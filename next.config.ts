@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   options: {
-    remarkPlugins: [remarkFrontmatter, [remarkMdxFrontmatter, { name: 'meta' }]]
+    remarkPlugins: [remarkFrontmatter, [remarkMdxFrontmatter, { name: "meta" }]]
   }
 });
 

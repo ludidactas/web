@@ -1,15 +1,7 @@
+import { Dispatch, SetStateAction } from 'react'
 import { Drawer } from 'vaul'
 import { Button } from '../ui/button'
-import {
-  DrawerTrigger,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from '../ui/drawer'
-import { Dispatch, SetStateAction } from 'react'
+import { DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '../ui/drawer'
 
 const MdDrawer = ({
   articulo,

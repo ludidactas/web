@@ -25,9 +25,11 @@ export default function Home() {
         })
         elemento.addEventListener('mouseenter', () => {
           console.log(`mouseenter en ${id}`)
+          elemento.classList.add('activo')
         })
         elemento.addEventListener('mouseleave', () => {
           console.log(`mouseleave en ${id}`)
+          elemento.classList.remove('activo')
         })
       })
     }

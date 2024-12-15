@@ -11,9 +11,7 @@ const overrideComponents = {
 }
 
 export default function Page() {
-  useEffect(() => {
-    console.log(meta)
-  }, [])
+  console.log(meta)
   return (
     <>
       <Button>Click me</Button>

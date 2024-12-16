@@ -35,7 +35,7 @@ const LdDrawer = ({
       <DrawerFooter>
         
         {/* Navegar a la página del artículo */}
-        <Button onClick={() => router.push(`/a/${articulo}`)}>Acceder</Button>
+        <Button disabled={!meta?.descripcion} onClick={() => router.push(`/a/${articulo}`)}>Acceder</Button>
 
         {/* Cerrar */}
         <Button onClick={() => setIsOpen(false)} variant="outline">

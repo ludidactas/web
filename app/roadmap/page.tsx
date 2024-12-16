@@ -54,7 +54,9 @@ export default function Roadmap() {
       {/* Si `articulo` está definida, renderizamos el drawer */}
       {articulo && <RoadmapDrawer articulo={articulo} isOpen={isCajonAbierto} setIsOpen={setIsCajonAbierto} />}
       {/* Renderizamos el SVG y le pasamos el ref */}
-      <RoadmapSvg ref={svgRef} />
+      <div className='flex flex-col items-center'>
+        <RoadmapSvg height={'100vh'} ref={svgRef} />
+      </div>
     </div>
   )
 }

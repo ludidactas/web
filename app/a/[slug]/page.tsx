@@ -8,7 +8,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   return <>
   {/* Si hay componente lo rendereamos */}
-  {Componente && <Componente />}
+  {Componente && <div className="md p-8"><Componente /></div>}
 
   {/* Si no, mostramos un mensaje */}
   {!Componente && <p className="p-8">

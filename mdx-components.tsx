@@ -13,9 +13,7 @@ export const meta = {
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     // Allows customizing built-in components, e.g. to add styling.
-    h1: ({ children }) => (
-      <h1 style={{ color: '#ccc', fontSize: '48px' }}>{children}</h1>
-    ),
+    // Peeero nosotres los estileamos desde `md.css`. Dejemos esto solo para customizar el nivel funcional.
     img: (props) => (
       <Image
         sizes="100vw"

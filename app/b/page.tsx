@@ -1,6 +1,7 @@
 import Math, { meta } from '@/md/matematica.mdx'
-import { PropsWithChildren, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { PropsWithChildren } from 'react'
+
+// Demo de cómo interceptar la producción de HTML a partir del MD
 
 function CustomH1({ children }: PropsWithChildren) {
   return <h1 style={{ color: 'blue', fontSize: '100px' }}>{children}</h1>
@@ -14,7 +15,6 @@ export default function Page() {
   console.log(meta)
   return (
     <>
-      <Button>Click me</Button>
       <Math components={overrideComponents} />
     </>
   )

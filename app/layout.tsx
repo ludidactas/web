@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ModeToggle } from '@/components/ui/mode-toggle'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -24,7 +25,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <div className='flex justify-between w-full p-4'>
+            <h1 className='text-2xl'>Roadmap</h1>
+            <ModeToggle />
+          </div>
           {children}
         </ThemeProvider>
       </body>

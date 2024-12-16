@@ -12,10 +12,7 @@ const overrideComponents = {
 }
 
 export default function Page() {
+  // Este meta lo podríamos usar para definir el CustomH1 (y por ejemplo usar en el título un color definido en el front-matter)
   console.log(meta)
-  return (
-    <>
-      <Math components={overrideComponents} />
-    </>
-  )
+  return <Math components={overrideComponents} />
 }

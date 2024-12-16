@@ -51,9 +51,9 @@ export default function Roadmap() {
 
   return (
     <div className="p-8">
-      
       {/* Si `articulo` está definida, renderizamos el drawer */}
       {articulo && <RoadmapDrawer articulo={articulo} isOpen={isCajonAbierto} setIsOpen={setIsCajonAbierto} />}
+      {/* Renderizamos el SVG y le pasamos el ref */}
       <RoadmapSvg ref={svgRef} />
     </div>
   )

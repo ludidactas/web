@@ -4,11 +4,12 @@
 import Math, { meta } from '@/md/matematica.mdx'
 import { MDXProps } from 'mdx/types'
 
-// Los valores de este enum tienen que matchear los ids que vengan de affinity/obsidian
+// Los valores de este enum tienen que matchear los ids que vengan de affinity
 enum Articulo{
-  Math = 'math'
+  Math = 'matematica'
 }
 
+// Este mapea ids de affinity a componentes MDX
 const articulos: Record<Articulo, [React.ComponentType<MDXProps>, Record<string, any>]> = {
   [Articulo.Math] : [Math, meta]
 }

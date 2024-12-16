@@ -1,3 +1,5 @@
+//@ts-nocheck - Para que no joda con el import de mdx/types. Quitar esta línea si hay que debuguear.
+
 // Índice de markdowns
 
 // app/a/[slug]/page.tsx

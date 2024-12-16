@@ -1,11 +1,19 @@
-h1{
+h1 {
   font-size: 3em;
-} 
+}
 
-.md li{
+.md li {
   margin-left: 1em;
 }
 
-.md a:hover{
+.md a {
+  text-decoration: underline;
+}
+
+.md a:hover {
   color: brown;
+}
+
+.md p {
+  margin: 0.3em 0;
 }

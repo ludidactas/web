@@ -5,18 +5,21 @@
 // app/a/[slug]/page.tsx
 import Math, { meta as MathMeta } from '@/md/matematica.mdx'
 import Prog, { meta as ProgMeta } from '@/md/programacion.mdx'
+import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 import { MDXProps } from 'mdx/types'
 
 // Los valores de este enum tienen que matchear los ids que vengan de affinity
 enum Articulo {
   Math = 'matematica',
   Programacion = 'programacion',
+  Gaming = 'gaming',
 }
 
 // Este mapea ids de affinity a componentes MDX
 const articulos: Record<Articulo, [React.ComponentType<MDXProps>, Record<string, any>]> = {
   [Articulo.Math]: [Math, MathMeta],
   [Articulo.Programacion]: [Prog, ProgMeta],
+  [Articulo.Gaming]: [Game, GameMeta],
 }
 
 /**

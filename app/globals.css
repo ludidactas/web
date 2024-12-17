@@ -71,6 +71,11 @@ body {
   }
 }
 
+svg [id*='rm.'] {
+  transition: 0.15s;
+}
+
 svg .activo {
-  filter: blur(5px);
+  transition: 0.15s;
+  filter: drop-shadow(10px 10px 5px black);
 }

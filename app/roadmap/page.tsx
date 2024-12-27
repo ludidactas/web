@@ -12,14 +12,15 @@ export default function Page() {
   const [isCajonAbierto, setIsCajonAbierto] = useState(false)
 
   // Nombre del artículo que se halla clickeado
-  const [clicked, setClicked] = useState<Articulo>(Articulo.Programacion)
+  const [clicked, setClicked] = useState<Articulo | null>(null)
   const [focused, setFocused] = useState<Articulo | null>(null)
   const [panelVisible, setPanelVisible] = useState(false)
 
   // Programación como default
-  const [_, metaProg] = getArticulo(Articulo.Programacion)
+  const { meta: metaProg } = getArticulo(Articulo.Programacion)
   const [meta, setMeta] = useState<Record<string, any>>(metaProg!)
 
+  // Al enfocar una unidad, activar el panel
   useEffect(() => {
     setPanelVisible(!!focused)
     if (focused) {
@@ -27,16 +28,34 @@ export default function Page() {
       setPanelVisible(true)
 
       // Seteamos los metadatos para este artículo
-      const [_, meta] = getArticulo(focused)
+      const { meta } = getArticulo(focused)
       if (meta) setMeta(meta)
     }
   }, [focused])
 
+  // Al clickear una unidad, activar el drawer
+  useEffect(() => {
+    setIsCajonAbierto(!!clicked)
+  }, [clicked])
+
   return (
     <div className="flex">
       {/* Si `clicked` está definida, renderizamos el drawer */}
-      {clicked && <RoadmapDrawer articulo={clicked} isOpen={isCajonAbierto} setIsOpen={setIsCajonAbierto} />}
-      <Roadmap onClick={(id) => setClicked(id)} onFocus={(id) => setFocused(id)} onUnfocus={() => setFocused(null)} />
+      <RoadmapDrawer
+        articulo={clicked}
+        isOpen={isCajonAbierto}
+        // Al cerrar el cajón "desclickeamos" el nodo
+        setIsOpen={(open) => {
+          setIsCajonAbierto(open)
+          setClicked(null)
+        }}
+      />
+
+      <Roadmap
+        onClick={(id) => setClicked((clicked) => (id === clicked ? null : id))}
+        onFocus={(id) => setFocused(id)}
+        onUnfocus={() => setFocused(null)}
+      />
       <div className="h-full">
         <FadeTransition show={panelVisible}>
           <>

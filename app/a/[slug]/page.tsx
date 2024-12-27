@@ -1,18 +1,27 @@
-import { getArticulo } from "@/md";
+import { esArticulo, getArticulo } from '@/md'
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const slug = (await params).slug
+  const { slug } = await params
 
   // Si tenemos a este artículo listado, traemos su MD
-  const [Componente, meta] = getArticulo(slug)
+  const { Contenido, meta } = getArticulo(slug)
 
-  return <>
-  {/* Si hay componente lo rendereamos */}
-  {Componente && <div className="md p-8"><Componente /></div>}
+  return (
+    <>
+      {/* Si hay componente lo rendereamos */}
+      {Contenido && (
+        <div className="md p-8">
+          <Contenido />
+        </div>
+      )}
 
-  {/* Si no, mostramos un mensaje */}
-  {!Componente && <p className="p-8">
-    No tenemos indexado el componente `{slug}`. O bien falta el MD en la carpeta `md`, o bien falta indexarlo en `app/a/[slug]/page.tsx`
-    </p>}
-  </>;
+      {/* Si no, mostramos un mensaje */}
+      {!Contenido && (
+        <p className="p-8">
+          No tenemos indexado el componente `{slug}`. O bien falta el MD en la carpeta `md`, o bien falta indexarlo en
+          `app/a/[slug]/page.tsx`
+        </p>
+      )}
+    </>
+  )
 }

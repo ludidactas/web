@@ -16,16 +16,26 @@ export enum Articulo {
 }
 
 // Este mapea ids de affinity a componentes MDX
-const articulos: Record<Articulo, [React.ComponentType<MDXProps>, Record<string, any>]> = {
-  [Articulo.Math]: [Math, MathMeta],
-  [Articulo.Programacion]: [Prog, ProgMeta],
-  [Articulo.Gaming]: [Game, GameMeta],
+const articulos: Record<Articulo, { Contenido: React.ComponentType<MDXProps>; meta: Record<string, any> }> = {
+  [Articulo.Math]: { Contenido: Math, meta: MathMeta },
+  [Articulo.Programacion]: { Contenido: Prog, meta: ProgMeta },
+  [Articulo.Gaming]: { Contenido: Game, meta: GameMeta },
 }
+
+const articuloVacio = () =>
+  structuredClone({
+    Contenido: null,
+    meta: null,
+  })
+
+/**
+ * Evalúa si un string está en nuestro índice (es decir, si es un artículo)
+ */
+export const esArticulo = (id: string): id is Articulo => Object.keys(articulos).includes(id)
 
 /**
  * Devuelve un artículo y su `meta`, dado un id, o `[null, null]` si el id no existe
  */
-export const getArticulo = (id: string) =>
-  Object.keys(articulos).includes(id) ? articulos[id as Articulo] : [null, null]
+export const getArticulo = (id: string) => (esArticulo(id) ? articulos[id as Articulo] : articuloVacio())
 
 export default articulos

@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction } from 'react'
+'use client'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Drawer } from 'vaul'
 import { Button } from '../ui/button'
 import { useRouter } from 'next/navigation'
@@ -11,20 +12,27 @@ const LdDrawer = ({
   isOpen,
   setIsOpen,
 }: {
-  articulo: string
+  articulo: string | null
   isOpen: boolean
   setIsOpen: Dispatch<SetStateAction<boolean>>
 }) => {
   // Importamos el router
   const router = useRouter()
 
-  const [_, meta] = getArticulo(articulo)
+  const [meta, setMeta] = useState<Record<string, any>>({})
+
+  // Cuando cambie el artículo, updateamos el meta
+  useEffect(() => {
+    if (!articulo) return setMeta({})
+    const { meta } = getArticulo(articulo)
+    setMeta(meta ?? {})
+  }, [articulo])
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{capitalize(articulo)}</DrawerTitle>
+          <DrawerTitle>{meta.titulo}</DrawerTitle>
           <DrawerDescription>
             {meta?.descripcion ??
               `Acá iría la pequeña descripción de ${articulo}, pero no está. Agregarla al front-matter del MD en cuestión con la clave 'descripcion'.`}

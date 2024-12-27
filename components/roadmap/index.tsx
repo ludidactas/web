@@ -18,9 +18,6 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
   // Ref para el svg
   const svgRef = useRef<SVGAElement>()
 
-  // Nombre del artículo que se halla focuseado
-  const [articulo, setArticulo] = useState<null | string>(null)
-
   // Targeteamos los elementos con id que empiecen con 'rm.' y suscribimos eventos
   useEffect(() => {
     if (svgRef.current) {
@@ -44,7 +41,6 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
         // Al hacerle click, abrimos el cajón y le pasamos este id
         elemento.addEventListener('click', () => {
           if (onClick) onClick(id)
-          setArticulo(id)
         })
 
         // Al entrar, le aplicamos la clase "activo"

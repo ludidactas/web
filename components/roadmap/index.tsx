@@ -3,11 +3,12 @@ import RoadmapSvg from '@/app/roadmap.svg'
 import { useEffect, useRef, useState } from 'react'
 
 import './roadmap.css'
+import { Articulo } from '@/md'
 
 interface RoadmapProps {
-  onFocus?: (id: string) => void
-  onUnfocus?: (id: string) => void
-  onClick?: (id: string) => void
+  onFocus?: (id: Articulo) => void
+  onUnfocus?: (id: Articulo) => void
+  onClick?: (id: Articulo) => void
 }
 
 // Útil https://react-typescript-cheatsheet.netlify.app
@@ -29,8 +30,15 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
       // Para cada uno
       elementos_con_id.forEach((elemento) => {
         // Obtenemos la parte del id que venga después del punto
-        const id = elemento.id.split('.')[1]
+        const id = elemento.id.split('.')[1] as Articulo
 
+        // Si no está entre los artículos enumerados, volvermos
+        if (!Object.values(Articulo).includes(id)) {
+          console.log(`${id} no está entre los artículos enumerados`)
+          return
+        }
+
+        // Lo claseamos como nodo
         elemento.classList.add('nodo')
 
         // Al hacerle click, abrimos el cajón y le pasamos este id

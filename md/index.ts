@@ -9,7 +9,7 @@ import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 import { MDXProps } from 'mdx/types'
 
 // Los valores de este enum tienen que matchear los ids que vengan de affinity
-enum Articulo {
+export enum Articulo {
   Math = 'matematica',
   Programacion = 'programacion',
   Gaming = 'gaming',

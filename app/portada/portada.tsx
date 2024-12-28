@@ -1,14 +1,15 @@
 'use client'
 import { ButtonIcon } from "@/components/custom/ld-btn"
 import LogoLema from "./logoLema"
+import Image from "next/image"
 
-export default function Header() {
+export default function Portada() {
 
     return (
-        <div className="flex flex-col items-center w-[60%] m-[20%]">
+        <div className="flex flex-col items-center ">
             
             <LogoLema />
-            <img src="/img/Compo.png" />
+            <Image src="/img/Compo.png" alt="PortadaImg" width={500} height={500}/>
             {/* scrollTo es una funcion que te da window, se puede usar el nombre directamente */}
             <ButtonIcon onClick={() => scrollTo({
                 // window.innerHeigth toma el alto de la pantalla

@@ -27,6 +27,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0",
+    "remark-bracketed-spans": "^3.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.0.0",
     "remeda": "^2.17.4",

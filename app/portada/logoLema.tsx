@@ -1,14 +1,17 @@
 
 
 export default function LogoLema() {
-   
+
     return (
-        <div className= "flex" style={{ width: '50%', height: '30%', marginBottom: '20px', marginLeft:'60px', alignItems: "center"}}>
-        
-            <img className="logo " style={{ width: '40%', height: '30%', marginTop: '150px' }} src="/img/Logo.png"/>
-        
-            <img className="lema" style={{ width: '100%', height: '30%', marginTop: '150px' }} src="/img/Lema.png"/>
-       
-        </div> 
+        <div className="flex w-[90%] items-center">
+
+            <img className="w-[40%]" src="/img/Logo.png" />
+            <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">
+                <img className="" src="/img/Lema.png" />
+                <p>Tecnologías pedagógicas emergentes </p>
+            </div>
+
+
+        </div>
     )
 }

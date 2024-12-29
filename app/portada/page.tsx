@@ -1,13 +1,16 @@
 
-import Header from "./header";
-
+import Portada from "./portada";
+import Pantalla from "./pantalla";
+import Identidad from "./identidad"
+import Propuestas from "./propuestas";
 
 export default function Page() {
-   
+
     return (
         <>
-        <Header/>
-        <Pantalla/>
+            <Portada />
+            <Identidad/>
+            <Propuestas/>
         </>
     )
 }

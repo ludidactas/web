@@ -27,8 +27,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className='flex justify-between w-full p-4'>
-            <h1 className='text-2xl'>Roadmap</h1>
+          <div className="flex justify-between w-full p-4">
+            <h1 className="text-2xl">Roadmap</h1>
             <ModeToggle />
           </div>
           {children}

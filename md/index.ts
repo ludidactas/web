@@ -1,4 +1,5 @@
 //@ts-nocheck - Para que no joda con el import de mdx/types. Quitar esta línea si hay que debuguear.
+import { Meta } from '@/mdx'
 
 // Índice de markdowns
 
@@ -16,7 +17,7 @@ export enum Articulo {
 }
 
 // Este mapea ids de affinity a componentes MDX
-const articulos: Record<Articulo, { Contenido: React.ComponentType<MDXProps>; meta: Record<string, any> }> = {
+const articulos: Record<Articulo, { Contenido: React.ComponentType<MDXProps>; meta: Meta }> = {
   [Articulo.Math]: { Contenido: Math, meta: MathMeta },
   [Articulo.Programacion]: { Contenido: Prog, meta: ProgMeta },
   [Articulo.Gaming]: { Contenido: Game, meta: GameMeta },

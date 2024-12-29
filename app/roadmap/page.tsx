@@ -1,11 +1,12 @@
 'use client'
-import Roadmap from '@/components/roadmap'
+import { LibretaProvider } from '@/components/context/libreta'
 import RoadmapDrawer from '@/components/custom/ld-drawer'
+import FadeTransition from '@/components/fx/transition'
+import Roadmap from '@/components/roadmap'
+import Radar from '@/components/ui/radar'
+import { Articulo, getArticulo } from '@/md'
 import { useEffect, useState } from 'react'
 import { capitalize, entries, isObjectType } from 'remeda'
-import { Articulo, getArticulo } from '@/md'
-import FadeTransition from '@/components/fx/transition'
-import Radar from '@/components/ui/radar'
 
 export default function Page() {
   // Estado del drawer
@@ -39,36 +40,37 @@ export default function Page() {
   }, [clicked])
 
   return (
-    <div className="flex">
-      {/* Si `clicked` está definida, renderizamos el drawer */}
-      <RoadmapDrawer
-        articulo={clicked}
-        isOpen={isCajonAbierto}
-        // Al cerrar el cajón "desclickeamos" el nodo
-        setIsOpen={(open) => {
-          setIsCajonAbierto(open)
-          setClicked(null)
-        }}
-      />
+    <LibretaProvider>
+      <div className="flex">
+        <RoadmapDrawer
+          articulo={clicked}
+          isOpen={isCajonAbierto}
+          // Al cerrar el cajón "desclickeamos" el nodo
+          setIsOpen={(open) => {
+            setIsCajonAbierto(open)
+            setClicked(null)
+          }}
+        />
 
-      <Roadmap
-        onClick={(id) => setClicked((clicked) => (id === clicked ? null : id))}
-        onFocus={(id) => setFocused(id)}
-        onUnfocus={() => setFocused(null)}
-      />
-      <div className="h-full">
-        <FadeTransition show={panelVisible}>
-          <>
-            <h2 className="text-2xl">{meta.titulo}</h2>
-            {entries(meta).map(([k, v]) => (
-              <div key={k}>
-                <b>{capitalize(k)}:</b> {isObjectType(v) ? <pre>{JSON.stringify(v, null, 2)}</pre> : <p>{v}</p>}
-              </div>
-            ))}
-            <Radar stats={meta.stats} />
-          </>
-        </FadeTransition>
+        <Roadmap
+          onClick={(id) => setClicked((clicked) => (id === clicked ? null : id))}
+          onFocus={(id) => setFocused(id)}
+          onUnfocus={() => setFocused(null)}
+        />
+        <div className="h-full">
+          <FadeTransition show={panelVisible}>
+            <>
+              <h2 className="text-2xl">{meta.titulo}</h2>
+              {entries(meta).map(([k, v]) => (
+                <div key={k}>
+                  <b>{capitalize(k)}:</b> {isObjectType(v) ? <pre>{JSON.stringify(v, null, 2)}</pre> : <p>{v}</p>}
+                </div>
+              ))}
+              <Radar stats={meta.stats} />
+            </>
+          </FadeTransition>
+        </div>
       </div>
-    </div>
+    </LibretaProvider>
   )
 }

@@ -1,6 +1,4 @@
-//@ts-nocheck - Para que no joda con el import de mdx/types. Quitar esta línea si hay que debuguear.
-import { Meta } from '@/mdx'
-
+//@ts-nocheck - el export meta es problemático
 // Índice de markdowns
 
 // app/a/[slug]/page.tsx
@@ -8,6 +6,17 @@ import Math, { meta as MathMeta } from '@/md/matematica.mdx'
 import Prog, { meta as ProgMeta } from '@/md/programacion.mdx'
 import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 import { MDXProps } from 'mdx/types'
+import { Meta, metaSchema } from './schema'
+
+const asegurarFormato = (meta: unknown) => {
+  return metaSchema.parse(meta)
+}
+
+const articuloVacio = () =>
+  structuredClone({
+    Contenido: null,
+    meta: null,
+  })
 
 // Los valores de este enum tienen que matchear los ids que vengan de affinity
 export enum Articulo {
@@ -18,16 +27,10 @@ export enum Articulo {
 
 // Este mapea ids de affinity a componentes MDX
 const articulos: Record<Articulo, { Contenido: React.ComponentType<MDXProps>; meta: Meta }> = {
-  [Articulo.Math]: { Contenido: Math, meta: MathMeta },
-  [Articulo.Programacion]: { Contenido: Prog, meta: ProgMeta },
-  [Articulo.Gaming]: { Contenido: Game, meta: GameMeta },
+  [Articulo.Math]: { Contenido: Math, meta: asegurarFormato(MathMeta) },
+  [Articulo.Programacion]: { Contenido: Prog, meta: asegurarFormato(ProgMeta) },
+  [Articulo.Gaming]: { Contenido: Game, meta: asegurarFormato(GameMeta) },
 }
-
-const articuloVacio = () =>
-  structuredClone({
-    Contenido: null,
-    meta: null,
-  })
 
 /**
  * Evalúa si un string está en nuestro índice (es decir, si es un artículo)

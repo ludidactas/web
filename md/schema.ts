@@ -5,13 +5,29 @@ import { z } from 'zod'
 // Stats
 const statsSchema = z.record(z.string(), z.number())
 
-// Niveles
+// Niveles - nivel: lista de ids de unidades pertenecientes
 const nivelEnum = z.enum(['contacto', 'allegado', 'familiar', 'avanzado', 'experto'])
 const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
 
-// Unidades
+// Unidades - Por ahora id: string describiendo las expectativas en términos de "Entiendo"
 const unidadesSchema = z.record(z.string(), z.string())
 
+// Requerimientos
+const requerimientoMateriaSchema = z.string()
+
+const requerimientoNivelSchema = z.record(z.string(), z.string())
+
+const requerimientoUnidadSchema = z.record(
+  // En formato "level.unit"
+  z.string().regex(/^[^.]+\.[^.]+$/),
+  z.string()
+)
+
+const requerimientosSchema = z.array(
+  z.union([requerimientoMateriaSchema, requerimientoNivelSchema, requerimientoUnidadSchema])
+)
+
+// Meta
 export const metaSchema = z
   .object({
     titulo: z.string(),
@@ -19,6 +35,7 @@ export const metaSchema = z
     stats: statsSchema,
     niveles: nivelesSchema.optional(),
     unidades: unidadesSchema.optional(),
+    requiere: requerimientosSchema.optional(), // Refinar para verificar que no requiera unidades o niveles no presentes
   })
   .refine(
     (data) => {

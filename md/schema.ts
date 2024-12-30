@@ -6,8 +6,7 @@ import { z } from 'zod'
 const statsSchema = z.record(z.string(), z.number())
 
 // Niveles
-const nivelEnum = z.enum(['contacto', 'allegado', 'familiar', 'avanzado'])
-
+const nivelEnum = z.enum(['contacto', 'allegado', 'familiar', 'avanzado', 'experto'])
 const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
 
 // Unidades

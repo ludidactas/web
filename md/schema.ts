@@ -61,6 +61,7 @@ export const metaSchema = z
     unidades: unidadesSchema.optional(),
     requiere: requerimientosSchema.optional(), // Refinar para verificar que no requiera unidades o niveles no presentes
   })
+  // Checkea la relación entre niveles y unidades
   .refine(
     (data) => {
       if (!data.niveles) return true
@@ -73,10 +74,8 @@ export const metaSchema = z
 
       const faltantes = Array.from(nivelUnidades).filter((unidad) => !(unidad in data.unidades!))
 
-      if (faltantes.length > 0) {
-        // @ts-expect-error - Propiedad custom
-        data._faltantes = faltantes
-      }
+      // @ts-expect-error - Propiedad custom
+      if (faltantes.length > 0) data._faltantes = faltantes
 
       // Checkeamos si todas existen en `unidades`
       return Array.from(nivelUnidades).every((unidad) => unidad in data.unidades!)
@@ -87,6 +86,21 @@ export const metaSchema = z
         ', '
       )}`,
       path: ['niveles'], // This will show the error on the niveles field
+    })
+  )
+  // Checkea que ninguna unidad colisione con un nombre de nivel
+  .refine(
+    (data) => {
+      if (!data.unidades) return true
+      const colisiones = Object.keys(data.unidades).filter((u) => nivelEnum.safeParse(u).success)
+      // @ts-expect-error - Propiedad custom
+      if (colisiones.length > 0) data._colisiones = colisiones
+      return colisiones.length == 0
+    },
+    (data) => ({
+      // @ts-expect-error - Propiedad custom
+      message: `Hay unidades en ${data.titulo} nombradas como niveles: ${data._colisiones?.join(', ')}`,
+      path: ['unidades'],
     })
   )
 

@@ -27,7 +27,7 @@ export default function Stats({ stats }: StatsProps) {
   const chartData = entries(stats).map(([k, v]) => ({ stat: k, valor: v }))
 
   return (
-    <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[420px]">
+    <ChartContainer config={chartConfig} className="mx-auto max-h-[384px]">
       <RadarChart data={chartData}>
         <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
         <PolarAngleAxis dataKey="stat" />

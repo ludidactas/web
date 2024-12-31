@@ -1,13 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import { LibretaProvider } from '@/components/context/libreta'
 import RoadmapDrawer from '@/components/custom/ld-drawer'
+import LdMateria from '@/components/custom/ld-materia'
 import FadeTransition from '@/components/fx/transition'
 import Roadmap from '@/components/roadmap'
-import Radar from '@/components/ui/radar'
 import { getMateria, Materia } from '@/md'
 import { Meta } from '@/md/schema'
 import { useEffect, useState } from 'react'
-import { capitalize, entries, isObjectType } from 'remeda'
 
 export default function Page() {
   // Estado del drawer
@@ -37,7 +37,6 @@ export default function Page() {
 
   // Al clickear una unidad, activar el drawer
   useEffect(() => {
-    console.log(`seteando cajonabierto`)
     setIsCajonAbierto(!!clicked)
   }, [clicked])
 
@@ -50,7 +49,7 @@ export default function Page() {
           // Al cerrar el cajón "desclickeamos" el nodo
           setIsOpen={(open) => {
             setIsCajonAbierto(open)
-            setClicked(null)
+            // setClicked(null)
           }}
         />
 
@@ -59,17 +58,11 @@ export default function Page() {
           onFocus={(id) => setFocused(id)}
           onUnfocus={() => setFocused(null)}
         />
-        <div className="h-full">
-          <FadeTransition show={panelVisible}>
-            <>
-              <h2 className="text-2xl">{meta.titulo}</h2>
-              {entries(meta).map(([k, v]) => (
-                <div key={k}>
-                  <b>{capitalize(k)}:</b> {isObjectType(v) ? <pre>{JSON.stringify(v, null, 2)}</pre> : <p>{v}</p>}
-                </div>
-              ))}
-              {meta.stats && <Radar stats={meta.stats} />}
-            </>
+        <div className="h-full w-full">
+          <FadeTransition show={panelVisible || !!clicked}>
+            <div className="w-full">
+              <LdMateria materia={clicked} />
+            </div>
           </FadeTransition>
         </div>
       </div>

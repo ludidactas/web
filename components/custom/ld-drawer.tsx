@@ -73,15 +73,7 @@ interface CheckNivelProps {
 }
 
 const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
-  const {
-    libreta,
-    nivelCompletado,
-    nivelParcial,
-    toggleNivel,
-    toggleUnidad,
-    unidadesDeNivel,
-    requerimientosPendientes,
-  } = useLibreta(materia as Materia)
+  const { nivelCompletado, nivelParcial, toggleNivel, unidadesDeNivel } = useLibreta(materia as Materia)
 
   const unidades = unidadesDeNivel(nivel)
 
@@ -89,7 +81,6 @@ const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
     <div>
       {/* Checkbox principal */}
       <div className="px-8 py-2 flex gap-2 items-center">
-        {/* <Checkbox id={nivel} checked={nivelSeteado(nivel)} onClick={() => toggleNivel(nivel)} /> */}
         <Checkbox
           id={nivel}
           checked={nivelCompletado(nivel) ? true : nivelParcial(nivel) ? 'indeterminate' : false}
@@ -106,22 +97,51 @@ const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
       {/* Subchecks */}
       <div className="flex flex-col pl-8">
         {unidades &&
-          entries(unidades).map(([unid, texto]) => (
-            <div
-              className="px-8 py-2 flex gap-2 items-center"
-              key={unid}
-              onMouseEnter={() => console.log(`Requerimientos de ${unid}:`, requerimientosPendientes(unid))}
-            >
-              <Checkbox id={unid} className="w-2 h-2" checked={libreta[unid]} onClick={() => toggleUnidad(unid)} />
-              <label
-                htmlFor={unid}
-                className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {texto}
-              </label>
-            </div>
+          entries(unidades).map(([unidad, texto]) => (
+            <CheckUnidad materia={materia as Materia} unidad={unidad} texto={texto} />
           ))}
       </div>
     </div>
+  )
+}
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+
+const CheckUnidad = ({ materia, unidad, texto }: { materia: Materia; unidad: string; texto: string }) => {
+  const { libreta, requerimientosPendientes, toggleUnidad } = useLibreta(materia)
+  const pendientes = requerimientosPendientes(unidad)
+
+  type ElementType<T> = T extends Array<infer E> ? E : never
+  const renderDependencia = (dep: ElementType<ReturnType<typeof requerimientosPendientes>>) => {
+    if (dep.nivel) return `${materia} nivel ${dep.nivel}`
+    if (dep.unidad) return `unidad ${dep.unidad} de ${materia}`
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <div
+            className="px-8 py-2 flex gap-2 items-center"
+            key={unidad}
+            onMouseEnter={() => console.log(`Requerimientos de ${unidad}:`)}
+          >
+            <Checkbox id={unidad} className="w-2 h-2" checked={libreta[unidad]} onClick={() => toggleUnidad(unidad)} />
+            <label
+              htmlFor={unidad}
+              className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {texto}
+            </label>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            Esta unidad tiene como dependencia{pendientes.length > 1 ? 's' : ''}:{' '}
+            {pendientes.map(renderDependencia).join(', ')}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

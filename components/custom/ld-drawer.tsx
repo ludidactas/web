@@ -7,8 +7,8 @@ import { capitalize, entries } from 'remeda'
 import { Drawer } from 'vaul'
 import { Button } from '../ui/button'
 import { DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '../ui/drawer'
-import useLibreta, { Materia, Nivel } from '@/components/hooks/libreta'
-import { Meta } from '@/mdx'
+import useLibreta, { Materia } from '@/components/hooks/libreta'
+import { Meta, Nivel } from '@/md/schema'
 
 const LdDrawer = ({
   articulo,
@@ -22,13 +22,13 @@ const LdDrawer = ({
   // Importamos el router
   const router = useRouter()
 
-  const [meta, setMeta] = useState<Meta>({})
+  const [meta, setMeta] = useState<Meta>({ titulo: 'Nada', descripcion: 'Nada' })
 
   // Cuando cambie el artículo, updateamos el meta
   useEffect(() => {
-    if (!articulo) return setMeta({})
+    if (!articulo) return setMeta({ titulo: 'Nada', descripcion: 'Nada' })
     const { meta } = getArticulo(articulo)
-    setMeta(meta ?? {})
+    if (meta) setMeta(meta)
   }, [articulo])
 
   return (
@@ -46,7 +46,7 @@ const LdDrawer = ({
           <div className="max-h-96 overflow-scroll">
             <p className="px-8">Marcá los check a continuación teniendo en cuenta las observaciones:</p>
             {entries(meta.niveles).map(([nivel, unidades]) => (
-              <CheckNivel materia={articulo} nivel={nivel as Nivel} key={nivel} />
+              <CheckNivel materia={articulo} nivel={nivel} key={nivel} />
             ))}
           </div>
         )}
@@ -73,9 +73,15 @@ interface CheckNivelProps {
 }
 
 const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
-  const { libreta, nivelCompletado, nivelParcial, toggleNivel, toggleUnidad, unidadesDeNivel } = useLibreta(
-    materia as Materia
-  )
+  const {
+    libreta,
+    nivelCompletado,
+    nivelParcial,
+    toggleNivel,
+    toggleUnidad,
+    unidadesDeNivel,
+    requerimientosPendientes,
+  } = useLibreta(materia as Materia)
 
   const unidades = unidadesDeNivel(nivel)
 
@@ -101,7 +107,11 @@ const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
       <div className="flex flex-col pl-8">
         {unidades &&
           entries(unidades).map(([unid, texto]) => (
-            <div className="px-8 py-2 flex gap-2 items-center" key={unid}>
+            <div
+              className="px-8 py-2 flex gap-2 items-center"
+              key={unid}
+              onMouseEnter={() => console.log(`Requerimientos de ${unid}:`, requerimientosPendientes(unid))}
+            >
               <Checkbox id={unid} className="w-2 h-2" checked={libreta[unid]} onClick={() => toggleUnidad(unid)} />
               <label
                 htmlFor={unid}

@@ -1,15 +1,8 @@
 import { useContext } from 'react'
-import { fromEntries } from 'remeda'
+import { entries, find, first, fromEntries, isPlainObject, isString } from 'remeda'
 import LibretaContext from '../context/libreta'
 import { getArticulo } from '@/md'
-
-export enum Nivel {
-  Contacto = 'Entradx en contacto',
-  Allegado = 'Allegado',
-  Familiar = 'Familiar',
-  Avanzado = 'Avanzado',
-  Experto = 'Expertx',
-}
+import { Nivel, nivelEnum } from '@/md/schema'
 
 export enum Materia {
   Math = 'matematica',
@@ -25,6 +18,7 @@ const useLibreta = (materia: Materia) => {
   const { meta } = getArticulo(materia)
   const unidades = meta?.unidades
   const niveles = meta?.niveles
+  const requiere = meta?.requiere
 
   if (!unidades || !niveles) throw new Error(`Faltan o unidades o niveles de ${materia}`)
 
@@ -32,6 +26,7 @@ const useLibreta = (materia: Materia) => {
    * Activa o desactiva todas las unidades listadas bajo un nivel en el meta de la materia
    */
   const toggleNivel = (nivel: Nivel) => {
+    if (!niveles || !niveles[nivel]) return
     const unidadesUpdateadas = fromEntries(niveles[nivel].map((nv) => [nv, !nivelCompletado(nivel)]))
     setLibreta({ ...libreta, ...unidadesUpdateadas })
   }
@@ -60,30 +55,87 @@ const useLibreta = (materia: Materia) => {
    */
   const unidadesDeNivel = (nivel: Nivel) => niveles[nivel] && fromEntries(niveles[nivel].map((u) => [u, unidades[u]]))
 
-  return { libreta, unidades, niveles, toggleNivel, toggleUnidad, nivelCompletado, nivelParcial, unidadesDeNivel }
+  /**
+   * Devuelve el nivel de una unidad
+   */
+  const nivelDeUnidad = (unidad: string) => {
+    if (!unidades[unidad])
+      throw new Error(`La supuesta unidad ${unidad} de ${materia} no está en la lista de unidades!`)
+    if (!niveles) return null
+    const [nv, unids] = find(entries(niveles), ([nv, unids]) => unids.includes(unidad)) ?? [null, null]
+    return nv
+  }
+
+  const requerimientosPendientes = (unidad: string) => {
+    if (!Object.keys(unidades).includes(unidad)) {
+      console.warn(`Se solicitaron los requerimientos de unidad ${unidad} de ${materia}, pero no se encuentra listada`)
+      return []
+    }
+    if (!requiere || !requiere) {
+      return []
+    }
+
+    // Lógica para determinar los requerimientos
+    const requerimientos = []
+
+    // Primero nos enteramos de qué nivel es la unidad que estamos tratando (podría no ser de ninguno también - null)
+    const nivelUnidad = nivelDeUnidad(unidad)
+
+    // Requerimientos de materia: Una materia depende enteramente de otra
+    // Si una materia A tiene listada a otra B como dependencia, significa que cada nivel de A tiene como requerimiento
+    // el nivel correspondiente de B, es decir, que cada unidad de ese nivel en A tendrá como requerimiento todas las unidades
+    // del mismo nivel en B
+    const requerimientosMateria = requiere.filter((r) => isString(r))
+    if (requerimientosMateria)
+      if (!nivelDeUnidad) {
+        console.warn(`${materia} requiere ${requerimientosMateria.join(', ')} pero su unidad ${unidad} no tiene nivel`)
+        return []
+      } else {
+        for (const materia of requerimientosMateria) requerimientos.push({ materia: materia, nivel: nivelUnidad })
+      }
+
+    // Requerimientos de nivel: Un nivel de una materia depende de un nivel o una cierta unidad en otra
+    // nivel: otramateria.nivel
+    // nivel: otramateria.unidad
+    const requerimientosDeNivel = requiere.filter(
+      (r) => isPlainObject(r) && Object.keys(r).length == 1 && first(Object.keys(r)) == nivelUnidad
+    )
+    if (requerimientosDeNivel)
+      for (const req of requerimientosDeNivel) {
+        const dependencia = first(Object.values(req))!
+        const [materia, nivelOUnidad] = dependencia.split('.')
+        if (nivelEnum.parse(nivelOUnidad)) requerimientos.push({ materia, nivel: nivelOUnidad })
+        else requerimientos.push({ materia, unidad: nivelOUnidad })
+      }
+
+    // Requerimientos de unidad: una unidad de una materia depende de un nivel o una cierta unidad en otra
+    // nivel.unidad: otramateria.nivel
+    // nivel.unidad: otramateria.unidad
+    const requerimientosDeUnidad = requiere.filter(
+      (r) => isPlainObject(r) && Object.keys(r).length == 1 && first(Object.keys(r))!.includes('.')
+    )
+    if (requerimientosDeUnidad)
+      for (const req of requerimientosDeUnidad) {
+        const dependencia = first(Object.values(req))!
+        const [materia, nivelOUnidad] = dependencia.split('.')
+        if (nivelEnum.parse(nivelOUnidad)) requerimientos.push({ materia, nivel: nivelOUnidad })
+        else requerimientos.push({ materia, unidad: nivelOUnidad })
+      }
+
+    return requerimientos
+  }
+
+  return {
+    libreta,
+    unidades,
+    niveles,
+    toggleNivel,
+    toggleUnidad,
+    nivelCompletado,
+    nivelParcial,
+    unidadesDeNivel,
+    requerimientosPendientes,
+  }
 }
 
 export default useLibreta
-
-// Niveles de familiaridad:
-
-// 1 - Contacto:
-// - Tengo idea de qué va el tema, sus conceptos básicos y rudimentos operativos
-// - Puedo más o menos leer estructuralmente contenidos, aunque pudiera no entender todo el vocabulario, y hasta podría realizar pequeñas modificaciones
-// - Puede comprobarse con un assessment
-
-// 2 - Allegado:
-// - Si bien pueden escaparseme algunos términos, conozco el vocabulario básico que cubre el 80 % de lo que puede expresarse en este dominio, y puedo escribir mis contenidos a partir de consignas claras o contenidos base
-// - Puede comprobarse con ejercicios
-
-// 3 - Familiar:
-// - En virtud de la práctica y ejercitación reiterada me entiendo con el tema de manera que puedo abrirme paso en escenarios imprevistos
-// - Si no conozco algo sé dónde informarme sobre ello y domino la facultad de escribir
-// - Puede comprobarse con un proyecto
-
-// 4 - Avanzado:
-// - Llevé a término proyectos y conozco las prácticas de la comunidad o la industria
-// - Puede comprobarse con un proyecto avanzado, probablemente grupal
-
-// 5 - Expertx:
-// - Este dominio no me guarda secretos, y conozco sus puntos de contacto con dominios adyacentes

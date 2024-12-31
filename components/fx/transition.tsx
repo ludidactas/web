@@ -6,7 +6,7 @@ interface TransitionProps extends PropsWithChildren {
 }
 
 // FadeTransition component that handles the fade animation
-export default ({ show, children, ms = 300 }: TransitionProps) => {
+const FadeTransition = ({ show, children, ms = 300 }: TransitionProps) => {
   const [shouldRender, setShouldRender] = useState(show)
   const [isVisible, setIsVisible] = useState(false)
 
@@ -28,7 +28,7 @@ export default ({ show, children, ms = 300 }: TransitionProps) => {
       const timer = setTimeout(() => setShouldRender(false), ms) // match transition duration
       return () => clearTimeout(timer)
     }
-  }, [show])
+  }, [ms, show])
 
   return (
     <div
@@ -42,3 +42,5 @@ export default ({ show, children, ms = 300 }: TransitionProps) => {
     </div>
   )
 }
+
+export default FadeTransition

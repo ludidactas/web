@@ -1,10 +1,10 @@
-import { esArticulo, getArticulo } from '@/md'
+import { getMateria } from '@/md'
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
   // Si tenemos a este artículo listado, traemos su MD
-  const { Contenido, meta } = getArticulo(slug)
+  const { Contenido } = getMateria(slug)
 
   return (
     <>

@@ -1,9 +1,9 @@
-import Pantalla from "./pantalla"
+import Pantalla from './pantalla'
 
 export default function Recursos() {
-    return <Pantalla one={<></>} two={<></>} title={""} btnTxt={""} />
-  }
+  return <Pantalla one={<></>} two={<></>} title={''} btnTxt={''} />
+}
 
-  const Imagenes = () => <div>
+// const Imagenes = () => <div>
 
-    </div>
+//   </div>

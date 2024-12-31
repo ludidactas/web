@@ -1,11 +1,19 @@
-//@ts-nocheck - el import { meta } es problemático
+/**
+ * Este módulo lleva a cabo con MD estático lo que luego se resolvería dinámicamente usando
+ * los markdowns producidos mediante obsidian o el mdx servido desde el server
+ */
 
 // Índice de markdowns
+// @ts-expect-error import { meta } no funciona
 import Math, { meta as MathMeta } from '@/md/matematica.mdx'
+// @ts-expect-error import { meta } no funciona
 import Prog, { meta as ProgMeta } from '@/md/programacion.mdx'
+// @ts-expect-error import { meta } no funciona
 import Game, { meta as GameMeta } from '@/md/gaming.mdx'
+// @ts-expect-error import { meta } no funciona
 import Ilus, { meta as IlusMeta } from '@/md/ilustracion.mdx'
 
+import { z } from 'zod'
 import { MDXProps } from 'mdx/types'
 import { Meta, metaSchema } from './schema'
 import { isDeepEqual } from 'remeda'
@@ -21,33 +29,26 @@ const articuloVacio = () =>
   })
 
 // Los valores de este enum tienen que matchear los ids que vengan de affinity
-export enum Articulo {
-  Math = 'matematica',
-  Programacion = 'programacion',
-  Gaming = 'gaming',
-  Ilustracion = 'ilustracion',
-}
+export const materiaSchema = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
+
+export type Materia = z.infer<typeof materiaSchema>
 
 // Este mapea ids de affinity a componentes MDX
-const articulos: Record<Articulo, { Contenido: React.ComponentType<MDXProps>; meta: Meta }> = {
-  [Articulo.Math]: { Contenido: Math, meta: asegurarFormato(MathMeta) },
-  [Articulo.Programacion]: { Contenido: Prog, meta: asegurarFormato(ProgMeta) },
-  [Articulo.Gaming]: { Contenido: Game, meta: asegurarFormato(GameMeta) },
-  [Articulo.Ilustracion]: { Contenido: Ilus, meta: asegurarFormato(IlusMeta) },
-}
-
-if (!isDeepEqual(Object.keys(articulos), Object.values(Articulo))) {
-  throw new Error('Los articulos indexados no matchean los enumerados (@/md/index.ts)')
+const materias: Record<Materia, { Contenido: React.ComponentType<MDXProps>; meta: Meta }> = {
+  matematica: { Contenido: Math, meta: asegurarFormato(MathMeta) },
+  programacion: { Contenido: Prog, meta: asegurarFormato(ProgMeta) },
+  gaming: { Contenido: Game, meta: asegurarFormato(GameMeta) },
+  ilustracion: { Contenido: Ilus, meta: asegurarFormato(IlusMeta) },
 }
 
 /**
  * Evalúa si un string está en nuestro índice (es decir, si es un artículo)
  */
-export const esArticulo = (id: string): id is Articulo => Object.keys(articulos).includes(id)
+export const esMateria = (id: string): id is Materia => materiaSchema.safeParse(id).success
 
 /**
  * Devuelve un artículo y su `meta`, dado un id, o `[null, null]` si el id no existe
  */
-export const getArticulo = (id: string) => (esArticulo(id) ? articulos[id as Articulo] : articuloVacio())
+export const getMateria = (id: string) => (esMateria(id) ? materias[id as Materia] : articuloVacio())
 
-export default articulos
+export default materias

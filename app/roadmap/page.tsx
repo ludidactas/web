@@ -4,7 +4,8 @@ import RoadmapDrawer from '@/components/custom/ld-drawer'
 import FadeTransition from '@/components/fx/transition'
 import Roadmap from '@/components/roadmap'
 import Radar from '@/components/ui/radar'
-import { Articulo, getArticulo } from '@/md'
+import { getMateria, Materia } from '@/md'
+import { Meta } from '@/md/schema'
 import { useEffect, useState } from 'react'
 import { capitalize, entries, isObjectType } from 'remeda'
 
@@ -13,13 +14,13 @@ export default function Page() {
   const [isCajonAbierto, setIsCajonAbierto] = useState(false)
 
   // Nombre del artículo que se halla clickeado
-  const [clicked, setClicked] = useState<Articulo | null>(null)
-  const [focused, setFocused] = useState<Articulo | null>(null)
+  const [clicked, setClicked] = useState<Materia | null>(null)
+  const [focused, setFocused] = useState<Materia | null>(null)
   const [panelVisible, setPanelVisible] = useState(false)
 
   // Programación como default
-  const { meta: metaProg } = getArticulo(Articulo.Programacion)
-  const [meta, setMeta] = useState<Record<string, any>>(metaProg!)
+  const { meta: metaProg } = getMateria('programacion')
+  const [meta, setMeta] = useState<Meta>(metaProg!)
 
   // Al enfocar una unidad, activar el panel
   useEffect(() => {
@@ -29,13 +30,14 @@ export default function Page() {
       setPanelVisible(true)
 
       // Seteamos los metadatos para este artículo
-      const { meta } = getArticulo(focused)
+      const { meta } = getMateria(focused)
       if (meta) setMeta(meta)
     }
   }, [focused])
 
   // Al clickear una unidad, activar el drawer
   useEffect(() => {
+    console.log(`seteando cajonabierto`)
     setIsCajonAbierto(!!clicked)
   }, [clicked])
 
@@ -66,7 +68,7 @@ export default function Page() {
                   <b>{capitalize(k)}:</b> {isObjectType(v) ? <pre>{JSON.stringify(v, null, 2)}</pre> : <p>{v}</p>}
                 </div>
               ))}
-              <Radar stats={meta.stats} />
+              {meta.stats && <Radar stats={meta.stats} />}
             </>
           </FadeTransition>
         </div>

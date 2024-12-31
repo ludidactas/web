@@ -1,14 +1,14 @@
 'use client'
 import RoadmapSvg from '@/app/roadmap.svg'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import './roadmap.css'
-import { Articulo } from '@/md'
+import { esMateria, Materia } from '@/md'
 
 interface RoadmapProps {
-  onFocus?: (id: Articulo) => void
-  onUnfocus?: (id: Articulo) => void
-  onClick?: (id: Articulo) => void
+  onFocus?: (id: Materia) => void
+  onUnfocus?: (id: Materia) => void
+  onClick?: (id: Materia) => void
 }
 
 // Útil https://react-typescript-cheatsheet.netlify.app
@@ -27,10 +27,10 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
       // Para cada uno
       elementos_con_id.forEach((elemento) => {
         // Obtenemos la parte del id que venga después del punto
-        const id = elemento.id.split('.')[1] as Articulo
+        const id = elemento.id.split('.')[1] as Materia
 
         // Si no está entre los artículos enumerados, volvermos
-        if (!Object.values(Articulo).includes(id)) {
+        if (!esMateria(id)) {
           console.log(`${id} no está entre los artículos enumerados`)
           return
         }

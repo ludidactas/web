@@ -108,19 +108,19 @@ const CheckNivel = ({ materia, nivel }: CheckNivelProps) => {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const CheckUnidad = ({ materia, unidad, texto }: { materia: Materia; unidad: string; texto: string }) => {
-  const { libreta, requerimientosPendientes, toggleUnidad } = useLibreta(materia)
-  const pendientes = requerimientosPendientes(unidad)
+  const { libreta, requerimientos, toggleUnidad } = useLibreta(materia)
+  const pendientes = requerimientos(unidad)
 
   type ElementType<T> = T extends Array<infer E> ? E : never
-  const renderDependencia = (dep: ElementType<ReturnType<typeof requerimientosPendientes>>) => {
-    if (dep.nivel) return `${materia} nivel ${dep.nivel}`
-    if (dep.unidad) return `unidad ${dep.unidad} de ${materia}`
+  const renderDependencia = (dep: ElementType<ReturnType<typeof requerimientos>>) => {
+    if (dep.nivel) return `${dep.materia} nivel ${dep.nivel}`
+    if (dep.unidad) return `unidad ${dep.unidad} de ${dep.materia}`
   }
 
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <div
             className="px-8 py-2 flex gap-2 items-center"
             key={unidad}
@@ -131,7 +131,7 @@ const CheckUnidad = ({ materia, unidad, texto }: { materia: Materia; unidad: str
               htmlFor={unidad}
               className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              {texto}
+              {capitalize(unidad)} : {texto}
             </label>
           </div>
         </TooltipTrigger>

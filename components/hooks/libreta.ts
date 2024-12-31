@@ -66,12 +66,14 @@ const useLibreta = (materia: Materia) => {
     return nv
   }
 
-  const requerimientosPendientes = (unidad: string) => {
+  const requerimientos = (unidad: string) => {
+    console.log(`Averiguando requerimientos de ${unidad} (${materia})...`)
     if (!Object.keys(unidades).includes(unidad)) {
       console.warn(`Se solicitaron los requerimientos de unidad ${unidad} de ${materia}, pero no se encuentra listada`)
       return []
     }
-    if (!requiere || !requiere) {
+    if (!requiere) {
+      console.log(`...not tiene c:`)
       return []
     }
 
@@ -80,6 +82,7 @@ const useLibreta = (materia: Materia) => {
 
     // Primero nos enteramos de qué nivel es la unidad que estamos tratando (podría no ser de ninguno también - null)
     const nivelUnidad = nivelDeUnidad(unidad)
+    console.log(`...que es de nivel ${nivelUnidad}...`)
 
     // Requerimientos de materia: Una materia depende enteramente de otra
     // Si una materia A tiene listada a otra B como dependencia, significa que cada nivel de A tiene como requerimiento
@@ -91,7 +94,10 @@ const useLibreta = (materia: Materia) => {
         console.warn(`${materia} requiere ${requerimientosMateria.join(', ')} pero su unidad ${unidad} no tiene nivel`)
         return []
       } else {
-        for (const materia of requerimientosMateria) requerimientos.push({ materia: materia, nivel: nivelUnidad })
+        for (const materia of requerimientosMateria) {
+          console.log(`...agregando requerimiento de materia a ${materia} (o sea [${materia}.${nivelUnidad}])...`)
+          requerimientos.push({ materia, nivel: nivelUnidad })
+        }
       }
 
     // Requerimientos de nivel: Un nivel de una materia depende de un nivel o una cierta unidad en otra
@@ -104,8 +110,13 @@ const useLibreta = (materia: Materia) => {
       for (const req of requerimientosDeNivel) {
         const dependencia = first(Object.values(req))!
         const [materia, nivelOUnidad] = dependencia.split('.')
-        if (nivelEnum.parse(nivelOUnidad)) requerimientos.push({ materia, nivel: nivelOUnidad })
-        else requerimientos.push({ materia, unidad: nivelOUnidad })
+        if (nivelEnum.parse(nivelOUnidad)) {
+          console.log(`...gregando requerimiento de nivel a nivel [${materia}.${nivelOUnidad}]...`)
+          requerimientos.push({ materia, nivel: nivelOUnidad })
+        } else {
+          console.log(`...gregando requerimiento de nivel a unidad [${materia}.${nivelOUnidad}]...`)
+          requerimientos.push({ materia, unidad: nivelOUnidad })
+        }
       }
 
     // Requerimientos de unidad: una unidad de una materia depende de un nivel o una cierta unidad en otra
@@ -118,10 +129,16 @@ const useLibreta = (materia: Materia) => {
       for (const req of requerimientosDeUnidad) {
         const dependencia = first(Object.values(req))!
         const [materia, nivelOUnidad] = dependencia.split('.')
-        if (nivelEnum.parse(nivelOUnidad)) requerimientos.push({ materia, nivel: nivelOUnidad })
-        else requerimientos.push({ materia, unidad: nivelOUnidad })
+        if (nivelEnum.parse(nivelOUnidad)) {
+          console.log(`...agregando requerimiento de unidad a nivel [${materia}.${nivelOUnidad}]...`)
+          requerimientos.push({ materia, nivel: nivelOUnidad })
+        } else {
+          console.log(`...agregando requerimiento de unidad a unidad [${materia}.${nivelOUnidad}]...`)
+          requerimientos.push({ materia, unidad: nivelOUnidad })
+        }
       }
 
+    console.log(`Devolviendo `, requerimientos)
     return requerimientos
   }
 
@@ -134,7 +151,7 @@ const useLibreta = (materia: Materia) => {
     nivelCompletado,
     nivelParcial,
     unidadesDeNivel,
-    requerimientosPendientes,
+    requerimientos,
   }
 }
 

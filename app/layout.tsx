@@ -2,15 +2,15 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import './md.css'
-import { ThemeProvider } from '@/components/theme-provider'
-import { ModeToggle } from '@/components/ui/mode-toggle'
 import { Inter, Nova_Flat } from 'next/font/google'
- 
-// If loading a variable font, you don't need to specify the font weight
+import Link from 'next/link'
+
+const inter = Inter({ subsets: ['latin'] })
+
 const NovaF = Nova_Flat({
   subsets: ['latin'],
   display: 'swap',
-  weight: "400",
+  weight: '400',
 })
 
 const geistSans = localFont({
@@ -26,21 +26,20 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: 'Ludidactas',
-  description: 'Educación Emergente',
+  description: 'Tecnologías Educativas Emergente',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${NovaF.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className="flex justify-between w-full p-4">
-            <h1 className="text-2xl">Roadmap</h1>
-            <ModeToggle />
-          </div>
-          {children}
-        </ThemeProvider>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} ${NovaF.className} ${inter.className} antialiased`}>
+        <div className="flex justify-between w-full p-4">
+          <Link href="/" className="text-2xl">
+            Ludidactas
+          </Link>
+        </div>
+        {children}
       </body>
     </html>
   )

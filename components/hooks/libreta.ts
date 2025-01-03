@@ -79,6 +79,7 @@ const useLibreta = () => {
     const unidades = materias[materia].meta.unidades
     if (!unidades || !niveles) return null
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [nv, unids] = find(entries(niveles), ([nv, unids]) => unids.includes(unidad)) ?? [null, null]
     return nv
   }

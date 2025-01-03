@@ -70,12 +70,3 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-svg [id*='rm.'] {
-  transition: 0.15s;
-}
-
-svg .activo {
-  transition: 0.15s;
-  filter: drop-shadow(10px 10px 5px black);
-}

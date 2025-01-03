@@ -6,7 +6,6 @@ export default function Home() {
       <Link href="/roadmap">Roadmap</Link>
 
       {/* Contenido pendiente */}
-
     </div>
   )
 }

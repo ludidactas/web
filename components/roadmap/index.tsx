@@ -1,69 +1,64 @@
 'use client'
-import RoadmapSvg from '@/app/roadmap.svg'
-import { useEffect, useRef } from 'react'
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
-import './roadmap.css'
-import { esMateria, Materia } from '@/md'
-
-interface RoadmapProps {
-  onFocus?: (id: Materia) => void
-  onUnfocus?: (id: Materia) => void
-  onClick?: (id: Materia) => void
-}
+/**
+ * Componente que engloba el svg con interacciones y el preview del contenido,
+ * que sale lado a lado o dentro de un drawer dependiendo del tamaño de pantalla
+ */
 
 // Útil https://react-typescript-cheatsheet.netlify.app
+// Útil react-hook-form.com
 // Pendiente https://github.com/7PH/powerglitch
 
-export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
-  // Ref para el svg
-  const svgRef = useRef<SVGAElement>()
+import { LibretaProvider } from '@/components/context/libreta'
+import RoadmapDrawer from '@/components/custom/ld-drawer'
+import LdMateria from '@/components/custom/ld-materia'
+import FadeTransition from '@/components/fx/transition'
+import Roadmap, { RoadmapEvent } from '@/components/roadmap/svg'
+import { Materia } from '@/md'
+import { useCallback, useState } from 'react'
+import { usePrevious, useMediaQuery } from '@uidotdev/usehooks'
 
-  // Targeteamos los elementos con id que empiecen con 'rm.' y suscribimos eventos
-  useEffect(() => {
-    if (svgRef.current) {
-      // Recogemos todos los elementos svg que tengan un id que comienza con "rm."
-      const elementos_con_id = svgRef.current.querySelectorAll('[id*="rm."]')
+export default function MontajeRoadmap() {
+  // Media query para saber si usar el cajón o renderizar lado a lado
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
-      // Para cada uno
-      elementos_con_id.forEach((elemento) => {
-        // Obtenemos la parte del id que venga después del punto
-        const id = elemento.id.split('.')[1] as Materia
+  // Interacciones directas
+  const [clicked, setClicked] = useState(false)
+  const [focused, setFocused] = useState<Materia | null>(null)
+  const lastFocused = usePrevious(focused)
 
-        // Si no está entre los artículos enumerados, volvermos
-        if (!esMateria(id)) {
-          console.log(`${id} no está entre los artículos enumerados`)
-          return
-        }
+  const onClick: RoadmapEvent = useCallback(() => {
+    setClicked(!clicked)
+  }, [clicked])
+  const onFocus: RoadmapEvent = useCallback((id) => {
+    setFocused(id)
+  }, [])
 
-        // Lo claseamos como nodo
-        elemento.classList.add('nodo')
-
-        // Al hacerle click, abrimos el cajón y le pasamos este id
-        elemento.addEventListener('click', () => {
-          if (onClick) onClick(id)
-        })
-
-        // Al entrar, le aplicamos la clase "activo"
-        elemento.addEventListener('mouseenter', () => {
-          if (onFocus) onFocus(id)
-          elemento.classList.add('activo')
-        })
-
-        // Al salir, se la quitamos
-        elemento.addEventListener('mouseleave', () => {
-          if (onUnfocus) onUnfocus(id)
-          elemento.classList.remove('activo')
-        })
-      })
-    }
-  }, [svgRef])
+  const onUnfocus: RoadmapEvent = useCallback(() => {
+    setFocused(null)
+  }, [])
 
   return (
-    <div className="p-8">
-      {/* Renderizamos el SVG y le pasamos el ref */}
-      <div className="flex flex-col items-center">
-        <RoadmapSvg height={'100vh'} ref={svgRef} />
+    <LibretaProvider>
+      <div className="flex">
+        {/* Si no estamos en Desktop, renderizamos en drawer */}
+        {!isDesktop && <RoadmapDrawer articulo={focused ?? lastFocused} isOpen={clicked} setIsOpen={setClicked} />}
+
+        {/* El svg con event handlers */}
+        <Roadmap onClick={onClick} onFocus={onFocus} onUnfocus={onUnfocus} />
+
+        {/* Si estamos en Desktop, renderizamos lado a lado */}
+        {isDesktop && (
+          <div className="h-full w-full">
+            <FadeTransition show={!!focused || clicked}>
+              <div className="w-full">
+                <LdMateria materia={focused ?? lastFocused} />
+              </div>
+            </FadeTransition>
+          </div>
+        )}
       </div>
-    </div>
+    </LibretaProvider>
   )
 }

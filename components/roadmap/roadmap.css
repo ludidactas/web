@@ -1,3 +1,17 @@
 .nodo {
   cursor: pointer;
 }
+
+svg [id*='rm.'] {
+  transition: 0.15s;
+}
+
+svg .hovereado {
+  transition: 0.15s;
+  filter: drop-shadow(10px 10px 5px black);
+}
+
+svg .clicked {
+  transition: 0.15s;
+  filter: drop-shadow(10px 10px 5px #a33);
+}

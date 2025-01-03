@@ -16,7 +16,6 @@ import Ilus, { meta as IlusMeta } from '@/md/ilustracion.mdx'
 import { z } from 'zod'
 import { MDXProps } from 'mdx/types'
 import { Meta, metaSchema } from './schema'
-import { isDeepEqual } from 'remeda'
 
 const asegurarFormato = (meta: unknown) => {
   return metaSchema.parse(meta)

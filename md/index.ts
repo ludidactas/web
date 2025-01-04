@@ -14,10 +14,10 @@ import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 import Ilus, { meta as IlusMeta } from '@/md/ilustracion.mdx'
 
 import { MDXProps } from 'mdx/types'
-import { Materia, materiaSchema, Meta, metaSchema } from './schema'
+import { Materia, materiaSchema, Meta, materiaMetaSchema } from './schema'
 
 const asegurarFormato = (meta: unknown) => {
-  return metaSchema.parse(meta)
+  return materiaMetaSchema.parse(meta)
 }
 
 const articuloVacio = () =>

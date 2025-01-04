@@ -20,11 +20,11 @@ const LdDrawer = ({
   // Importamos el router
   const router = useRouter()
 
-  const [meta, setMeta] = useState<Meta>({ titulo: 'Nada', descripcion: 'Nada' })
+  const [meta, setMeta] = useState<Meta>({ titulo: 'Nada', descripcion: 'Nada', tipo: 'materia' })
 
   // Cuando cambie el artículo, updateamos el meta
   useEffect(() => {
-    if (!articulo) return setMeta({ titulo: 'Nada', descripcion: 'Nada' })
+    if (!articulo) return setMeta({ titulo: 'Nada', descripcion: 'Nada', tipo: 'materia' })
     const { meta } = getMateria(articulo)
     if (meta) setMeta(meta)
   }, [articulo])

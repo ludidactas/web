@@ -57,9 +57,10 @@ const requerimientosSchema = z.array(
 )
 
 // Meta
-export const metaSchema = z
+export const materiaMetaSchema = z
   .object({
     titulo: z.string(),
+    tipo: z.literal('materia'),
     descripcion: z.string(),
     stats: statsSchema.optional(),
     niveles: nivelesSchema.optional(),
@@ -109,4 +110,13 @@ export const metaSchema = z
     })
   )
 
-export type Meta = z.infer<typeof metaSchema>
+export type Meta = z.infer<typeof materiaMetaSchema>
+
+export const unidadMetaSchema = z.object({
+  titulo: z.string(),
+  tipo: z.literal('unidad'),
+  descripcion: z.string(),
+  lema: z.string(),
+})
+
+export type Unidad = z.infer<typeof unidadMetaSchema>

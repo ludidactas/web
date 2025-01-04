@@ -13,5 +13,5 @@ svg .hovereado {
 
 svg .clicked {
   transition: 0.15s;
-  filter: drop-shadow(10px 10px 5px #a33);
+  filter: drop-shadow(10px 10px 5px #36b);
 }

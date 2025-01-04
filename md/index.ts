@@ -13,9 +13,8 @@ import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 // @ts-expect-error import { meta } no funciona
 import Ilus, { meta as IlusMeta } from '@/md/ilustracion.mdx'
 
-import { z } from 'zod'
 import { MDXProps } from 'mdx/types'
-import { Meta, metaSchema } from './schema'
+import { Materia, materiaSchema, Meta, metaSchema } from './schema'
 
 const asegurarFormato = (meta: unknown) => {
   return metaSchema.parse(meta)
@@ -26,11 +25,6 @@ const articuloVacio = () =>
     Contenido: null,
     meta: null,
   })
-
-// Los valores de este enum tienen que matchear los ids que vengan de affinity
-export const materiaSchema = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
-
-export type Materia = z.infer<typeof materiaSchema>
 
 // Este mapea ids de affinity a componentes MDX
 const materias: Record<Materia, { Contenido: React.ComponentType<MDXProps>; meta: Meta }> = {

@@ -31,10 +31,15 @@ const statsSchema = z.record(z.string(), z.number())
 // - Este dominio no me guarda secretos, y conozco sus puntos de contacto con dominios adyacentes
 
 export const nivelEnum = z.enum(['contacto', 'allegado', 'familiar', 'avanzado', 'experto'])
-const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
+export const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
+export type Nivel = z.infer<typeof nivelEnum>
+
+// Materias - Los valores de este enum tienen que matchear los ids que vengan de affinity
+export const materiaSchema = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
+export type Materia = z.infer<typeof materiaSchema>
 
 // Unidades - Por ahora id: string describiendo las expectativas en términos de "Entiendo"
-const unidadesSchema = z.record(z.string(), z.string())
+export const unidadesSchema = z.record(z.string(), z.string())
 
 // Requerimientos
 const requerimientoMateriaSchema = z.string()
@@ -105,4 +110,3 @@ export const metaSchema = z
   )
 
 export type Meta = z.infer<typeof metaSchema>
-export type Nivel = z.infer<typeof nivelEnum>

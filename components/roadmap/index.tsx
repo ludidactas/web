@@ -10,55 +10,46 @@
 // Útil react-hook-form.com
 // Pendiente https://github.com/7PH/powerglitch
 
-import { LibretaProvider } from '@/components/context/libreta'
 import RoadmapDrawer from '@/components/custom/ld-drawer'
 import LdMateria from '@/components/custom/ld-materia'
 import FadeTransition from '@/components/fx/transition'
-import Roadmap, { RoadmapEvent } from '@/components/roadmap/svg'
-import { Materia } from '@/md'
-import { useCallback, useState } from 'react'
-import { usePrevious, useMediaQuery } from '@uidotdev/usehooks'
+import SvgRoadmap from '@/components/roadmap/svg'
+import { useMediaQuery } from '@uidotdev/usehooks'
+import { useContext } from 'react'
+import ContextoSvgRoadmap from './context'
 
 export default function MontajeRoadmap() {
   // Media query para saber si usar el cajón o renderizar lado a lado
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
-  // Interacciones directas
-  const [clicked, setClicked] = useState(false)
-  const [focused, setFocused] = useState<Materia | null>(null)
-  const lastFocused = usePrevious(focused)
-
-  const onClick: RoadmapEvent = useCallback(() => {
-    setClicked(!clicked)
-  }, [clicked])
-  const onFocus: RoadmapEvent = useCallback((id) => {
-    setFocused(id)
-  }, [])
-
-  const onUnfocus: RoadmapEvent = useCallback(() => {
-    setFocused(null)
-  }, [])
+  const { clicked, setClicked, focused, lastFocused } = useContext(ContextoSvgRoadmap)
 
   return (
-    <LibretaProvider>
-      <div className="flex">
-        {/* Si no estamos en Desktop, renderizamos en drawer */}
-        {!isDesktop && <RoadmapDrawer articulo={focused ?? lastFocused} isOpen={clicked} setIsOpen={setClicked} />}
+    <div className="flex">
+      {/* {clicked ? clicked.toString() : 'null'} */}
 
-        {/* El svg con event handlers */}
-        <Roadmap onClick={onClick} onFocus={onFocus} onUnfocus={onUnfocus} />
+      {/* Si no estamos en Desktop, renderizamos en drawer */}
+      {!isDesktop && (
+        <RoadmapDrawer
+          articulo={focused ?? lastFocused}
+          isOpen={!!clicked}
+          setIsOpen={(open) => setClicked(open ? clicked : null)}
+        />
+      )}
 
-        {/* Si estamos en Desktop, renderizamos lado a lado */}
-        {isDesktop && (
-          <div className="h-full w-full">
-            <FadeTransition show={!!focused || clicked}>
-              <div className="w-full">
-                <LdMateria materia={focused ?? lastFocused} />
-              </div>
-            </FadeTransition>
-          </div>
-        )}
-      </div>
-    </LibretaProvider>
+      {/* El svg con event handlers */}
+      <SvgRoadmap />
+
+      {/* Si estamos en Desktop, renderizamos lado a lado */}
+      {isDesktop && (
+        <div className="h-full w-full">
+          <FadeTransition show={!!focused || !!clicked}>
+            <div className="w-full">
+              <LdMateria materia={focused ?? lastFocused} />
+            </div>
+          </FadeTransition>
+        </div>
+      )}
+    </div>
   )
 }

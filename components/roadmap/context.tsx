@@ -1,0 +1,27 @@
+import { Materia } from '@/md/schema'
+import { usePrevious } from '@uidotdev/usehooks'
+import { createContext, PropsWithChildren, useRef, useState } from 'react'
+
+const useRoadmapState = () => {
+  const [clicked, setClicked] = useState<Materia | null>(null)
+  const [focused, setFocused] = useState<Materia | null>(null)
+  const lastFocused = usePrevious(focused)
+  const svgRef = useRef<SVGAElement>()
+
+  return { clicked, setClicked, focused, setFocused, lastFocused, svgRef }
+}
+
+const ContextoSvgRoadmap = createContext<ReturnType<typeof useRoadmapState>>({
+  clicked: null,
+  setClicked: () => {},
+  focused: null,
+  setFocused: () => {},
+  lastFocused: null,
+  svgRef: { current: undefined },
+})
+
+export const SvgRoadmapProvider = ({ children }: PropsWithChildren) => {
+  return <ContextoSvgRoadmap.Provider value={useRoadmapState()}>{children}</ContextoSvgRoadmap.Provider>
+}
+
+export default ContextoSvgRoadmap

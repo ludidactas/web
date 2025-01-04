@@ -93,13 +93,11 @@ const useLibreta = () => {
     const requiere = materias[materia].meta.requiere
     if (!unidades || !niveles || !requiere) return null
 
-    // console.log(`Averiguando requerimientos de ${unidad} (${materia})...`)
     if (!Object.keys(unidades).includes(unidad)) {
       console.warn(`Se solicitaron los requerimientos de unidad ${unidad} de ${materia}, pero no se encuentra listada`)
       return []
     }
     if (!requiere) {
-      // console.log(`...not tiene c:`)
       return []
     }
 
@@ -108,7 +106,6 @@ const useLibreta = () => {
 
     // Primero nos enteramos de qué nivel es la unidad que estamos tratando (podría no ser de ninguno también - null)
     const nivelUnidad = nivelDeUnidad(materia, unidad)
-    // console.log(`...que es de nivel ${nivelUnidad}...`)
 
     // Requerimientos de materia: Una materia depende enteramente de otra
     // Si una materia A tiene listada a otra B como dependencia, significa que cada nivel de A tiene como requerimiento
@@ -122,7 +119,6 @@ const useLibreta = () => {
       } else {
         for (const materia of requerimientosMateria) {
           if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
-          // console.log(`...agregando requerimiento de materia a ${materia} (o sea [${materia}.${nivelUnidad}])...`)
           requerimientos.push({ materia, nivel: nivelUnidad })
         }
       }
@@ -141,10 +137,8 @@ const useLibreta = () => {
         if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
 
         if (nivelEnum.parse(nivelOUnidad)) {
-          // console.log(`...agregando requerimiento de nivel a nivel [${materia}.${nivelOUnidad}]...`)
           requerimientos.push({ materia, nivel: nivelOUnidad as Nivel })
         } else {
-          // console.log(`...agregando requerimiento de nivel a unidad [${materia}.${nivelOUnidad}]...`)
           requerimientos.push({ materia, unidad: nivelOUnidad })
         }
       }
@@ -163,15 +157,12 @@ const useLibreta = () => {
         if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
 
         if (nivelEnum.parse(nivelOUnidad)) {
-          // console.log(`...agregando requerimiento de unidad a nivel [${materia}.${nivelOUnidad}]...`)
           requerimientos.push({ materia, nivel: nivelOUnidad as Nivel })
         } else {
-          // console.log(`...agregando requerimiento de unidad a unidad [${materia}.${nivelOUnidad}]...`)
           requerimientos.push({ materia, unidad: nivelOUnidad })
         }
       }
 
-    // console.log(`Devolviendo `, requerimientos)
     return requerimientos
   }
 
@@ -182,23 +173,6 @@ const useLibreta = () => {
     const reqs = requerimientos(materia, unidad)
     if (!reqs) return
 
-    console.log(`Computando pendientes de ${materia}.${unidad}, partiendo de reqs `, reqs)
-    reqs.forEach((r) => {
-      console.log(`Evaluando req `, r, `: `)
-      if (r.nivel) {
-        console.log(`Es de nivel, checkeando si está completado... `, nivelCompletado(r.materia as Materia, r.nivel))
-      } else {
-        console.log(`Es de unidad, checkeando si está completada...`, libreta[`${r.materia}.${r.unidad}`] ?? false)
-      }
-    })
-    console.log(
-      reqs.map((req) => ({
-        ...req,
-        pendiente: req.nivel
-          ? !nivelCompletado(req.materia as Materia, req.nivel)
-          : libreta[`${req.materia}.${req.unidad}`] ?? true,
-      }))
-    )
     return reqs.map((req) => ({
       ...req,
       pendiente: req.nivel

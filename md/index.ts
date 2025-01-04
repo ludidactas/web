@@ -7,7 +7,7 @@
 // @ts-expect-error import { meta } no funciona
 import Math, { meta as MathMeta } from '@/md/matematica.mdx'
 // @ts-expect-error import { meta } no funciona
-import Prog, { meta as ProgMeta } from '@/md/programacion.mdx'
+import Prog, { meta as ProgMeta } from '@/md/programacion/programacion.mdx'
 // @ts-expect-error import { meta } no funciona
 import Game, { meta as GameMeta } from '@/md/gaming.mdx'
 // @ts-expect-error import { meta } no funciona

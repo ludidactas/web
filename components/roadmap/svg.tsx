@@ -40,7 +40,6 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
 
         // Si no está entre los artículos enumerados, volvermos
         if (!esMateria(id)) {
-          console.log(`${id} no está entre los artículos enumerados`)
           return
         }
 
@@ -52,8 +51,6 @@ export default function Roadmap({ onFocus, onUnfocus, onClick }: RoadmapProps) {
           // Si clickeamos el que ya está clickeado, pasamos a null
           const estado = id == clicked ? null : id
           if (onClick) onClick(estado)
-
-          console.log(`Click en ${id}`, estado, clicked)
 
           // Le removemos la clase 'clicked' a todas y se la agreagamos a este si el estado no es null
           elementos_con_id.forEach((el) => el.classList.remove('clicked'))

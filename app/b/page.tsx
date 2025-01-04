@@ -1,4 +1,4 @@
-import Math, { meta } from '@/md/matematica.mdx'
+import Math from '@/md/matematica.mdx'
 import { PropsWithChildren } from 'react'
 
 // Demo de cómo interceptar la producción de HTML a partir del MD
@@ -13,6 +13,5 @@ const overrideComponents = {
 
 export default function Page() {
   // Este meta lo podríamos usar para definir el CustomH1 (y por ejemplo usar en el título un color definido en el front-matter)
-  console.log(meta)
   return <Math components={overrideComponents} />
 }

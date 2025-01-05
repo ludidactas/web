@@ -15,12 +15,18 @@ import LdMateria from '@/components/custom/ld-materia'
 import FadeTransition from '@/components/fx/transition'
 import SvgRoadmap from '@/components/roadmap/svg'
 import { useMediaQuery } from '@uidotdev/usehooks'
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import ContextoSvgRoadmap from './context'
 
 export default function MontajeRoadmap() {
   // Media query para saber si usar el cajón o renderizar lado a lado
-  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  // Esto corre en useEffect para suceder solo en el browser
+  const esDesktop = useMediaQuery('(min-width: 768px)')
+  useEffect(() => {
+    setIsDesktop(esDesktop)
+  }, [esDesktop])
 
   const { clicked, setClicked, focused, lastFocused } = useContext(ContextoSvgRoadmap)
 

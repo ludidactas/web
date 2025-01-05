@@ -5,6 +5,7 @@ import Radar from '@/components/ui/radar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getMateria } from '@/md'
 import { Materia, Meta, Nivel } from '@/md/schema'
+import { usePrevious } from '@uidotdev/usehooks'
 
 import { CircleDashed, CircleDot } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -12,18 +13,19 @@ import { capitalize, entries } from 'remeda'
 import { twMerge } from 'tailwind-merge'
 
 export default function LdMateria({ materia }: { materia: Materia | null }) {
-  const [meta, setMeta] = useState<Meta>({ titulo: 'Nada', descripcion: 'Nada' })
+  const [meta, setMeta] = useState<Meta | null>(null)
+  const lastMeta = usePrevious(meta)
 
   // Cuando cambie el artículo, updateamos el meta
   useEffect(() => {
-    if (!materia) return setMeta({ titulo: 'Nada', descripcion: 'Nada' })
+    if (!materia) return setMeta(null)
     const { meta } = getMateria(materia)
     if (meta) setMeta(meta)
   }, [materia])
 
   return (
     <>
-      {materia && (
+      {meta && (
         <>
           <h2 className="text-2xl">{meta.titulo}</h2>
           <div className="flex flex-col lg:flex-row">
@@ -48,7 +50,7 @@ export default function LdMateria({ materia }: { materia: Materia | null }) {
           )}
         </>
       )}
-      {!materia && <p>Clickeá una materia para comenzar</p>}
+      {!meta && <p>Clickeá una materia para comenzar</p>}
     </>
   )
 }

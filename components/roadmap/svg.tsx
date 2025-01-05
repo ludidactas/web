@@ -5,12 +5,12 @@
  */
 
 import RoadmapSvg from '@/app/roadmap.svg'
-import { useContext, useEffect } from 'react'
+import { useCallback, useContext, useEffect } from 'react'
 
-import './roadmap.css'
 import { esMateria } from '@/md'
 import { Materia } from '@/md/schema'
 import ContextoSvgRoadmap from './context'
+import './roadmap.css'
 
 // Los tres eventos en el roadmap pasan id y elemento HTML
 export type RoadmapEvent = (id: Materia | null) => void
@@ -22,66 +22,87 @@ interface RoadmapSvgProps {
 }
 
 export default function SvgRoadmap({ onClick, onFocus, onUnfocus }: RoadmapSvgProps) {
-  // Ref para el svg
-
   const { clicked, setClicked, setFocused, svgRef } = useContext(ContextoSvgRoadmap)
 
-  // Targeteamos los elementos con id que empiecen con 'rm.' y suscribimos eventos
+  // Define handlers with useCallback to maintain stable references
+  const clickHandler = useCallback(
+    (id: Materia, elem: Element) => {
+      const seleccionado = id == clicked ? null : id
+
+      // Get elements inside the handler to ensure we have current state
+      const elementos_con_id = svgRef.current?.querySelectorAll('[id*="rm."]')
+      if (elementos_con_id) {
+        elementos_con_id.forEach((el) => el.classList.remove('clicked'))
+      }
+      if (seleccionado) elem.classList.add('clicked')
+
+      setClicked(seleccionado)
+      if (onClick) onClick(seleccionado)
+    },
+    [clicked, onClick, svgRef]
+  )
+
+  const mouseEnterHandler = useCallback(
+    (id: Materia, elem: Element) => {
+      elem.classList.add('hovereado')
+      setFocused(id)
+      if (onFocus) onFocus(id)
+    },
+    [onFocus, setFocused]
+  )
+
+  const mouseLeaveHandler = useCallback(
+    (id: Materia, elem: Element) => {
+      elem.classList.remove('hovereado')
+      setFocused(null)
+      if (onUnfocus) onUnfocus(id)
+    },
+    [onUnfocus, setFocused]
+  )
+
+  // Effect now just manages attaching/detaching listeners
   useEffect(() => {
-    if (svgRef.current) {
-      console.log(`Montando svg...`)
+    if (!svgRef.current) return
 
-      // Recogemos todos los elementos svg que tengan un id que comienza con "rm."
-      const elementos_con_id = svgRef.current.querySelectorAll('[id*="rm."]')
+    const elementos_con_id = svgRef.current.querySelectorAll('[id*="rm."]')
+    const listeners: Array<{ element: Element; cleanup: () => void }> = []
 
-      // Para cada uno
-      elementos_con_id.forEach((elemento) => {
-        // Obtenemos la parte del id que venga después del punto
-        const id = elemento.id.split('.')[1]
+    elementos_con_id.forEach((elemento) => {
+      const id = elemento.id.split('.')[1]
+      if (!esMateria(id)) return
 
-        // Si no está entre los artículos enumerados, nos lo salteamos
-        if (!esMateria(id)) return
+      elemento.classList.add('nodo')
 
-        // Lo claseamos como nodo
-        elemento.classList.add('nodo')
+      // Create bound handlers
+      const clickFn = () => clickHandler(id, elemento)
+      const enterFn = () => mouseEnterHandler(id, elemento)
+      const leaveFn = () => mouseLeaveHandler(id, elemento)
 
-        // Al hacer click
-        elemento.addEventListener('click', () => {
-          // Si clickeamos el que ya está clickeado, pasamos a null
-          const seleccionado = id == clicked ? null : id
+      // Add listeners
+      elemento.addEventListener('click', clickFn)
+      elemento.addEventListener('mouseenter', enterFn)
+      elemento.addEventListener('mouseleave', leaveFn)
 
-          console.log(id, clicked, seleccionado)
-
-          // Le removemos la clase 'clicked' a todas y se la agreagamos a este si el seleccionado no es null
-          elementos_con_id.forEach((el) => el.classList.remove('clicked'))
-          if (seleccionado) elemento.classList.add('clicked')
-
-          // Updateamos state
-          setClicked(seleccionado)
-          if (onClick) onClick(seleccionado)
-        })
-
-        // Al entrar el mouse, le aplicamos la clase "activo"
-        elemento.addEventListener('mouseenter', () => {
-          elemento.classList.add('hovereado')
-          setFocused(id)
-          if (onFocus) onFocus(id)
-        })
-
-        // Al salir el mouse, se la quitamos
-        elemento.addEventListener('mouseleave', () => {
-          elemento.classList.remove('hovereado')
-          setFocused(null)
-          if (onUnfocus) onUnfocus(id)
-        })
+      // Store cleanup
+      listeners.push({
+        element: elemento,
+        cleanup: () => {
+          elemento.removeEventListener('click', clickFn)
+          elemento.removeEventListener('mouseenter', enterFn)
+          elemento.removeEventListener('mouseleave', leaveFn)
+          elemento.classList.remove('nodo')
+        },
       })
-      // setMontado(true)
+    })
+
+    // Cleanup function
+    return () => {
+      listeners.forEach(({ cleanup }) => cleanup())
     }
-  }, [svgRef])
+  }, [clickHandler, mouseEnterHandler, mouseLeaveHandler, svgRef])
 
   return (
     <div className="p-8">
-      {/* Renderizamos el SVG y le pasamos el ref */}
       <div className="flex flex-col items-center">
         <RoadmapSvg height={'100vh'} ref={svgRef} />
       </div>

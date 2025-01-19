@@ -110,7 +110,7 @@ export const materiaMetaSchema = z
     })
   )
 
-export type Meta = z.infer<typeof materiaMetaSchema>
+export type MetaMateria = z.infer<typeof materiaMetaSchema>
 
 export const unidadMetaSchema = z.object({
   titulo: z.string(),
@@ -119,4 +119,4 @@ export const unidadMetaSchema = z.object({
   lema: z.string(),
 })
 
-export type Unidad = z.infer<typeof unidadMetaSchema>
+export type MetaUnidad = z.infer<typeof unidadMetaSchema>

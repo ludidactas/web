@@ -1,11 +1,11 @@
 import LibretaContext from '@/components/context/libreta'
-import materias, { esMateria, Materia } from '@/md'
-import { Nivel, nivelEnum } from '@/md/schema'
+import { Materia, Nivel, nivelEnum } from '@/md/schema'
 import { useContext } from 'react'
 import { entries, find, first, fromEntries, isPlainObject, isString } from 'remeda'
+import { useMaterias } from '@/components/context/contenido'
 
 export interface Requerimiento {
-  materia: Materia
+  materia: string
   nivel?: Nivel | null
   unidad?: string
   pendiente?: boolean
@@ -14,6 +14,8 @@ export interface Requerimiento {
 const useLibreta = () => {
   // Datasource
   const { libreta, setLibreta } = useContext(LibretaContext)
+
+  const materias = useMaterias()
 
   /**
    * Activa o desactiva todas las unidades listadas bajo un nivel en el meta de la materia
@@ -118,7 +120,7 @@ const useLibreta = () => {
         return []
       } else {
         for (const materia of requerimientosMateria) {
-          if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
+          // if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
           requerimientos.push({ materia, nivel: nivelUnidad })
         }
       }
@@ -134,7 +136,7 @@ const useLibreta = () => {
         const dependencia = first(Object.values(req))!
         const [materia, nivelOUnidad] = dependencia.split('.')
 
-        if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
+        // if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
 
         if (nivelEnum.parse(nivelOUnidad)) {
           requerimientos.push({ materia, nivel: nivelOUnidad as Nivel })
@@ -154,7 +156,7 @@ const useLibreta = () => {
         const dependencia = first(Object.values(req))!
         const [materia, nivelOUnidad] = dependencia.split('.')
 
-        if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
+        // if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
 
         if (nivelEnum.parse(nivelOUnidad)) {
           requerimientos.push({ materia, nivel: nivelOUnidad as Nivel })

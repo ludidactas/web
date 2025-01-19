@@ -6,10 +6,6 @@
  * que sale lado a lado o dentro de un drawer dependiendo del tamaño de pantalla
  */
 
-// Útil https://react-typescript-cheatsheet.netlify.app
-// Útil react-hook-form.com
-// Pendiente https://github.com/7PH/powerglitch
-
 import RoadmapDrawer from '@/components/custom/ld-drawer'
 import LdMateria from '@/components/custom/ld-materia'
 import FadeTransition from '@/components/fx/transition'

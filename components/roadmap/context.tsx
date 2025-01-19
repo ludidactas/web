@@ -1,10 +1,9 @@
-import { Materia } from '@/md/schema'
 import { usePrevious } from '@uidotdev/usehooks'
 import { createContext, PropsWithChildren, useRef, useState } from 'react'
 
 const useRoadmapState = () => {
-  const [clicked, setClicked] = useState<Materia | null>(null)
-  const [focused, setFocused] = useState<Materia | null>(null)
+  const [clicked, setClicked] = useState<string | null>(null)
+  const [focused, setFocused] = useState<string | null>(null)
   const lastFocused = usePrevious(focused)
   const svgRef = useRef<SVGAElement>()
 

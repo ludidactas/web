@@ -17,3 +17,11 @@ Viene empezando como biblioteca de recursos, de los cuales la columna vertebral 
 - Agregamos zod para validación, sobre todo de los front-matter.
 - Armamos un LibretaContext, estado para llevar registro de las unidades, mirroreada al localStorage, y un hook `useLibreta`, para usarla de manera ergonómica.
 - Instalamos `usehooks`, en primera para el renderizado responsive con `useMediaQuery`, aunque cabe usar muchas otras de sus funciones.
+- Agregamos `glob` para levantar los archivos md dinámicamente
+
+## Checkear
+
+https://www.svgator.com/
+https://react-typescript-cheatsheet.netlify.app
+https://react-hook-form.com
+https://github.com/7PH/powerglitch

@@ -6,14 +6,11 @@
 
 import RoadmapSvg from '@/app/roadmap.svg'
 import { useCallback, useContext, useEffect } from 'react'
-
-import { esMateria } from '@/md'
-import { Materia } from '@/md/schema'
 import ContextoSvgRoadmap from './context'
 import './roadmap.css'
 
 // Los tres eventos en el roadmap pasan id y elemento HTML
-export type RoadmapEvent = (id: Materia | null) => void
+export type RoadmapEvent = (id: string | null) => void
 
 interface RoadmapSvgProps {
   onClick?: RoadmapEvent
@@ -26,7 +23,7 @@ export default function SvgRoadmap({ onClick, onFocus, onUnfocus }: RoadmapSvgPr
 
   // Define handlers with useCallback to maintain stable references
   const clickHandler = useCallback(
-    (id: Materia, elem: Element) => {
+    (id: string, elem: Element) => {
       const seleccionado = id == clicked ? null : id
 
       // Get elements inside the handler to ensure we have current state
@@ -43,7 +40,7 @@ export default function SvgRoadmap({ onClick, onFocus, onUnfocus }: RoadmapSvgPr
   )
 
   const mouseEnterHandler = useCallback(
-    (id: Materia, elem: Element) => {
+    (id: string, elem: Element) => {
       elem.classList.add('hovereado')
       setFocused(id)
       if (onFocus) onFocus(id)
@@ -52,7 +49,7 @@ export default function SvgRoadmap({ onClick, onFocus, onUnfocus }: RoadmapSvgPr
   )
 
   const mouseLeaveHandler = useCallback(
-    (id: Materia, elem: Element) => {
+    (id: string, elem: Element) => {
       elem.classList.remove('hovereado')
       setFocused(null)
       if (onUnfocus) onUnfocus(id)
@@ -68,8 +65,8 @@ export default function SvgRoadmap({ onClick, onFocus, onUnfocus }: RoadmapSvgPr
     const listeners: Array<{ element: Element; cleanup: () => void }> = []
 
     elementos_con_id.forEach((elemento) => {
-      const id = elemento.id.split('.')[1]
-      if (!esMateria(id)) return
+      const id = elemento.id.split('.')[1] as string
+      // if (!esMateria(id)) return
 
       elemento.classList.add('nodo')
 

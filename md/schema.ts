@@ -35,8 +35,8 @@ export const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
 export type Nivel = z.infer<typeof nivelEnum>
 
 // Materias - Los valores de este enum tienen que matchear los ids que vengan de affinity
-export const materiaSchema = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
-export type Materia = z.infer<typeof materiaSchema>
+export const materiaEnum = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
+export type Materia = z.infer<typeof materiaEnum>
 
 // Unidades - Por ahora id: string describiendo las expectativas en términos de "Entiendo"
 export const unidadesSchema = z.record(z.string(), z.string())
@@ -56,9 +56,12 @@ const requerimientosSchema = z.array(
   z.union([requerimientoMateriaSchema, requerimientoNivelSchema, requerimientoUnidadSchema])
 )
 
-// Meta
+/**
+ * Esquema del front-matter de materia
+ */
 export const materiaMetaSchema = z
   .object({
+    id: z.string(),
     titulo: z.string(),
     tipo: z.literal('materia'),
     descripcion: z.string(),
@@ -112,11 +115,24 @@ export const materiaMetaSchema = z
 
 export type MetaMateria = z.infer<typeof materiaMetaSchema>
 
+/**
+ * Esquema del front-matter de unidad
+ */
 export const unidadMetaSchema = z.object({
-  titulo: z.string(),
+  id: z.string(),
   tipo: z.literal('unidad'),
+  materia: materiaEnum,
+  titulo: z.string(),
   descripcion: z.string(),
   lema: z.string(),
 })
 
 export type MetaUnidad = z.infer<typeof unidadMetaSchema>
+
+/**
+ * Un articulo es una materia o una unidad o cualquier otro tipo de MD con front-matter estructurado
+ * que tengamos, cualquiera sea su formato
+ */
+export const articuloMetaSchema = z.union([unidadMetaSchema, materiaMetaSchema])
+
+export type Meta = z.infer<typeof articuloMetaSchema>

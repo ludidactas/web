@@ -1,21 +1,51 @@
-import { Meta } from '@/md/schema'
-import {glob} from 'glob'
+import { articuloMetaSchema, Meta, MetaUnidad } from '@/md/schema'
+import { glob } from 'glob'
 import { ReactNode } from 'react'
+import { join } from 'path'
+import { groupBy } from 'remeda'
+
+interface Md {
+  default: ReactNode
+  meta: Meta
+  src: string
+  ok?: boolean
+}
 
 export default async function Page() {
-    const mds = await glob("./md/*.mdx")
-    console.log(`mds:`, mds)
+  // Obtenemos la ruta de la carpeta de mds...
+  const mdDir = join(process.cwd(), 'md')
 
-    const mdMap: Record<string, {default: ReactNode, meta: Meta}> = {}
-    for(const fn of mds){
-        const importAddr = `@/md/${fn.split('\\')[1]}`
-        console.log(`Importando ${importAddr}...`)
-        const { default: Post, meta } = await import(`@/md/${fn.split('\\')[1]}`)
-        mdMap[fn] = {default: Post, meta }
-    }
-    console.log(mdMap)
+  // Levantantamos todas las rutas de archivos mds dentro de ella...
+  const pathsMds = await glob('**/*.mdx', { cwd: mdDir })
 
-    const metas = Object.fromEntries(Object.entries(mdMap).map(([k, v]) => [k, v.meta]))
-   
-    return <p>{JSON.stringify(mdMap)}</p>
+  // Los importamos todos...
+  const mds: Md[] = []
+  for (const fn of pathsMds) {
+    const { default: Post, meta } = await import(`@/md/${fn}`)
+    mds.push({ default: Post, meta, src: fn })
   }
+
+  // Los verificamos
+  for (const md of mds) {
+    md.ok = articuloMetaSchema.safeParse(md.meta).success
+  }
+
+  // Filtramos
+  const mdsOk = mds.filter((md) => md.ok)
+  const mdsBad = mds.filter((md) => !md.ok)
+
+  const materias = mdsOk.filter((md) => md.meta.tipo == 'materia')
+  const unidadesValidas = mdsOk.filter((md) => md.meta.tipo == 'unidad')
+  const unidades = groupBy(unidadesValidas, (md) => (md.meta as MetaUnidad).materia)
+
+  return (
+    <div>
+      <h3 className="text-2xl">Mds materias:</h3>
+      <pre>{JSON.stringify(materias, null, 2)}</pre>
+      <h3 className="text-2xl">Mds unidades:</h3>
+      <pre>{JSON.stringify(unidades, null, 2)}</pre>
+      <h3 className="text-2xl">Mds malos:</h3>
+      <pre>{JSON.stringify(mdsBad, null, 2)}</pre>
+    </div>
+  )
+}

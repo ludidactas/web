@@ -19,6 +19,9 @@ const ContextoSvgRoadmap = createContext<ReturnType<typeof useRoadmapState>>({
   svgRef: { current: undefined },
 })
 
+/**
+ * Hostea el estado del roadmap (nodo clickeado, hovereado, etc...)
+ */
 export const SvgRoadmapProvider = ({ children }: PropsWithChildren) => {
   return <ContextoSvgRoadmap.Provider value={useRoadmapState()}>{children}</ContextoSvgRoadmap.Provider>
 }

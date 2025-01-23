@@ -4,6 +4,7 @@ import './globals.css'
 import './md.css'
 import { Inter, Nova_Flat } from 'next/font/google'
 import Link from 'next/link'
+import { BibliotecaRoot } from '@/components/contenido-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,12 +35,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${NovaF.className} ${inter.className} antialiased`}>
-        <div className="flex justify-between w-full p-4">
-          <Link href="/" className="text-2xl">
-            Ludidactas
-          </Link>
-        </div>
-        {children}
+        <BibliotecaRoot>
+          <div className="flex justify-between w-full p-4">
+            <Link href="/" className="text-2xl">
+              Ludidactas
+            </Link>
+          </div>
+          {children}
+        </BibliotecaRoot>
       </body>
     </html>
   )

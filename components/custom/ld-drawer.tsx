@@ -1,54 +1,57 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import { esMateria, getMateria } from '@/md'
 import { Meta } from '@/md/schema'
 import { useRouter } from 'next/navigation'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Drawer } from 'vaul'
 import LdMateria from './ld-materia'
+import { useBiblioteca } from '../context/contenido'
 
 const LdDrawer = ({
-  articulo,
+  idArticulo,
   isOpen,
   setIsOpen,
 }: {
-  articulo: string | null
+  idArticulo: string | null
   isOpen: boolean
   setIsOpen: Dispatch<SetStateAction<boolean>>
 }) => {
   // Importamos el router
   const router = useRouter()
 
-  const [meta, setMeta] = useState<Meta>({ titulo: 'Nada', descripcion: 'Nada', tipo: 'materia' })
+  const [meta, setMeta] = useState<Meta>()
+
+  const { materias } = useBiblioteca()
 
   // Cuando cambie el artículo, updateamos el meta
   useEffect(() => {
-    if (!articulo) return setMeta({ titulo: 'Nada', descripcion: 'Nada', tipo: 'materia' })
-    const { meta } = getMateria(articulo)
-    if (meta) setMeta(meta)
-  }, [articulo])
+    if (!idArticulo) return setMeta(undefined)
+    // Si está en el array de materias ya pasó por la verificación de zod
+    const md = materias.find((m) => m.meta.id == idArticulo)
+    if (md) setMeta(md.meta)
+  }, [idArticulo, materias])
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{meta.titulo}</DrawerTitle>
+          <DrawerTitle>{meta?.titulo ?? 'No hay meta'}</DrawerTitle>
           <DrawerDescription>
             {meta?.descripcion ??
-              `Acá iría la pequeña descripción de ${articulo}, pero no está. Agregarla al front-matter del MD en cuestión con la clave 'descripcion'.`}
+              `Acá iría la pequeña descripción de ${idArticulo}, pero no está. Agregarla al front-matter del MD en cuestión con la clave 'descripcion'.`}
           </DrawerDescription>
         </DrawerHeader>
 
-        {articulo && esMateria(articulo) && (
+        {idArticulo && meta && (
           <div className="p-8 max-h-96 overflow-scroll">
-            <LdMateria materia={articulo} />
+            <LdMateria idMateria={idArticulo} />
           </div>
         )}
 
         <DrawerFooter>
           {/* Navegar a la página del artículo */}
-          <Button disabled={!meta?.descripcion} onClick={() => router.push(`/a/${articulo}`)}>
+          <Button disabled={!meta?.descripcion} onClick={() => router.push(`/a/${idArticulo}`)}>
             Acceder
           </Button>
           {/* Cerrar */}

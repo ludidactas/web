@@ -33,7 +33,7 @@ export default function MontajeRoadmap() {
       {/* Si no estamos en Desktop, renderizamos en drawer */}
       {!isDesktop && (
         <RoadmapDrawer
-          articulo={focused ?? lastFocused}
+          idArticulo={focused ?? lastFocused}
           isOpen={!!clicked}
           setIsOpen={(open) => setClicked(open ? clicked : null)}
         />
@@ -46,9 +46,7 @@ export default function MontajeRoadmap() {
       {isDesktop && (
         <div className="h-full w-full">
           <FadeTransition show={!!focused || !!clicked}>
-            <div className="w-full">
-              <LdMateria materia={focused ?? lastFocused} />
-            </div>
+            <div className="w-full">{/* <LdMateria materia={focused ?? lastFocused} /> */}</div>
           </FadeTransition>
         </div>
       )}

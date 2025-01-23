@@ -35,11 +35,10 @@ export const nivelesSchema = z.record(nivelEnum, z.array(z.string()))
 export type Nivel = z.infer<typeof nivelEnum>
 
 // Materias - Los valores de este enum tienen que matchear los ids que vengan de affinity
-export const materiaEnum = z.enum(['matematica', 'programacion', 'gaming', 'ilustracion'])
-export type Materia = z.infer<typeof materiaEnum>
+// Pendiente levantar las materias existentes y comprobar el match con los ids del svg y que no haya ids duplicados
 
 // Unidades - Por ahora id: string describiendo las expectativas en términos de "Entiendo"
-export const unidadesSchema = z.record(z.string(), z.string())
+export const textitosUnidades = z.record(z.string(), z.string())
 
 // Requerimientos
 const requerimientoMateriaSchema = z.string()
@@ -67,7 +66,7 @@ export const materiaMetaSchema = z
     descripcion: z.string(),
     stats: statsSchema.optional(),
     niveles: nivelesSchema.optional(),
-    unidades: unidadesSchema.optional(),
+    unidades: textitosUnidades.optional(),
     requiere: requerimientosSchema.optional(), // Refinar para verificar que no requiera unidades o niveles no presentes
   })
   // Checkea la relación entre niveles y unidades
@@ -121,7 +120,7 @@ export type MetaMateria = z.infer<typeof materiaMetaSchema>
 export const unidadMetaSchema = z.object({
   id: z.string(),
   tipo: z.literal('unidad'),
-  materia: materiaEnum,
+  materia: z.string(),
   titulo: z.string(),
   descripcion: z.string(),
   lema: z.string(),

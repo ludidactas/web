@@ -12,7 +12,9 @@ export function BibliotecaProvider({ children, biblioteca }: { children: ReactNo
 }
 
 /**
- * Usa y devuelve el value de context
+ * Usa y devuelve el value de context. Es el lugar para armar funciones wrappers de los datos,
+ * ya que estas no pueden cruzar el network boundary. Dice _("Error: Functions cannot be passed
+ * directly to Client Components unless you explicitly expose it by marking it with "use server".)_
  */
 export function useBiblioteca() {
   const context = use(BibliotecaContext)

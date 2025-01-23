@@ -46,7 +46,9 @@ export default function MontajeRoadmap() {
       {isDesktop && (
         <div className="h-full w-full">
           <FadeTransition show={!!focused || !!clicked}>
-            <div className="w-full">{/* <LdMateria materia={focused ?? lastFocused} /> */}</div>
+            <div className="w-full">
+              <LdMateria idMateria={focused ?? lastFocused ?? undefined} />
+            </div>
           </FadeTransition>
         </div>
       )}

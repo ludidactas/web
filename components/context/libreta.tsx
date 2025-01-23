@@ -10,6 +10,7 @@ const LibretaContext = createContext<ILibretaContext>({
   setLibreta: () => {},
 })
 
+/** Client provider (usa localStorage) */
 export const LibretaProvider = ({ children }: PropsWithChildren) => {
   // Value para el contexto
   const [libreta, setLibreta] = useState<Record<string, boolean>>({})

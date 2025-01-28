@@ -1,6 +1,7 @@
 import { articuloMetaSchema, Meta, MetaMateria, MetaUnidad } from '@/md/schema'
 import { glob } from 'fast-glob'
 import { join } from 'path'
+import { ZodError } from 'zod'
 
 export type MDXModule = {
   default: React.ComponentType
@@ -38,7 +39,7 @@ export async function importarBiblioteca() {
   const pathsMds = await glob('**/*.mdx', { cwd: mdDir })
 
   // Los importamos todos...
-  const mds: (Md & { ok?: boolean })[] = []
+  const mds: (Md & { ok?: boolean; issues?: ZodError['issues'] })[] = []
   for (const fn of pathsMds) {
     const { meta } = await import(`@/md/${fn}`)
     mds.push({ meta, src: fn })
@@ -46,7 +47,9 @@ export async function importarBiblioteca() {
 
   // Los verificamos
   for (const md of mds) {
-    md.ok = articuloMetaSchema.safeParse(md.meta).success
+    const parseInfo = articuloMetaSchema.safeParse(md.meta)
+    md.ok = parseInfo.success
+    md.issues = parseInfo.error?.issues
   }
 
   // Filtramos

@@ -36,7 +36,7 @@ const useLibreta = () => {
       // y sus valores lo opuesto del actual valor de `nivelCompletado`
       const estadoNivel = nivelCompletado(nivel)
 
-      const unidadesUpdateadas = fromEntries(niveles[nivel].map((unid) => [`${materia}.${unid}`, !estadoNivel]))
+      const unidadesUpdateadas = fromEntries(niveles[nivel].map((unid) => [`${idMateria}.${unid}`, !estadoNivel]))
       setLibreta({ ...libreta, ...unidadesUpdateadas })
     }
 
@@ -48,7 +48,7 @@ const useLibreta = () => {
       if (!unidad) return null
 
       // Si la unidad aún no está en la libreta, la creamos en true
-      const clave = `${materia}.${unidad}`
+      const clave = `${idMateria}.${idUnidad}`
       if (libreta[clave] === undefined) return setLibreta({ ...libreta, [clave]: true })
       setLibreta({ ...libreta, [clave]: !libreta[clave] })
     }
@@ -60,7 +60,7 @@ const useLibreta = () => {
       const niveles = materia.meta.niveles
       if (!niveles || !niveles[nivel]) return null
 
-      return niveles[nivel].reduce((acc, unid) => acc && libreta[`${materia}.${unid}`], true)
+      return niveles[nivel].reduce((acc, unid) => acc && libreta[`${idMateria}.${unid}`], true)
     }
 
     /**
@@ -70,7 +70,7 @@ const useLibreta = () => {
       const niveles = materia.meta.niveles
       if (!niveles || !niveles[nivel]) return null
 
-      return niveles[nivel].some((unid) => libreta[`${materia}.${unid}`])
+      return niveles[nivel].some((unid) => libreta[`${idMateria}.${unid}`])
     }
 
     /**
@@ -100,16 +100,16 @@ const useLibreta = () => {
     /**
      * Devuelve los requerimientos de una unidad según las entradas del `requiere` del meta de la materia
      */
-    const requerimientosDeUnidad = (unidad: string): Requerimiento[] | null => {
+    const requerimientosDeUnidad = (idUnidad: string): Requerimiento[] | null => {
       const niveles = materia.meta.niveles
       const unidades = materia.meta.unidades
       const requiere = materia.meta.requiere
 
       if (!unidades || !niveles || !requiere) return null
 
-      if (!Object.keys(unidades).includes(unidad)) {
+      if (!Object.keys(unidades).includes(idUnidad)) {
         console.warn(
-          `Se solicitaron los requerimientos de unidad ${unidad} de ${materia}, pero no se encuentra listada`
+          `Se solicitaron los requerimientos de unidad ${idUnidad} de ${idMateria}, pero no se encuentra listada`
         )
         return []
       }
@@ -121,7 +121,7 @@ const useLibreta = () => {
       const reqs = []
 
       // Primero nos enteramos de qué nivel es la unidad que estamos tratando (podría no ser de ninguno también - null)
-      const nivelUnidad = nivelDeUnidad(unidad)
+      const nivelUnidad = nivelDeUnidad(idUnidad)
 
       // Requerimientos de materia: Una materia depende enteramente de otra
       // Si una materia A tiene listada a otra B como dependencia, significa que cada nivel de A tiene como requerimiento
@@ -131,7 +131,7 @@ const useLibreta = () => {
       if (requerimientosMateria)
         if (!nivelDeUnidad) {
           console.warn(
-            `${materia} requiere ${requerimientosMateria.join(', ')} pero su unidad ${unidad} no tiene nivel`
+            `${idMateria} requiere ${requerimientosMateria.join(', ')} pero su unidad ${idUnidad} no tiene nivel`
           )
           return []
         } else {
@@ -170,14 +170,14 @@ const useLibreta = () => {
       if (requerimientosDeUnidad)
         for (const req of requerimientosDeUnidad) {
           const dependencia = first(Object.values(req))!
-          const [materia, nivelOUnidad] = dependencia.split('.')
+          const [idMateriaDep, nivelOUnidad] = dependencia.split('.')
 
           // if (!esMateria(materia)) throw new Error(`${materia} no es una materia válida`)
 
           if (nivelEnum.parse(nivelOUnidad)) {
-            reqs.push({ materia, nivel: nivelOUnidad as Nivel })
+            reqs.push({ materia: idMateriaDep, nivel: nivelOUnidad as Nivel })
           } else {
-            reqs.push({ materia, unidad: nivelOUnidad })
+            reqs.push({ materia: idMateriaDep, unidad: nivelOUnidad })
           }
         }
 
@@ -193,7 +193,9 @@ const useLibreta = () => {
 
       return reqs.map((req) => ({
         ...req,
-        pendiente: req.nivel ? !nivelCompletado(req.nivel) : libreta[`${req.materia}.${req.unidad}`] ?? true,
+        pendiente: req.nivel
+          ? !hojaDe(req.materia)?.nivelCompletado(req.nivel)
+          : libreta[`${req.materia}.${req.unidad}`] ?? true,
       }))
     }
 
@@ -216,7 +218,7 @@ const useLibreta = () => {
   /** Recibe una key y devuelve el estado de esa key en la libreta */
   const statusDe = (id: string) => libreta[id]
 
-  return { hojaDe, statusDe }
+  return { hojaDe, statusDe, libreta }
 }
 
 export default useLibreta

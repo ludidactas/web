@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { capitalize, entries } from 'remeda'
 import { twMerge } from 'tailwind-merge'
 import { useBiblioteca } from '../context/contenido'
+import Image from 'next/image'
 
 /** Display de los metadatos de una materia */
 export default function LdMateria({ idMateria }: { idMateria?: string }) {
@@ -19,13 +20,14 @@ export default function LdMateria({ idMateria }: { idMateria?: string }) {
   const lastMeta = usePrevious(meta)
 
   const { getMateria } = useBiblioteca()
+  const { libreta } = useLibreta()
 
   // Cuando cambie el artículo, updateamos el meta
   useEffect(() => {
     if (!idMateria) return setMeta(undefined)
     // Si está en el array de materias ya pasó por la verificación de zod
     const md = getMateria(idMateria)
-    if (md) setMeta(md.meta)
+    setMeta(md?.meta)
   }, [idMateria])
 
   return (
@@ -37,6 +39,7 @@ export default function LdMateria({ idMateria }: { idMateria?: string }) {
             <p className="lg:max-w-96">
               <b>Descripción:</b> {meta.descripcion}
             </p>
+            {meta.avatar && <Image width={224} height={224} src={meta.avatar} alt="Avatar" />}
             {idMateria && meta.stats && (
               <div className="lg:min-w-96">
                 <Radar stats={meta.stats} />
@@ -55,7 +58,9 @@ export default function LdMateria({ idMateria }: { idMateria?: string }) {
           )}
         </>
       )}
-      {!meta && <p>Clickeá una materia para comenzar</p>}
+      {!meta && idMateria && <p>[{idMateria}] aún no está en la biblioteca</p>}
+      {!meta && !idMateria && <p>Clickeá una materia para comenzar</p>}
+      <pre>{JSON.stringify(libreta, null, 2)}</pre>
     </>
   )
 }
@@ -70,7 +75,7 @@ const CheckNivel = ({ idMateria, nivel }: CheckNivelProps) => {
   const hoja = hojaDe(idMateria)
   const idsUnidades = hoja?.unidadesDeNivel(nivel)
 
-  if (!hoja) return <p>No tenemos hoja de {idMateria} en la libreta</p>
+  if (!hoja) return <p>No tenemos hoja de {idMateria} en la biblioteca</p>
 
   if (!idsUnidades)
     return (
@@ -130,10 +135,11 @@ const CheckConTooltip = ({ idMateria, idUnidad, texto }: { idMateria: string; id
         <TooltipTrigger asChild>
           <div>
             <CheckUnidad idMateria={idMateria} idUnidad={idUnidad} texto={texto} requerimientos={dependencias} />
+            {JSON.stringify(dependencias)}
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <div>
+          <div className="w-max">
             <p>Esta unidad tiene como dependencia{dependencias.length > 1 ? 's' : ''}: </p>
             {dependencias.map((dep) => (
               <p className="flex items-center gap-2" key={`${dep.materia}.${dep.nivel ?? dep.unidad}`}>

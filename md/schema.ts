@@ -64,6 +64,7 @@ export const materiaMetaSchema = z
     titulo: z.string(),
     tipo: z.literal('materia'),
     descripcion: z.string(),
+    avatar: z.string().optional(),
     stats: statsSchema.optional(),
     niveles: nivelesSchema.optional(),
     unidades: textitosUnidades.optional(),

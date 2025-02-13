@@ -45,7 +45,7 @@ const useLibreta = () => {
      */
     const toggleUnidad = (idUnidad: string) => {
       const unidad = getUnidad(idUnidad)
-      if (!unidad) return null
+      if (!unidad) throw new Error(`Se solicitó la unidad ${idUnidad}, pero no está en la biblioteca`)
 
       // Si la unidad aún no está en la libreta, la creamos en true
       const clave = `${idMateria}.${idUnidad}`

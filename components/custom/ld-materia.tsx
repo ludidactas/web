@@ -50,7 +50,6 @@ export default function LdMateria({ idMateria }: { idMateria?: string }) {
           <p>Checkeá teniendo en cuenta las observaciones</p>
           {idMateria && meta.niveles && (
             <div className="max-h-96 overflow-scroll">
-              <p className="px-8">Marcá los checks a continuación teniendo en cuenta las observaciones:</p>
               {entries(meta.niveles).map(([nivel, unidades]) => (
                 <CheckNivel idMateria={idMateria} nivel={nivel} key={nivel} />
               ))}
@@ -60,7 +59,6 @@ export default function LdMateria({ idMateria }: { idMateria?: string }) {
       )}
       {!meta && idMateria && <p>[{idMateria}] aún no está en la biblioteca</p>}
       {!meta && !idMateria && <p>Clickeá una materia para comenzar</p>}
-      <pre>{JSON.stringify(libreta, null, 2)}</pre>
     </>
   )
 }
@@ -90,8 +88,8 @@ const CheckNivel = ({ idMateria, nivel }: CheckNivelProps) => {
       <div className="px-8 py-2 flex gap-2 items-center">
         <Checkbox
           id={nivel}
-          checked={hoja?.nivelCompletado(nivel) ? true : hoja?.nivelParcial(nivel) ? 'indeterminate' : false}
-          onClick={() => hoja?.toggleNivel(nivel)}
+          checked={hoja.nivelCompletado(nivel) === true ? true : hoja.nivelParcial(nivel) ? 'indeterminate' : false}
+          onClick={() => hoja.toggleNivel(nivel)}
         />
         <label
           htmlFor={nivel}
@@ -135,7 +133,6 @@ const CheckConTooltip = ({ idMateria, idUnidad, texto }: { idMateria: string; id
         <TooltipTrigger asChild>
           <div>
             <CheckUnidad idMateria={idMateria} idUnidad={idUnidad} texto={texto} requerimientos={dependencias} />
-            {JSON.stringify(dependencias)}
           </div>
         </TooltipTrigger>
         <TooltipContent>
@@ -167,6 +164,11 @@ const CheckUnidad = ({
 }) => {
   const hoja = useLibreta().hojaDe(idMateria)
   const requerimientosPendientes = requerimientos?.some((r) => r.pendiente)
+
+  const { getUnidad } = useBiblioteca()
+
+  // const unidad = getUnidad(idUnidad)
+  // if (!unidad) return <p>Unidad {idUnidad} inexistente</p>
 
   return (
     <div className="px-8 py-2 flex gap-2 items-center" key={idUnidad}>

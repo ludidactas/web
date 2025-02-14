@@ -1,6 +1,6 @@
 import Pantalla from './pantalla'
-// @ts-expect-error meta no exportado correctamente
-import ContentProp, { meta } from '@/app/portada/propuestas.mdx'
+// @ts-ignore
+import ContentProp, { meta } from '@/app/inicio/propuestas.mdx'
 import Image from 'next/image'
 
 export default function Propuestas() {

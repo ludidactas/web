@@ -8,7 +8,7 @@ export default function Portada() {
     return (
         <div className="flex flex-col items-center ">
             
-            <LogoLema />
+            
             <Image src="/img/Compo.png" alt="PortadaImg" width={500} height={500}/>
             {/* scrollTo es una funcion que te da window, se puede usar el nombre directamente */}
             <ButtonIcon onClick={() => scrollTo({

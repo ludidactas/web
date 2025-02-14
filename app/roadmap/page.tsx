@@ -1,5 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
+import RoadCont from '@/app/roadmap/roadmapCont.mdx'
 
 const Roadmap = dynamic(() => import('@/components/roadmap'), {
   ssr: false,
@@ -7,5 +8,8 @@ const Roadmap = dynamic(() => import('@/components/roadmap'), {
 })
 
 export default function Page() {
-  return <Roadmap />
+  return <div className="p-10 px-20">
+  <RoadCont/>  
+  <Roadmap />
+  </div>
 }

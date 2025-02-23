@@ -16,8 +16,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     // Peeero nosotres los estileamos desde `md.css`. Dejemos esto solo para customizar el nivel funcional.
     img: (props) => (
       <Image
-        sizes="100vw"
-        style={{ width: '100%', height: 'auto' }}
+        
+        width={1000}
+        height={1000}
         {...(props as ImageProps)}
       />
     ),

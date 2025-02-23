@@ -10,10 +10,10 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import { AlignJustify } from "lucide-react";
 import Link from "next/link";
-import { ComponentProps, ReactNode } from "react";
+import { ComponentProps } from "react";
 
 
 const MenuMobile = () =>
@@ -70,10 +70,10 @@ const MenuMobile = () =>
 // );
 
 
-interface MenuLinkEjemploProps{ href: string, children: ReactNode }
 
-//version props explícitos
-const MenuLinkEjemplo = ({ href, children }: MenuLinkEjemploProps) => <Link className="todoloquequiera" href={href}>{children}</Link>
+// Version props explícitos
+// interface MenuLinkEjemploProps{ href: string, children: ReactNode }
+// const MenuLinkEjemplo = ({ href, children }: MenuLinkEjemploProps) => <Link className="todoloquequiera" href={href}>{children}</Link>
 
 //version props derivados existentes en Link
 const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="border-2 rounded-[10px] p-2 hover:bg-slate-200" />

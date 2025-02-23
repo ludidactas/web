@@ -3,7 +3,6 @@ import Identidad from './identidad'
 import Propuestas from './propuestas'
 import Recursos from './recursos'
 import Contacto from './contacto'
-import Menu from './menu'
 import WithAOS from '@/components/ui/with-aos'
 import Footer from './footer'
 

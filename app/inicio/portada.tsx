@@ -1,6 +1,5 @@
 'use client'
 import { ButtonIcon } from "@/components/custom/ld-btn"
-import LogoLema from "./logoLema"
 import Image from "next/image"
 
 export default function Portada() {

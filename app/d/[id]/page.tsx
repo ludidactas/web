@@ -7,7 +7,9 @@ export default async function Page({
     const { default: Post, meta } = await import(`@/md/${slug}.mdx`)
     console.log(meta)
    
-    return <Post />
+    return <div className="md">
+      <Post />
+      </div>
   }
    
   export function generateStaticParams() {

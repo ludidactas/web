@@ -1,6 +1,5 @@
 import Pantalla from './pantalla'
 import Image from 'next/image'
-// @ts-ignore
 import Recur, {meta} from '@/app/inicio/recursos.mdx'
 import Link from 'next/link'
 

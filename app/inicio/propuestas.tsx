@@ -1,5 +1,4 @@
 import Pantalla from './pantalla'
-// @ts-ignore
 import ContentProp, { meta } from '@/app/inicio/propuestas.mdx'
 import Image from 'next/image'
 import Link from "next/link"

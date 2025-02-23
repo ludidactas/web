@@ -1,5 +1,4 @@
 import Pantalla from "./pantalla"
-//@ts-ignore
 import ContentCont, {meta} from "@/app/inicio/contacto.mdx"
 import Image from "next/image"
 import Link from "next/link"

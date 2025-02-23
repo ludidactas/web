@@ -36,7 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${NovaF.className} ${inter.className} antialiased`}>
-        <div className="flex bg-zinc-500/50 items-center w-full p-4">
+        <div className="flex dark:bg-[#1e1e1e] justify-between p-2 px-4">
           <LogoLema/>
           <Menu/>
           {/* <Link href="/" className="text-2xl">

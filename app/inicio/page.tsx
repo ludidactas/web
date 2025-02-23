@@ -4,16 +4,18 @@ import Propuestas from './propuestas'
 import Recursos from './recursos'
 import Contacto from './contacto'
 import Menu from './menu'
+import WithAOS from '@/components/ui/with-aos'
+import Footer from './footer'
 
 export default function Page() {
   return (
-    <div className="mt-[20em]">
-     
+    <WithAOS >
       <Portada />
       <Identidad />
       <Propuestas />
       <Recursos/>
       <Contacto/>
-    </div>
+      <Footer/>
+    </WithAOS>
   )
 }

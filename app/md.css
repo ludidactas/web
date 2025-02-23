@@ -6,7 +6,7 @@ h1 {
 }
 
 h2 {
-  font-size: 2.5em;
+  font-size: 2em;
   color:blueviolet;
   text-align: center;
 }
@@ -15,6 +15,15 @@ h3{
   font-size: 1.5em;
   text-align: center;
 }
+h4{
+  font-size: 1.3em;
+  padding:2em
+
+}
+
+p{
+  padding: 1em;
+}
 
 .md li {
   margin-left: 1em;
@@ -22,6 +31,7 @@ h3{
 
 .md a {
   text-decoration: underline;
+  scroll-behavior: smooth;
 }
 
 .md a:hover {
@@ -29,26 +39,35 @@ h3{
 }
 
  .md p {
-  margin: 1em 0;
+  margin: 1em ;
   text-align: left;
 }
+
+
 
 /* Estilos propuestas */
 .headProp{
   background-color: #1E1E1E;
   color: #fff;
-  padding:8em;
+  padding:4em;
+  font-size: larger;
+ 
+}
+
+.formato{
+  display: grid;
+  grid-column: 3;
 }
 
 .lineas{
-  background-color: #4198AA;
+  
   padding: 20px;
   padding-left: 15em;
   padding-right: 15em;
 }
 
 .modulo{
-  background-color: black;
+  background-color: #1E1E1E;
   border: 2px solid #ccc;
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
   color:aliceblue;
@@ -58,15 +77,29 @@ h3{
   border-radius: 30px;
   margin-inline: 10em;
   display:grid;
-
   grid-template-columns: 1fr 4fr; /* First column is smaller (image), second is bigger (text) */
  
 }
 
-
 .propuestas{
   text-align: center;
   align-items: center;
+}
+.formato {
+  text-align: justify;
+  margin:2em;
+  gap:2em;
+  align-content: center;
+ }
+
+ .circle {
+  float: left;
+  width: 150px;
+  height: 150px;
+  margin: 20px;
+  shape-outside: circle(50% at 30%);
+  clip-path: circle(50% at 0%);
+  background: #4198AA;
 }
 
 .propuestas img{
@@ -75,6 +108,8 @@ h3{
   margin-bottom: 50px;
 }
 
+
+
 /* Estilos componente identidad */
 
 .identidad{
@@ -82,10 +117,17 @@ h3{
   padding-right: 10em;
 }
 
+
+.identidad div{
+  border: 4px;
+}
+
 .identidad img{
   width: 100%;
   height: auto;
-}
+  border: #9a1adf;
+  border: 20px;
+ }
 
 .identidad .section{
   
@@ -100,6 +142,12 @@ h3{
   padding-left: 10em;
   padding-right: 10em;
 }
+
+.identidad p{
+  margin-block: 20px;
+  margin: 1em ;
+  text-align: center;
+ }
 
 .identidad .item{
   display: flex;

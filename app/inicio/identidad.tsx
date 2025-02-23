@@ -2,10 +2,13 @@ import Pantalla from "./pantalla"
 import Image from "next/image"
 // @ts-ignore
 import Ident, { meta } from "@/app/inicio/identidad.mdx"
+import Link from "next/link"
 
 
 export default function Identidad() {
-  return <Pantalla one={<Ident />} two={<Imagenes />} title={meta.titulo} btnTxt={""} />
+  return <div><Pantalla one={<Ident/>} two={<Imagenes/>} title={meta.titulo} btn={ <Link className="custom-btn btn-15" href="/identidad"> ¡Quiero saber más! </Link>} />
+  </div>
+   
 }
 
 const Imagenes = () => <div>

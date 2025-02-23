@@ -1,6 +1,8 @@
-import IdentidadComp from "./IdentidadComp"
+import IdentidadCont from "@/app/identidad/identidadCont.mdx"
 
 
-export default function Page(){
-    return <IdentidadComp/>
+export default function Page() {
+    return <div className="identidad">
+        <IdentidadCont />
+    </div>
 }

@@ -1,11 +1,5 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
-  return (
-    <div className="p-8">
-      <Link href="/roadmap">Roadmap</Link>
-
-      {/* Contenido pendiente */}
-    </div>
-  )
+  redirect('/inicio')
 }

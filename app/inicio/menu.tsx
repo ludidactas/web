@@ -26,7 +26,7 @@ const MenuMobile = () =>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Identidad</DropdownMenuItem>
             <DropdownMenuItem>Propuestas</DropdownMenuItem>
-            <DropdownMenuItem>Recursos y roadmap</DropdownMenuItem>
+            {/* <DropdownMenuItem>Recursos</DropdownMenuItem> */}
             <DropdownMenuItem>Contacto</DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
@@ -82,7 +82,7 @@ const MenuDesktop = () => <div className="flex gap-4 items-center p-4">
     {/* Implementacion version props */}
     <MenuLink href="/identidad"> Identidad </MenuLink>
     <MenuLink href="/propuestas"> Propuestas </MenuLink>
-    <MenuLink href="/roadmap"> Recursos</MenuLink>
+    {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/"> Contacto </MenuLink>
 </div>
 

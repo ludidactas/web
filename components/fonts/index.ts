@@ -1,5 +1,5 @@
 import localFont from 'next/font/local'
-import { Inter, Nova_Flat, Press_Start_2P, Pixelify_Sans} from 'next/font/google'
+import { Inter, Nova_Flat, Press_Start_2P, Pixelify_Sans, Jersey_10} from 'next/font/google'
 
 export const inter = Inter({ subsets: ['latin'] })
 
@@ -7,6 +7,10 @@ export const NovaF = Nova_Flat({
   subsets: ['latin'],
   display: 'swap',
   weight: '400',
+})
+export const Jersey=Jersey_10({
+  weight:'400',
+  subsets: ['latin']
 })
 
 export const Pixelify=Pixelify_Sans({

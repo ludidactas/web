@@ -5,11 +5,6 @@ h1 {
   text-align: center;
 }
 
-h2 {
-  font-size: 2em;
-  color:blueviolet;
-  text-align: center;
-}
 
 h3{
   font-size: 1.5em;
@@ -21,9 +16,6 @@ h4{
 
 }
 
-p{
-  padding: 1em;
-}
 
 .md li {
   margin-left: 1em;
@@ -46,113 +38,17 @@ p{
 
 
 /* Estilos propuestas */
-.headProp{
-  background-color: #1E1E1E;
-  color: #fff;
-  padding:4em;
-  font-size: larger;
- 
-}
-
-.formato{
-  display: grid;
-  grid-column: 3;
-}
-
-.lineas{
-  
-  padding: 20px;
-  padding-left: 15em;
-  padding-right: 15em;
-}
-
-.modulo{
-  background-color: #1E1E1E;
-  border: 2px solid #ccc;
-  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
-  color:aliceblue;
-  padding: 50px;
-  margin-bottom: 10px;
-  column-count: 2;
-  border-radius: 30px;
-  margin-inline: 10em;
-  display:grid;
-  grid-template-columns: 1fr 4fr; /* First column is smaller (image), second is bigger (text) */
- 
-}
-
-.propuestas{
-  text-align: center;
-  align-items: center;
-}
-.formato {
-  text-align: justify;
-  margin:2em;
-  gap:2em;
-  align-content: center;
- }
 
  .circle {
   float: left;
   width: 150px;
-  height: 150px;
+  height:150px;
   margin: 20px;
   shape-outside: circle(50% at 30%);
   clip-path: circle(50% at 0%);
   background: #4198AA;
 }
 
-.propuestas img{
-  width: 20%;
-  height: 10%;
-  margin-bottom: 50px;
-}
-
-
-
-/* Estilos componente identidad */
-
-.identidad{
-  padding-left: 10em;
-  padding-right: 10em;
-}
-
-
-.identidad div{
-  border: 4px;
-}
-
-.identidad img{
-  width: 100%;
-  height: auto;
-  border: #9a1adf;
-  border: 20px;
- }
-
-.identidad .section{
-  
-  padding-left: 5em;
-  padding-right: 5em;
-  padding-bottom: 1em;
-}
-
-.identidad .list{
-  align-items: center;
-  display: flex;
-  padding-left: 10em;
-  padding-right: 10em;
-}
-
-.identidad p{
-  margin-block: 20px;
-  margin: 1em ;
-  text-align: center;
- }
-
-.identidad .item{
-  display: flex;
-  width: 10%;
-}
 
 /* Estilos roadmap */
 .roadhead{

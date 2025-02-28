@@ -14,7 +14,7 @@ export default function Page() {
       <Propuestas />
       <Recursos/>
       <Contacto/>
-      <Footer/>
+      
     </WithAOS>
   )
 }

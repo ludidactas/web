@@ -47,11 +47,14 @@ const MenuDesktop = () => <div className="flex gap-4 items-center mr-10">
     <MenuLink href="/propuestas"> Propuestas </MenuLink>
     <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
-    <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/"> Contacto </MenuLink>
-    <p className="text-2xl">|</p>   
-    <MenuLink target="_blank" href="https://ludidactas.medium.com/"> Blog </MenuLink>
+    <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/">
+      Contacto
+    </MenuLink>
+    <MenuLink target="_blank" href="https://ludidactas.medium.com/">
+      Blog
+    </MenuLink>
+  </div>
 
-</div>
 
 //Renderiza uno u otro según se le indique en
 const Menu = () => (

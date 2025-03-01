@@ -4,20 +4,18 @@ import Propuestas from './propuestas'
 import Recursos from './recursos'
 import Contacto from './contacto'
 import WithAOS from '@/components/ui/with-aos'
-import Footer from './footer'
 import Hero from './hero'
 
 
 export default function Page() {
   return (
-    <WithAOS >
-      <Hero/>
+    <WithAOS>
+      <Hero />
       <Portada />
       <Identidad />
       <Propuestas />
-      <Recursos/>
-      <Contacto/>
-      
+      <Recursos />
+      <Contacto />
     </WithAOS>
   )
 }

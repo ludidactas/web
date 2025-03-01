@@ -1,26 +1,33 @@
 'use client'
-import React, { PropsWithChildren, createRef, useEffect, useState } from 'react'
-import sketch from './sketch'
+import { PropsWithChildren, createRef, useEffect, useRef } from 'react'
 
 const Textura = ({ children }: PropsWithChildren) => {
   const canvasContainer = createRef<HTMLDivElement>()
-  const [p5, setP5] = useState<any>()
+  const p5InstanceRef = useRef<any>(null)
 
-  // Cargamos dinámicamente p5 al cargar el componente - client side _only_
+  // Importamos e instanciamos p5 y el sketch todo client-side only:
   useEffect(() => {
-    import('p5').then((p5Module) => {
-      setP5(p5Module.default)
-    })
-  }, [])
+    import('p5')
+      .then(async (p5Module) => {
+        const p5Constructor = p5Module.default
 
-  useEffect(() => {
-    if (p5) {
-      const myp5 = new p5(sketch, canvasContainer.current!)
-      return () => {
-        myp5.remove()
+        const { default: sketch } = await import('./sketch')
+
+        if (canvasContainer.current) {
+          p5InstanceRef.current = new p5Constructor(sketch, canvasContainer.current)
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading p5:', err)
+      })
+
+    return () => {
+      if (p5InstanceRef.current && typeof p5InstanceRef.current.remove === 'function') {
+        p5InstanceRef.current.remove()
+        p5InstanceRef.current = null
       }
     }
-  }, [p5, canvasContainer])
+  }, [canvasContainer])
 
   return (
     <div>

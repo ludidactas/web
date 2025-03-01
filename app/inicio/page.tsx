@@ -7,6 +7,7 @@ import WithAOS from '@/components/ui/with-aos'
 import Footer from './footer'
 import Hero from './hero'
 
+
 export default function Page() {
   return (
     <WithAOS >

@@ -11,6 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@radix-ui/react-dropdown-menu";
 import { AlignJustify } from "lucide-react";
 import Link from "next/link";
 import { ComponentProps } from "react";
@@ -76,14 +77,19 @@ const MenuMobile = () =>
 // const MenuLinkEjemplo = ({ href, children }: MenuLinkEjemploProps) => <Link className="todoloquequiera" href={href}>{children}</Link>
 
 //version props derivados existentes en Link
-const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="border-2 rounded-[10px] p-2 hover:bg-slate-200" />
+const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="p-2 text-xl bg-white rounded-md hover:bg-black hover:text-white " />
 
-const MenuDesktop = () => <div className="flex gap-4 items-center p-4">
+const MenuDesktop = () => <div className="flex gap-4 items-center mr-10">
     {/* Implementacion version props */}
     <MenuLink href="/identidad"> Identidad </MenuLink>
+    <p className="text-2xl">|</p>
     <MenuLink href="/propuestas"> Propuestas </MenuLink>
+    <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/"> Contacto </MenuLink>
+    <p className="text-2xl">|</p>   
+    <MenuLink target="_blank" href="https://ludidactas.medium.com/"> Blog </MenuLink>
+
 </div>
 
 //Renderiza uno u otro según se le indique en

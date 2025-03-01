@@ -25,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* <GoogleTagManager gtmId="GTM-M4H5VXKB" /> */}
         <BibliotecaRoot>
           <Textura>
-            <div className="flex dark:bg-[#1e1e1e] justify-between p-2 px-4">
+            <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4">
               <LogoLema />
               <Menu />
             </div>

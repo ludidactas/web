@@ -92,7 +92,7 @@ const MenuDesktop = () => (
       Contacto
     </MenuLink>
     <MenuLink target="_blank" href="https://ludidactas.medium.com/">
-      Contacto
+      Blog
     </MenuLink>
   </div>
 )

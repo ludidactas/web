@@ -1,1 +1,0 @@
-Esto está acá nada más para medio demostrar cómo se puede agregar contenido mdx directo

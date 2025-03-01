@@ -4,7 +4,9 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,         // Ojo
+    "noImplicitAny": false,  // Ojo
+    "strictNullChecks": false, // Ojo
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

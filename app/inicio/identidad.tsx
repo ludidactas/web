@@ -1,6 +1,6 @@
 import Pantalla from './pantalla'
 import Image from 'next/image'
-//@ts-ignore ojo
+//@ts-ignore meta
 import Ident, { meta } from '@/app/inicio/identidad.mdx'
 import Link from 'next/link'
 

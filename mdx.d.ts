@@ -6,5 +6,5 @@ declare module '*.mdx' {
   export default Component
 
   // Export the `meta` frontmatter explicitly
-  export const meta: Record<string, object>
+  export const meta: Record<string, any>
 }

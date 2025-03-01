@@ -22,7 +22,7 @@ export default function Page() {
           <Image
             className="text-center shadow-2xl rounded-xl"
             data-aos="zoom-in"
-            src={'/img/identidad1.png'}
+            src={'/img/Identidad1.png'}
             alt={'Grupo taller Ludidactas'}
             width={1000}
             height={1000}
@@ -135,7 +135,7 @@ export default function Page() {
             <Image
               className="shadow-2xl rounded-xl"
               data-aos="fade-left"
-              src={'/img/identidad2.png'}
+              src={'/img/Identidad2.JPG'}
               alt={'Grupo taller Ludidactas'}
               width={1000}
               height={1000}
@@ -190,7 +190,7 @@ export default function Page() {
             <Image
               className="shadow-2xl rounded-xl"
               data-aos="fade-right"
-              src={'/img/identidad3.png'}
+              src={'/img/Identidad3.png'}
               alt={'Taller Ludidactas 2'}
               width={1000}
               height={1000}

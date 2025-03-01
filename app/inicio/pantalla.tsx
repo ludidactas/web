@@ -21,6 +21,7 @@ const Pantalla = ({ title, one, two, btn, espejado = false }: PantallaProps) =>
                 {two}
             </div>
         </div>
+      
     </div>
 
 export default Pantalla;

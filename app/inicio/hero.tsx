@@ -1,4 +1,4 @@
-import { Pixelify } from "@/components/fonts"
+import { Jersey, Pixelify } from "@/components/fonts"
 import {
     Carousel,
     CarouselContent,
@@ -15,18 +15,18 @@ export default function Hero() {
         <Carousel className="w-[1300px] ">
             <CarouselContent>
 
-                <CarouselItem className="flex gap-4 p-10 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
-                    <p className={`${Pixelify.className} text-6xl text-center `}>CONVOCATORIA LUDIDáCTICA</p>
-                    <div className="flex gap-4 p-10 bg-white rounded-xl" >
+                <CarouselItem className="  flex gap-4 p-10 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
+                    <p className={`[text-shadow:0_0_10px_rgb(245,240,250)] text-6xl text-center `}>CONVOCATORIA LUDIDÁCTICA</p>
+                    <div className="flex gap-4 p-10 bg-white/50 rounded-xl" >
                         <div className="flex items-center flex-col ">
-                            <p className=" text-3xl mb-5  ">Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol docente/didáctico/pedagógico y dispuestas a ocupar también el
+                            <p className="text-center text-3xl mb-5  ">Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol docente/didáctico/pedagógico y dispuestas a ocupar también el
                                 de aprendientes
                                
                             </p>
                             <Link className="custom-btn btn-15 w-40 text-center" href="/propuestas/convocatoria">Ver más</Link>
                         
                         </div>
-                                <Image className="rounded-full border-2 shadow-xl" src="/img/Grupo.webp" alt="" width={300} height={300} />
+                                <Image className="rounded-full border-2 shadow-xl" src="/img/Grupo.webp" alt="" width={250} height={250} />
 
                 
 

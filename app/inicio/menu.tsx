@@ -50,6 +50,7 @@ const MenuDesktop = () => <div className="flex gap-4 items-center mr-10">
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/">
       Contacto
     </MenuLink>
+    <p className="text-2xl">|</p>
     <MenuLink target="_blank" href="https://ludidactas.medium.com/">
       Blog
     </MenuLink>

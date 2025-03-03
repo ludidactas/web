@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
-import { Pixelify } from '@/components/fonts'
+import { Jersey, Pixelify } from '@/components/fonts'
 import WithAOS from '@/components/ui/with-aos'
 import { PropsWithChildren } from 'react'
 
@@ -32,7 +32,7 @@ export default function Page() {
         <div className="mt-20">
           <h1
             data-aos="fade-left"
-            className={`${Pixelify.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+            className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
           >
             ¿Qué nos motiva?
           </h1>
@@ -48,7 +48,7 @@ export default function Page() {
             <div className="grid grid-cols-2  m-10 justify-center items-center ">
               <h1
                 data-aos="fade-left"
-                className={`${Pixelify.className} m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-5xl`}
+                className={`${Jersey.className} m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-5xl`}
               >
                 Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
                 que nos permita →
@@ -143,15 +143,12 @@ export default function Page() {
             <div data-aos="fade-up" className="flex flex-col items-center">
               <h1
                 data-aos="fade-left"
-                className={`${Pixelify.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
+                className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
               >
                 {' '}
                 Con la motivación correcta el aprendizaje se da de una forma orgánica.
               </h1>
 
-              {/* <h3 className="drop-shadow-lg text-cyan-500 text-4xl">
-                            Con la motivación correcta el aprendizaje se da de una forma orgánica.
-                        </h3> */}
               <p className="text-[1.3rem] m-10 p-4 rounded-xl bg-slate-200">
                 Enseñamos, en principio,{' '}
                 <span className="text-[#46BFD7]">
@@ -169,14 +166,10 @@ export default function Page() {
             <div data-aos="fade-up" className="flex flex-col items-center">
               <h1
                 data-aos="fade-left"
-                className={`${Pixelify.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
+                className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
               >
                 ¡Aprender no tiene por qué ser forzoso o mecánico!
               </h1>
-
-              {/* <h3 className="drop-shadow-lg text-cyan-500 text-4xl">
-                            ¡Aprender no tiene por qué ser forzoso o mecánico!
-                        </h3> */}
 
               <p className="text-[1.3rem] m-10 p-10 bg-slate-200 rounded-xl">
                 Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro

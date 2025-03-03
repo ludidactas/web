@@ -1,12 +1,16 @@
+'use client'
+
 import Pantalla from './pantalla'
 import Image from 'next/image'
 //@ts-ignore meta
 import Ident, { meta } from '@/app/inicio/identidad.mdx'
 import Link from 'next/link'
+import {Link as Scroll} from 'react-scroll';
+import { CircleChevronDown } from 'lucide-react';
 
 export default function Identidad() {
   return (
-    <div>
+  <div className='identidadini'>
       <Pantalla
         one={<Ident />}
         two={<Imagenes />}
@@ -17,10 +21,15 @@ export default function Identidad() {
             ¡Quiero saber más!{' '}
           </Link>
         }
+        scroll={
+          <Scroll to="propuestasini" smooth={true} duration={500}><CircleChevronDown className="w-full h-full" /></Scroll>
+        }
       />
     </div>
   )
 }
+
+
 
 const Imagenes = () => (
   <div>

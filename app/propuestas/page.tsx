@@ -1,5 +1,7 @@
 import { Pixelify, Jersey } from '@/components/fonts'
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/ld-carousel';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Jersey_10 } from 'next/font/google';
 
 import Image from 'next/image'
 
@@ -24,17 +26,17 @@ const Formatos = () => {
     <div className="mt-20 mx-20">
       <h1 className="text-3xl">En Ludidactas hemos diseñado 3 propuestas o lineas de contenido principales:</h1>
 
-      <h1 className={`${Pixelify.className} my-5 text-4xl text-[#4198AA]`}>técnica, didáctica y pedagógica.</h1>
+      <h1 className={`${Jersey.className} my-5 text-5xl text-[#4198AA]`}>técnica, didáctica y pedagógica.</h1>
       <div className="flex flex-col items-center rounded-xl pt-10">
-        <h2 className="text-center text-3xl bg-slate-200 w-fit p-10 rounded-xl">
+        <h2 className="text-center text-3xl w-fit px-10 rounded-xl">
           Las propuestas se ofrecen en formato seminario, taller y clases particulares:
         </h2>
-        <div className="grid grid-cols-3 gap-4 m-20">
+        <div className="bg-white grid grid-cols-3 gap-4 m-20">
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
             data-aos-delay="100"
-            className="bg-slate-200 h-full p-4 rounded-xl items-center justify-center"
+            className="border-2 border-violet-500 border-double h-full p-4 rounded-xl items-center justify-center"
           >
             <span className="circle"></span>
             <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Seminarios</p>
@@ -49,7 +51,7 @@ const Formatos = () => {
             data-aos="fade-left"
             data-aos-duration="2000"
             data-aos-delay="200"
-            className="bg-slate-200 p-4 h-full rounded-xl items-center "
+            className="border-2 border-violet-500 border-double p-4 h-full rounded-xl items-center "
           >
             <span className="circle"></span>
             <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Talleres</p>
@@ -63,7 +65,7 @@ const Formatos = () => {
             data-aos="fade-left"
             data-aos-duration="2000"
             data-aos-delay="300"
-            className="bg-slate-200 h-full p-4 rounded-xl"
+            className="border-2 border-violet-500 border-double h-full p-4 rounded-xl"
           >
             <span className="circle"></span>
             <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Clases Particulares</p>
@@ -76,14 +78,43 @@ const Formatos = () => {
   )
 }
 
-const Lineas = () => {
+interface LineasProps {
+  titulo: string
+  descripcion: string
+  lista: string[]
+  btntxt: string
+}
+
+const Lineas = ({ titulo, descripcion, lista, btntxt }: LineasProps) => {
+  return <div className="flex w-[700px] m-10 border-4 border-dotted  border-blue-500 p-10 rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
+
+    <h1 className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg w-fit font-bold [writing-mode:vertical-rl] [text-orientation:upright]`}>
+      {titulo} </h1>
+    <div className='flex bg-white  flex-col py-10 gap-9 rounded-xl'>
+      <h3 className='text-xl px-10'>
+        {descripcion}
+      </h3>
+      <ul className='flex flex-col gap-4 px-10'>
+        {lista.map(txt => (<li key={txt}> •  {txt}</li>))}
+      </ul>
+
+      <button className="custom-btn btn-15 w-fit self-center"> {btntxt}</button>
+    </div>
+
+  </div>
+
+
+}
+
+
+const Modulo = () => {
   return (
-    <div className="m-20">
-      <div className="bg-slate-200 p-10">
-        <h1 data-aos="fade-left" className={`${Jersey.className} m-10 pt-10 drop-shadow-lg text-7xl`}>
+    <div className="flex flex-col m-10 px-20 items-center justify-center">
+      <div className="bg-slate-100 p-10  rounded-xl">
+        <h1 data-aos="fade-left" className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text m-10 drop-shadow-lg text-7xl`}>
           Líneas de contenido
         </h1>
-        <p>
+        <p className='px-10 text-xl text-center'>
           {' '}
           Hemos desarrollado un esquema que nos permite ofrecer oportunidades de formación para todos los niveles de
           aprendizaje, en módulos cortos y autoconclusivos. Los módulos propuestos se corresponden con determinados
@@ -91,20 +122,40 @@ const Lineas = () => {
           reiterados en varios talleres. No todas las correlatividades son difíciles. ¡Consultanos!
         </p>
       </div>
+
+      <Lineas
+        titulo="TÉCNICA"
+        descripcion="Aprendemos mediante la experiencia en grupo, bajo la premisa de que lxs alumnxs puedan recibir a quienes lleguen y tener la oportunidad para guiar a lxs otrxs y poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo"
+        lista={['Formación grupal, abierta a todo público.',
+          'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas']}
+        btntxt='Próximamente...' />
+      <Lineas
+      titulo='DIDÁCTICA'
+      descripcion='En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir'
+      lista={['Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
+        'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica']}
+      btntxt='Convocatoria Ludidáctica'/>
+      <Lineas
+      titulo='PEDAGÓGICA'
+      descripcion='En la línea pedagógica exploramos la relación humana con el proceso educativo. Qué hace allí el docente? Desde dónde se para? Cómo decide qué va a mostrar? Y qué está mostrando -es decir, enseñando- con su actutid, sus acciones, su forma de estar? Cuál es el proyecto político y cultural que incorpora?'
+      lista={['Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.', 
+        'Expresada en encuentros, charlas, conversatorios y escritos']}
+      btntxt='Ver blog'/>
     </div>
   )
 }
+
 const Tecnologias = () => {
   return (
-    <div>
-      <h1 className="p-8 mx-4 text-3xl rounded-xl bg-slate-300/50">
+    <div className='m-20'>
+      <h1 className="p-8 mx-4 text-3xl rounded-xl bg-slate-100">
         Todas las propuestas se encuentran dirigidas tanto a personas pertenecientes al ámbito educativo, como a un
-        público general, que busquen formarse en cada una de las líneas de contenido y de las{' '}
-        <span className="font-bold">tecnologías asociadas a ellas.</span>
+        público general, que busquen formarse en cada una de las líneas de contenido y -en el caso de la línea técnica- de las{' '}
+        <span className="font-bold text-cyan-500">tecnologías con las que trabajamos.</span>
       </h1>
 
       <div className="text-center">
-        <h1 data-aos="fade-left" className={`${Jersey.className} m-10 pt-10 drop-shadow-lg text-7xl`}>
+        <h1 data-aos="fade-left" className={`${Jersey.className} m-10 pt-10 drop-shadow-lg text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}>
           Tecnologías
         </h1>
         <div className=" grid grid-cols-3 gap-[40px]  p-20 place-items-center ">
@@ -173,57 +224,15 @@ const Tecnologias = () => {
     </div>
   )
 }
+
 export default function Page() {
   return (
     <>
       <Formatos />
-      <Lineas />
+      <Modulo />
       <Tecnologias />
     </>
   )
 
-  //     <div className="modulo" data-aos="fade-up">
-  //         <div className="subtitle">
-  //             ![Técnica](/img/tecnica.png)
-  //         </div>
-  //         <div>
-  //             ### Aprendemos mediante la experiencia en grupo, bajo la premisa de que lxs alumnxs puedan recibir a quienes lleguen y tener la oportunidad para guiar a lxs otrxs y poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo.
 
-  //             - Formación grupal, abierta a todo público.
-
-  //             - Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas.
-
-  //             <button className="custom-btn btn-15"> Ver propuestas técnicas</button>
-  //         </div>
-
-  //     </div>
-
-  //     <div className="modulo" data-aos="fade-up">
-  //         <div className="subtitle ">
-  //             ![Didáctica](/img/didactica.png)
-  //         </div>
-  //         <div>
-  //             ### En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir
-
-  //             -  Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.
-
-  //             -  Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica
-
-  //             <button className="custom-btn btn-15">Ver propuestas didácticas</button>
-  //         </div>
-  //     </div>
-
-  //     <div className="modulo" data-aos="fade-up">
-  //         <div className="subtitle ">
-  //             ![Pedagógica](/img/pedagogica.png)
-  //         </div>
-  //         <div>
-  //             - Línea de contenido orientada a docentes.
-  //             - Talleres, cursos y seminarios
-
-  //             <button className="custom-btn btn-15">Ver propuestas pedagógicas</button>
-  //         </div>
-  //     </div>
-
-  // </div>
 }

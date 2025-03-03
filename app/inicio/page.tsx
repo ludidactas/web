@@ -9,7 +9,7 @@ import Hero from './hero'
 
 export default function Page() {
   return (
-    <WithAOS>
+  <WithAOS>
       <Hero />
       <Portada />
       <Identidad />
@@ -17,5 +17,6 @@ export default function Page() {
       <Recursos />
       <Contacto />
     </WithAOS>
+ 
   )
 }

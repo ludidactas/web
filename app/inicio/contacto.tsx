@@ -1,11 +1,16 @@
+'use client'
+import { CircleChevronDown, CircleChevronUp } from 'lucide-react'
 import Pantalla from './pantalla'
 // @ts-ignore meta
 import ContentCont, { meta } from '@/app/inicio/contacto.mdx'
 import Image from 'next/image'
 import Link from 'next/link'
+import {Link as Scroll} from 'react-scroll';
+
 
 export default function Contacto() {
-  return (
+  return (<div className='contactoini'>
+
     <Pantalla
       one={<ContentCont />}
       two={<Imagenes />}
@@ -16,8 +21,13 @@ export default function Contacto() {
           ¡Contáctanos!{' '}
         </Link>
       }
+      scroll={
+        <Scroll to="heroini" smooth={true} duration={500}><CircleChevronUp className="w-full h-full" /></Scroll>
+        
+      }
       espejado
-    />
+      />
+      </div>
   )
 }
 

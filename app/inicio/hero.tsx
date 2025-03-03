@@ -11,34 +11,37 @@ import Link from "next/link"
 
 
 export default function Hero() {
-    return <div className="flex  justify-center ">
-        <Carousel className="w-[1300px] ">
-            <CarouselContent>
+    return <div className=" heroini flex  justify-center ">
+        <div className="w-[1300px] ">
+           
 
-                <CarouselItem className="  flex gap-4 p-10 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
-                    <p className={`[text-shadow:0_0_10px_rgb(245,240,250)] text-6xl text-center `}>CONVOCATORIA LUDIDÁCTICA</p>
-                    <div className="flex gap-4 p-10 bg-white/50 rounded-xl" >
+                <div className="w-[1300px] border-solid border-4 border-black rounded-xl flex gap-4 p-10 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
+                    <Image className="animate-bounce" width={350} height={350}src={"/img/CONVOCATORIA.png"} alt={""}/>
+                    <div className={`${Jersey.className} flex gap-2 p-6 bg-white border-4 border-black border-dashed rounded-xl`} >
                         <div className="flex items-center flex-col ">
-                            <p className="text-center text-3xl mb-5  ">Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol docente/didáctico/pedagógico y dispuestas a ocupar también el
-                                de aprendientes
+                            
+
+                            <p className="text-left text-3xl mb-5">Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol docente/didáctico/pedagógico y dispuestas a ocupar también el
+                                de aprendientes.</p>
+                            <p className="pt-2 text-3xl">¡Si estás interesadx, accedé a la info completa y escribinos!</p>    
                                
-                            </p>
-                            <Link className="custom-btn btn-15 w-40 text-center" href="/propuestas/convocatoria">Ver más</Link>
+                           
+                            <Link className="custom-btn btn-15 w-40 text-center" href="/propuestas/convocatoria">Convocatoria</Link>
+                            
                         
                         </div>
-                                <Image className="rounded-full border-2 shadow-xl" src="/img/Grupo.webp" alt="" width={250} height={250} />
+                                <Image className="rounded-full border-2 shadow-xl" src="/img/Grupo.webp" alt="" width={150} height={150} />
 
                 
 
                     </div>
-                </CarouselItem>
-                <CarouselItem className=" place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
+                </div>
+                {/* <CarouselItem className=" place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
                     <p>para sostener un taller anual de tecnología (programación, ilustración digital, producción musical, y cualquier
                         disciplina aledaña). No necesitás ningún título ni certificación, solo el interés genuino.</p>
-                </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-        </Carousel>
+                </CarouselItem> */}
+            
+            
+        </div>
     </div>
 }

@@ -1,7 +1,5 @@
-import { Pixelify, Jersey } from '@/components/fonts'
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/ld-carousel';
+import {  Jersey } from '@/components/fonts'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Jersey_10 } from 'next/font/google';
 
 import Image from 'next/image'
 
@@ -10,11 +8,11 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
     <TooltipProvider delayDuration={100}>
       <Tooltip>
         <TooltipTrigger>
-          <Image className="w-full h-full" src={url} width={100} height={100} alt="" />
+          <Image className="w-full h-full " src={url} width={100} height={100} alt="" />
         </TooltipTrigger>
         <TooltipContent className="bg-black text-white w-[20em] p-5">
           <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
-          {descripcion}
+          <p className='text-center'>{descripcion}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -23,58 +21,64 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
 
 const Formatos = () => {
   return (
-    <div className="mt-20 mx-20">
-      <h1 className="text-3xl">En Ludidactas hemos diseñado 3 propuestas o lineas de contenido principales:</h1>
+    <div className="mt-20 mx-15 flex flex-col items-center rounded-xl pt-10">
+      <h2 className="text-3xl">En Ludidactas hemos diseñado 3 propuestas o lineas de contenido principales:</h2>
+      <h2 className={`${Jersey.className} my-5 text-5xl text-[#06b6d4]`}>técnica, didáctica y pedagógica.</h2>
+      <h2 className="text-center text-3xl w-fit px-10 rounded-xl">
+        Las propuestas se ofrecen en formato seminario, taller y clases particulares:
+      </h2>
 
-      <h1 className={`${Jersey.className} my-5 text-5xl text-[#4198AA]`}>técnica, didáctica y pedagógica.</h1>
-      <div className="flex flex-col items-center rounded-xl pt-10">
-        <h2 className="text-center text-3xl w-fit px-10 rounded-xl">
-          Las propuestas se ofrecen en formato seminario, taller y clases particulares:
-        </h2>
-        <div className="bg-white grid grid-cols-3 gap-4 m-20">
-          <div
-            data-aos="fade-left"
-            data-aos-duration="2000"
-            data-aos-delay="100"
-            className="border-2 border-violet-500 border-double h-full p-4 rounded-xl items-center justify-center"
-          >
-            <span className="circle"></span>
-            <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Seminarios</p>
-            <p className="m-2">
-              Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
-              puntual. Es ideal para almas autodidactas que pueden aprovechar una buena rampa de entrada a un tema que
-              les evite el famoso &quot;infierno de tutoriales&quot;.
-            </p>
-          </div>
+      <div className="bg-white grid grid-cols-3 gap-4 place-content-between m-20">
+        <div
+          data-aos="fade-left"
+          data-aos-duration="2000"
+          data-aos-delay="100"
+          className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl "
+        >
+          <span className="circle"></span>
 
-          <div
-            data-aos="fade-left"
-            data-aos-duration="2000"
-            data-aos-delay="200"
-            className="border-2 border-violet-500 border-double p-4 h-full rounded-xl items-center "
-          >
-            <span className="circle"></span>
-            <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Talleres</p>
-            <p className="m-2">
-              Son instancias largas, recurrentes, orientadas alrededor de una línea de desarrollo de proyectos. Es ideal
-              para almas aplicadas, que disfruten el trabajo en equipo, y la buena cosecha que sigue a una buena
-              siembra.
-            </p>
-          </div>
-          <div
-            data-aos="fade-left"
-            data-aos-duration="2000"
-            data-aos-delay="300"
-            className="border-2 border-violet-500 border-double h-full p-4 rounded-xl"
-          >
-            <span className="circle"></span>
-            <p className="text-3xl text-center text-[#46BFD7] drop-shadow-lg m-4">Clases Particulares</p>
+          <h1 className="text-3xl text-center text-[#06b6d4] drop-shadow-lg">Seminarios</h1>
+          <p className="m-2">
+            Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
+            puntual. Es ideal para almas autodidactas que pueden aprovechar una buena rampa de entrada a un tema que
+            les evite el famoso &quot;infierno de tutoriales&quot;.
+          </p>
+        </div>
+
+        <div
+          data-aos="fade-left"
+          data-aos-duration="2000"
+          data-aos-delay="200"
+          className="border-2 border-[#06b6d4] border-solid p-4 h-full rounded-xl  "
+        >
+          <span className="circle"></span>
+
+
+
+          <h1 className="text-3xl text-center text-[#06b6d4] drop-shadow-lg">Talleres</h1>
+          <p className="m-2">
+            Son instancias largas, recurrentes, orientadas alrededor de una línea de desarrollo de proyectos. Es ideal
+            para almas aplicadas, que disfruten el trabajo en equipo, y la buena cosecha que sigue a una buena
+            siembra.
+          </p>
+        </div>
+
+        <div
+          data-aos="fade-left"
+          data-aos-duration="2000"
+          data-aos-delay="300"
+          className="border-2 border-[#06b6d4] border-solid p-4 h-full rounded-xl "
+        >
+          <span className="circle"></span>
+          <h1 className="text-3xl text-center text-[#06b6d4] drop-shadow-lg"> Clases Particulares</h1>
+          <p className="m-2">
             Son para vos si sabés lo querés y vas con toda en esa dirección, o si apreciás el fruto de un trabajo
             sostenido y preferís el mentoreo individual.
-          </div>
+          </p>
         </div>
       </div>
     </div>
+
   )
 }
 
@@ -83,18 +87,27 @@ interface LineasProps {
   descripcion: string
   lista: string[]
   btntxt: string
+  imagen:JSX.Element
 }
 
-const Lineas = ({ titulo, descripcion, lista, btntxt }: LineasProps) => {
-  return <div className="flex w-[700px] m-10 border-4 border-dotted  border-blue-500 p-10 rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
+const Lineas = ({ titulo, descripcion, imagen, lista, btntxt }: LineasProps) => {
+  return <div className="flex w-[800px] m-10 border-4 border-dashed border-black p-10 rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
+  
 
-    <h1 className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg w-fit font-bold [writing-mode:vertical-rl] [text-orientation:upright]`}>
+    <h1 className={`${Jersey.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg w-fit font-bold [writing-mode:vertical-rl] [text-orientation:upright]`}>
       {titulo} </h1>
-    <div className='flex bg-white  flex-col py-10 gap-9 rounded-xl'>
-      <h3 className='text-xl px-10'>
+    
+    <div className='flex bg-white flex-col py-10 gap-9 rounded-xl'>
+      <div className='flex flex-col gap-4'>
+
+      <h3 className='text-xl text-center'>
         {descripcion}
       </h3>
-      <ul className='flex flex-col gap-4 px-10'>
+   
+      {imagen}
+   
+      </div>
+      <ul className='flex flex-col text-center gap-4 px-10'>
         {lista.map(txt => (<li key={txt}> •  {txt}</li>))}
       </ul>
 
@@ -109,15 +122,15 @@ const Lineas = ({ titulo, descripcion, lista, btntxt }: LineasProps) => {
 
 const Modulo = () => {
   return (
-    <div className="flex flex-col m-10 px-20 items-center justify-center">
-      <div className="bg-slate-100 p-10  rounded-xl">
+    <div className="flex flex-col m-10 px-20 mx-20 items-center justify-center ">
+      <div className="p-10 border-4 border-dashed border-black rounded-xl">
         <h1 data-aos="fade-left" className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text m-10 drop-shadow-lg text-7xl`}>
           Líneas de contenido
         </h1>
-        <p className='px-10 text-xl text-center'>
+        <p className='px-10 bg-white rounded-xl text-2xl text-center'>
           {' '}
-          Hemos desarrollado un esquema que nos permite ofrecer oportunidades de formación para todos los niveles de
-          aprendizaje, en módulos cortos y autoconclusivos. Los módulos propuestos se corresponden con determinados
+          Hemos desarrollado un esquema que nos permite ofrecer <span className='font-bold text-[#06b6d4]'>oportunidades de formación para todos los niveles de
+          aprendizaje, en módulos cortos y autoconclusivos/span</span>. Los módulos propuestos se corresponden con determinados
           temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse
           reiterados en varios talleres. No todas las correlatividades son difíciles. ¡Consultanos!
         </p>
@@ -128,36 +141,53 @@ const Modulo = () => {
         descripcion="Aprendemos mediante la experiencia en grupo, bajo la premisa de que lxs alumnxs puedan recibir a quienes lleguen y tener la oportunidad para guiar a lxs otrxs y poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo"
         lista={['Formación grupal, abierta a todo público.',
           'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas']}
-        btntxt='Próximamente...' />
+        btntxt='Próximamente...'
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel.jpeg' alt='' width={200} height={200} />} />
+
+
+
+
+
       <Lineas
-      titulo='DIDÁCTICA'
-      descripcion='En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir'
-      lista={['Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
-        'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica']}
-      btntxt='Convocatoria Ludidáctica'/>
+        titulo='DIDÁCTICA'
+        descripcion='En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir'
+        lista={['Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
+          'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica']}
+        btntxt='Convocatoria Ludidáctica' 
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
+
+        
+
+
+
+
       <Lineas
-      titulo='PEDAGÓGICA'
-      descripcion='En la línea pedagógica exploramos la relación humana con el proceso educativo. Qué hace allí el docente? Desde dónde se para? Cómo decide qué va a mostrar? Y qué está mostrando -es decir, enseñando- con su actutid, sus acciones, su forma de estar? Cuál es el proyecto político y cultural que incorpora?'
-      lista={['Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.', 
-        'Expresada en encuentros, charlas, conversatorios y escritos']}
-      btntxt='Ver blog'/>
+        titulo='PEDAGÓGICA'
+        descripcion='En la línea pedagógica exploramos la relación humana con el proceso educativo. ¿Qué hace allí el docente? ¿Desde dónde se para? ¿Cómo decide qué va a mostrar? ¿Qué muestra -es decir, enseñando- con su actutid, sus acciones, su forma de estar? ¿Cuál es el proyecto político y cultural que incorpora?'
+        lista={['Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.',
+          'Expresada en encuentros, charlas, conversatorios y escritos']}
+        btntxt='Ver blog'
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
+
+
     </div>
   )
 }
 
 const Tecnologias = () => {
   return (
-    <div className='m-20'>
-      <h1 className="p-8 mx-4 text-3xl rounded-xl bg-slate-100">
+    <div className='m-20 rounded-xl bg-slate-100/50'>
+      <h1 data-aos="fade-left" className={`${Jersey.className} m-10 pt-10 drop-shadow-lg text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}>
+          Tecnologías
+        </h1>
+      <h1 className="p-8 mx-4 text-3xl ">
         Todas las propuestas se encuentran dirigidas tanto a personas pertenecientes al ámbito educativo, como a un
-        público general, que busquen formarse en cada una de las líneas de contenido y -en el caso de la línea técnica- de las{' '}
+        público general, que busquen formarse en cada una de las líneas de contenido y -en el caso de la línea técnica- en las{' '}
         <span className="font-bold text-cyan-500">tecnologías con las que trabajamos.</span>
       </h1>
 
-      <div className="text-center">
-        <h1 data-aos="fade-left" className={`${Jersey.className} m-10 pt-10 drop-shadow-lg text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}>
-          Tecnologías
-        </h1>
+    
+        
         <div className=" grid grid-cols-3 gap-[40px]  p-20 place-items-center ">
           <LogoTec
             nombre="Python"
@@ -221,7 +251,7 @@ const Tecnologias = () => {
           />
         </div>
       </div>
-    </div>
+   
   )
 }
 

@@ -1,13 +1,14 @@
+import Image from "next/image"
 import Link from "next/link"
 
 export default function LogoLema() {
 
     return<Link href="/inicio">
         <div className="flex w-[80%] items-center">
-            <img className="w-[20%]"src="/img/Logo.png" />
+            <Image  src="/img/Logo.png" alt={""} width={180} height={180} />
              <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">
-               <img className="" src="/img/Lema.png"/>
-                <p>Tecnologías pedagógicas emergentes </p>
+               <Image className="" src="/img/Lema.png" alt={""} width={800} height={800}/>
+                <p className="text-[1em] m-0">Tecnologías pedagógicas emergentes </p>
             </div>
         </div>
     </Link>

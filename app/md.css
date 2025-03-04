@@ -1,4 +1,8 @@
 /* Estilos generales componentes */
+p{
+  margin:1em;
+  font-size: 1.1em;
+}
 
 h1 {
   font-size: 3em;
@@ -7,8 +11,9 @@ h1 {
 
 
 h3{
+  margin:1em;
   font-size: 1.5em;
-  text-align: center;
+
 }
 h4{
   font-size: 1.3em;
@@ -16,6 +21,7 @@ h4{
 
 }
 
+p
 
 .md li {
   margin-left: 1em;
@@ -30,10 +36,7 @@ h4{
   color: brown;
 }
 
- .md p {
-  margin: 1em ;
-  text-align: left;
-}
+
 
 
 
@@ -46,7 +49,7 @@ h4{
   margin: 20px;
   shape-outside: circle(50% at 30%);
   clip-path: circle(50% at 0%);
-  background: #4198AA;
+  background:#06b6d4;
 }
 
 
@@ -98,9 +101,4 @@ h4{
 }
 .btn-15:active {
   top: 2px;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
 }

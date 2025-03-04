@@ -8,7 +8,8 @@ import Hero from './hero'
 
 
 export default function Page() {
-  return (
+  return (<div className='flex flex-col items-center justify-center'>
+
   <WithAOS>
       <Hero />
       <Portada />
@@ -18,5 +19,6 @@ export default function Page() {
       <Contacto />
     </WithAOS>
  
+  </div>
   )
 }

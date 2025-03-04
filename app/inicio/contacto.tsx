@@ -1,5 +1,5 @@
 'use client'
-import { CircleChevronDown, CircleChevronUp } from 'lucide-react'
+import { CircleChevronUp } from 'lucide-react'
 import Pantalla from './pantalla'
 // @ts-ignore meta
 import ContentCont, { meta } from '@/app/inicio/contacto.mdx'
@@ -16,7 +16,7 @@ export default function Contacto() {
       two={<Imagenes />}
       title={meta.titulo}
       btn={
-        <Link className="custom-btn btn-15" href="/contacto">
+        <Link className="custom-btn btn-15" href="https://www.instagram.com/ludidactas" target='_blank'>
           {' '}
           ¡Contáctanos!{' '}
         </Link>

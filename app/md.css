@@ -1,7 +1,8 @@
 /* Estilos generales componentes */
 p{
   margin:1em;
-  font-size: 1.1em;
+  font-size: 1.15em;
+  font:bold ;
 }
 
 h1 {
@@ -61,10 +62,11 @@ p
 
 /* Estilos botones componentes */
 .custom-btn {
+  font-family: 'Jersey 10', sans-serif;;
   color: #fff;
   margin-top:20px;
   padding: 10px 25px; 
-  background: transparent;
+  background: white;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;

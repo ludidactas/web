@@ -1,3 +1,4 @@
+import { Jersey } from "@/components/fonts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,7 +64,7 @@ const Menu = () => (
     <div className="block md:hidden">
       <MenuMobile />
     </div>
-    <div className="hidden md:block">
+    <div className={`${Jersey.className} text-4xl hidden md:block`}>
       <MenuDesktop />
     </div>
   </>

@@ -16,7 +16,7 @@ export default function Hero() {
                             <p className="text-3xl text-indigo-500 m-0">¡Si estás interesadx, accedé a la info completa y escribinos!</p>    
                                
                            
-                            <Link className="custom-btn btn-15 w-40 text-center" href="/propuestas/convocatoria">Convocatoria</Link>
+                            <Link className="custom-btn btn-15 w-40 text-center" href="/convocatoria">Convocatoria</Link>
                             
                         
                         </div>

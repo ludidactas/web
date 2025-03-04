@@ -2,6 +2,7 @@ import {  Jersey } from '@/components/fonts'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import Image from 'next/image'
+import Link from 'next/link';
 
 const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; descripcion: string }) => {
   return (
@@ -88,9 +89,10 @@ interface LineasProps {
   lista: string[]
   btntxt: string
   imagen:JSX.Element
+  btnurl:string
 }
 
-const Lineas = ({ titulo, descripcion, imagen, lista, btntxt }: LineasProps) => {
+const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasProps) => {
   return <div className="flex w-[800px] m-10 border-4 border-dashed border-black p-10 rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
   
 
@@ -111,7 +113,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt }: LineasProps) => 
         {lista.map(txt => (<li key={txt}> •  {txt}</li>))}
       </ul>
 
-      <button className="custom-btn btn-15 w-fit self-center"> {btntxt}</button>
+      <Link className="custom-btn btn-15 w-fit self-center" href={btnurl}> {btntxt}</Link>
     </div>
 
   </div>
@@ -142,6 +144,7 @@ const Modulo = () => {
         lista={['Formación grupal, abierta a todo público.',
           'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas']}
         btntxt='Próximamente...'
+        btnurl=''
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel.jpeg' alt='' width={200} height={200} />} />
 
 
@@ -154,6 +157,7 @@ const Modulo = () => {
         lista={['Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
           'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica']}
         btntxt='Convocatoria Ludidáctica' 
+        btnurl='/convocatoria'
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
 
         
@@ -167,6 +171,7 @@ const Modulo = () => {
         lista={['Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.',
           'Expresada en encuentros, charlas, conversatorios y escritos']}
         btntxt='Ver blog'
+        btnurl=''
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
 
 

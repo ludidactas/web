@@ -171,7 +171,7 @@ const Modulo = () => {
         lista={['Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.',
           'Expresada en encuentros, charlas, conversatorios y escritos']}
         btntxt='Ver blog'
-        btnurl=''
+        btnurl='https://ludidactas.medium.com/'
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
 
 

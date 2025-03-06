@@ -4,7 +4,6 @@ import Pantalla from './pantalla'
 import Image from 'next/image'
 //@ts-ignore meta
 import Recur, { meta } from '@/app/inicio/recursos.mdx'
-import Link from 'next/link'
 import {Link as Scroll} from 'react-scroll';
 import { CircleChevronDown } from 'lucide-react';
 
@@ -18,10 +17,10 @@ export default function Recursos() {
       two={<Imagenes />}
       title={meta.titulo}
       btn={
-        <Link className="custom-btn btn-15" href="/roadmap">
+        <button className="custom-btn btn-15 btndisabled" disabled>
           {' '}
-          Proximamente...{' '}
-        </Link>
+          Próximamente...{' '}
+        </button>
       }
       scroll={<Scroll to="contactoini" smooth={true} duration={500}><CircleChevronDown className="w-full h-full" /></Scroll>
     }

@@ -39,9 +39,9 @@ const MenuMobile = () => (
 )
 
 //version props derivados existentes en Link
-const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="p-2 text-xl bg-white rounded-md hover:bg-black hover:text-white " />
+const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black " />
 
-const MenuDesktop = () => <div className="flex gap-4 items-center mr-10">
+const MenuDesktop = () => <div className="flex gap-4 bg-white/50 items-center mr-10">
     {/* Implementacion version props */}
     <MenuLink href="/identidad"> Identidad </MenuLink>
     <p className="text-2xl">|</p>

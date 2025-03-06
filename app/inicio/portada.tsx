@@ -11,7 +11,7 @@ export default function Portada() {
             <h3 className="mx-80 mb-20 text-center"> <span className="text-[#4198AA]">Aprendé a crear recursos educativos desautomatizados,</span> entrenando el arte de la programación, las animaciones y los videojuegos.</h3>
             {/* scrollTo es una funcion que te da window, se puede usar el nombre directamente */}
             <div className="w-10">
-            <Link to="identidadini" smooth={true} duration={500}><CircleChevronDown className="[animation:bounce_0.5s_infinite] w-full h-full" /></Link>
+            <Link to="identidadini" smooth={true} duration={500}><CircleChevronDown className=" bg-white/50 rounded-full [animation:bounce_0.8s_infinite] hover:text-white hover:bg-[#06b6d4] w-full h-full" /></Link>
 
             </div>
         </div>

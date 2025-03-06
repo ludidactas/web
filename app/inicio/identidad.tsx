@@ -18,7 +18,7 @@ export default function Identidad() {
         btn={
           <Link className="custom-btn btn-15" href="/identidad">
             {' '}
-            ¡Quiero saber más!{' '}
+             Más sobre el proyecto{' '}
           </Link>
         }
         scroll={
@@ -28,8 +28,6 @@ export default function Identidad() {
     </div>
   )
 }
-
-
 
 const Imagenes = () => (
   <div>

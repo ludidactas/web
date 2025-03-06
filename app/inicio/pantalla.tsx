@@ -24,7 +24,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
                 {two}
             </div>
         </div>
-        <div className="w-10 mb-40 [animation:bounce_0.5s_infinite]">
+        <div className="w-10 mb-40 bg-white/50 rounded-full [animation:bounce_0.8s_infinite] hover:text-white hover:bg-[#06b6d4]" >
 
         {scroll}
         </div>

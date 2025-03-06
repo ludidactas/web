@@ -3,61 +3,64 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Image from "next/image"
 import Link from "next/link"
 
-export default function page(){
-    return<div data-aos="fade-left" className="mx-20 items-center text-center">
+export default function page() {
+    return <div data-aos="fade-left" className="mx-20 py-10 items-center text-center">
         <div className="grid grid-cols-2 place-content-between mx-10">
             <div className={`${Jersey.className} flex flex-col items-center`}>
 
-        <Image src={"/img/CONVOCATORIA.png"} alt={""} width={500} height={500}/>
+                <Image src={"/img/CONVOCATORIA.png"} alt={""} width={450} height={450} />
 
-        <div className="border-4 border-black border-dashed m-10 p-2 bg-[#ffffb5]">
+                <div className="border-4 border-black border-dashed rounded-xl m-5 p-2 bg-[#ffffb5]">
 
-        <h1 className="m-2 drop-shadow-3xl text-4xl">Sábados de 11 a 13hs en Güemes</h1>
-        <h1 className="text-3xl">Desde abril</h1>
-        </div>
+                    <h1 className="m-2 drop-shadow-3xl text-3xl">Sábados de 11 a 13hs en Güemes</h1>
+                    <h1 className="text-2xl">Desde abril</h1>
+
+                </div>
+                <Link className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center" target='_blank' href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform">Formulario de inscripción</Link>
+
             </div>
-        <Carousel className="self-center border-4 border-black rounded-xl border-dashed bg-cyan-100/50">
-            <CarouselContent className="items-center">
-                <CarouselItem className="p-8">
-                 <Image className="w-full " src={"/img/slide1.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide2.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide3.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide4.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide5.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide6.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-               
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide7.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-                <CarouselItem className="p-8 w-fit">
-                 <Image className="w-full " src={"/img/slide8.png"} alt={""} width={500} height={200}></Image>   
-                   
-                </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
+            <Carousel className="self-center border-4 border-black rounded-xl border-dashed bg-cyan-100/50">
+                <CarouselContent className="items-center">
+                    <CarouselItem className="p-8">
+                        <Image className="w-full " src={"/img/slide1.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide2.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide3.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide4.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide5.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide6.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide7.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                    <CarouselItem className="p-8 w-fit">
+                        <Image className="w-full " src={"/img/slide8.png"} alt={""} width={500} height={200}></Image>
+
+                    </CarouselItem>
+                </CarouselContent>
+                <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
                 <CarouselNext className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
-              
-        </Carousel>
+
+            </Carousel>
         </div>
 
-        <Link className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center" target='_blank' href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform">Formulario de inscripción</Link>
-        </div>
+        {/* <Link className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center" target='_blank' href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform">Formulario de inscripción</Link> */}
+    </div>
 }

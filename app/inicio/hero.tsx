@@ -3,10 +3,13 @@ import { Jersey} from "@/components/fonts"
 import Image from "next/image"
 import Link from "next/link"
 
+interface HeroProps{
+    className:string
+}
 
-export default function Hero() {
-    return <div data-aos='zoom-out' data-aos-duration="1000" className="heroini self-center w-[1300px] border-solid border-4 border-black rounded-xl flex gap-2 p-5 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" >
-                    <Image className="animate-bounce" width={300} height={300}src={"/img/CONVOCATORIA.png"} alt={""}/>
+export default function Hero({className}:HeroProps) {
+    return <div data-aos='zoom-out' data-aos-duration="1000" className={className} >
+                    <Image className="[animation:bounce_2s_infinite]" width={300} height={300}src={"/img/CONVOCATORIA.png"} alt={""}/>
                     <div className={`${Jersey.className} flex gap-2 p-6 bg-white border-4 border-black border-dashed rounded-xl`} >
                         <div className="flex items-center flex-col ">
                             

@@ -38,7 +38,7 @@ export default function Page() {
           </h1>
 
           <div className="flex flex-col text-center  mx-20 p-2">
-            <p className="text-[1.4rem] m-10 p-10 f bg-white border-4 border-black border-dotted rounded-xl mb-10">
+            <p className="text-[1.4rem] m-10 p-10 f bg-white border-4 border-black border-dashed rounded-xl mb-10">
               Uno de los desafíos que se nos presenta a los educadores en la actualidad es la <span className='text-[#46BFD7] font-bold'>creciente disociación
               entre diferentes áreas de la enseñanza</span> en todos los niveles educativos. Sumado a esto, actualmente
               experienciamos una <span className='font-bold text-[#46BFD7]'>progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas

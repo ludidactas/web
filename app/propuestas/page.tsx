@@ -4,27 +4,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import Image from 'next/image'
 import Link from 'next/link';
 
-const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; descripcion: string }) => {
-  return (
-    <TooltipProvider delayDuration={100}>
-      <Tooltip>
-        <TooltipTrigger>
-          <Image className="w-full h-full " src={url} width={100} height={100} alt="" />
-        </TooltipTrigger>
-        <TooltipContent className="bg-black text-white w-[20em] p-5">
-          <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
-          <p className='text-center'>{descripcion}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
-}
+const Convocatoria=()=>{
+  return<div>
 
+  </div>
+
+}
 const Formatos = () => {
   return (
     <div className="mt-20 mx-15 flex flex-col items-center rounded-xl pt-10">
-      <h2 className="text-3xl">En Ludidactas hemos diseñado 3 propuestas o lineas de contenido principales:</h2>
-      <h2 className={`${Jersey.className} my-5 text-5xl text-[#06b6d4]`}>técnica, didáctica y pedagógica.</h2>
+      {/* <h2 className="text-3xl">En Ludidactas hemos diseñado 3 propuestas o lineas de contenido principales:</h2>
+      <h2 className={`${Jersey.className} my-5 text-5xl text-[#06b6d4]`}>técnica, didáctica y pedagógica.</h2> */}
       <h2 className="text-center text-3xl w-fit px-10 rounded-xl">
         Las propuestas se ofrecen en formato seminario, taller y clases particulares:
       </h2>
@@ -93,23 +83,23 @@ interface LineasProps {
 }
 
 const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasProps) => {
-  return <div className="flex w-[800px] m-10 border-4 border-dashed border-black p-10 rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
+  return <div className="flex w-[800px] m-10 border-4 px-10 border-dashed border-black rounded-xl items-center gap-8" data-aos="fade-up" data-aos-duration="1000">
   
 
     <h1 className={`${Jersey.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg w-fit font-bold [writing-mode:vertical-rl] [text-orientation:upright]`}>
       {titulo} </h1>
     
-    <div className='flex bg-white flex-col py-10 gap-9 rounded-xl'>
-      <div className='flex flex-col gap-4'>
+    <div className='flex bg-white/80 flex-col py-10 gap-5 rounded-xl'>
+      <div className='flex flex-col items-center p-5 gap-4'>
 
-      <h3 className='text-xl text-center'>
+      <h3 className='text-xl text-center font-semibold text-[#06b6d4]'>
         {descripcion}
       </h3>
    
       {imagen}
    
       </div>
-      <ul className='flex flex-col text-center gap-4 px-10'>
+      <ul className='flex flex-col text-left gap-4 px-10'>
         {lista.map(txt => (<li key={txt}> •  {txt}</li>))}
       </ul>
 
@@ -125,14 +115,15 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
 const Modulo = () => {
   return (
     <div className="flex flex-col m-10 px-20 mx-20 items-center justify-center ">
+      
       <div className="p-10 border-4 border-dashed border-black rounded-xl">
-        <h1 data-aos="fade-left" className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text m-10 drop-shadow-lg text-7xl`}>
+        <h1 data-aos="fade-left" className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-7xl`}>
           Líneas de contenido
         </h1>
         <p className='px-10 bg-white rounded-xl text-2xl text-center'>
           {' '}
           Hemos desarrollado un esquema que nos permite ofrecer <span className='font-bold text-[#06b6d4]'>oportunidades de formación para todos los niveles de
-          aprendizaje, en módulos cortos y autoconclusivos/span</span>. Los módulos propuestos se corresponden con determinados
+          aprendizaje, en módulos cortos y autoconclusivos</span>. Los módulos propuestos se corresponden con determinados
           temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse
           reiterados en varios talleres. No todas las correlatividades son difíciles. ¡Consultanos!
         </p>
@@ -145,7 +136,7 @@ const Modulo = () => {
           'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas']}
         btntxt='Próximamente...'
         btnurl=''
-        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel.jpeg' alt='' width={200} height={200} />} />
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel.jpeg' alt='' width={150} height={150} />} />
 
 
 
@@ -158,7 +149,7 @@ const Modulo = () => {
           'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica']}
         btntxt='Convocatoria Ludidáctica' 
         btnurl='/convocatoria'
-        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={150} width={150}/>} />
 
         
 
@@ -172,13 +163,27 @@ const Modulo = () => {
           'Expresada en encuentros, charlas, conversatorios y escritos']}
         btntxt='Ver blog'
         btnurl='https://ludidactas.medium.com/'
-        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={200} width={200}/>} />
+        imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={150} width={150}/>} />
 
 
     </div>
   )
 }
-
+const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; descripcion: string }) => {
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger>
+          <Image className="w-full h-full " src={url} width={100} height={100} alt="" />
+        </TooltipTrigger>
+        <TooltipContent className="bg-black text-white w-[20em] p-5">
+          <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
+          <p className='text-center'>{descripcion}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 const Tecnologias = () => {
   return (
     <div className='m-20 rounded-xl bg-slate-100/50'>
@@ -263,8 +268,9 @@ const Tecnologias = () => {
 export default function Page() {
   return (
     <>
-      <Formatos />
+      <Convocatoria/>
       <Modulo />
+      <Formatos />
       <Tecnologias />
     </>
   )

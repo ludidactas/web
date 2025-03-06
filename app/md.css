@@ -62,7 +62,8 @@ p
 
 /* Estilos botones componentes */
 .custom-btn {
-  font-family: 'Jersey 10', sans-serif;;
+  font-family: 'Jersey 10', sans-serif;
+  font-size: larger;
   color: #fff;
   margin-top:20px;
   padding: 10px 25px; 
@@ -75,10 +76,19 @@ p
 }
 
 .btn-15 {
-  color: #c04aff;
+  color: #ab32ec;
   border: 1px solid#9a1adf;
   box-shadow: 0 0 5px #9a1adf, 0 0 5px #9a1adf inset;
   z-index: 1;
+ 
+}
+
+.btndisabled{
+  box-shadow: 0 0 5px black, 0 0 5px black;
+  color:black;
+  background: #dbd8d8;
+  border: 1px solid#c1bcc4;
+
 }
 .btn-15:after {
   position: absolute;
@@ -94,6 +104,15 @@ p
   transition: all 0.3s ease;
   border-radius: 10px;
 }
+
+.btndisabled:after{
+  background: #67606b;
+  box-shadow:
+   0 0 20px  #9b959f;
+  transition: none;
+  color:#9b959f
+}
+
 .btn-15:hover {
   color: #fff;
 }

@@ -8,10 +8,11 @@ import Hero from './hero'
 
 
 export default function Page() {
-  return (<div className='flex flex-col items-center justify-center'>
-
-  <WithAOS>
-      <Hero className="heroini self-center w-[1300px] border-solid border-4 border-black rounded-xl flex gap-2 p-5 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50"/>
+  return (
+  
+  <div className='flex flex-col items-center justify-center'>
+   <WithAOS>
+      <Hero/>
       <Portada />
       <Identidad />
       <Propuestas />

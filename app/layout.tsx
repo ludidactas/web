@@ -29,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <LogoLema />
               <Menu />
             </div>
-            <div className='mx-10 border-x-4 border-slate-200 border-dashed '>
+            <div className='mx-4 md:mx-10 border-x-4 border-slate-200 border-dashed '>
 
             {children}
             </div>

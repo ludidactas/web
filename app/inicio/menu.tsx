@@ -1,42 +1,51 @@
+'use client'
 import { Jersey } from "@/components/fonts";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { AlignJustify } from "lucide-react";
 import Link from "next/link";
-import { ComponentProps } from "react";
+import { ComponentProps, useState } from "react";
 
-const MenuMobile = () => (
-  <DropdownMenu>
+const MenuMobile = () => {
+  const [open, setOpen] = useState(false);
+
+  const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
+  };
+
+  const handleItemClick = () => {
+    // Close the dropdown
+    setOpen(false);
+  };
+
+  return (
+  <DropdownMenu open={open} onOpenChange={handleOpenChange}>
     <DropdownMenuTrigger>
-      <AlignJustify size={44} />
+      <AlignJustify size={30} />
     </DropdownMenuTrigger>
-    <DropdownMenuContent>
-      <DropdownMenuLabel>MENU</DropdownMenuLabel>
-      <DropdownMenuSeparator />
+    <DropdownMenuContent onClick={handleItemClick}>
       <DropdownMenuItem>
-        <Link href="/propuestas">Identidad</Link>
+        <Link href="/identidad">Identidad</Link>
       </DropdownMenuItem>
       <DropdownMenuItem>
-        <Link href="/identidad">Propuestas</Link>
+        <Link href="/propuestas">Propuestas</Link>
       </DropdownMenuItem>
       {/* <DropdownMenuItem>
         <Link href="https://www.instagram.com/recursos/">Recursos</Link>
       </DropdownMenuItem> */}
       <DropdownMenuItem>
-        <Link href="https://www.instagram.com/ludidactas/">Contacto</Link>
+        <Link target="_blank" href="https://www.instagram.com/ludidactas/">Contacto</Link>
       </DropdownMenuItem>
       <DropdownMenuItem>
-        <Link href="https://ludidactas.medium.com/">Blog</Link>
+        <Link target="_blank" href="https://ludidactas.medium.com/">Blog</Link>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
-)
+)}
 
 //version props derivados existentes en Link
 const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black " />
@@ -61,7 +70,7 @@ const MenuDesktop = () => <div className="flex gap-4 bg-white/50 items-center mr
 //Renderiza uno u otro según se le indique en
 const Menu = () => (
   <>
-    <div className="block md:hidden">
+    <div className="block w-10 md:hidden">
       <MenuMobile />
     </div>
     <div className={`${Jersey.className} text-4xl hidden md:block`}>

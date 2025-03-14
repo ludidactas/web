@@ -129,9 +129,9 @@ const Modulo = () => {
     <div className="flex flex-col m-4 md:m-10 md:px-20 md:mx-20 items-center justify-center ">
 
       <div className="p-4 md:border-4 md:border-dashed md:border-black md:rounded-xl">
-        <h1 data-aos="fade-left" className={`${Jersey.className} bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-xl md:text-7xl`}>
+        <h2 data-aos="fade-left" className={`${Jersey.className} h2ludi bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-xl md:text-7xl`}>
           Líneas de contenido
-        </h1>
+        </h2>
         <p className='px-4 md:px-10 bg-white rounded-xl text-[0.8rem] md:text-2xl text-center'>
           {' '}
           Hemos desarrollado un esquema que nos permite ofrecer <span className='font-bold text-[#06b6d4]'>oportunidades de formación para todos los niveles de

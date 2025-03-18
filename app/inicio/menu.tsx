@@ -28,6 +28,9 @@ const MenuMobile = () => {
       <AlignJustify size={30} />
     </DropdownMenuTrigger>
     <DropdownMenuContent onClick={handleItemClick}>
+    <DropdownMenuItem>
+        <Link href="/inicio">Inicio</Link>
+      </DropdownMenuItem>
       <DropdownMenuItem>
         <Link href="/identidad">Identidad</Link>
       </DropdownMenuItem>

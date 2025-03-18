@@ -1,28 +1,4 @@
-/* Estilos generales componentes */
-p{
-  margin:1em;
-  font-size: 1.15em;
-  font:bold ;
-}
-
-h1 {
-  font-size: 3em;
-  text-align: center;
-}
-
-
-h3{
-  margin:1em;
-  font-size: 1.5em;
-
-}
-h4{
-  font-size: 1.3em;
-  padding:2em
-
-}
-
-p
+/* Estilos md roadmap */
 
 .md li {
   margin-left: 1em;
@@ -38,12 +14,9 @@ p
 }
 
 
-
-
-
 /* Estilos propuestas */
 
- .circle {
+ /* .circle {
   float: left;
   width: 150px;
   height:150px;
@@ -51,7 +24,7 @@ p
   shape-outside: circle(50% at 30%);
   clip-path: circle(50% at 0%);
   background:#06b6d4;
-}
+} */
 
 
 /* Estilos roadmap */

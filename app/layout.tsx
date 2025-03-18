@@ -1,3 +1,4 @@
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
 import { GoogleTagManager } from '@next/third-parties/google'
 import { GoogleAnalytics } from '@next/third-parties/google'
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${NovaF.className} ${inter.className} antialiased`}>
         <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
+        <VercelAnalytics />
         <BibliotecaRoot>
           <Textura>
             <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4">

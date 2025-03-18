@@ -1,3 +1,6 @@
+import { GoogleTagManager } from '@next/third-parties/google'
+import { GoogleAnalytics } from '@next/third-parties/google'
+
 import type { Metadata } from 'next'
 
 import './globals.css'
@@ -21,19 +24,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
     <html lang="en">
       <body className={`${NovaF.className} ${inter.className} antialiased`}>
-        {/* <GoogleAnalytics gaId="G-VYSMHGH9RZ" /> */}
-        {/* <GoogleTagManager gtmId="GTM-M4H5VXKB" /> */}
+        <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
+        <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <BibliotecaRoot>
           <Textura>
             <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4">
               <LogoLema />
               <Menu />
             </div>
-            <div className='mx-2 md:mx-10 border-x-4 border-slate-200 border-dashed '>
+            <div className="mx-2 md:mx-10 border-x-4 border-slate-200 border-dashed ">{children}</div>
 
-            {children}
-            </div>
-            
             <Footer />
           </Textura>
         </BibliotecaRoot>

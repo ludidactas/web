@@ -11,73 +11,50 @@ const Convocatoria = () => {
   </div>
 
 }
-const Formatos = () => {
+interface FormatosProps {
+  formato: string,
+  descripcion: string
+
+}
+
+const Formatos = ({ formato, descripcion }: FormatosProps) => {
+  return <div
+    data-aos="fade-left"
+    data-aos-duration="2000"
+    data-aos-delay="100"
+    className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl "
+  >
+
+    <h1 className="flex text-xl md:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
+      <Waypoints className='w-20' />
+      {formato}
+      <Waypoints className='w-20' />
+    </h1>
+    <p className="m-2 text-[1rem] md:text-lg">
+      {descripcion}
+    </p>
+  </div>
+}
+
+const FormatosModulo = () => {
   return (
     <div className="md:mt-20 md:mx-15 flex flex-col items-center text-center rounded-xl md:pt-10">
-      <h2 className="text-center font-bold text-[0.8rem] md:text-3xl w-fit px-10 rounded-x bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text">
-        Las propuestas se ofrecen en formato seminario, taller y clases particulares:
+      <h2 className="text-center font-bold text-xl md:text-3xl w-fit px-10 rounded-x bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text">
+        Las propuestas se ofrecen en formato seminario, taller y clases particulares
       </h2>
 
       <div className="bg-white flex flex-col md:grid md:grid-cols-3 gap-4 place-content-between m-10 md:m-20">
 
-        <div
-          data-aos="fade-left"
-          data-aos-duration="2000"
-          data-aos-delay="100"
-          className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl "
-        >
-
-          <h1 className="flex text-[1rem] md:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
-            <Waypoints className='w-20' />
-            Seminarios
-            <Waypoints className='w-20' />
-          </h1>
-          <p className="m-2 text-[0.6rem] md:text-lg">
-            Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
+        <Formatos formato='Seminario' descripcion='Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
             puntual. Es ideal para almas autodidactas que pueden aprovechar una buena rampa de entrada a un tema que
-            les evite el famoso &quot;infierno de tutoriales&quot;.
-          </p>
-        </div>
+            les evite el famoso &quot;infierno de tutoriales&quot;.'/>
 
-        <div
-          data-aos="fade-left"
-          data-aos-duration="2000"
-          data-aos-delay="200"
-          className="border-2 border-[#06b6d4] border-solid p-4 h-full rounded-xl  "
-        >
-
-
-
-
-          <h1 className="flex text-[1rem] md:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
-            <Waypoints className='w-20' />
-            Talleres
-            <Waypoints className='w-20' />
-          </h1>
-          <p className="m-2 text-[0.6rem] md:text-lg">
-            Son instancias largas, recurrentes, orientadas alrededor de una línea de desarrollo de proyectos. Es ideal
+        <Formatos formato='Talleres' descripcion=' Son instancias largas, recurrentes, orientadas alrededor de una línea de desarrollo de proyectos. Es ideal
             para almas aplicadas, que disfruten el trabajo en equipo, y la buena cosecha que sigue a una buena
-            siembra.
-          </p>
-        </div>
+            siembra.'/>
+        <Formatos formato='Clases Particulares' descripcion='Son para vos si sabés lo querés y vas con toda en esa dirección, o si apreciás el fruto de un trabajo
+            sostenido y preferís el mentoreo individual.'/>
 
-        <div
-          data-aos="fade-left"
-          data-aos-duration="2000"
-          data-aos-delay="300"
-          className="border-2 border-[#06b6d4] border-solid p-4 h-full rounded-xl "
-        >
-
-          <h1 className="flex text-[1rem] md:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
-            <Waypoints className='w-20' />
-            Clases Particulares
-            <Waypoints className='w-20' />
-          </h1>
-          <p className="m-2 text-[0.6rem] md:text-lg">
-            Son para vos si sabés lo querés y vas con toda en esa dirección, o si apreciás el fruto de un trabajo
-            sostenido y preferís el mentoreo individual.
-          </p>
-        </div>
       </div>
     </div>
 
@@ -98,20 +75,20 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
   return <div className="flex flex-col md:flex-row w-fit mx-4 md:w-[800px] m-4 md:m-10 border-2 p-4 md:px-10 border-dashed border-black rounded-xl items-center md:gap-8" data-aos="fade-up" data-aos-duration="1000">
 
 
-    <h1 className={`${Jersey.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-xl md:text-5xl md:w-fit font-bold md:[writing-mode:vertical-rl] md:[text-orientation:upright]`}>
+    <h1 className={`${Jersey.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl md:text-7xl md:w-fit font-bold md:[writing-mode:vertical-rl] md:[text-orientation:upright]`}>
       {titulo} </h1>
 
-    <div className='flex bg-white/80 flex-col md:py-10 md:gap-5 rounded-xl'>
+    <div className='flex bg-white/80 flex-col md:py-10 md:gap-4  rounded-xl'>
       <div className='flex flex-col items-center md:p-5 md:gap-4'>
 
-        <h3 className='text-[0.6rem] md:text-xl text-center font-semibold text-[#06b6d4]'>
+        <h3 className='text-[1rem] md:text-2xl m-4 text-center font-semibold text-[#06b6d4]'>
           {descripcion}
         </h3>
 
         {imagen}
 
       </div>
-      <ul className='flex flex-col text-center gap-4 p-4 md:px-10 text-[0.6rem] md:text-lg'>
+      <ul className='flex flex-col font-bold text-center gap-4 p-4 md:px-10 text-[1rem] md:text-lg'>
         {lista.map(txt => (<li key={txt}> •  {txt}</li>))}
       </ul>
 
@@ -124,21 +101,22 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
 }
 
 
-const Modulo = () => {
+const LineasModulo = () => {
   return (
     <div className="flex flex-col m-4 md:m-10 md:px-20 md:mx-20 items-center justify-center ">
 
-      <div className="p-4 md:border-4 md:border-dashed md:border-black md:rounded-xl">
-        <h2 data-aos="fade-left" className={`${Jersey.className} h2ludi bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-xl md:text-7xl`}>
+      <div className="p-4 text-center  md:px-10 bg-white rounded-xl text-[1rem] md:text-2xl">
+        <h2 data-aos="fade-left" className={`${Jersey.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg md:text-7xl`}>
           Líneas de contenido
         </h2>
-        <p className='px-4 md:px-10 bg-white rounded-xl text-[0.8rem] md:text-2xl text-center'>
+        <p className='m-4'>
           {' '}
           Hemos desarrollado un esquema que nos permite ofrecer <span className='font-bold text-[#06b6d4]'>oportunidades de formación para todos los niveles de
             aprendizaje, en módulos cortos y autoconclusivos</span>. Los módulos propuestos se corresponden con determinados
           temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse
-          reiterados en varios talleres. No todas las correlatividades son difíciles. <span className='font-bold text-[#06b6d4]'>¡Consultanos!</span>
-        </p>
+          reiterados en varios talleres. No todas las correlatividades son difíciles</p>
+        <p className='font-bold text-[#06b6d4]'>¡Consultanos!</p>
+
       </div>
 
       <Lineas
@@ -150,10 +128,6 @@ const Modulo = () => {
         btnurl=''
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel.jpeg' alt='' width={150} height={150} />} />
 
-
-
-
-
       <Lineas
         titulo='DIDÁCTICA'
         descripcion='En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir'
@@ -162,11 +136,6 @@ const Modulo = () => {
         btntxt='Convocatoria Ludidáctica'
         btnurl='/convocatoria'
         imagen={<Image className='w-fit h-fit self-center rounded-full' src='/img/grupopixel2.jpeg' alt='' height={150} width={150} />} />
-
-
-
-
-
 
       <Lineas
         titulo='PEDAGÓGICA'
@@ -198,19 +167,16 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
 }
 const Tecnologias = () => {
   return (
-    <div className='mx-10 md:m-20 rounded-xl bg-slate-100/50'>
-      <h1 data-aos="fade-left" className={`${Jersey.className} m-4 md:m-10 pt-10 drop-shadow-lg text-xl md:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}>
+    <div className='mx-8 md:m-20 rounded-xl bg-slate-100/50'>
+      <h1 data-aos="fade-left" className={`${Jersey.className} m-4 md:m-10 pt-10 drop-shadow-lg text-4xl text-center md:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}>
         Tecnologías
       </h1>
-      <h1 className="p-4 md:p-8 mx-4 text-[0.8rem] md:text-3xl ">
-        Todas las propuestas se encuentran dirigidas tanto a personas pertenecientes al ámbito educativo, como a un
-        público general, que busquen formarse en cada una de las líneas de contenido y -en el caso de la línea técnica- en las{' '}
+      <p className=" font-bold text-center md:p-8 mx-4 text-[1rem] md:text-3xl ">
+        Todas las propuestas se encuentran dirigidas a cualquier persona que busque formarse en cada una de las líneas de contenido y -en el caso de la línea técnica- en cada una de las{' '}
         <span className="font-bold text-cyan-500">tecnologías con las que trabajamos.</span>
-      </h1>
+      </p>
 
-
-
-      <div className=" grid grid-cols-3 gap-[40px] p-8 md:p-20 place-items-center ">
+      <div className="grid grid-cols-3 gap-[40px] p-10 md:p-20 place-items-center ">
         <LogoTec
           nombre="Python"
           url="/img/tecnologias/python.png"
@@ -281,8 +247,8 @@ export default function Page() {
   return (
     <>
       <Convocatoria />
-      <Modulo />
-      <Formatos />
+      <LineasModulo />
+      <FormatosModulo />
       <Tecnologias />
     </>
   )

@@ -13,13 +13,17 @@ export default function Recursos() {
 
       <Pantalla
         title="Recursos y roadmap"
-        one={<p className='pludi'>
+        one={<>
+        
+        <p>
           Los contenidos producidos en los talleres, cursos y seminarios los hemos hechos disponibles en el sitio web, de modo que este funcione como biblioteca de recursos.
 
-          Estos recursos funcionan como material de referencia, abierto y gratuito.
-
-          <span className="text-center font-bold px-10 text-[#46BFD7]">¡Explorá los recursos que hemos creado para ti!</span>
-        </p>}
+          Estos recursos funcionan como material de referencia, abierto y gratuito.</p>
+          
+          <p className="font-bold mt-4 text-[#46BFD7]">¡Explorá los recursos que hemos creado para ti!
+        </p>
+        
+        </>}
         two={<Imagenes />}
         btn={
           <button className="custom-btn btn-15 btndisabled w-fit" disabled>

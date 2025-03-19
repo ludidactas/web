@@ -36,7 +36,7 @@ const HeroDesktop = ({ className }: HeroProps) => {
 const HeroMobile = ({ className }: HeroProps) => {
     return (
     <div data-aos-duration="1000" className={className} >    
-        <div className={`${Jersey.className} flex-col items-center flex gap-2 p-4 bg-white border-2 border-black border-dashed rounded-xl`}>
+        <div className={`${Jersey.className} flex-col h-max items-center flex gap-2 p-4 bg-white border-2 border-black border-dashed rounded-xl`}>
 
                     <Image className="w-[45vW]" width={400} height={400} src={"/img/CONVOCATORIA.png"} alt={""} />
                     <p className="text-2xl text-center p-4">Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol docente/didáctico/pedagógico y dispuestas a ocupar también el
@@ -62,7 +62,7 @@ const Hero = () => {
     return (
         <>
             <div className="block md:hidden">
-                <HeroMobile className="flex flex-col items-center h-[100vh] border-solid border-2 border-black rounded-xl p-4 bg-gradient-to-r from-cyan-500/50 to-blue-500/50" />
+                <HeroMobile className="flex flex-col items-center h-max border-solid border-2 border-black rounded-xl p-4 bg-gradient-to-r from-cyan-500/50 to-blue-500/50" />
             </div>
             <div className='hidden md:block'>
                 <HeroDesktop className="heroini self-center w-[1300px] border-solid border-4 border-black rounded-xl flex gap-2 p-5 items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50" />

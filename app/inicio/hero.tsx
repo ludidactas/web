@@ -1,10 +1,9 @@
 'use client'
 
+import BtnNeon from '@/components/custom/ld-btn-neon'
 import { titulo } from '@/components/fonts'
 import { CircleChevronDown } from 'lucide-react'
-
 import Image from 'next/image'
-import Link from 'next/link'
 import { Link as Scroll } from 'react-scroll'
 
 interface HeroProps {
@@ -29,9 +28,9 @@ const HeroDesktop = ({ className }: HeroProps) => {
           </p>
           <p className="text-3xl text-indigo-500 m-0">¡Si estás interesadx, accedé a la info completa y escribinos!</p>
 
-          <Link className="custom-btn btn-15 w-40 text-center" href="/convocatoria">
+          <BtnNeon className="w-40 text-center" href="/convocatoria">
             Convocatoria
-          </Link>
+          </BtnNeon>
         </div>
         <Image
           className="rounded-full w-fit border-2 shadow-xl"
@@ -60,9 +59,9 @@ const HeroMobile = ({ className }: HeroProps) => {
           ¡Si estás interesadx, accedé a la info completa y escribinos!
         </h3>
 
-        <Link className="custom-btn btn-15 w-[35vw] text-center" href="/convocatoria">
+        <BtnNeon className="w-[35vw] text-center" href="/convocatoria">
           Convocatoria
-        </Link>
+        </BtnNeon>
       </div>
       <div className="w-[8vw] my-10">
         <Scroll to="portadaini" smooth={true} duration={500}>

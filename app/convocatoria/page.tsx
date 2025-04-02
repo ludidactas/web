@@ -1,7 +1,7 @@
+import BtnNeon from '@/components/custom/ld-btn-neon'
 import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
 import Image from 'next/image'
-import Link from 'next/link'
 import { ComponentProps } from 'react'
 
 const CarouselConvocatoria = ({ children, className }: ComponentProps<typeof Carousel>) => (
@@ -62,20 +62,18 @@ export default function page() {
 
           <InfoConv />
 
-          <Link
-            className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center"
+          <BtnNeon
+            className="animate-bounce text-xl mb-10 text-center"
             target="_blank"
             href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform"
           >
             Formulario de inscripción
-          </Link>
+          </BtnNeon>
         </div>
 
         {/* Desktop */}
         <CarouselConvocatoria className="hidden md:block" />
       </div>
-
-      {/* <Link className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center" target='_blank' href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform">Formulario de inscripción</Link> */}
     </div>
   )
 }

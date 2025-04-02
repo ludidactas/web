@@ -1,10 +1,9 @@
 'use client'
-import { titulo } from '@/components/fonts'
+import BtnNeon from '@/components/custom/ld-btn-neon'
+import { titulo as fuenteTitulo } from '@/components/fonts'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Waypoints } from 'lucide-react'
-
 import Image from 'next/image'
-import Link from 'next/link'
 import { useState } from 'react'
 
 const Convocatoria = () => {
@@ -81,7 +80,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
       data-aos-duration="1000"
     >
       <h1
-        className={`${titulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl md:text-7xl md:w-fit font-bold md:[writing-mode:vertical-rl] md:[text-orientation:upright]`}
+        className={`${fuenteTitulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl md:text-7xl md:w-fit font-bold md:[writing-mode:vertical-rl] md:[text-orientation:upright]`}
       >
         {titulo}{' '}
       </h1>
@@ -98,10 +97,10 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
           ))}
         </ul>
 
-        <Link className="custom-btn btn-15 w-fit text-xs self-center" href={btnurl}>
+        <BtnNeon className="text-xs self-center" href={btnurl}>
           {' '}
           {btntxt}
-        </Link>
+        </BtnNeon>
       </div>
     </div>
   )
@@ -113,7 +112,7 @@ const LineasModulo = () => {
       <div className="p-4 text-center  md:px-10 bg-white rounded-xl text-[1rem] md:text-2xl">
         <h2
           data-aos="fade-left"
-          className={`${titulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg md:text-7xl`}
+          className={`${fuenteTitulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg md:text-7xl`}
         >
           Líneas de contenido
         </h2>
@@ -217,7 +216,7 @@ const Tecnologias = () => {
     <div className="mx-8 md:m-20 rounded-xl bg-slate-100/50">
       <h1
         data-aos="fade-left"
-        className={`${titulo.className} m-4 md:m-10 pt-10 drop-shadow-lg text-4xl text-center md:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
+        className={`${fuenteTitulo.className} m-4 md:m-10 pt-10 drop-shadow-lg text-4xl text-center md:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
       >
         Tecnologías
       </h1>

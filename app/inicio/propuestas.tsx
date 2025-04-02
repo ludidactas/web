@@ -2,46 +2,43 @@
 
 import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { Link as Scroll } from 'react-scroll';
-import Pantalla from './pantalla';
-
+import { Link as Scroll } from 'react-scroll'
+import Pantalla from './pantalla'
+import BtnNeon from '@/components/custom/ld-btn-neon'
 
 export default function Propuestas() {
   return (
-    <div className='propuestasini'>
+    <div className="propuestasini">
       <Pantalla
         title="Propuestas"
         one={
-        <>
-        <p className='pludi'>
-          En ludidactas hemos diseñado distintas propuestas de aprendizaje: <span className="text-[#46BFD7] font-bold">técnicas, didácticas y pedagógicas. </span>
+          <>
+            <p className="pludi">
+              En ludidactas hemos diseñado distintas propuestas de aprendizaje:{' '}
+              <span className="text-[#46BFD7] font-bold">técnicas, didácticas y pedagógicas. </span>
+              Esto quiere decir que{' '}
+              <span className="text-[#46BFD7] font-bold">
+                tanto si eres profe o estudiante, ¡puedes formarte con nosotros!{' '}
+              </span>{' '}
+            </p>
 
-          Esto quiere decir que <span className="text-[#46BFD7] font-bold">tanto si eres profe o estudiante, ¡puedes formarte con nosotros! </span> </p>
-
-          <p className='mt-4'>Te invitamos a que conozcas nuestras líneas de contenido y las distintas modalidades que hemos creado para vos.
-        </p>
-        </>
-        
-      }
-        two={<Imagenes />}
-        btn={
-          <Link className="custom-btn btn-15 w-fit" href="/propuestas">
-            {' '}
-            Ver propuestas{' '}
-          </Link>
+            <p className="mt-4">
+              Te invitamos a que conozcas nuestras líneas de contenido y las distintas modalidades que hemos creado para
+              vos.
+            </p>
+          </>
         }
+        two={<Imagenes />}
+        btn={<BtnNeon href="/propuestas"> Ver propuestas </BtnNeon>}
         scroll={
-          <Scroll to="recursosini" smooth={true} duration={500}><CircleChevronDown className="w-full h-full" /></Scroll>
-
-        } 
+          <Scroll to="recursosini" smooth={true} duration={500}>
+            <CircleChevronDown className="w-full h-full" />
+          </Scroll>
+        }
         espejado={true}
-        />
-
+      />
     </div>
-
   )
-
 }
 
 const Imagenes = () => (

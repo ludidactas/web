@@ -1,4 +1,4 @@
-import { Jersey } from '@/components/fonts'
+import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -51,7 +51,7 @@ export default function page() {
   return (
     <div data-aos="fade-left" className="md:mx-20 py-10 items-center text-center">
       <div className="flex flex-col md:grid md:grid-cols-2 place-content-between mx-10">
-        <div className={`${Jersey.className} flex flex-col items-center`}>
+        <div className={`${titulo.className} flex flex-col items-center`}>
           {/* Desktop */}
           <Image className="hidden md:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
 

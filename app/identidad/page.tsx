@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
-import { Jersey } from '@/components/fonts'
+import { titulo } from '@/components/fonts'
 import WithAOS from '@/components/ui/with-aos'
 import { PropsWithChildren } from 'react'
 
@@ -33,23 +33,27 @@ const IdDesktop = () => {
         <div className="mt-20">
           <h1
             data-aos="fade-left"
-            className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+            className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
           >
             ¿Qué nos motiva?
           </h1>
 
           <div className="flex flex-col text-center  mx-20 p-2">
             <p className="text-[1.4rem] m-10 p-10 f bg-white border-4 border-black border-dashed rounded-xl mb-10">
-              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la <span className='text-[#46BFD7] font-bold'>creciente disociación
-                entre diferentes áreas de la enseñanza</span> en todos los niveles educativos. Sumado a esto, actualmente
-              experienciamos una <span className='font-bold text-[#46BFD7]'>progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas
-                sociales.</span>{' '}
+              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la{' '}
+              <span className="text-[#46BFD7] font-bold">
+                creciente disociación entre diferentes áreas de la enseñanza
+              </span>{' '}
+              en todos los niveles educativos. Sumado a esto, actualmente experienciamos una{' '}
+              <span className="font-bold text-[#46BFD7]">
+                progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas sociales.
+              </span>{' '}
             </p>
 
             <div className="grid grid-cols-2  m-10 justify-center items-center ">
               <h1
                 data-aos="fade-left"
-                className={`${Jersey.className} m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-5xl`}
+                className={`${titulo.className} m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-5xl`}
               >
                 Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
                 que nos permita →
@@ -120,13 +124,19 @@ const IdDesktop = () => {
         <div className="flex flex-col mx-20 gap-20">
           <p className="text-[1.4rem] m-10 p-10 bg-sky-200/30 rounded-xl">
             Entendemos{' '}
-            <span className="text-[#46BFD7] font-bold text-2xl">el juego como germen de la educación y de la creatividad</span>,
-            que ocurre en la naturaleza espontánea y consistentemente <span className="text-[#46BFD7] font-bold text-2xl">con un rol didáctico:</span> cada especie juega como le
+            <span className="text-[#46BFD7] font-bold text-2xl">
+              el juego como germen de la educación y de la creatividad
+            </span>
+            , que ocurre en la naturaleza espontánea y consistentemente{' '}
+            <span className="text-[#46BFD7] font-bold text-2xl">con un rol didáctico:</span> cada especie juega como le
             va a ser propio trabajar en su edad adulta. También vemos al juego como un proceso de ensayo y
             autoperfeccionamiento: la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que
             practica, ensaya y estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la
-            performarce.   <span className="text-[#8b5cf6] font-bold text-2xl">El juego nos facilita aprender con independencia de las formas. Nos muestra horizontes, que
-              reclaman caminos.</span>
+            performarce.{' '}
+            <span className="text-[#8b5cf6] font-bold text-2xl">
+              El juego nos facilita aprender con independencia de las formas. Nos muestra horizontes, que reclaman
+              caminos.
+            </span>
           </p>
 
           <div className="grid grid-cols-2 gap-4 items-center justify-center">
@@ -141,15 +151,17 @@ const IdDesktop = () => {
             <div data-aos="" className="flex flex-col items-center">
               <h1
                 data-aos="fade-left"
-                className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
+                className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
               >
                 {' '}
                 Con la motivación correcta el aprendizaje se da de una forma orgánica.
               </h1>
 
-              <p data-aos="fade-up"
-
-                data-aos-duration="500" className="text-[1.3rem] m-10 p-4 rounded-xl bg-white/50 border-dashed border-4 border-black">
+              <p
+                data-aos="fade-up"
+                data-aos-duration="500"
+                className="text-[1.3rem] m-10 p-4 rounded-xl bg-white/50 border-dashed border-4 border-black"
+              >
                 Enseñamos, en principio,{' '}
                 <span className="text-[#46BFD7]">
                   programación, matemática, ilustración digital y otras aptitudes que colaboren al sostén de los
@@ -166,14 +178,16 @@ const IdDesktop = () => {
             <div data-aos="fade-up" className="flex flex-col items-center">
               <h1
                 data-aos="fade-left"
-                className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
+                className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
               >
                 ¡Aprender no tiene por qué ser forzoso o mecánico!
               </h1>
 
-              <p data-aos="fade-up"
-
-                data-aos-duration="500" className="text-[1.3rem] m-10 p-10 bg-white/50 border-4 border-dashed border-black rounded-xl">
+              <p
+                data-aos="fade-up"
+                data-aos-duration="500"
+                className="text-[1.3rem] m-10 p-10 bg-white/50 border-4 border-dashed border-black rounded-xl"
+              >
                 Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
                 nombre), pues creemos que atendiendo al proceso de transmisión de saberes podemos nutrir el poder
                 creativo del aprendizaje. Para nosotros es importante cultivar la capacidad de hacer, no mediante
@@ -215,28 +229,30 @@ const IdMobile = () => {
         <div className="mt-10">
           <h1
             data-aos="fade-left"
-            className={`${Jersey.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
+            className={`${titulo.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
           >
             ¿Qué nos motiva?
           </h1>
 
           <div className="flex flex-col text-center  mx-4 p-2">
             <p className="text-xl p-8 bg-white border-2 border-black border-dashed rounded-xl mb-10">
-              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la <span className='text-[#46BFD7] font-bold'>creciente disociación
-                entre diferentes áreas de la enseñanza</span> en todos los niveles educativos. Sumado a esto, actualmente
-              experienciamos una <span className='font-bold text-[#46BFD7]'>progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas
-                sociales.</span>{' '}
+              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la{' '}
+              <span className="text-[#46BFD7] font-bold">
+                creciente disociación entre diferentes áreas de la enseñanza
+              </span>{' '}
+              en todos los niveles educativos. Sumado a esto, actualmente experienciamos una{' '}
+              <span className="font-bold text-[#46BFD7]">
+                progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas sociales.
+              </span>{' '}
             </p>
 
             <div className="flex flex-col  m-4 justify-center items-center ">
               <h1
                 data-aos="fade-left"
-                className={`${Jersey.className} mb-4 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-4xl`}
+                className={`${titulo.className} mb-4 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-4xl`}
               >
                 Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
-                que nos permita <br />
-
-                ↓
+                que nos permita <br />↓
               </h1>
 
               <Carousel className="w-[250px] mx-4 self-center">
@@ -302,36 +318,40 @@ const IdMobile = () => {
         </div>
 
         <div className="flex flex-col mx-4 gap-2">
+          <div className="bg-sky-200/30 rounded-xl">
+            <p className="text-xl m-4 p-8">
+              Entendemos{' '}
+              <span className="text-[#46BFD7] font-bold">el juego como germen de la educación y de la creatividad</span>
+              , que ocurre en la naturaleza espontánea y consistentemente{' '}
+              <span className="text-[#46BFD7] font-bold ">con un rol didáctico:</span> cada especie juega como le va a
+              ser propio trabajar en su edad adulta.{' '}
+            </p>
 
-         <div className="bg-sky-200/30 rounded-xl">
-          <p className="text-xl m-4 p-8">
-            Entendemos{' '}
-            <span className="text-[#46BFD7] font-bold">el juego como germen de la educación y de la creatividad</span>,
-            que ocurre en la naturaleza espontánea y consistentemente <span className="text-[#46BFD7] font-bold ">con un rol didáctico:</span> cada especie juega como le
-            va a ser propio trabajar en su edad adulta. </p>
+            <h1
+              data-aos="fade-left"
+              className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
+            >
+              {' '}
+              El juego nos facilita aprender con independencia de las formas. Nos muestra horizontes, que reclaman
+              caminos.
+            </h1>
+
+            <p className="text-xl m-4 p-8">
+              <span className="text-[#46BFD7] font-bold ">
+                El juego es un proceso de ensayo y autoperfeccionamiento:
+              </span>{' '}
+              la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que practica, ensaya y
+              estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la performarce.
+            </p>
+          </div>
 
           <h1
             data-aos="fade-left"
-            className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
-            > El juego nos facilita aprender con independencia de las formas. Nos muestra horizontes, que
-            reclaman caminos.</h1>
-
-          <p className="text-xl m-4 p-8">
-            <span className="text-[#46BFD7] font-bold ">El juego es un proceso de ensayo y
-              autoperfeccionamiento:</span> la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que
-            practica, ensaya y estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la
-            performarce.
-          </p>
-            </div> 
-
-          <h1
-            data-aos="fade-left"
-            className={`${Jersey.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
+            className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
           >
             {' '}
             Con la motivación correcta el aprendizaje se da de una forma orgánica.
           </h1>
-
 
           <Image
             className="shadow-lg w-full rounded-xl"
@@ -342,26 +362,24 @@ const IdMobile = () => {
             height={600}
           ></Image>
 
-
-
-          <p data-aos="fade-up"
-
-            data-aos-duration="500" className="text-xl m-4 p-8 rounded-xl bg-white/50 border-dashed border-4 border-black">
-              Consideramos las áreas de computación, sistemas e informática como campos que exceden por mucho las
-              computadoras electrónicas y el software. 
-             <span className="text-[#46BFD7] font-bold"> Por ello enseñamos, en principio,
-           
-              programación, matemática, ilustración digital y otras aptitudes que colaboren al sostén de los
-              procesos pedagógicos
+          <p
+            data-aos="fade-up"
+            data-aos-duration="500"
+            className="text-xl m-4 p-8 rounded-xl bg-white/50 border-dashed border-4 border-black"
+          >
+            Consideramos las áreas de computación, sistemas e informática como campos que exceden por mucho las
+            computadoras electrónicas y el software.
+            <span className="text-[#46BFD7] font-bold">
+              {' '}
+              Por ello enseñamos, en principio, programación, matemática, ilustración digital y otras aptitudes que
+              colaboren al sostén de los procesos pedagógicos
             </span>
             . Pero esperamos eventualmente dar la bienvenida a talleres de música, circo, ciencias, huerta y más.
-            
           </p>
-
 
           <h1
             data-aos="fade-left"
-            className={`${Jersey.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
+            className={`${titulo.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
           >
             ¡Aprender no tiene por qué ser forzoso o mecánico!
           </h1>
@@ -375,19 +393,21 @@ const IdMobile = () => {
             height={1000}
           ></Image>
 
-          <p data-aos="fade-up"
-
-            data-aos-duration="500" className="text-xl m-4 p-8 bg-white/50 border-4 border-dashed border-black rounded-xl">
-            Nuestra perspectiva lúdica y didáctica (de allí nuestro
-            nombre), pues creemos que atendiendo al proceso de transmisión de saberes podemos nutrir el poder
-            creativo del aprendizaje. Para nosotros es importante <span className="text-[#46BFD7] font-bold">cultivar la capacidad de hacer</span>, no mediante
-            procedimientos mecánicos, sino mediante <span className="text-[#46BFD7] font-bold">el juego como via para
-            enseñar con mayor inmunidad a los síntomas de la repetición inadvertida.</span>
+          <p
+            data-aos="fade-up"
+            data-aos-duration="500"
+            className="text-xl m-4 p-8 bg-white/50 border-4 border-dashed border-black rounded-xl"
+          >
+            Nuestra perspectiva lúdica y didáctica (de allí nuestro nombre), pues creemos que atendiendo al proceso de
+            transmisión de saberes podemos nutrir el poder creativo del aprendizaje. Para nosotros es importante{' '}
+            <span className="text-[#46BFD7] font-bold">cultivar la capacidad de hacer</span>, no mediante procedimientos
+            mecánicos, sino mediante{' '}
+            <span className="text-[#46BFD7] font-bold">
+              el juego como via para enseñar con mayor inmunidad a los síntomas de la repetición inadvertida.
+            </span>
           </p>
-
         </div>
       </div>
-
     </WithAOS>
   )
 }

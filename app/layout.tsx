@@ -11,7 +11,7 @@ import { BibliotecaRoot } from '@/components/contenido-provider'
 // import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import Menu from './inicio/menu'
 import LogoLema from './inicio/logoLema'
-import { inter, NovaF } from '@/components/fonts'
+import { body } from '@/components/fonts'
 import Textura from '@/components/fx/textura'
 import Footer from './inicio/footer'
 
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
     <html lang="en">
-      <body className={`${NovaF.className} ${inter.className} antialiased`}>
+      <body className={`${body.className} antialiased`}>
         <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <VercelAnalytics />

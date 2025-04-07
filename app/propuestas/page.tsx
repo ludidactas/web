@@ -22,24 +22,24 @@ const Formatos = ({ formato, descripcion }: FormatosProps) => {
       data-aos-delay="100"
       className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl "
     >
-      <h1 className="flex text-xl md:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
+      <h1 className="flex text-xl lg:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
         <Waypoints className="w-20" />
         {formato}
         <Waypoints className="w-20" />
       </h1>
-      <p className="m-2 text-[1rem] md:text-lg">{descripcion}</p>
+      <p className="m-2 text-[1rem] lg:text-lg">{descripcion}</p>
     </div>
   )
 }
 
 const FormatosModulo = () => {
   return (
-    <div className="md:mt-20 md:mx-15 flex flex-col items-center text-center rounded-xl md:pt-10">
-      <h2 className="text-center font-bold text-xl md:text-3xl w-fit px-10 rounded-x bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text">
+    <div className="lg:mt-20 lg:mx-15 flex flex-col items-center text-center rounded-xl lg:pt-10">
+      <h2 className="text-center font-bold text-xl lg:text-3xl w-fit px-10 rounded-x bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text">
         Las propuestas se ofrecen en formato seminario, taller y clases particulares
       </h2>
 
-      <div className="bg-white flex flex-col md:grid md:grid-cols-3 gap-4 place-content-between m-10 md:m-20">
+      <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between m-10 lg:m-20">
         <Formatos
           formato="Seminario"
           descripcion='Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
@@ -75,23 +75,23 @@ interface LineasProps {
 const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasProps) => {
   return (
     <div
-      className="flex flex-col md:flex-row w-fit mx-4 md:w-[800px] m-4 md:m-10 border-2 p-4 md:px-10 border-dashed border-black rounded-xl items-center md:gap-8"
+      className="flex flex-col lg:flex-row w-fit mx-4 lg:w-[800px] m-4 lg:m-10 border-2 p-4 lg:px-10 border-dashed border-black rounded-xl items-center lg:gap-8"
       data-aos="fade-up"
       data-aos-duration="1000"
     >
       <h1
-        className={`${fuenteTitulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl md:text-7xl md:w-fit font-bold md:[writing-mode:vertical-rl] md:[text-orientation:upright]`}
+        className={`${fuenteTitulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl lg:text-7xl lg:w-fit font-bold lg:[writing-mode:vertical-rl] lg:[text-orientation:upright]`}
       >
         {titulo}{' '}
       </h1>
 
-      <div className="flex bg-white/80 flex-col md:py-10 md:gap-4  rounded-xl">
-        <div className="flex flex-col items-center md:p-5 md:gap-4">
-          <h3 className="text-[1rem] md:text-2xl m-4 text-center font-semibold text-[#06b6d4]">{descripcion}</h3>
+      <div className="flex bg-white/80 flex-col lg:py-10 lg:gap-4  rounded-xl">
+        <div className="flex flex-col items-center lg:p-5 lg:gap-4">
+          <h3 className="text-[1rem] lg:text-2xl m-4 text-center font-semibold text-[#06b6d4]">{descripcion}</h3>
 
           {imagen}
         </div>
-        <ul className="flex flex-col font-bold text-center gap-4 p-4 md:px-10 text-[1rem] md:text-lg">
+        <ul className="flex flex-col font-bold text-center gap-4 p-4 lg:px-10 text-[1rem] lg:text-lg">
           {lista.map((txt) => (
             <li key={txt}> • {txt}</li>
           ))}
@@ -108,11 +108,11 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
 
 const LineasModulo = () => {
   return (
-    <div className="flex flex-col m-4 md:m-10 md:px-20 md:mx-20 items-center justify-center ">
-      <div className="p-4 text-center  md:px-10 bg-white rounded-xl text-[1rem] md:text-2xl">
+    <div className="flex flex-col m-4 lg:m-10 lg:px-20 lg:mx-20 items-center justify-center ">
+      <div className="p-4 text-center  lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl">
         <h2
           data-aos="fade-left"
-          className={`${fuenteTitulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg md:text-7xl`}
+          className={`${fuenteTitulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg lg:text-7xl`}
         >
           Líneas de contenido
         </h2>
@@ -201,7 +201,7 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
       {/* Disables hover delay */}
       <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger onClick={() => setOpen(!open)}>
-          <Image className="w-fit h-fit md:w-full md:h-full " src={url} width={100} height={100} alt="" />
+          <Image className="w-fit h-fit lg:w-full lg:h-full " src={url} width={100} height={100} alt="" />
         </TooltipTrigger>
         <TooltipContent className="bg-black text-center text-white w-[20em] p-5">
           <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
@@ -213,20 +213,20 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
 }
 const Tecnologias = () => {
   return (
-    <div className="mx-8 md:m-20 rounded-xl bg-slate-100/50">
+    <div className="mx-8 lg:m-20 rounded-xl bg-slate-100/50">
       <h1
         data-aos="fade-left"
-        className={`${fuenteTitulo.className} m-4 md:m-10 pt-10 drop-shadow-lg text-4xl text-center md:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
+        className={`${fuenteTitulo.className} m-4 lg:m-10 pt-10 drop-shadow-lg text-4xl text-center lg:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
       >
         Tecnologías
       </h1>
-      <p className=" font-bold text-center md:p-8 mx-4 text-[1rem] md:text-3xl ">
+      <p className=" font-bold text-center lg:p-8 mx-4 text-[1rem] lg:text-3xl ">
         Todas las propuestas se encuentran dirigidas a cualquier persona que busque formarse en cada una de las líneas
         de contenido y -en el caso de la línea técnica- en cada una de las{' '}
         <span className="font-bold text-cyan-500">tecnologías con las que trabajamos.</span>
       </p>
 
-      <div className="grid grid-cols-3 gap-[40px] p-10 md:p-20 place-items-center ">
+      <div className="grid grid-cols-3 gap-[40px] p-10 lg:p-20 place-items-center ">
         <LogoTec
           nombre="Python"
           url="/img/tecnologias/python.png"

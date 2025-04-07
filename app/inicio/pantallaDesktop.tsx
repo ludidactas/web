@@ -2,14 +2,14 @@ import { titulo } from '@/components/fonts'
 import { PantallaProps } from './pantalla'
 
 const PantallaDesktop = ({ title, one, two, btn, scroll, espejado = false }: PantallaProps) => (
-  <div className="hidden md:flex w-[100vw] h-[100vh] mt-5 mb-20 flex-col items-center place-content-center">
+  <div className="hidden lg:flex w-[100vw] h-[100vh] mt-5 mb-20 flex-col items-center place-content-center">
     <h2
       className={`${titulo.className} drop-shadow-xl text-7xl bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text`}
     >
       {title}
     </h2>
 
-    <div className={`flex px-[200px] items-center p-10 gap-20 ${espejado ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
+    <div className={`flex px-[200px] items-center p-10 gap-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
       <div
         className="w-[40vw] gap-4 bg-white/60 rounded-xl border-4 border-dashed border-slate-800 p-8 text-xl text-center"
         data-aos={espejado ? 'fade-left' : 'fade-right'}

@@ -41,10 +41,10 @@ const PortadaMobile = () => {
 const Portada = () => {
   return (
     <>
-      <div className="block md:hidden w-[100vw] h-[100vh]">
+      <div className="block lg:hidden w-[100vw] h-[100vh]">
         <PortadaMobile />
       </div>
-      <div className={'hidden md:block w-[100vw] h-[100vh]'}>
+      <div className={'hidden lg:block w-[100vw] h-[100vh]'}>
         <PortadaDesktop />
       </div>
     </>

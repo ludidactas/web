@@ -81,10 +81,10 @@ const HeroMobile = () => {
 const Hero = () => {
   return (
     <>
-      <div className="block md:hidden">
+      <div className="block lg:hidden">
         <HeroMobile />
       </div>
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <HeroDesktop />
       </div>
     </>

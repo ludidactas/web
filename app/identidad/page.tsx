@@ -18,7 +18,7 @@ function SpeechBubble({ children }: PropsWithChildren) {
 const IdDesktop = () => {
   return (
     <WithAOS>
-      <div className="hidden md:block text-center">
+      <div className="hidden lg:block text-center">
         <div className="flex justify-center border-solid">
           <Image
             className="text-center shadow-4xl rounded-xl "
@@ -214,7 +214,7 @@ const IdDesktop = () => {
 const IdMobile = () => {
   return (
     <WithAOS>
-      <div className="block md:hidden text-center">
+      <div className="block lg:hidden text-center">
         <div className="flex justify-center border-solid">
           <Image
             className="text-center w-full shadow-4xl rounded-xl "

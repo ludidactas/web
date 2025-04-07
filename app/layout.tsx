@@ -34,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <LogoLema />
               <Menu />
             </div>
-            <div className="mx-2 md:mx-10 border-x-4 border-slate-200 border-dashed ">{children}</div>
+            <div className="mx-2 lg:mx-10 border-x-4 border-slate-200 border-dashed ">{children}</div>
 
             <Footer />
           </Textura>

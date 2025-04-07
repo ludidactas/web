@@ -49,14 +49,14 @@ const InfoConv = () => (
 )
 export default function page() {
   return (
-    <div data-aos="fade-left" className="md:mx-20 py-10 items-center text-center">
-      <div className="flex flex-col md:grid md:grid-cols-2 place-content-between mx-10">
+    <div data-aos="fade-left" className="lg:mx-20 py-10 items-center text-center">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 place-content-between mx-10">
         <div className={`${titulo.className} flex flex-col items-center`}>
           {/* Desktop */}
-          <Image className="hidden md:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
+          <Image className="hidden lg:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
 
           {/* Mobile */}
-          <CarouselConvocatoria className="block md:hidden">
+          <CarouselConvocatoria className="block lg:hidden">
             <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
           </CarouselConvocatoria>
 
@@ -72,7 +72,7 @@ export default function page() {
         </div>
 
         {/* Desktop */}
-        <CarouselConvocatoria className="hidden md:block" />
+        <CarouselConvocatoria className="hidden lg:block" />
       </div>
     </div>
   )

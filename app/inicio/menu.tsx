@@ -1,59 +1,65 @@
 'use client'
-import { Jersey } from "@/components/fonts";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { AlignJustify } from "lucide-react";
-import Link from "next/link";
-import { ComponentProps, useState } from "react";
+import { titulo } from '@/components/fonts'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AlignJustify } from 'lucide-react'
+import Link from 'next/link'
+import { ComponentProps, useState } from 'react'
 
 const MenuMobile = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const handleOpenChange = (isOpen) => {
-    setOpen(isOpen);
-  };
+    setOpen(isOpen)
+  }
 
   const handleItemClick = () => {
     // Close the dropdown
-    setOpen(false);
-  };
+    setOpen(false)
+  }
 
   return (
-  <DropdownMenu open={open} onOpenChange={handleOpenChange}>
-    <DropdownMenuTrigger>
-      <AlignJustify size={30} />
-    </DropdownMenuTrigger>
-    <DropdownMenuContent onClick={handleItemClick}>
-    <DropdownMenuItem>
-        <Link href="/inicio">Inicio</Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link href="/identidad">Identidad</Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link href="/propuestas">Propuestas</Link>
-      </DropdownMenuItem>
-      {/* <DropdownMenuItem>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+      <DropdownMenuTrigger>
+        <AlignJustify size={30} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent onClick={handleItemClick}>
+        <DropdownMenuItem>
+          <Link href="/inicio">Inicio</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link href="/identidad">Identidad</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link href="/propuestas">Propuestas</Link>
+        </DropdownMenuItem>
+        {/* <DropdownMenuItem>
         <Link href="https://www.instagram.com/recursos/">Recursos</Link>
       </DropdownMenuItem> */}
-      <DropdownMenuItem>
-        <Link target="_blank" href="https://www.instagram.com/ludidactas/">Contacto</Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link target="_blank" href="https://ludidactas.medium.com/">Blog</Link>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-)}
+        <DropdownMenuItem>
+          <Link target="_blank" href="https://www.instagram.com/ludidactas/">
+            Contacto
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link target="_blank" href="https://ludidactas.medium.com/">
+            Blog
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 //version props derivados existentes en Link
-const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black " />
+const MenuLink = (props: ComponentProps<typeof Link>) => (
+  <Link
+    {...props}
+    className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black "
+  />
+)
 
-const MenuDesktop = () => <div className="flex gap-4 bg-white/50 items-center mr-10">
+const MenuDesktop = () => (
+  <div className="flex gap-4 bg-white/50 items-center mr-10">
     {/* Implementacion version props */}
     <MenuLink href="/identidad"> Identidad </MenuLink>
     <p className="text-2xl">|</p>
@@ -68,15 +74,15 @@ const MenuDesktop = () => <div className="flex gap-4 bg-white/50 items-center mr
       Blog
     </MenuLink>
   </div>
-
+)
 
 //Renderiza uno u otro según se le indique en
 const Menu = () => (
   <>
-    <div className="block w-10 md:hidden">
+    <div className="block w-10 lg:hidden">
       <MenuMobile />
     </div>
-    <div className={`${Jersey.className} text-4xl hidden md:block`}>
+    <div className={`${titulo.className} text-4xl hidden lg:block`}>
       <MenuDesktop />
     </div>
   </>

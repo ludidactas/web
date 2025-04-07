@@ -13,10 +13,9 @@
   color: brown;
 }
 
-
 /* Estilos propuestas */
 
- /* .circle {
+/* .circle {
   float: left;
   width: 150px;
   height:150px;
@@ -26,9 +25,8 @@
   background:#06b6d4;
 } */
 
-
 /* Estilos roadmap */
-.roadhead{
+.roadhead {
   text-align: center;
   padding-bottom: 5em;
 }
@@ -38,8 +36,8 @@
   font-family: 'Jersey 10', sans-serif;
   font-size: larger;
   color: #fff;
-  margin-top:10px;
-  padding: 8px 15px; 
+  margin-top: 10px;
+  /* padding: 8px 15px;  */
   background: white;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -53,37 +51,33 @@
   border: 1px solid#9a1adf;
   box-shadow: 0 0 5px #9a1adf, 0 0 5px #9a1adf inset;
   z-index: 1;
- 
 }
 
-.btndisabled{
+.btndisabled {
   box-shadow: 0 0 5px black, 0 0 5px black;
-  color:black;
+  color: black;
   background: #dbd8d8;
   border: 1px solid#c1bcc4;
-
 }
 .btn-15:after {
   position: absolute;
-  content: "";
+  content: '';
   width: 0;
   height: 100%;
   top: 0;
   right: 0;
   z-index: -1;
   background: #9a1adf;
-  box-shadow:
-   0 0 20px  #9a1adf;
+  box-shadow: 0 0 20px #9a1adf;
   transition: all 0.3s ease;
   border-radius: 10px;
 }
 
-.btndisabled:after{
+.btndisabled:after {
   background: #67606b;
-  box-shadow:
-   0 0 20px  #9b959f;
+  box-shadow: 0 0 20px #9b959f;
   transition: none;
-  color:#9b959f
+  color: #9b959f;
 }
 
 .btn-15:hover {

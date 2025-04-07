@@ -8,44 +8,29 @@ export default function Footer() {
     <div className="flex flex-col items-center bg-slate-200/50 text-center pt-10">
       {/* Desktop */}
 
-      <div className="hidden md:flex flex-col items-center text-center font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[15px] pt-1 dark:text-slate-50 ">
-        <Image src="/img/Logo.png" alt={''} width={100} height={100} />
-        <div className="flex items-center">
-          <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50">
-            <Image className="" src="/img/Lema.png" alt={''} width={300} height={300} />
-            <p className={`${titulo.className} text-[1em] m-0`}>Tecnologías pedagógicas emergentes </p>
-          </div>
+      <div className="text-[0.8em] md:text-[14px] lg:text-[15px] flex flex-col items-center text-center pt-1 dark:text-slate-50 gap-8">
+        <div className="flex flex-col items-center gap-2">
+          <Image className="w-[50px] md:w-[100px]" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
+          <Image className="w-[200px] md:w-[300px]" src="/img/lema_sketchy.gif" alt={''} width={300} height={300} />
+          <p className={`font-medium pt-1 dark:text-slate-50 ${titulo.className} text-[1em] m-0`}>
+            Tecnologías pedagógicas emergentes{' '}
+          </p>
         </div>
-        <div className={`${titulo.className} m-5`}>
-          <p className="m-0">Córdoba, Argentina</p>
-          <p className="m-0">2025</p>
-        </div>
-        <Link
-          className={`${titulo.className} flex flex-col items-center`}
-          href="https://www.instagram.com/ludidactas/"
-          target="_blank"
-        >
-          <Instagram width={35} height={35} /> <p className="m-0  mb-10 text-2xl">@ludidactas</p>{' '}
-        </Link>
-      </div>
 
-      {/* Mobile */}
-      <div className="md:hidden flex flex-col items-center text-center text-[0.8em] md:text-[14px] lg:text-[15px] dark:text-slate-50 ">
-        <Image src="/img/Logo.png" alt={''} width={50} height={50} />
-        <div className="flex items-center">
-          <div className="flex flex-col">
-            <Image className="" src="/img/Lema.png" alt={''} width={200} height={200} />
-            <p className={`${titulo.className} text-[1em] m-0`}>Tecnologías pedagógicas emergentes </p>
-          </div>
-        </div>
         <Link
-          className={`${titulo.className} flex flex-col mt-5 items-center`}
+          className={`${titulo.className} flex flex-col items-center my-4`}
           href="https://www.instagram.com/ludidactas/"
           target="_blank"
         >
-          <Instagram width={20} height={20} /> <p className="m-0 text-md">@ludidactas</p>{' '}
+          <div className="hidden md:flex flex-col items-center">
+            <Instagram width={35} height={35} /> <p className="m-0 text-2xl">@ludidactas</p>{' '}
+          </div>
+          <div className="flex md:hidden flex-col items-center">
+            <Instagram width={20} height={20} /> <p className="m-0 text-md">@ludidactas</p>{' '}
+          </div>
         </Link>
-        <div className={`${titulo.className} m-4`}>
+
+        <div className={`${titulo.className} m-5`}>
           <p className="m-0">Córdoba, Argentina</p>
           <p className="m-0">2025</p>
         </div>

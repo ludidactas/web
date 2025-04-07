@@ -1,6 +1,7 @@
 'use client'
 
 import BtnNeon from '@/components/custom/ld-btn-neon'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { body, titulo } from '@/components/fonts'
 import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
@@ -29,9 +30,9 @@ const HeroDesktop = () => {
           </p>
           <p className="text-3xl text-indigo-500 mb-6">¡Si estás interesadx, accedé a la info completa y escribinos!</p>
 
-          <BtnNeon className="w-40" href="/convocatoria">
+          <BtnSketchy className="w-40 h-20 text-2xl text-center leading-[56px]" href="/convocatoria">
             Convocatoria
-          </BtnNeon>
+          </BtnSketchy>
         </div>
 
         <Image

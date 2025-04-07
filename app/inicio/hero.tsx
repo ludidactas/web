@@ -1,6 +1,5 @@
 'use client'
 
-import BtnNeon from '@/components/custom/ld-btn-neon'
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { body, titulo } from '@/components/fonts'
 import { CircleChevronDown } from 'lucide-react'
@@ -66,9 +65,9 @@ const HeroMobile = () => {
           ¡Si estás interesadx, accedé a la info completa y escribinos!
         </h3>
 
-        <BtnNeon className="w-[35vw] text-center" href="/convocatoria">
+        <BtnSketchy className="w-[35vw] h-[56px] text-center leading-[36px]" href="/convocatoria">
           Convocatoria
-        </BtnNeon>
+        </BtnSketchy>
       </div>
       <div className="w-[8vw] my-10">
         <Scroll to="portadaini" smooth={true} duration={500}>

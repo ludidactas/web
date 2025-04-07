@@ -1,7 +1,7 @@
-import { Jersey } from '@/components/fonts'
+import BtnNeon from '@/components/custom/ld-btn-neon'
+import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
 import Image from 'next/image'
-import Link from 'next/link'
 import { ComponentProps } from 'react'
 
 const CarouselConvocatoria = ({ children, className }: ComponentProps<typeof Carousel>) => (
@@ -49,33 +49,31 @@ const InfoConv = () => (
 )
 export default function page() {
   return (
-    <div data-aos="fade-left" className="md:mx-20 py-10 items-center text-center">
-      <div className="flex flex-col md:grid md:grid-cols-2 place-content-between mx-10">
-        <div className={`${Jersey.className} flex flex-col items-center`}>
+    <div data-aos="fade-left" className="lg:mx-20 py-10 items-center text-center">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 place-content-between mx-10">
+        <div className={`${titulo.className} flex flex-col items-center`}>
           {/* Desktop */}
-          <Image className="hidden md:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
+          <Image className="hidden lg:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
 
           {/* Mobile */}
-          <CarouselConvocatoria className="block md:hidden">
+          <CarouselConvocatoria className="block lg:hidden">
             <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
           </CarouselConvocatoria>
 
           <InfoConv />
 
-          <Link
-            className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center"
+          <BtnNeon
+            className="animate-bounce text-xl mb-10 text-center"
             target="_blank"
             href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform"
           >
             Formulario de inscripción
-          </Link>
+          </BtnNeon>
         </div>
 
         {/* Desktop */}
-        <CarouselConvocatoria className="hidden md:block" />
+        <CarouselConvocatoria className="hidden lg:block" />
       </div>
-
-      {/* <Link className="animate-bounce custom-btn btn-15 w-fit text-xl mb-10 text-center" target='_blank' href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform">Formulario de inscripción</Link> */}
     </div>
   )
 }

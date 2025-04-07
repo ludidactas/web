@@ -1,10 +1,10 @@
 'use client'
 
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
-import BtnNeon from '@/components/custom/ld-btn-neon'
 
 export default function Propuestas() {
   return (
@@ -18,7 +18,7 @@ export default function Propuestas() {
               <span className="text-[#46BFD7] font-bold">técnicas, didácticas y pedagógicas. </span>
               Esto quiere decir que{' '}
               <span className="text-[#46BFD7] font-bold">
-                tanto si eres profe o estudiante, ¡puedes formarte con nosotros!{' '}
+                tanto si sos profe o estudiante, podés formarte con nosotros!{' '}
               </span>{' '}
             </p>
 
@@ -29,7 +29,12 @@ export default function Propuestas() {
           </>
         }
         two={<Imagenes />}
-        btn={<BtnNeon href="/propuestas"> Ver propuestas </BtnNeon>}
+        btn={
+          <BtnSketchy className="block mx-auto h-[64px] leading-[42px]" href="/propuestas">
+            {' '}
+            Ver propuestas{' '}
+          </BtnSketchy>
+        }
         scroll={
           <Scroll to="recursosini" smooth={true} duration={500}>
             <CircleChevronDown className="w-full h-full" />

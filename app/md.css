@@ -46,12 +46,18 @@
   border-radius: 10px;
 }
 
+.btn-disabled {
+  background-image: url(/img/btndisabled.png) !important;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
 .btn-sketchy {
   background-image: url(/img/btnhover.gif);
   background-position: center;
   background-size: contain;
   background-repeat: no-repeat;
-  font-weight: 900;
 }
 
 .btn-sketchy:hover {

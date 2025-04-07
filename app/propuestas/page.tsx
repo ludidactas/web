@@ -182,7 +182,6 @@ const LineasModulo = () => {
           <BtnSketchy
             className="block text-xl h-[64px] leading-[44px] self-center"
             href="https://ludidactas.medium.com/"
-            disabled
           >
             Ver blog
           </BtnSketchy>

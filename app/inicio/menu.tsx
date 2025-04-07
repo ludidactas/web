@@ -79,10 +79,10 @@ const MenuDesktop = () => (
 //Renderiza uno u otro según se le indique en
 const Menu = () => (
   <>
-    <div className="block w-10 md:hidden">
+    <div className="block w-10 lg:hidden">
       <MenuMobile />
     </div>
-    <div className={`${titulo.className} text-4xl hidden md:block`}>
+    <div className={`${titulo.className} text-4xl hidden lg:block`}>
       <MenuDesktop />
     </div>
   </>

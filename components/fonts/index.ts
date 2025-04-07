@@ -1,5 +1,15 @@
+import {
+  Chelsea_Market,
+  Funnel_Sans,
+  Inter,
+  Jersey_10,
+  Lexend,
+  Nova_Flat,
+  Pangolin,
+  Pixelify_Sans,
+  Press_Start_2P,
+} from 'next/font/google'
 import localFont from 'next/font/local'
-import { Inter, Nova_Flat, Press_Start_2P, Pixelify_Sans, Jersey_10, Funnel_Sans, Lexend } from 'next/font/google'
 
 export const inter = Inter({ subsets: ['latin'] })
 
@@ -48,6 +58,20 @@ export const geistMono = localFont({
   weight: '100 900',
 })
 
-export const body = lexend
-export const titulo = jersey
-export const boton = titulo
+// Chakra_Petch, Share_Tech, Space_Grotesk
+
+export const body = Chelsea_Market({
+  weight: '400',
+  subsets: ['latin'],
+})
+export const titulo = Chelsea_Market({
+  weight: '400',
+  subsets: ['latin'],
+})
+
+// Pangolin, Iceland, Walter_Turncoat
+
+export const boton = Pangolin({
+  weight: '400',
+  subsets: ['latin'],
+})

@@ -1,7 +1,7 @@
 'use client'
 
 import BtnNeon from '@/components/custom/ld-btn-neon'
-import { titulo } from '@/components/fonts'
+import { body, titulo } from '@/components/fonts'
 import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { Link as Scroll } from 'react-scroll'
@@ -13,22 +13,22 @@ interface HeroProps {
 const HeroDesktop = ({ className }: HeroProps) => {
   return (
     <div data-aos="zoom-out" data-aos-duration="1000" className={className}>
-      <Image
+      {/* <Image
         className="[animation:bounce_2s_infinite]"
         width={300}
         height={300}
         src={'/img/CONVOCATORIA.png'}
         alt={''}
-      />
-      <div className={`${titulo.className} flex gap-2 p-6 bg-white border-4 border-black border-dashed rounded-xl`}>
+      /> */}
+      <div className={`${body.className} flex gap-2 p-6 bg-white border-4 border-black border-dashed rounded-xl`}>
         <div className="flex items-center flex-col ">
-          <p className="text-left m-0 text-3xl">
+          <p className="text-left m-0 text-3xl p-8">
             Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol
             docente/didáctico/pedagógico y dispuestas a ocupar también el de aprendientes.
           </p>
-          <p className="text-3xl text-indigo-500 m-0">¡Si estás interesadx, accedé a la info completa y escribinos!</p>
+          <p className="text-3xl text-indigo-500 mb-6">¡Si estás interesadx, accedé a la info completa y escribinos!</p>
 
-          <BtnNeon className="w-40 text-center" href="/convocatoria">
+          <BtnNeon className="w-40" href="/convocatoria">
             Convocatoria
           </BtnNeon>
         </div>
@@ -50,7 +50,7 @@ const HeroMobile = ({ className }: HeroProps) => {
       <div
         className={`${titulo.className} flex-col items-center flex gap-2 p-4 bg-white border-2 border-black border-dashed rounded-xl`}
       >
-        <Image className="w-[45vW]" width={400} height={400} src={'/img/CONVOCATORIA.png'} alt={''} />
+        {/* <Image className="w-[45vW]" width={400} height={400} src={'/img/CONVOCATORIA.png'} alt={''} /> */}
         <p className="text-2xl text-center p-4">
           Convocamos a personas interesadas en <span className="font-bold">practicar</span> el rol
           docente/didáctico/pedagógico y dispuestas a ocupar también el de aprendientes.

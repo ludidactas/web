@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { CircleChevronDown } from 'lucide-react'
 import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
-import BtnNeon from '@/components/custom/ld-btn-neon'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 
 export default function Identidad() {
   return (
@@ -18,8 +18,8 @@ export default function Identidad() {
               Ludidactas surge en el año 2020 como un <span className="text-[#46BFD7]">laboratorio didáctico</span> cuyo
               objetivo consiste en la creación de nuevas propuestas pedagógicas de formación docente (herramientas y
               recursos para la enseñanza) y de instancias educativas abiertas a todo público (talleres, cursos,
-              encuentros) que atiendan de manera flexible, responsable y eficiente a las preguntas y problemáticas
-              subyacentes a la enseñanza.
+              encuentros) que atiendan de manera <b>flexible, responsable y eficiente</b> a las preguntas y
+              problemáticas subyacentes a la enseñanza.
             </p>
             <p className="mt-4">
               Nuestras propuestas tienen un enfoque{' '}
@@ -30,7 +30,12 @@ export default function Identidad() {
           </>
         }
         two={<Imagenes />}
-        btn={<BtnNeon href="/identidad"> Más sobre el proyecto </BtnNeon>}
+        btn={
+          <BtnSketchy className="block mx-auto h-[90px] leading-[62px]" href="/identidad">
+            {' '}
+            Más sobre el proyecto{' '}
+          </BtnSketchy>
+        }
         scroll={
           <Scroll to="propuestasini" smooth={true} duration={500}>
             <CircleChevronDown className="w-full h-full" />

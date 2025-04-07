@@ -1,5 +1,5 @@
 'use client'
-import BtnNeon from '@/components/custom/ld-btn-neon'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { titulo as fuenteTitulo } from '@/components/fonts'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Waypoints } from 'lucide-react'
@@ -67,12 +67,11 @@ interface LineasProps {
   titulo: string
   descripcion: string
   lista: string[]
-  btntxt: string
+  btn: JSX.Element
   imagen: JSX.Element
-  btnurl: string
 }
 
-const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasProps) => {
+const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
   return (
     <div
       className="flex flex-col lg:flex-row w-fit mx-4 lg:w-[800px] m-4 lg:m-10 border-2 p-4 lg:px-10 border-dashed border-black rounded-xl items-center lg:gap-8"
@@ -97,10 +96,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btntxt, btnurl }: LineasPr
           ))}
         </ul>
 
-        <BtnNeon className="text-xs self-center" href={btnurl}>
-          {' '}
-          {btntxt}
-        </BtnNeon>
+        {btn}
       </div>
     </div>
   )
@@ -136,8 +132,11 @@ const LineasModulo = () => {
           'Formación grupal, abierta a todo público.',
           'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas',
         ]}
-        btntxt="Próximamente..."
-        btnurl=""
+        btn={
+          <BtnSketchy className="block text-xl h-[64px] leading-[44px] self-center" href={''} disabled>
+            Proximamente
+          </BtnSketchy>
+        }
         imagen={
           <Image
             className="w-fit h-fit self-center rounded-full"
@@ -156,8 +155,11 @@ const LineasModulo = () => {
           'Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
           'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica',
         ]}
-        btntxt="Convocatoria Ludidáctica"
-        btnurl="/convocatoria"
+        btn={
+          <BtnSketchy className="block text-xl h-[64px] leading-[44px] self-center" href="/convocatoria">
+            Convocatoria
+          </BtnSketchy>
+        }
         imagen={
           <Image
             className="w-fit h-fit self-center rounded-full"
@@ -176,8 +178,15 @@ const LineasModulo = () => {
           'Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.',
           'Expresada en encuentros, charlas, conversatorios y escritos',
         ]}
-        btntxt="Ver blog"
-        btnurl="https://ludidactas.medium.com/"
+        btn={
+          <BtnSketchy
+            className="block text-xl h-[64px] leading-[44px] self-center"
+            href="https://ludidactas.medium.com/"
+            disabled
+          >
+            Ver blog
+          </BtnSketchy>
+        }
         imagen={
           <Image
             className="w-fit h-fit self-center rounded-full"

@@ -1,9 +1,9 @@
 'use client'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { CircleChevronUp } from 'lucide-react'
 import Image from 'next/image'
 import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
-import BtnNeon from '@/components/custom/ld-btn-neon'
 
 export default function Contacto() {
   return (
@@ -16,17 +16,21 @@ export default function Contacto() {
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>
             <p>
-              Así que si tienes dudas o deseas recibir más información sobre Ludidactas y las propuestas que tenemos
-              para tí, no dudes en escribirnos o contactarnos por redes sociales.
+              Así que si tenés dudas o querés recibir más información sobre Ludidactas y las propuestas que tenemos para
+              vos, no dudes en escribirnos o contactarnos por redes sociales.
             </p>
           </>
         }
         two={<Imagenes />}
         btn={
-          <BtnNeon target="_blank" href="http://www.instagram.com/ludidactas">
+          <BtnSketchy
+            className="block mx-auto h-[56px] leading-[36px]"
+            target="_blank"
+            href="http://www.instagram.com/ludidactas"
+          >
             {' '}
-            ¡Contáctanos!{' '}
-          </BtnNeon>
+            ¡Contactanos!{' '}
+          </BtnSketchy>
         }
         scroll={
           <Scroll to="portadaini" smooth={true} duration={500}>

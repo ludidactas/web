@@ -46,6 +46,25 @@
   border-radius: 10px;
 }
 
+.btn-disabled {
+  background-image: url(/img/btndisabled.png) !important;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.btn-sketchy {
+  background-image: url(/img/btnhover.gif);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.btn-sketchy:hover {
+  text-shadow: 0px 0px 1px black;
+  transform: scale(1.15);
+}
+
 .btn-15 {
   color: #ab32ec;
   border: 1px solid#9a1adf;

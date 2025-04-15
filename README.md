@@ -25,3 +25,9 @@ https://www.svgator.com/
 https://react-typescript-cheatsheet.netlify.app
 https://react-hook-form.com
 https://github.com/7PH/powerglitch
+
+### Línea para gifear un grupo de imágenes png:
+
+ffmpeg -framerate 4 -i logo%d.png -vf "format=rgba,split[s0][s1];[s0]palettegen=reserve_transparent=on:transparency_color=ffffff[p];[s1][p]paletteuse" -loop 0 logo.gif
+
+Reemplazar `logo` con lo que corresponda

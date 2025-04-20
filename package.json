@@ -19,6 +19,7 @@
     "@radix-ui/react-popover": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@svgdotjs/svg.js": "^3.2.4",
     "@svgr/webpack": "^8.1.0",
     "@types/mdx": "^2.0.13",
     "@uidotdev/usehooks": "^2.4.1",

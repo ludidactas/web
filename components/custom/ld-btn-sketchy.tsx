@@ -6,7 +6,7 @@ export default function BtnSketchy(props: ComponentProps<typeof Link> & { disabl
   return (
     <Link
       {...props}
-      className={`w-fit py-2 px-8 ${body.className} ${props.className} ${
+      className={`w-fit py-2 px-8 flex-0 ${body.className} ${props.className} ${
         props.disabled ? 'btn-disabled text-slate-600' : 'btn-sketchy'
       }`}
     />

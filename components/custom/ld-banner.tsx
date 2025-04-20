@@ -11,10 +11,10 @@ export default function LdBanner() {
         Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
         el de aprendientes{' '}
       </p>
-      <p className="text-xs text-center text-[##93278c]">
+      <p className="text-xs text-center text-[#93278c]">
         ¡Si estás interesadx, accedé a la info completa y escribinos!
       </p>
-      <BtnSketchy className=" h-[56px] text-center leading-[36px]" href="/convocatoria">
+      <BtnSketchy className="h-[50px] text-center leading-[30px]" href="/convocatoria">
         Convocatoria
       </BtnSketchy>
     </div>

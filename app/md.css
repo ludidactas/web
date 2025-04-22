@@ -62,7 +62,7 @@
 
 .btn-sketchy:hover {
   text-shadow: 0px 0px 1px black;
-  transform: scale(1.15);
+  /* transform: scale(1.15); */
 }
 
 .btn-15 {

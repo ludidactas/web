@@ -5,7 +5,7 @@ import BtnSketchy from './ld-btn-sketchy'
 
 export default function LdBannerConvocatoriaMobile() {
   const mensaje = (
-    <div className="flex flex-col items-center h-full justify-around  px-4">
+    <div className="flex flex-col items-center h-full justify-around px-12">
       <p className="text-3xl text-center">
         {' '}
         Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también

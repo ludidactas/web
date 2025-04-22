@@ -3,7 +3,7 @@ import ConvocatoriaSvg from '@/svg/convocatoria.svg'
 import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
-export default function LdBannerConvocatoria() {
+export default function LdBannerConvocatoria({ className }: { className: string }) {
   const mensaje = (
     <div className="flex flex-col items-center gap-1">
       <p className="text-xs text-center">
@@ -36,7 +36,6 @@ export default function LdBannerConvocatoria() {
       setup={(nodos) => {
         // Le aplicamos el blend mode al cono
         nodos['ld.cono'].node.style.mixBlendMode = 'screen'
-
       }}
       // Función loop
       animation={(t, nodos) => {
@@ -44,6 +43,7 @@ export default function LdBannerConvocatoria() {
           nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
         })
       }}
+      className={`w-4/5 ${className}`}
     />
   )
 }

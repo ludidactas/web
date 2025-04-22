@@ -49,7 +49,7 @@ const InfoConv = () => (
 )
 export default function Page() {
   return (
-    <div data-aos="fade-left" className="lg:mx-20 py-10 items-center text-center">
+    <div data-aos="fade-left" className="lg:mx-20 items-center text-center">
       {/* Banner */}
       <div className="bg-[url(/img/tincho.jpg)] bg-contain bg-center bg-no-repeat w-full h-[200px] md:h-[380px]" />
 

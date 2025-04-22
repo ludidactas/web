@@ -1,4 +1,4 @@
-import BtnNeon from '@/components/custom/ld-btn-neon'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
 import Image from 'next/image'
@@ -42,38 +42,37 @@ const CarouselConvocatoria = ({ children, className }: ComponentProps<typeof Car
 )
 
 const InfoConv = () => (
-  <div className="border-4 border-black border-dashed rounded-xl m-5 p-2 bg-[#ffffb5]">
-    <h1 className="m-2 drop-shadow-3xl text-3xl">Sábados de 11 a 13hs en Güemes</h1>
-    <h1 className="text-2xl">Desde abril</h1>
+  <div className="border-4 border-black border-dashed rounded-xl m-5 p-2 bg-[#ffffb5] mb-10">
+    <h1 className="m-2 drop-shadow-3xl text-3xl">Estamos a la espera de respuesta para disponer de espacio</h1>
+    <h1 className="text-2xl">Igual podés llenar el formulario y te contactamos pronto :)</h1>
   </div>
 )
-export default function page() {
+export default function Page() {
   return (
     <div data-aos="fade-left" className="lg:mx-20 py-10 items-center text-center">
-      <div className="flex flex-col lg:grid lg:grid-cols-2 place-content-between mx-10">
-        <div className={`${titulo.className} flex flex-col items-center`}>
-          {/* Desktop */}
-          <Image className="hidden lg:block" src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
+      {/* Banner */}
+      <div className="bg-[url(/img/tincho.jpg)] bg-contain bg-center bg-no-repeat w-full h-[200px] md:h-[380px] my-12" />
 
-          {/* Mobile */}
-          <CarouselConvocatoria className="block lg:hidden">
-            <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} />
-          </CarouselConvocatoria>
+      <div className={`${titulo.className} flex flex-col items-center`}>
 
-          <InfoConv />
+        {/* Mobile */}
+        <CarouselConvocatoria className="block lg:hidden">
+          {/* <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} /> */}
+        </CarouselConvocatoria>
 
-          <BtnNeon
-            className="animate-bounce text-xl mb-10 text-center"
-            target="_blank"
-            href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform"
-          >
-            Formulario de inscripción
-          </BtnNeon>
-        </div>
+        <InfoConv />
 
-        {/* Desktop */}
-        <CarouselConvocatoria className="hidden lg:block" />
+        <BtnSketchy
+          className="animate-bounce text-xl mb-10 text-center h-[3em] leading-8"
+          target="_blank"
+          href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform"
+        >
+          Inscripción
+        </BtnSketchy>
       </div>
+
+      {/* Desktop */}
+      <CarouselConvocatoria className="hidden lg:block w-1/2 mx-auto" />
     </div>
   )
 }

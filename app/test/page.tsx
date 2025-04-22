@@ -1,4 +1,4 @@
-import LdBanner from '@/components/custom/ld-banner'
+import LdBanner from '@/components/custom/ld-banner-convocatoria'
 
 export default function Page() {
   return (

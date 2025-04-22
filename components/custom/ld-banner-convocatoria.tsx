@@ -1,9 +1,9 @@
 'use client'
-import ConvocatoriaSvg from '@/convocatoria.svg'
+import ConvocatoriaSvg from '@/svg/convocatoria.svg'
 import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
-export default function LdBanner() {
+export default function LdBannerConvocatoria() {
   const mensaje = (
     <div className="flex flex-col items-center gap-1">
       <p className="text-xs text-center">
@@ -27,18 +27,21 @@ export default function LdBanner() {
       // Los ids que le hayamos puesto a los elementos
       ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
       // Los slots que hayamos dejado, mapeando a su contenido
-      slots={{
-        'ld.slot.contenido': mensaje,
-      } as const}
+      slots={
+        {
+          'ld.slot.contenido': mensaje,
+        } as const
+      }
       // Función setup
       setup={(nodos) => {
         // Le aplicamos el blend mode al cono
         nodos['ld.cono'].node.style.mixBlendMode = 'screen'
+
       }}
       // Función loop
       animation={(t, nodos) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.dy(Math.sin(t / 1000 + idx / 2) * 0.04)
+          nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
         })
       }}
     />

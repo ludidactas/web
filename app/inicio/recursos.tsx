@@ -23,10 +23,7 @@ export default function Recursos() {
         }
         two={<Imagenes />}
         btn={
-          <button className="custom-btn btndisabled w-fit p-2 " disabled>
-            {' '}
-            Próximamente...{' '}
-          </button>
+          <p className='text-neutral-500'>Próximamente...</p>
         }
         scroll={
           <Scroll to="contactoini" smooth={true} duration={500}>

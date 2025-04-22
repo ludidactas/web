@@ -136,10 +136,9 @@ const LineasModulo = () => {
           didáctica. El material generado durante las clases particulares se pone a disposición como recursos para que
           sirva a autodidactas y otrxs profes. En los seminarios directamente se dispensa formación técnica a chorro. En
           el blog se escribe sobre pedagogía y enseñanza al público más maduro. Ludilabs, nuestro estudio anexo, ofrece
-          campo para el desempeño profesional. Aún a personas a las que no tengamos nada que enseñarles, las recibimos
-          para así aprender de ellas.
+          campo para el desempeño profesional. Aún a personas a las que no tengamos nada que enseñarles, les damos la
+          bienvenida para así aprender de ellas.
         </p>
-        <p className="m-4">Los </p>
         <Link href='https://instagram.com/ludidactas' >¡Consultanos!</Link>
       </div>
 

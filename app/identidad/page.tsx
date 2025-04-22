@@ -18,7 +18,30 @@ function SpeechBubble({ children }: PropsWithChildren) {
 const IdDesktop = () => {
   return (
     <WithAOS>
-      <div className="hidden lg:block text-center">
+      <div className="hidden lg:flex text-center flex-col items-center">
+        <h1
+          data-aos="fade-left"
+          className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+        >
+          La visión
+        </h1>
+
+        <div className="w-3/5 pb-12">
+          <p className="text-[1.6rem] m-4">.</p>
+          <p className="text-[1.6rem] m-4">
+            La visión del proyecto es la formación de un grupo de trabajo por el{' '}
+            <span className="text-[#46BFD7] font-bold">crecimiento regenerativo de la educación</span>. Orgánico.
+            Comunitario. Con amor por la enseñanza, la técnica y la educación. De la mano con la comprensión,
+            distinguiendo fines y medios.
+          </p>
+          <p className="text-[1.6rem] m-4">
+            Por eso la propuesta gira alrededor de{' '}
+            <span className="text-[#46BFD7] font-bold">la práctica y la técnica para el juego</span>, quitando el foco
+            de la utilidad, la deriva, la ganancia. Y configura los medios de manera que que haya lugar para todo el
+            mundo, para un crecimiento rizomático, nodal, sostenible.
+          </p>
+        </div>
+
         <div className="flex justify-center border-solid">
           <Image
             className="text-center shadow-4xl rounded-xl "
@@ -35,7 +58,7 @@ const IdDesktop = () => {
             data-aos="fade-left"
             className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
           >
-            ¿Qué nos motiva?
+            El hoy
           </h1>
 
           <div className="flex flex-col text-center  mx-20 p-2">
@@ -231,7 +254,7 @@ const IdMobile = () => {
             data-aos="fade-left"
             className={`${titulo.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
           >
-            ¿Qué nos motiva?
+            El hoy
           </h1>
 
           <div className="flex flex-col text-center  mx-4 p-2">

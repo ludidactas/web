@@ -5,21 +5,6 @@ import LdBannerConvocatoriaMobile from '@/components/custom/ld-banner-convocator
 import { CircleChevronDown } from 'lucide-react'
 import { Link as Scroll } from 'react-scroll'
 
-const HeroTincho = () => {
-  return (
-    <div
-    // className="relative bg-[url(/img/tincho.jpg)] bg-contain bg-center bg-no-repeat w-screen h-[380px] my-12"
-    >
-      <LdBannerConvocatoria/>
-      {/* <BtnSketchy
-        className="absolute w-40 h-20 text-2xl text-center leading-[56px] bottom-0 right-1/4"
-        href="/convocatoria"
-      >
-        Convocatoria
-      </BtnSketchy> */}
-    </div>
-  )
-}
 
 const HeroMobile = () => {
   return (
@@ -42,8 +27,7 @@ const Hero = () => {
         <HeroMobile />
       </div>
       <div className="hidden lg:block">
-        {/* <HeroDesktop /> */}
-        <HeroTincho />
+        <LdBannerConvocatoria className="w-[80vw]" />
       </div>
     </>
   )

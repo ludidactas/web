@@ -4,11 +4,19 @@ import { titulo as fuenteTitulo } from '@/components/fonts'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Waypoints } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import NextLink from 'next/link'
+import { ComponentProps, useState } from 'react'
 
-const Convocatoria = () => {
-  return <div></div>
-}
+const Link = (props: ComponentProps<typeof NextLink>) => (
+  <NextLink
+    className="bg-gradient-to-r from-cyan-500 to-violet-500 
+    text-transparent bg-clip-text underline decoration-double 
+    hover:border-b hover:border-b-4 border-violet-500"
+    {...props}
+  />
+)
+  
+
 interface FormatosProps {
   formato: string
   descripcion: string
@@ -105,7 +113,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
 const LineasModulo = () => {
   return (
     <div className="flex flex-col m-4 lg:m-10 lg:px-20 lg:mx-20 items-center justify-center ">
-      <div className="p-4 text-center  lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl">
+      <div className="p-4 text-center lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl lg:mx-32">
         <h2
           data-aos="fade-left"
           className={`${fuenteTitulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg lg:text-7xl`}
@@ -114,23 +122,37 @@ const LineasModulo = () => {
         </h2>
         <p className="m-4">
           {' '}
-          Hemos desarrollado un esquema que nos permite ofrecer{' '}
-          <span className="font-bold text-[#06b6d4]">
-            oportunidades de formación para todos los niveles de aprendizaje, en módulos cortos y autoconclusivos
-          </span>
-          . Los módulos propuestos se corresponden con determinados temas y relaciones. Así mismo, varios módulos pueden
-          llegar a aparecer en un solo taller o encontrarse reiterados en varios talleres. No todas las correlatividades
-          son difíciles
+          Hemos buscado desarrollar un esquema que nos permita ofrecer{' '}
+          <span className="font-bold text-[#06b6d4]">oportunidades de formación para todo el mundo.</span>{' '}
         </p>
-        <p className="font-bold text-[#06b6d4]">¡Consultanos!</p>
+        <p className="m-4">
+          <span className="font-bold text-[#06b6d4]">La clave está en la flexibilidad</span> debida a{' '}
+          <Link
+            href="/identidad"
+          >
+            nuestras necesidades identitarias
+          </Link>
+          . En los talleres, los estudiantes más avanzados enseñan a los más nuevos, y así practican también la
+          didáctica. El material generado durante las clases particulares se pone a disposición como recursos para que
+          sirva a autodidactas y otrxs profes. En los seminarios directamente se dispensa formación técnica a chorro. En
+          el blog se escribe sobre pedagogía y enseñanza al público más maduro. Ludilabs, nuestro estudio anexo, ofrece
+          campo para el desempeño profesional. Aún a personas a las que no tengamos nada que enseñarles, las recibimos
+          para así aprender de ellas.
+        </p>
+        <p className="m-4">Los </p>
+        <Link href='https://instagram.com/ludidactas' >¡Consultanos!</Link>
       </div>
 
       <Lineas
         titulo="TÉCNICA"
-        descripcion="Aprendemos mediante la experiencia en grupo, bajo la premisa de que lxs alumnxs puedan recibir a quienes lleguen y tener la oportunidad para guiar a lxs otrxs y poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo"
+        descripcion="Aprendemos mediante la experiencia en grupo, bajo 
+        la premisa de que lxs alumnxs puedan tener la oportunidad para guiar a lxs otrxs y 
+        poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. 
+        Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo"
         lista={[
           'Formación grupal, abierta a todo público.',
           'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas',
+          'Estructura modular. Los módulos siguen líneas, temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse reiterados en varios talleres. No todas las correlatividades son difíciles.',
         ]}
         btn={
           <BtnSketchy className="block text-xl h-[64px] leading-[44px] self-center" href={''} disabled>
@@ -303,7 +325,6 @@ const Tecnologias = () => {
 export default function Page() {
   return (
     <>
-      <Convocatoria />
       <LineasModulo />
       <FormatosModulo />
       <Tecnologias />

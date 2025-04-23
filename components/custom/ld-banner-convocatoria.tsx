@@ -4,6 +4,7 @@ import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
 export default function LdBannerConvocatoria({ className }: { className?: string }) {
+  
   const mensaje = (
     <div className="flex flex-col items-center gap-1">
       <p className="text-xs text-center">

@@ -173,7 +173,7 @@ const LineasModulo = () => {
         titulo="DIDÁCTICA"
         descripcion="En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir"
         lista={[
-          'Linea de contenido dirigida a docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo propio de los medios asociados tales como la elaboración de rutas de aprendizaje, la eleccion y el desarrollo de las modalidades y las herramientas necesarias.',
+          'Linea de contenido dirigida a talleristas, docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo de las actividades y los materiales que les son propios tales como rutas de aprendizaje, guías de ejercicios, trabajos prácticos, etc.',
           'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica',
         ]}
         btn={
@@ -194,7 +194,7 @@ const LineasModulo = () => {
 
       <Lineas
         titulo="PEDAGÓGICA"
-        descripcion="En la línea pedagógica exploramos la relación humana con el proceso educativo. ¿Qué hace allí el docente? ¿Desde dónde se para? ¿Cómo decide qué va a mostrar? ¿Qué muestra -es decir, enseñando- con su actutid, sus acciones, su forma de estar? ¿Cuál es el proyecto político y cultural que incorpora?"
+        descripcion="En la línea pedagógica exploramos la relación humana con el proceso educativo. ¿Qué hace allí el docente? ¿Desde dónde se para? ¿Cómo decide qué va a mostrar? ¿Qué muestra -es decir, enseña- con su actutid, sus acciones, su forma de estar? ¿Cuál es el proyecto político y cultural que incorpora?"
         lista={[
           'Orientada a la comunidad educativa en general, principalmente a personas que se implique en el aspecto regenerativo/reflexivo del proyecto.',
           'Expresada en encuentros, charlas, conversatorios y escritos',

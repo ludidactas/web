@@ -5,8 +5,8 @@ import { entries } from 'remeda'
 
 interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string> {
   SvgComponent: any
-  setup: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
-  animation: (dt: number, nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
+  setup?: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
+  animation?: (dt: number, nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
   ids?: SvgIds[]
   slots?: Record<SvgSlotIds, ReactNode>
   className?: string
@@ -28,9 +28,10 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
   SvgComponent,
   setup,
   animation,
-  ids,
-  slots,
-  className,
+  ids = [] as const,
+  //@ts-ignore
+  slots = {} as const,
+  className = '',
 }: LdSvgProps<SvgIds, SvgSlotIds>) {
   // Ref al svg base
   const svgRef = useRef<SVGElement>()
@@ -70,7 +71,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
     // Función del main loop
     const updateAnimation = (dt: number) => {
       // Aplicar animación a los nodos
-      if (nodosRef.current) {
+      if (nodosRef.current && animation) {
         animation(dt, nodosRef.current)
       }
 
@@ -79,7 +80,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
     }
 
     // Aplicar setup
-    setup(nodosRef.current)
+    if (setup) setup(nodosRef.current)
 
     // Arrancar main loop
     animationFrameRef.current = requestAnimationFrame(updateAnimation)
@@ -94,7 +95,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
   }, [setup, animation])
 
   return <>
-    <SvgComponent className={` ${show ? 'visible' : 'invisible'} ${className ?? ''} `} ref={svgRef} />
+    <SvgComponent className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
     {/* Le chantamos el contenido en los slots */}
     {slotsRef.current && entries(slotsRef.current).map(([slotId, container]) => createPortal(
       slots[slotId], container, slotId

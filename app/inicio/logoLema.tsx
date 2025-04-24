@@ -9,7 +9,7 @@ const LogoLemaDesktop = () => {
         <Image className="w-24" src="/img/logo_sketchy.gif" alt={''} width={180} height={180} />
         <div className="font-medium text-[7px] sm:text-[12px] lg:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">
           <Image className="" src="/img/lema_sketchy.gif" alt={''} width={800} height={800} />
-          <p className={`${titulo.className} text-[1em] m-0`}>Tecnologías educativas emergentes </p>
+          <p className={`${titulo.className} text-[1em] m-0`}>Educación emergente </p>
         </div>
       </div>
     </Link>
@@ -23,7 +23,7 @@ const LogoLemaMobile = () => {
         <Image className="w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
         <div className="font-medium text-[10px] lg:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">
           <Image className="" src="/img/lema_sketchy.gif" alt={''} width={200} height={200} />
-          <p className={`${titulo.className} m-0 text-nowrap`}>Tecnologías educativas emergentes </p>
+          <p className={`${titulo.className} m-0 text-nowrap`}>Educación emergente </p>
         </div>
       </div>
     </Link>

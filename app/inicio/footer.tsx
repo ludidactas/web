@@ -13,7 +13,7 @@ export default function Footer() {
           <Image className="w-[50px] lg:w-[100px]" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
           <Image className="w-[200px] lg:w-[300px]" src="/img/lema_sketchy.gif" alt={''} width={300} height={300} />
           <p className={`font-medium pt-1 dark:text-slate-50 ${titulo.className} text-[1em] m-0`}>
-            Tecnologías pedagógicas emergentes{' '}
+            Educación emergente{' '}
           </p>
         </div>
 

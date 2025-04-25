@@ -3,6 +3,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { titulo } from '@/components/fonts'
 import WithAOS from '@/components/ui/with-aos'
 import { PropsWithChildren } from 'react'
+import { Metadata } from 'next'
 
 function SpeechBubble({ children }: PropsWithChildren) {
   return (
@@ -13,6 +14,10 @@ function SpeechBubble({ children }: PropsWithChildren) {
       </div>
     </div>
   )
+}
+
+export const metadata: Metadata = {
+  title: 'Identidad',
 }
 
 const IdDesktop = () => {

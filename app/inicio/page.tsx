@@ -5,7 +5,16 @@ import Recursos from './recursos'
 import Contacto from './contacto'
 import WithAOS from '@/components/ui/with-aos'
 import Hero from './hero'
+import { Metadata } from 'next'
 
+export const metadata: Metadata = {
+  title: 'Ludidactas',
+  openGraph: {
+    title: 'Ludidactas - Edudación emergente',
+    description: 'Motor didáctico-pedagógico',
+    images: ''
+  }
+}
 
 export default function Page() {
   return (

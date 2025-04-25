@@ -1,11 +1,12 @@
-'use client'
+
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { titulo as fuenteTitulo } from '@/components/fonts'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { LogoTec } from '@/components/ui/logotec'
 import { Waypoints } from 'lucide-react'
+import { Metadata } from 'next'
 import Image from 'next/image'
 import NextLink from 'next/link'
-import { ComponentProps, useState } from 'react'
+import { ComponentProps } from 'react'
 
 const Link = (props: ComponentProps<typeof NextLink>) => (
   <NextLink
@@ -16,6 +17,9 @@ const Link = (props: ComponentProps<typeof NextLink>) => (
   />
 )
   
+export const metadata: Metadata = {
+  title: 'Propuestas',
+}
 
 interface FormatosProps {
   formato: string
@@ -221,25 +225,7 @@ const LineasModulo = () => {
   )
 }
 
-const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; descripcion: string }) => {
-  const [open, setOpen] = useState(false)
 
-  return (
-    <TooltipProvider delayDuration={0}>
-      {' '}
-      {/* Disables hover delay */}
-      <Tooltip open={open} onOpenChange={setOpen}>
-        <TooltipTrigger onClick={() => setOpen(!open)}>
-          <Image className="w-fit h-fit lg:w-full lg:h-full " src={url} width={100} height={100} alt="" />
-        </TooltipTrigger>
-        <TooltipContent className="bg-black text-center text-white w-[20em] p-5">
-          <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
-          <p className="text-center">{descripcion}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
-}
 const Tecnologias = () => {
   return (
     <div className="mx-8 lg:m-20 rounded-xl bg-slate-100/50">

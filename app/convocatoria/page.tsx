@@ -1,6 +1,7 @@
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
+import { Metadata } from 'next'
 import Image from 'next/image'
 import { ComponentProps } from 'react'
 
@@ -47,6 +48,17 @@ const InfoConv = () => (
     <h1 className="text-2xl">Igual podés llenar el formulario y te contactamos pronto :)</h1>
   </div>
 )
+
+export const metadata: Metadata = {
+  title: 'Convocatoria',
+  openGraph: {
+    title: 'Convocatoria',
+    description:
+      'Ludidactas convoca a una formación de formadores para talleristas de programación, ilustración digital, producción musical y sonora, narrativa y demás técnicas multimedia.',
+    images: '/img/tincho.jpg',
+  },
+}
+
 export default function Page() {
   return (
     <div data-aos="fade-left" className="lg:mx-20 items-center text-center">

@@ -51,11 +51,12 @@ const InfoConv = () => (
 
 export const metadata: Metadata = {
   title: 'Convocatoria',
+  description: 'Ludidactas convoca a una formación de formadores para talleristas de programación, ilustración digital, producción musical y sonora, narrativa y demás técnicas multimedia.',
   openGraph: {
     title: 'Convocatoria',
     description:
       'Ludidactas convoca a una formación de formadores para talleristas de programación, ilustración digital, producción musical y sonora, narrativa y demás técnicas multimedia.',
-    images: '/img/tincho.jpg',
+    images: ['https://ludidactas.com/img/tincho.jpg'],
   },
 }
 

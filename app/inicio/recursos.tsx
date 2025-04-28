@@ -1,9 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import { CircleChevronDown } from 'lucide-react'
-import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
+import ArrowDownLd from '@/components/custom/ld-arrowDown'
 
 export default function Recursos() {
   return (
@@ -26,9 +25,7 @@ export default function Recursos() {
           <p className='text-neutral-500'>Próximamente...</p>
         }
         scroll={
-          <Scroll to="contactoini" smooth={true} duration={500}>
-            <CircleChevronDown className="w-full h-full" />
-          </Scroll>
+          <ArrowDownLd to='contactoini'/>
         }
       />
     </div>

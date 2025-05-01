@@ -26,7 +26,7 @@ const IdDesktop = () => {
       <div className="hidden lg:flex text-center flex-col items-center">
         <h1
           data-aos="fade-left"
-          className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+          className={`${titulo.className} m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
         >
           La visión
         </h1>
@@ -67,7 +67,7 @@ const IdDesktop = () => {
         <div className="mt-20">
           <h1
             data-aos="fade-left"
-            className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+            className={`${titulo.className} m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
           >
             El hoy
           </h1>

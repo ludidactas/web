@@ -12,7 +12,7 @@ const Link = (props: ComponentProps<typeof NextLink>) => (
   <NextLink
     className="bg-gradient-to-r from-cyan-500 to-violet-500 
     text-transparent bg-clip-text underline decoration-double 
-    hover:border-b hover:border-b-4 border-violet-500"
+    hover:border-b border-violet-500"
     {...props}
   />
 )
@@ -91,7 +91,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
       data-aos-duration="1000"
     >
       <h1
-        className={`${fuenteTitulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg text-4xl lg:text-7xl lg:w-fit font-bold lg:[writing-mode:vertical-rl] lg:[text-orientation:upright]`}
+        className={`${fuenteTitulo.className} bg-gradient-to-b from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-[2px_2px_2px_rgba(0,0,0)] text-4xl lg:text-7xl lg:w-fit font-bold lg:[writing-mode:vertical-rl] lg:[text-orientation:upright]`}
       >
         {titulo}{' '}
       </h1>
@@ -116,11 +116,11 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
 
 const LineasModulo = () => {
   return (
-    <div className="flex flex-col m-4 lg:m-10 lg:px-20 lg:mx-20 items-center justify-center ">
-      <div className="p-4 text-center lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl lg:mx-32">
+    <div className="flex flex-col m-4 lg:m-10 lg:px-10 lg:mx-10 items-center justify-center ">
+      <div className="p-4 text-center lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl lg:mx-10">
         <h2
           data-aos="fade-left"
-          className={`${fuenteTitulo.className} text-4xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-lg lg:text-7xl`}
+          className={`${fuenteTitulo.className} text-4xl p-5 bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-[2px_2px_2px_rgba(0,0,0)] lg:text-7xl`}
         >
           Líneas de contenido
         </h2>
@@ -231,7 +231,7 @@ const Tecnologias = () => {
     <div className="mx-8 lg:m-20 rounded-xl bg-slate-100/50">
       <h1
         data-aos="fade-left"
-        className={`${fuenteTitulo.className} m-4 lg:m-10 pt-10 drop-shadow-lg text-4xl text-center lg:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
+        className={`${fuenteTitulo.className} m-4 lg:m-10 py-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] text-4xl text-center lg:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}
       >
         Tecnologías
       </h1>

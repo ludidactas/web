@@ -3,29 +3,46 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 type SvgAnimacionProps = {
-  className?: string;
+  children?: JSX.Element;
 };
 
-export default function SvgAnimacion({ className }: SvgAnimacionProps){
+export default function SvgAnimacion({ children }: SvgAnimacionProps) {
   const [showFirst, setShowFirst] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setShowFirst(prev => !prev);
-    }, 300); // Switch every 300ms
-
+    }, 300); 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className={className}>
-       
-      {showFirst ? (
-        <Image className='m-10 p-10 w-full' src="/img/Caja1.1.svg" alt="Frame 1" width={200} height={200} />
-      ) : (
-        <Image className='m-10 p-10 w-full' src="/img/Caja2.2.svg" alt="Frame 2" width={200} height={200} />
-      )}
+    <div className="relative w-full h-full m-20">
+
+      <div className="w-full h-full">
+        {showFirst ? (
+          <Image
+            src="/img/Caja1.1.svg"
+            alt="Frame 1"
+            width={1000}
+            height={1000}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <Image
+            src="/img/Caja2.2.svg"
+            alt="Frame 2"
+            width={1000}
+            height={1000}
+            className="w-full h-full object-contain"
+          />
+        )}
+      </div>
+
+      {/* Children content on top */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center m-20">
+        {children}
+      </div>
     </div>
   );
-};
-
+}

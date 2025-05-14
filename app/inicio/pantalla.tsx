@@ -1,5 +1,5 @@
+import SvgAnimacion from '@/components/custom/ld-svgAnimation';
 import { titulo } from '@/components/fonts'
-import Image from 'next/image'
 
 
 
@@ -30,12 +30,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
                   className="relative w-full h-fit text-xl text-center bg-white/60 overflow-hidden px-8 pt-10 pb-8"
                   data-aos={espejado ? 'fade-left' : 'fade-right'}
                 >
-                  <Image
-                    src="/img/Caja.gif"
-                    alt=""
-                    className="absolute w-fit inset-0 z-0"
-                    width={400}
-                    height={400}
+                  <SvgAnimacion className='absolute'
                   />
                   <div className="relative z-10">
                     <div>{one}</div>

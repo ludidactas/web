@@ -1,3 +1,4 @@
+'use client'
 import { Box, SVG, Element as SvgElement } from '@svgdotjs/svg.js'
 import { useRef, useState, useEffect, ReactNode } from 'react'
 import { createPortal } from 'react-dom'

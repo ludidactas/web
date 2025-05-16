@@ -19,7 +19,7 @@ export default function SvgAnimacion({ children }: SvgAnimacionProps) {
   return (
     <div className="relative w-full h-full m-20">
 
-      <div className="w-full h-full">
+      <div className="w-full">
         {showFirst ? (
           <Image
             src="/img/Caja1.1.svg"
@@ -39,7 +39,6 @@ export default function SvgAnimacion({ children }: SvgAnimacionProps) {
         )}
       </div>
 
-      {/* Children content on top */}
       <div className="absolute inset-0 z-10 flex items-center justify-center m-20">
         {children}
       </div>

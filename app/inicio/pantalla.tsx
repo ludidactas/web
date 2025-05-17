@@ -1,5 +1,6 @@
 import { LdSvg } from '@/components/custom/ld-svg';
 import { titulo } from '@/components/fonts'
+import { secuenciar } from '@/lib/utils';
 import CajaTexto from '@/svg/CajaTextoPre.svg'
 
 
@@ -33,13 +34,8 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
             <LdSvg className='text-2xl w-full'
               SvgComponent={CajaTexto}
               ids={["cajaUno", "cajaDos"] as const}
-              animation={(t, nodos) => {
-                const i = 500
-                nodos['cajaUno'].attr({ opacity: t % i < i / 2 ? 1 : 0 })
-                nodos['cajaDos'].attr({ opacity: t % i > i / 2 ? 1 : 0 })
-              }}
+              animation={secuenciar(["cajaUno", "cajaDos"], 500)}
               slots={{ 'slotCaja': one} as const}
-
 
             />
           </div>

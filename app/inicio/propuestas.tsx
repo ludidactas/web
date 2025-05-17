@@ -5,6 +5,7 @@ import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
+import { Hl } from './highlight'
 
 export default function Propuestas() {
   return (
@@ -12,21 +13,31 @@ export default function Propuestas() {
       <Pantalla
         title="Propuestas"
         one={
-          <>
-            <p className="pludi">
-              En ludidactas hemos diseñado distintas propuestas de aprendizaje:{' '}
-              <span className="text-[#46BFD7] font-bold">técnicas, didácticas y pedagógicas. </span>
-              Esto quiere decir que{' '}
-              <span className="text-[#46BFD7] font-bold">
-                tanto si sos profe o estudiante, podés formarte con nosotros!{' '}
-              </span>{' '}
+          <div className="flex flex-col gap-4">
+            <p>
+              El proyecto nace, vive y se sostiene en su comunidad y se ordena en torno la visión de construir la
+              educación que queremos ver.
+            </p>
+            <p>
+              Si buscás acercarte al rol de profe o si ya lo estás practicando, encontrarás pares que están aprendiendo
+              lo mismo y disfrutan de practicarlo y construirlo en grupo, y un espacio para tu voz. Y algunos otros
+              recursos...
+            </p>
+            <p>
+              Si buscás practicar y aprender artes y disciplinas (programación, música, ilustración, ciencias, etc...)
+              encontrarás una comunidad de profes excepcionales, profes que practican.
+            </p>
+            <p>
+              Diseñamos nuestras propuestas en torno a alimentar y entreconectar esas dos comunidades, convencidxs de
+              que los dos roles en que están compartimentadas en relaidad no existen, y allí hay en verdad un solo
+              continuo gradiente.
             </p>
 
             <p className="mt-4">
-              Te invitamos a que conozcas nuestras líneas de contenido y las distintas modalidades que hemos creado para
-              vos.
+              Organizamos el contenido y propuestas en tres líneas:{' '}
+              <Hl>técnica, didáctica y pedagógica. </Hl>
             </p>
-          </>
+          </div>
         }
         two={<Imagenes />}
         btn={

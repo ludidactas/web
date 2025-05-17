@@ -1,24 +1,61 @@
 'use client'
-import LdBanner from '@/components/custom/ld-banner-convocatoria'
+import ConvocatoriaSvg from '@/svg/banner.svg'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { LdSvg } from '@/components/custom/ld-svg'
+import { secuenciar } from '@/lib/utils'
 import CajaTexto from '@/svg/CajaTextoPre.svg'
 
 export default function Page() {
   const one = <p>Tuvieja</p>
 
+  const mensaje = (
+    <div className="flex flex-col items-center gap-1">
+      <p className="text-xs text-center">
+        {' '}
+        Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
+        el de aprendientes{' '}
+      </p>
+      <p className="text-xs text-center text-[#93278c]">
+        ¡Si estás interesadx, accedé a la info completa y escribinos!
+      </p>
+      <BtnSketchy className="h-[50px] text-center leading-[30px]" href="/convocatoria">
+        Convocatoria
+      </BtnSketchy>
+    </div>
+  )
+
   return (
     <div className="h-screen w-4/5 mx-auto">
-      <LdBanner />
+      <LdSvg
+        // El svg importado
+        SvgComponent={ConvocatoriaSvg}
+        // Los ids que le hayamos puesto a los elementos
+        ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
+        // Los slots que hayamos dejado, mapeando a su contenido
+        slots={
+          {
+            'ld.slot.contenido': mensaje,
+          } as const
+        }
+        // Función setup
+        setup={(nodos) => {
+          // Le aplicamos el blend mode al cono
+          nodos['ld.cono'].node.style.mixBlendMode = 'screen'
+        }}
+        // Función loop
+        animation={(t, nodos) => {
+          Object.values(nodos).forEach((nodo, idx) => {
+            nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
+          })
+        }}
+        className={`w-4/5`}
+      />
 
       <LdSvg
         className="text-2xl w-full"
         SvgComponent={CajaTexto}
         ids={['cajaUno', 'cajaDos'] as const}
-        animation={(t, nodos) => {
-          const i = 500
-          nodos['cajaUno'].attr({ opacity: t % i < i / 2 ? 1 : 0 })
-          nodos['cajaDos'].attr({ opacity: t % i > i / 2 ? 1 : 0 })
-        }}
+        animation={secuenciar(['cajaUno', 'cajaDos'], 600)}
         slots={{ slotCaja: one } as const}
       />
     </div>

@@ -123,9 +123,9 @@ function setBBox<T extends SVGElement>(bbox: Box, target: T) {
  * Nota: muta el svg!
  */
 function crearSlot(svg: SVGElement, id: string) {
-
+  
   // Agarramos el elemento SVG a partir del id
-  const nodoTarget = SVG(svg.querySelector(`[id="${id}"]`))
+  const nodoTarget = SVG(svg.querySelector(`[id$="${id}"]`))
 
   // Creamos un foreignObject con las dimensiones de la bbox del slot
   // Nota: el placeholder lo tuve que dibujar con pen (es un path) porque la herramienta

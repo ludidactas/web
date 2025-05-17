@@ -4,6 +4,7 @@ import { titulo } from '@/components/fonts'
 import WithAOS from '@/components/ui/with-aos'
 import { PropsWithChildren } from 'react'
 import { Metadata } from 'next'
+import { Hl } from '../inicio/highlight'
 
 function SpeechBubble({ children }: PropsWithChildren) {
   return (
@@ -72,17 +73,19 @@ const IdDesktop = () => {
             El hoy
           </h1>
 
-          <div className="flex flex-col text-center  mx-20 p-2">
-            <p className="text-[1.4rem] m-10 p-10 f bg-white border-4 border-black border-dashed rounded-xl mb-10">
-              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la{' '}
-              <span className="text-[#46BFD7] font-bold">
-                creciente disociación entre diferentes áreas de la enseñanza
-              </span>{' '}
-              en todos los niveles educativos. Sumado a esto, actualmente experienciamos una{' '}
-              <span className="font-bold text-[#46BFD7]">
-                progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas sociales.
-              </span>{' '}
-            </p>
+          <div className="flex flex-col items-center mx-20 p-2 text-xl">
+            <div className="max-w-[640px] flex flex-col gap-2">
+              <p>Nos reconocemos en una época que pide regeneración.</p>
+              <p>
+                La <Hl>disociación entre diferentes áreas y estadíos de la educación</Hl> a través una
+                compartimentalización que sirve a la rentabilidad o masificación y no a la enseñanza, facilitó que hoy
+                confundamos educación con instrucción, estudio con práctica y certificación con realización.
+              </p>
+              <p>
+                Queremos sembrar otro tipo de espacio educativo, centrado en la práctica y el grupo, flexible por
+                diseño, donde el proceso educativo mismo sea al menos tan importante como su resultado.
+              </p>
+            </div>
 
             <div className="grid grid-cols-2  m-10 justify-center items-center ">
               <h1
@@ -95,19 +98,6 @@ const IdDesktop = () => {
 
               <Carousel className="w-[400px] ml-10 self-center">
                 <CarouselContent>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      La formación en el <span className="text-cyan-500">uso creativo</span> de tecnologías
-                      contemporáneas, lo que hace a la diferencia entre usuario y consumidor.
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel1.png'}
-                      alt={''}
-                      width={200}
-                      height={200}
-                    ></Image>
-                  </CarouselItem>
                   <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
                     <SpeechBubble>
                       El <span className="text-cyan-500">diálogo e integración</span> entre diversas áreas y
@@ -149,7 +139,21 @@ const IdDesktop = () => {
                       height={200}
                     ></Image>
                   </CarouselItem>
+                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
+                    <SpeechBubble>
+                      La formación en el <span className="text-cyan-500">uso creativo</span> de tecnologías
+                      contemporáneas, lo que hace a la diferencia entre usuario y consumidor.
+                    </SpeechBubble>
+                    <Image
+                      className="m-6 p-2  bg-white rounded-xl"
+                      src={'/img/Pixel1.png'}
+                      alt={''}
+                      width={200}
+                      height={200}
+                    ></Image>
+                  </CarouselItem>
                 </CarouselContent>
+
                 <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
                 <CarouselNext className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
               </Carousel>

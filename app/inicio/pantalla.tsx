@@ -1,6 +1,6 @@
 import { LdSvg } from '@/components/custom/ld-svg';
 import { titulo } from '@/components/fonts'
-import CajaTexto from '@/svg/CajaTexto.svg'
+import CajaTexto from '@/svg/CajaTextoPre.svg'
 
 
 export interface PantallaProps {
@@ -32,13 +32,13 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
           >
             <LdSvg className='text-2xl w-full'
               SvgComponent={CajaTexto}
-              ids={["uno", "dos"] as const}
+              ids={["cajaUno", "cajaDos"] as const}
               animation={(t, nodos) => {
                 const i = 500
-                nodos['uno'].attr({ opacity: t % i < i / 2 ? 1 : 0 })
-                nodos['dos'].attr({ opacity: t % i > i / 2 ? 1 : 0 })
+                nodos['cajaUno'].attr({ opacity: t % i < i / 2 ? 1 : 0 })
+                nodos['cajaDos'].attr({ opacity: t % i > i / 2 ? 1 : 0 })
               }}
-              slots={{ 'slot': one, btn} as const}
+              slots={{ 'slotCaja': one} as const}
 
 
             />

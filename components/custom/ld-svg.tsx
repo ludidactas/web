@@ -25,6 +25,8 @@ interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string> {
  * **slots**: record que mapea ids de slots (los que se hayan exportado del archivo de diseño)
  * a componentes de react o cualquier fragmento que se quiera renderizar en su lugar.
  */
+
+
 export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
   SvgComponent,
   setup,
@@ -48,6 +50,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
 
   // Flag para invisibilizar el componente hasta que termine de correr el `setup` (sino flashea)
   const [show, setShow] = useState(false)
+
 
   // Gather y setup de nodos (cuando se monta el svg)
   useEffect(() => {
@@ -140,11 +143,13 @@ function crearSlot(svg: SVGElement, id: string) {
  * Busca el id dentro del svg y lo devuelve como nodo de svgdotjs
  */
 function crearElem(svg: SVGElement, id: string) { 
-  try {
-    return SVG(svg.querySelector(`[id="${id}"]`))
-  } catch { 
-    throw new LdSvgError(`No se encuentra elemento con id ${id} dentro del SVG`)
-  }
+ 
+    const elem = svg.querySelector(`[id$="${id}"]`)
+    if(elem == null)
+      throw new LdSvgError(`No se encuentra elemento con id ${id} dentro del SVG`)
+  
+    return SVG(elem)
+  
 }
 
 class LdSvgError extends Error { }

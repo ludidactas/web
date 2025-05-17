@@ -41,7 +41,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // Función loop
       animation={(t, nodos) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.dy(Math.sin(t / 1000 + idx) * 0.12)
+          nodo.dy(Math.sin(t / 600 + idx) * 0.18)
         })
       }}
       className={`w-4/5 ${className ?? ''}`}

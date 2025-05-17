@@ -1,5 +1,5 @@
 'use client'
-import ConvocatoriaSvg from '@/svg/convocatoria.svg'
+import ConvocatoriaSvg from '@/svg/banner.svg'
 import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
@@ -41,7 +41,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // Función loop
       animation={(t, nodos) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
+          nodo.dy(Math.sin(t / 1000 + idx) * 0.12)
         })
       }}
       className={`w-4/5 ${className ?? ''}`}

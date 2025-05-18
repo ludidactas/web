@@ -9,10 +9,11 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Ludidactas',
+  description: 'Laboratorio didáctico-pedagógico.',
   openGraph: {
     title: 'Ludidactas - Edudación emergente',
-    description: 'Motor didáctico-pedagógico',
-    images: ''
+    description: 'Laboratorio didáctico-pedagógico',
+    images: ['https://ludidactas.com/img/Compo.png']
   }
 }
 

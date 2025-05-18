@@ -1,12 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-//@ts-ignore meta
-import { CircleChevronDown } from 'lucide-react'
-import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { Hl } from './highlight'
+import ArrowDownLd from '@/components/custom/ld-arrowDown'
 
 export default function Identidad() {
   return (
@@ -37,9 +35,7 @@ export default function Identidad() {
           </BtnSketchy>
         }
         scroll={
-          <Scroll to="propuestasini" smooth={true} duration={500}>
-            <CircleChevronDown className="w-full h-full" />
-          </Scroll>
+         <ArrowDownLd to='propuestasini'/>
         }
       />
     </div>

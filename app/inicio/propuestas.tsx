@@ -1,11 +1,10 @@
 'use client'
 
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
-import { CircleChevronDown } from 'lucide-react'
 import Image from 'next/image'
-import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
 import { Hl } from './highlight'
+import ArrowDownLd from '@/components/custom/ld-arrowDown'
 
 export default function Propuestas() {
   return (
@@ -47,9 +46,7 @@ export default function Propuestas() {
           </BtnSketchy>
         }
         scroll={
-          <Scroll to="recursosini" smooth={true} duration={500}>
-            <CircleChevronDown className="w-full h-full" />
-          </Scroll>
+          <ArrowDownLd to='recursosini'/>
         }
         espejado={true}
       />

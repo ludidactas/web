@@ -1,9 +1,8 @@
 'use client'
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
-import { CircleChevronUp } from 'lucide-react'
 import Image from 'next/image'
-import { Link as Scroll } from 'react-scroll'
 import Pantalla from './pantalla'
+import ArrowUpLd from '@/components/custom/ld-arrowUp'
 
 export default function Contacto() {
   return (
@@ -32,9 +31,7 @@ export default function Contacto() {
           </BtnSketchy>
         }
         scroll={
-          <Scroll to="portadaini" smooth={true} duration={500}>
-            <CircleChevronUp className="w-full h-full" />
-          </Scroll>
+         <ArrowUpLd to='portadaini'/>
         }
         espejado={true}
       />

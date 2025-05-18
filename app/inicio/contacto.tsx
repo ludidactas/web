@@ -15,8 +15,7 @@ export default function Contacto() {
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>
             <p>
-              Así que si tenés dudas o querés recibir más información sobre Ludidactas y las propuestas que tenemos para
-              vos, no dudes en escribirnos o contactarnos por redes sociales.
+              Si tenés consultas, preguntas o propuestas, no dudes en escribirnos o contactarnos por redes sociales.
             </p>
           </>
         }

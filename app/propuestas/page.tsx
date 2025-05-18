@@ -1,4 +1,3 @@
-
 import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { titulo as fuenteTitulo } from '@/components/fonts'
 import { LogoTec } from '@/components/ui/logotec'
@@ -16,7 +15,7 @@ const Link = (props: ComponentProps<typeof NextLink>) => (
     {...props}
   />
 )
-  
+
 export const metadata: Metadata = {
   title: 'Propuestas',
 }
@@ -54,9 +53,8 @@ const FormatosModulo = () => {
       <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between m-10 lg:m-20">
         <Formatos
           formato="Seminario"
-          descripcion='Son instancias de una o dos clases intensivas y largas en las que vemos de manera introductoria algún tema
-            puntual. Es ideal para almas autodidactas que pueden aprovechar una buena rampa de entrada a un tema que
-            les evite el famoso "infierno de tutoriales".'
+          descripcion='Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema
+            puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo.'
         />
 
         <Formatos
@@ -65,6 +63,7 @@ const FormatosModulo = () => {
             para almas aplicadas, que disfruten el trabajo en equipo, y la buena cosecha que sigue a una buena
             siembra."
         />
+        
         <Formatos
           formato="Clases Particulares"
           descripcion="Son para vos si sabés lo querés y vas con toda en esa dirección, o si apreciás el fruto de un trabajo
@@ -131,30 +130,21 @@ const LineasModulo = () => {
         </p>
         <p className="m-4">
           <span className="font-bold text-[#06b6d4]">La clave está en la flexibilidad</span> debida a{' '}
-          <Link
-            href="/identidad"
-          >
-            nuestras necesidades identitarias
-          </Link>
-          . En los talleres, los estudiantes más avanzados enseñan a los más nuevos, y así practican también la
-          didáctica. El material generado durante las clases particulares se pone a disposición como recursos para que
-          sirva a autodidactas y otrxs profes. En los seminarios directamente se dispensa formación técnica a chorro. En
-          el blog se escribe sobre pedagogía y enseñanza al público más maduro. Ludilabs, nuestro estudio anexo, ofrece
-          campo para el desempeño profesional. Aún a personas a las que no tengamos nada que enseñarles, les damos la
-          bienvenida para así aprender de ellas.
+          <Link href="/identidad">nuestras necesidades identitarias</Link>. En los talleres, los estudiantes más
+          avanzados enseñan a los más nuevos, y así practican también la didáctica. El material generado durante las
+          clases particulares se pone a disposición como recursos para que sirva a autodidactas y otrxs profes. En los
+          seminarios directamente se dispensa formación técnica a chorro. Y en el blog se escribe sobre
+          pedagogía y enseñanza al público más maduro.
         </p>
-        <Link href='https://instagram.com/ludidactas' >¡Consultanos!</Link>
+        <Link href="https://instagram.com/ludidactas">¡Consultanos!</Link>
       </div>
 
       <Lineas
         titulo="TÉCNICA"
-        descripcion="Aprendemos mediante la experiencia en grupo, bajo 
-        la premisa de que lxs alumnxs puedan tener la oportunidad para guiar a lxs otrxs y 
-        poner en práctica lo aprendido. Así para cualquier nivel hay alguien a quien nutre ese encuentro. 
-        Los espacios técnicos funcionan mejor con contribución estable y compromiso a largo plazo"
+        descripcion="Aprendemos mediante la experiencia en grupo, en talleres grupales estables o seminarios de temas específicos"
         lista={[
           'Formación grupal, abierta a todo público.',
-          'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas',
+          'Talleres, cursos y seminarios orientados a la transmisión de conocimientos técnicos en las áreas de las que haya profes. De momento son programación, animación, desarrollo de videojuegos y otras tecnologías y herramientas asociadas',
           'Estructura modular. Los módulos siguen líneas, temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse reiterados en varios talleres. No todas las correlatividades son difíciles.',
         ]}
         btn={
@@ -225,7 +215,6 @@ const LineasModulo = () => {
   )
 }
 
-
 const Tecnologias = () => {
   return (
     <div className="mx-8 lg:m-20 rounded-xl bg-slate-100/50">
@@ -236,9 +225,8 @@ const Tecnologias = () => {
         Tecnologías
       </h1>
       <p className=" font-bold text-center lg:p-8 mx-4 text-[1rem] lg:text-3xl ">
-        Todas las propuestas se encuentran dirigidas a cualquier persona que busque formarse en cada una de las líneas
-        de contenido y -en el caso de la línea técnica- en cada una de las{' '}
-        <span className="font-bold text-cyan-500">tecnologías con las que trabajamos.</span>
+        De momento trabajamos principalmente con programación y afines. Las propuestas técnicas utilizan estas
+        tecnologías y están dirigidas a cualquier persona que busque formarse en las líneas técnica/didácta
       </p>
 
       <div className="grid grid-cols-3 gap-[40px] p-10 lg:p-20 place-items-center ">

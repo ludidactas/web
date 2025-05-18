@@ -4,6 +4,9 @@ import BtnSketchy from '@/components/custom/ld-btn-sketchy'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { secuenciar } from '@/lib/utils'
 import CajaTexto from '@/svg/CajaTextoPre.svg'
+import LdBarrita from '@/components/custom/ld-barrita'
+import Image from 'next/image'
+import LdProgreso from '@/components/custom/ld-progreso'
 
 export default function Page() {
   const one = <p>Tuvieja</p>
@@ -25,8 +28,34 @@ export default function Page() {
   )
 
   return (
-    <div className="h-screen w-4/5 mx-auto">
-      <LdSvg
+    <div className="h-screen w-4/5 mx-auto flex flex-col gap-8">
+
+      <LdProgreso
+        titulo='Introducción a la programación con Python'
+        score={4}
+        target={6}
+        horarios='jueves 19 a 20.30hs'
+        imagen='/img/tecnologias/python.png'
+      />
+
+      <LdProgreso
+        titulo='Taller de desarrollo web'
+        score={7}
+        target={12}
+        horarios='martes 19 a 20.30hs'
+        imagen='/img/tecnologias/web.png'
+      />
+
+      <LdProgreso
+        titulo='Programación de videojuegos con Godot'
+        score={5}
+        target={6}
+        horarios='viernes 19 a 20.30hs'
+        imagen='/img/tecnologias/godot.png'
+      />
+
+
+      {/* <LdSvg
         // El svg importado
         SvgComponent={ConvocatoriaSvg}
         // Los ids que le hayamos puesto a los elementos
@@ -57,7 +86,7 @@ export default function Page() {
         ids={['cajaUno', 'cajaDos'] as const}
         animation={secuenciar(['cajaUno', 'cajaDos'], 600)}
         slots={{ slotCaja: one } as const}
-      />
+      /> */}
     </div>
   )
 }

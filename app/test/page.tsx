@@ -7,6 +7,10 @@ import CajaTexto from '@/svg/CajaTextoPre.svg'
 import LdBarrita from '@/components/custom/ld-barrita'
 import Image from 'next/image'
 import LdProgreso from '@/components/custom/ld-progreso'
+import LdRoadmapDummy from '@/components/custom/ld-roadmap-dummy'
+
+
+
 
 export default function Page() {
   const one = <p>Tuvieja</p>
@@ -28,32 +32,36 @@ export default function Page() {
   )
 
   return (
-    <div className="h-screen w-4/5 mx-auto flex flex-col gap-8">
+    <div className="h-screen w-4/5 mx-auto flex flex-col gap-8 items-center">
+      <div className='p-8 bg-neutral-50 w-3/5'>
+        <LdRoadmapDummy/>
+      </div>
 
       <LdProgreso
-        titulo='Introducción a la programación con Python'
+        titulo="Introducción a la programación con Python"
         score={4}
         target={6}
-        horarios='jueves 19 a 20.30hs'
-        imagen='/img/tecnologias/python.png'
+        horarios="jueves 19 a 20.30hs"
+        imagen="/img/tecnologias/python.png"
       />
 
       <LdProgreso
-        titulo='Taller de desarrollo web'
+        titulo="Taller de desarrollo web"
         score={7}
         target={12}
-        horarios='martes 19 a 20.30hs'
-        imagen='/img/tecnologias/web.png'
+        horarios="martes 19 a 20.30hs"
+        imagen="/img/tecnologias/web.png"
       />
 
       <LdProgreso
-        titulo='Programación de videojuegos con Godot'
+        titulo="Programación de videojuegos con Godot"
         score={5}
         target={6}
-        horarios='viernes 19 a 20.30hs'
-        imagen='/img/tecnologias/godot.png'
+        horarios="viernes 19 a 20.30hs"
+        imagen="/img/tecnologias/godot.png"
       />
 
+      <div className="w-full h-24" />
 
       {/* <LdSvg
         // El svg importado
@@ -72,7 +80,7 @@ export default function Page() {
           nodos['ld.cono'].node.style.mixBlendMode = 'screen'
         }}
         // Función loop
-        animation={(t, nodos) => {
+        animation={(nodos, t) => {
           Object.values(nodos).forEach((nodo, idx) => {
             nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
           })

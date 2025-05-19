@@ -12,7 +12,7 @@ export default function ArrowDownLd({ to }: ArrowDownLdProps){
                 <LdSvg
                 SvgComponent={ArrowDown}
                 ids={['uno','dos','tres']as const}
-                animation={(t, nodos) => {
+                animation={(nodos, t) => {
                   const i = 500
                   nodos['uno'].attr({ opacity: t % i < i / 2 ? 1 : 0 })
                   nodos['dos'].attr({ opacity: t % i > i / 2 ? 1 : 0 })

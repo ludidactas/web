@@ -39,7 +39,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
         nodos['ld.cono'].node.style.mixBlendMode = 'screen'
       }}
       // Función loop
-      animation={(t, nodos) => {
+      animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
           nodo.dy(Math.sin(t / 600 + idx) * 0.18)
         })

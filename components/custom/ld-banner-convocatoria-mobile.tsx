@@ -38,7 +38,7 @@ export default function LdBannerConvocatoriaMobile() {
         nodos['ld.cono'].node.style.mixBlendMode = 'screen'
       }}
       // Función loop
-      animation={(t, nodos) => {
+      animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
           nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
         })

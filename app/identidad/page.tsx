@@ -21,32 +21,32 @@ export const metadata: Metadata = {
   title: 'Identidad',
 }
 
-const IdDesktop = () => {
+export default function Page() {
   return (
     <WithAOS>
-      <div className="hidden lg:flex text-center flex-col items-center">
+      <div className="flex flex-col items-center text-center">
         <h1
           data-aos="fade-left"
-          className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+          className={`${titulo.className} m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
         >
           La visión
         </h1>
 
-        <div className="w-3/5 pb-12">
-          <p className="text-[1.6rem] m-4">
+        <div className="mx-20 pb-12 text-[1.6rem] space-y-4">
+          <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
             <span className="text-[#46BFD7] font-bold">crecimiento regenerativo de la educación</span>. Orgánico.
             Comunitario. Con amor por la enseñanza, la técnica y la educación. De la mano con la comprensión,
             distinguiendo fines y medios.
           </p>
-          <p className="text-[1.6rem] m-4">
+          <p>
             A medida que nos vamos encontrando y reconociendo, esta visión se concretiza en{' '}
             <span className="text-[#46BFD7] font-bold">
               talleres, ciclos de formación, conversaciones, producción de material de referencia, publicaciones
             </span>{' '}
             y demás formas de encuentro.
           </p>
-          <p className="text-[1.6rem] m-4">
+          <p>
             La propuesta pedagógica gira alrededor de{' '}
             <span className="text-[#46BFD7] font-bold">la práctica y la técnica para el juego</span>, quitando el foco
             de la utilidad, la deriva, la ganancia. Y configura los medios de manera que que haya lugar para todo el
@@ -65,10 +65,10 @@ const IdDesktop = () => {
           ></Image>
         </div>
 
-        <div className="mt-20">
+        <div className="mt-10 md:mt-20">
           <h1
             data-aos="fade-left"
-            className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+            className={`${titulo.className} m-4 md:m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl md:text-7xl`}
           >
             El hoy
           </h1>
@@ -87,18 +87,18 @@ const IdDesktop = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-2  m-10 justify-center items-center ">
+            <div className="flex flex-col m-4 md:grid md:grid-cols-2  md:m-10 justify-center items-center ">
               <h1
                 data-aos="fade-left"
-                className={`${titulo.className} m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-5xl`}
+                className={`${titulo.className} mb-4 md:m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-4xl md:text-5xl`}
               >
                 Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
-                que nos permita →
+                que nos permita:
               </h1>
 
-              <Carousel className="w-[400px] ml-10 self-center">
+              <Carousel className="w-[60vw] mx-4 md:w-[400px] md:ml-10">
                 <CarouselContent>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
+                  <CarouselItem className="flex flex-col place-content-center items-center text-xs md:text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
                     <SpeechBubble>
                       El <span className="text-cyan-500">diálogo e integración</span> entre diversas áreas y
                       &quot;niveles&quot; de la educación. ¡El proceso de enseñanza-aprendizaje es un único fenómeno!
@@ -161,89 +161,85 @@ const IdDesktop = () => {
           </div>
         </div>
 
-        <div className="flex flex-col mx-20 gap-20">
-          <div className="text-[1.4rem] m-10 p-10 bg-sky-200/30 rounded-xl">
-            <p>
-              Entendemos{' '}
-              <span className="text-[#46BFD7] font-bold text-2xl">
-                el juego como germen de la educación y de la creatividad
-              </span>
-              , que ocurre en la naturaleza espontánea y consistentemente{' '}
-              <span className="text-[#46BFD7] font-bold text-2xl">con un rol didáctico:</span> cada especie juega como
-              le va a ser propio trabajar en su edad adulta. Y juego es también el proceso de ensayo y
-              autoperfeccionamiento: la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta,
-              que practica, ensaya y estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o
-              la performarce.{' '}
-            </p>
-            <p className="text-[#8b5cf6] font-bold text-2xl pt-6">
-              El juego nos impulsa a la investigación, a aprender a aprender, independientemente de la forma que tome.
-              Nos muestra horizontes, que reclaman caminos.
-            </p>
-          </div>
+        <div className="text-xl m-4 md:text-[1.4rem] md:mx-10 md:p-10 bg-sky-200/30 rounded-xl">
+          <p>
+            Entendemos{' '}
+            <span className="text-[#46BFD7] font-bold md:text-2xl">
+              el juego como germen de la educación y de la creatividad
+            </span>
+            , que ocurre en la naturaleza espontánea y consistentemente{' '}
+            <span className="text-[#46BFD7] font-bold md:text-2xl">con un rol didáctico:</span> cada especie juega como
+            le va a ser propio trabajar en su edad adulta. Y juego es también el proceso de ensayo y
+            autoperfeccionamiento: la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que
+            practica, ensaya y estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la
+            performarce.{' '}
+          </p>
+          <p className="text-[#8b5cf6] font-bold text-2xl pt-6">
+            El juego nos impulsa a la investigación, a aprender a aprender, independientemente de la forma que tome. Nos
+            muestra horizontes, que reclaman caminos.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4 items-center justify-center">
+        <div className="flex flex-col mx-20">
+          <h1
+            data-aos="fade-left"
+            className={`${titulo.className} m-20 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl md:text-5xl`}
+          >
+            {' '}
+            Con la motivación correcta el aprendizaje se da de una forma orgánica.
+          </h1>
+
+          <div className="md:grid md:grid-cols-2 w-[80vw] gap-8 items-center self-center">
             <Image
-              className="shadow-2xl w-fit ml-10 rounded-xl"
+              className="shadow-2xl m-5 rounded-xl"
               data-aos="fade-left"
               src={'/img/Identidad2.JPG'}
               alt={'Grupo taller Ludidactas'}
               width={600}
               height={600}
             ></Image>
-            <div data-aos="" className="flex flex-col items-center">
-              <h1
-                data-aos="fade-left"
-                className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
-              >
-                {' '}
-                Con la motivación correcta el aprendizaje se da de una forma orgánica.
-              </h1>
 
-              <p
-                data-aos="fade-up"
-                data-aos-duration="500"
-                className="text-[1.3rem] m-10 p-4 rounded-xl bg-white/50 border-dashed border-4 border-black"
-              >
-                Una educación al servicio de la productividad mercantilista no podrá dejar nunca de comparar y
-                cuantificar, ni de organizar el deber en función de metas y expectativas preestablecidas, con la
-                ansiedad que inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no
-                puede ser todos los lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}
-                <span className="text-[#46BFD7]">
-                  el verdadero aprendizaje tiene lugar, el que se siente como descubrir, no como adquirir
-                </span>
-                .
-              </p>
-            </div>
+            <p
+              data-aos="fade-up"
+              data-aos-duration="500"
+              className="text-2xl m-5 p-10 bg-white/50 border-4 border-dashed border-black rounded-xl"
+            >
+              Una educación al servicio de la productividad mercantilista no podrá dejar nunca de comparar y
+              cuantificar, ni de organizar el deber en función de metas y expectativas preestablecidas, con la ansiedad
+              que inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no puede ser todos
+              los lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}
+              <span className="text-[#46BFD7] font-bold">
+                el verdadero aprendizaje tiene lugar, el que se siente como descubrir, no como adquirir
+              </span>
+            </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 items-center justify-center w-fit">
-            <div data-aos="fade-up" className="flex flex-col items-center">
-              <h1
-                data-aos="fade-left"
-                className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
-              >
-                Tomamos la forma que tome nuestra comunidad
-              </h1>
-
-              <p
-                data-aos="fade-up"
-                data-aos-duration="500"
-                className="text-[1.3rem] m-10 p-10 bg-white/50 border-4 border-dashed border-black rounded-xl"
-              >
-                Enseñamos, en principio,
-                <span className="text-[#46BFD7]">
-                  {' '}
-                  programación, matemática, ilustración digital y otras técnicas cercanas al desarrollo de videojuegos{' '}
-                </span>
-                , porque es el ámbito y contexto concreto donde el proyecto se originó. Pero esperamos eventualmente dar
-                la bienvenida a talleres de música, circo, ciencias, huerta y más. Enseñamos computación, sistemas e
-                informática como campos del conocimiento creativo, no como instrumentos de lucro, provecho y
-                rendimiento.
-              </p>
-            </div>
+        <div className="flex flex-col mx-20">
+          <h1
+            data-aos="fade-left"
+            className={`${titulo.className} m-20 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl md:text-5xl`}
+          >
+            Tomamos la forma que tome nuestra comunidad
+          </h1>
+          <div className="md:grid md:grid-cols-2 w-[80vw] gap-8 items-center">
+            <p
+              data-aos="fade-up"
+              data-aos-duration="500"
+              className="text-2xl m-5 p-10 bg-white/50 border-4 border-dashed border-black rounded-xl"
+            >
+              Enseñamos, en principio,
+              <span className="text-[#46BFD7] font-bold">
+                {' '}
+                programación, matemática, ilustración digital y otras técnicas cercanas al desarrollo de videojuegos{' '}
+              </span>
+              , porque es el ámbito y contexto concreto donde el proyecto se originó. Pero esperamos eventualmente dar
+              la bienvenida a talleres de música, circo, ciencias, huerta y más. Enseñamos computación, sistemas e
+              informática como campos del conocimiento creativo, no como instrumentos de lucro, provecho y rendimiento.
+            </p>
 
             <Image
-              className="shadow-2xl w-fit rounded-xl"
+              className="shadow-2xl m-5 rounded-xl"
               data-aos="fade-right"
               src={'/img/Identidad3.png'}
               alt={'Taller Ludidactas 2'}
@@ -253,224 +249,17 @@ const IdDesktop = () => {
           </div>
         </div>
 
-        <p className="w-3/5 mx-auto text-[1.4rem] m-10 p-10 ">
+        <p className="p-10 w-[60vw] text-[1.4rem] ">
           {' '}
           Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
           nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el tejido creativo.
+        </p>
+        <p className="px-10 w-[60vw] pb-20 text-[1.4rem]">
           Para nosotros es importante cultivar la capacidad de hacer, no mediante procedimientos mecánicos, sino
           mediante <span className="text-[#46BFD7]">el juego</span> como via para enseñar con mayor inmunidad a{' '}
           <span className="text-[#46BFD7]">los síntomas de la repetición inadvertida</span>.
         </p>
       </div>
     </WithAOS>
-  )
-}
-
-const IdMobile = () => {
-  return (
-    <WithAOS>
-      <div className="block lg:hidden text-center">
-        <div className="flex justify-center border-solid">
-          <Image
-            className="text-center w-full shadow-4xl rounded-xl "
-            data-aos="zoom-in-down"
-            src={'/img/Identidad1.png'}
-            alt={'Grupo taller Ludidactas'}
-            width={200}
-            height={200}
-          ></Image>
-        </div>
-
-        <div className="mt-10">
-          <h1
-            data-aos="fade-left"
-            className={`${titulo.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl`}
-          >
-            El hoy
-          </h1>
-
-          <div className="flex flex-col text-center  mx-4 p-2">
-            <p className="text-xl p-8 bg-white border-2 border-black border-dashed rounded-xl mb-10">
-              Uno de los desafíos que se nos presenta a los educadores en la actualidad es la{' '}
-              <span className="text-[#46BFD7] font-bold">
-                creciente disociación entre diferentes áreas de la enseñanza
-              </span>{' '}
-              en todos los niveles educativos. Sumado a esto, actualmente experienciamos una{' '}
-              <span className="font-bold text-[#46BFD7]">
-                progresiva influencia de la tecnología en todas las áreas del conocimiento y esferas sociales.
-              </span>{' '}
-            </p>
-
-            <div className="flex flex-col  m-4 justify-center items-center ">
-              <h1
-                data-aos="fade-left"
-                className={`${titulo.className} mb-4 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-4xl`}
-              >
-                Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
-                que nos permita <br />↓
-              </h1>
-
-              <Carousel className="w-[250px] mx-4 self-center">
-                <CarouselContent>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xs bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      La formación en el uso creativo de tecnologías contemporáneas, con el fin de reducir la brecha
-                      entre tecnología y procesos de aprendizaje.
-                    </SpeechBubble>
-                    <Image
-                      className="m-4 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel1.png'}
-                      alt={''}
-                      width={100}
-                      height={100}
-                    ></Image>
-                  </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xs bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      El diálogo y integración entre diversas áreas la educación, teniendo en cuenta que el proceso de{' '}
-                      <span className="text-cyan-500">enseñanza-aprendizaje es un único fenómeno.</span>
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel2.png'}
-                      alt={''}
-                      width={100}
-                      height={100}
-                    ></Image>
-                  </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xs bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      Comprender que las condiciones para la enseñanza no están dadas por procedimientos mecánicos sino
-                      por el juego como motor organizador del aprendizaje
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel3.png'}
-                      alt={''}
-                      width={100}
-                      height={100}
-                    ></Image>
-                  </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xs bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      Reivindicar el poder creativo del aprendizaje, orientándolo a la construcción de herramientas y
-                      recursos didácticos.
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel4.png'}
-                      alt={''}
-                      width={100}
-                      height={100}
-                    ></Image>
-                  </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
-                <CarouselNext className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
-              </Carousel>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col mx-4 gap-2">
-          <div className="bg-sky-200/30 rounded-xl">
-            <p className="text-xl m-4 p-8">
-              Entendemos{' '}
-              <span className="text-[#46BFD7] font-bold">el juego como germen de la educación y de la creatividad</span>
-              , que ocurre en la naturaleza espontánea y consistentemente{' '}
-              <span className="text-[#46BFD7] font-bold ">con un rol didáctico:</span> cada especie juega como le va a
-              ser propio trabajar en su edad adulta.{' '}
-            </p>
-
-            <h1
-              data-aos="fade-left"
-              className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
-            >
-              {' '}
-              El juego nos facilita aprender con independencia de las formas. Nos muestra horizontes, que reclaman
-              caminos.
-            </h1>
-
-            <p className="text-xl m-4 p-8">
-              <span className="text-[#46BFD7] font-bold ">
-                El juego es un proceso de ensayo y autoperfeccionamiento:
-              </span>{' '}
-              la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que practica, ensaya y
-              estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la performarce.
-            </p>
-          </div>
-
-          <h1
-            data-aos="fade-left"
-            className={`${titulo.className} m-10 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
-          >
-            {' '}
-            Con la motivación correcta el aprendizaje se da de una forma orgánica.
-          </h1>
-
-          <Image
-            className="shadow-lg w-full rounded-xl"
-            data-aos="fade-left"
-            src={'/img/Identidad2.JPG'}
-            alt={'Grupo taller Ludidactas'}
-            width={600}
-            height={600}
-          ></Image>
-
-          <p
-            data-aos="fade-up"
-            data-aos-duration="500"
-            className="text-xl m-4 p-8 rounded-xl bg-white/50 border-dashed border-4 border-black"
-          >
-            Consideramos las áreas de computación, sistemas e informática como campos que exceden por mucho las
-            computadoras electrónicas y el software.
-            <span className="text-[#46BFD7] font-bold">
-              {' '}
-              Por ello enseñamos, en principio, programación, matemática, ilustración digital y otras aptitudes que
-              colaboren al sostén de los procesos pedagógicos
-            </span>
-            . Pero esperamos eventualmente dar la bienvenida a talleres de música, circo, ciencias, huerta y más.
-          </p>
-
-          <h1
-            data-aos="fade-left"
-            className={`${titulo.className} m-4 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl`}
-          >
-            ¡Aprender no tiene por qué ser forzoso o mecánico!
-          </h1>
-
-          <Image
-            className="shadow-xl w-full mb-4 rounded-xl"
-            data-aos="fade-right"
-            src={'/img/Identidad3.png'}
-            alt={'Taller Ludidactas 2'}
-            width={1000}
-            height={1000}
-          ></Image>
-
-          <p
-            data-aos="fade-up"
-            data-aos-duration="500"
-            className="text-xl m-4 p-8 bg-white/50 border-4 border-dashed border-black rounded-xl"
-          >
-            Nuestra perspectiva lúdica y didáctica (de allí nuestro nombre), pues creemos que atendiendo al proceso de
-            transmisión de saberes podemos nutrir el poder creativo del aprendizaje. Para nosotros es importante{' '}
-            <span className="text-[#46BFD7] font-bold">cultivar la capacidad de hacer</span>, no mediante procedimientos
-            mecánicos, sino mediante{' '}
-            <span className="text-[#46BFD7] font-bold">
-              el juego como via para enseñar con mayor inmunidad a los síntomas de la repetición inadvertida.
-            </span>
-          </p>
-        </div>
-      </div>
-    </WithAOS>
-  )
-}
-export default function Page() {
-  return (
-    <>
-      <IdDesktop />
-      <IdMobile />
-    </>
   )
 }

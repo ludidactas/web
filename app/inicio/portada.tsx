@@ -7,7 +7,7 @@ const Portada = () => {
   return (
     <div className="portadaini w-[100vw] h-[100vh] mt-20 flex flex-col items-center justify-center mb-20">
       <Image 
-        className="w-[80vw] lg:w-[700px]" 
+        className="aspect-auto object-fill" 
         src="/img/Compo.png" 
         alt="PortadaImg" 
         width={1000} 

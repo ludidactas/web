@@ -4,7 +4,6 @@ import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
 export default function LdBannerConvocatoria({ className }: { className?: string }) {
-  
   const mensaje = (
     <div className="flex flex-col items-center gap-1">
       <p className="text-xs text-center">
@@ -26,7 +25,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // El svg importado
       SvgComponent={ConvocatoriaSvg}
       // Los ids que le hayamos puesto a los elementos
-      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
+      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo', 'ld.slot.contenido'] as const}
       // Los slots que hayamos dejado, mapeando a su contenido
       slots={
         {
@@ -41,7 +40,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // Función loop
       animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.dy(Math.sin(t / 600 + idx) * 0.18)
+          nodo.dy(Math.sin(t / 600 + idx) * 0.04)
         })
       }}
       className={`w-4/5 ${className ?? ''}`}

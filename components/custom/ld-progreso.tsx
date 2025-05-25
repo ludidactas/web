@@ -18,11 +18,11 @@ export default function LdProgreso({
   horarios,
   imagen,
   scorelabel = 'Inscritos:',
-  horariosLabel = 'Horarios:'
+  horariosLabel = 'Horarios:',
 }: Props) {
   const porcentaje = score / target
   return (
-    <div className="flex flex-h items-center gap-2">
+    <div className="w-full flex flex-h items-center gap-2">
       <Image src={imagen} alt={ titulo } width={64} height={64} />
       <div className="flex flex-col w-full items-start">
         <p>{titulo}</p>

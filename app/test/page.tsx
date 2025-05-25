@@ -1,9 +1,100 @@
-import LdBanner from '@/components/custom/ld-banner-convocatoria'
+'use client'
+import ConvocatoriaSvg from '@/svg/banner.svg'
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import { LdSvg } from '@/components/custom/ld-svg'
+import { secuenciar } from '@/lib/utils'
+import CajaTexto from '@/svg/CajaTextoPre.svg'
+import LdBarrita from '@/components/custom/ld-barrita'
+import Image from 'next/image'
+import LdProgreso from '@/components/custom/ld-progreso'
+import LdRoadmapDummy from '@/components/custom/ld-roadmap-dummy'
+
+
+
 
 export default function Page() {
+  const one = <p>Tuvieja</p>
+
+  const mensaje = (
+    <div className="flex flex-col items-center gap-1">
+      <p className="text-xs text-center">
+        {' '}
+        Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
+        el de aprendientes{' '}
+      </p>
+      <p className="text-xs text-center text-[#93278c]">
+        ¡Si estás interesadx, accedé a la info completa y escribinos!
+      </p>
+      <BtnSketchy className="h-[50px] text-center leading-[30px]" href="/convocatoria">
+        Convocatoria
+      </BtnSketchy>
+    </div>
+  )
+
   return (
-    <div className="h-screen w-4/5 mx-auto">
-      <LdBanner />
+    <div className="h-screen w-4/5 mx-auto flex flex-col gap-8 items-center">
+      <div className='p-8 bg-neutral-50 w-3/5'>
+        <LdRoadmapDummy/>
+      </div>
+
+      <LdProgreso
+        titulo="Introducción a la programación con Python"
+        score={4}
+        target={6}
+        horarios="jueves 19 a 20.30hs"
+        imagen="/img/tecnologias/python.png"
+      />
+
+      <LdProgreso
+        titulo="Taller de desarrollo web"
+        score={7}
+        target={12}
+        horarios="martes 19 a 20.30hs"
+        imagen="/img/tecnologias/web.png"
+      />
+
+      <LdProgreso
+        titulo="Programación de videojuegos con Godot"
+        score={5}
+        target={6}
+        horarios="viernes 19 a 20.30hs"
+        imagen="/img/tecnologias/godot.png"
+      />
+
+      <div className="w-full h-24" />
+
+      {/* <LdSvg
+        // El svg importado
+        SvgComponent={ConvocatoriaSvg}
+        // Los ids que le hayamos puesto a los elementos
+        ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
+        // Los slots que hayamos dejado, mapeando a su contenido
+        slots={
+          {
+            'ld.slot.contenido': mensaje,
+          } as const
+        }
+        // Función setup
+        setup={(nodos) => {
+          // Le aplicamos el blend mode al cono
+          nodos['ld.cono'].node.style.mixBlendMode = 'screen'
+        }}
+        // Función loop
+        animation={(nodos, t) => {
+          Object.values(nodos).forEach((nodo, idx) => {
+            nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
+          })
+        }}
+        className={`w-4/5`}
+      />
+
+      <LdSvg
+        className="text-2xl w-full"
+        SvgComponent={CajaTexto}
+        ids={['cajaUno', 'cajaDos'] as const}
+        animation={secuenciar(['cajaUno', 'cajaDos'], 600)}
+        slots={{ slotCaja: one } as const}
+      /> */}
     </div>
   )
 }

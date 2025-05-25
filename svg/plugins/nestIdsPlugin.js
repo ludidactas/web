@@ -1,4 +1,8 @@
-// svg/nestIdsPlugin.js
+/**
+ * Plugin de SVGO para jerarquizar ids. <g id="uno"><g id="dos"/></g/> 
+ * se convierte en <g id="uno"><g id="uno.dos"/></g/>
+ * Usado en svgo.config.js
+ */
 const nestIdsPlugin = {
   name: 'nestIds',
   description: 'Nests element IDs by concatenating parent IDs with the current ID, separated by periods.',

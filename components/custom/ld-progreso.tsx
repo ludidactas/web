@@ -11,6 +11,10 @@ interface Props {
   horariosLabel?: string
 }
 
+/**
+ * Barrita de progreso (para comunicar el estado de iniciativas,
+ * porcentajes de inscritos necesarios para arrancar un curso, etc.)
+ */
 export default function LdProgreso({
   titulo,
   score,
@@ -23,7 +27,7 @@ export default function LdProgreso({
   const porcentaje = score / target
   return (
     <div className="w-full flex flex-h items-center gap-2">
-      <Image src={imagen} alt={ titulo } width={64} height={64} />
+      <Image src={imagen} alt={titulo} width={64} height={64} />
       <div className="flex flex-col w-full items-start">
         <p>{titulo}</p>
         <LdBarrita porcentaje={porcentaje} />

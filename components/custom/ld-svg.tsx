@@ -4,12 +4,12 @@ import { useRef, useState, useEffect, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { entries } from 'remeda'
 
-interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string> {
+interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string = ''> {
   SvgComponent: any
   setup?: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
   animation?: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>, dt: number) => void
   ids?: readonly (SvgIds | SvgSlotIds)[]
-  slots?: Readonly<Record<SvgSlotIds, ReactNode>>
+  slots?: Readonly<Partial<Record<SvgSlotIds, ReactNode>>>
   className?: string
 }
 
@@ -26,7 +26,7 @@ interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string> {
  * a componentes de react o cualquier fragmento que se quiera renderizar en su lugar.
  */
 
-export function LdSvg<SvgIds extends string, SvgSlotIds extends string>({
+export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
   SvgComponent,
   setup,
   animation,
@@ -134,7 +134,7 @@ function crearSlot(svg: SVGElement, id: string) {
   // Agarramos el elemento SVG a partir del id
   const nodoTarget = SVG(svg.querySelector(`[id$="${id}"]`))
   if (nodoTarget == null) throw new LdSvgError(`No se encuentra elemento (slot) con id ${id} dentro del SVG`)
-  
+
   // Creamos un foreignObject con las dimensiones de la bbox del slot
   // Nota: el placeholder lo tuve que dibujar con pen (es un path) porque la herramienta
   // rect estaba produciendo un cuadrado con un transform, y eso jode el placement

@@ -1,7 +1,7 @@
-import { LdSvg } from "@/components/custom/ld-svg"
-import { clsx, type ClassValue } from "clsx"
-import { ComponentProps } from "react"
-import { twMerge } from "tailwind-merge"
+import { LdSvg } from '@/components/custom/ld-svg'
+import { clsx, type ClassValue } from 'clsx'
+import { ComponentProps } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -10,9 +10,9 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * En el contexto de usar LdSvg, esta función se encarga de crear una animación que
  * secuencia la aparición de una cantidad de ids, como para hacer una animación cuadro por cuadro.
- * 
+ *
  * E.g:
- * 
+ *
  * dt = 300 ms
  * mdt = 300 / 3 = 100 ms
  *
@@ -27,13 +27,13 @@ export function cn(...inputs: ClassValue[]) {
  * |     |     | X   |
  * | mdt | mdt | mdt |
  * |       dt        |
- * 
- * @param ids 
- * @param duracion 
- * @returns 
+ *
+ * @param ids
+ * @param duracion
+ * @returns
  */
 export function secuenciar(ids: string[], duracion: number): ComponentProps<typeof LdSvg>['animation'] {
-  return (t, nodos) => {
+  return (nodos, t) => {
     const dt = duracion
     const ta = t % dt // tiempo actual
     ids.forEach((id, i) => {
@@ -42,5 +42,3 @@ export function secuenciar(ids: string[], duracion: number): ComponentProps<type
     })
   }
 }
-
-

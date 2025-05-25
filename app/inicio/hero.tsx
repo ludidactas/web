@@ -5,7 +5,6 @@ import LdBannerConvocatoriaMobile from '@/components/custom/ld-banner-convocator
 import { CircleChevronDown } from 'lucide-react'
 import { Link as Scroll } from 'react-scroll'
 
-
 const HeroMobile = () => {
   return (
     <>
@@ -23,7 +22,7 @@ const HeroMobile = () => {
 const Hero = () => {
   return (
     <>
-      <div className="block lg:hidden w-screen flex flex-col items-center">
+      <div className="lg:hidden w-screen flex flex-col items-center">
         <HeroMobile />
       </div>
       <div className="hidden lg:block">

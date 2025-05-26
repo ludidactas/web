@@ -1,14 +1,14 @@
 // svg/normalizeIdsPlugin.js
 
 /**
- * Plugin de SVGO para jerarquizar ids. "activo1" -> "activo"
+ * Plugin de SVGO para normalizar ids. "activo1" -> "activo"
  * "inactivo2" -> "inactivo", etc.
  * Usado en svgo.config.js en combinación con jerarquización
  * para tener ids únicos y predecibles
  */
 const normalizeIdsPlugin = {
   name: 'normalizeIds',
-  description: 'Normalizes IDs by removing numeric suffixes',
+  description: 'Normaliza ids removiendo sufijos numéricos, excepto aquellos que empiezan con `_`',
   fn: () => {
     // Helper que remueve los números al final de un id
     const normalizeId = (id) => {

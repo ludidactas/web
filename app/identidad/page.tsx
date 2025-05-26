@@ -6,6 +6,8 @@ import { ComponentProps, PropsWithChildren } from 'react'
 import { Metadata } from 'next'
 import { Hl } from '../inicio/highlight'
 import { cn } from '@/lib/utils'
+import SvgEscritorio from '@/svg/escritorio'
+import SvgPibis from '@/svg/pibis'
 
 function SpeechBubble({ children }: PropsWithChildren) {
   return (
@@ -184,26 +186,23 @@ export default function Page() {
         </div>
 
         {/* Secciones con titulo + dibujo + texto */}
-        <TituloYDosColumnas
-          titulo="Con la motivación correcta el aprendizaje se da de una forma orgánica."
-          srcImagen="/img/Identidad2.png"
-        >
-          <P>
-            Una educación al servicio de la productividad mercantilista no podrá dejar nunca de comparar y cuantificar,
-            ni de organizar el deber en función de metas y expectativas preestablecidas, con la ansiedad que
-            inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no puede ser todos los
-            lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}
-            <span className="text-[#46BFD7] font-bold">
-              el verdadero aprendizaje tiene lugar, el que se siente como descubrir, no como adquirir
-            </span>
-          </P>
+        <TituloYDosColumnas titulo="Con la motivación correcta el aprendizaje se da de una forma orgánica.">
+          <>
+            <SvgEscritorio />
+            <P>
+              Una educación al servicio de la productividad mercantilista no podrá dejar nunca de comparar y
+              cuantificar, ni de organizar el deber en función de metas y expectativas preestablecidas, con la ansiedad
+              que inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no puede ser todos
+              los lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}
+              <span className="text-[#46BFD7] font-bold">
+                el verdadero aprendizaje tiene lugar, el que se siente como descubrir, no como adquirir
+              </span>
+            </P>
+          </>
         </TituloYDosColumnas>
 
-        <TituloYDosColumnas
-          titulo="Tomamos la forma que tome nuestra comunidad"
-          srcImagen="/img/Identidad3.png"
-          invertido
-        >
+        <TituloYDosColumnas titulo="Tomamos la forma que tome nuestra comunidad" invertido>
+          <SvgPibis />
           <P>
             Enseñamos, en principio,{' '}
             <span className="text-[#46BFD7] font-bold">
@@ -235,12 +234,13 @@ export default function Page() {
 
 interface TituloYDosColumnasProps extends PropsWithChildren {
   titulo: string
-  svg?: any
-  srcImagen?: string
   invertido?: boolean
 }
 
-const TituloYDosColumnas = ({ titulo, svg, children, srcImagen, invertido = false }: TituloYDosColumnasProps) => (
+/**
+ * Abstrae el layout en columnas que usamos en la última parte de la página
+ */
+const TituloYDosColumnas = ({ titulo, children, invertido = false }: TituloYDosColumnasProps) => (
   <div className="flex flex-col mx-20 max-w-[1480px]">
     <h1
       data-aos="fade-left"
@@ -250,23 +250,9 @@ const TituloYDosColumnas = ({ titulo, svg, children, srcImagen, invertido = fals
     </h1>
 
     <div
-      className={cn(
-        'grid grid-rows-2 lg:grid-cols-2 lg:grid-rows-none gap-8 items-center justify-items-center',
-        invertido && 'rtl'
-      )}
+      className="grid grid-rows-2 lg:grid-cols-2 lg:grid-rows-none gap-8 items-center justify-items-center"
+      style={invertido ? { direction: 'rtl' } : {}}
     >
-      {/* Reemplazar por el svg */}
-      {srcImagen && (
-        <Image
-          className="shadow-2xl m-5 rounded-xl"
-          data-aos="fade-left"
-          src={srcImagen}
-          alt={'Grupo taller Ludidactas'}
-          width={600}
-          height={600}
-        ></Image>
-      )}
-
       {children}
     </div>
   </div>

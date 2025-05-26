@@ -3,8 +3,10 @@
 // eslint-disable-next-line import/no-anonymous-default-export
 
 import { nestIdsPlugin } from './svg/plugins/nestIdsPlugin.js';
-import { normalizeIdsPlugin } from './svg/plugins/normalizeIdsPlugin.js';
+// import { normalizeIdsPlugin } from './svg/plugins/normalizeIdsPlugin.js';
+import { randomizeImageIds } from './svg/plugins/randomizeImageIds.js';
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
   plugins: [
     {
@@ -15,7 +17,8 @@ export default {
         },
       },
     },
+    randomizeImageIds,
     nestIdsPlugin,
-    normalizeIdsPlugin,
+    // normalizeIdsPlugin,
   ],
 }

@@ -45,7 +45,7 @@ const Formatos = ({ formato, descripcion }: FormatosProps) => {
 
 const FormatosModulo = () => {
   return (
-    <div className="lg:mt-20 lg:mx-15 flex flex-col items-center text-center rounded-xl lg:pt-10">
+    <div className="max-w-[1480px] lg:mt-20 lg:mx-15 flex flex-col items-center text-center rounded-xl lg:pt-10">
       <h2 className="text-center font-bold text-xl lg:text-3xl w-fit px-10 rounded-x bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text">
         Las propuestas se ofrecen en formato seminario, taller y clases particulares
       </h2>
@@ -53,8 +53,8 @@ const FormatosModulo = () => {
       <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between m-10 lg:m-20">
         <Formatos
           formato="Seminario"
-          descripcion='Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema
-            puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo.'
+          descripcion="Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema
+            puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo."
         />
 
         <Formatos
@@ -63,7 +63,7 @@ const FormatosModulo = () => {
             para almas aplicadas, que disfruten el trabajo en equipo, y la buena cosecha que sigue a una buena
             siembra."
         />
-        
+
         <Formatos
           formato="Clases Particulares"
           descripcion="Son para vos si sabés lo querés y vas con toda en esa dirección, o si apreciás el fruto de un trabajo
@@ -116,7 +116,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
 const LineasModulo = () => {
   return (
     <div className="flex flex-col m-4 lg:m-10 lg:px-10 lg:mx-10 items-center justify-center ">
-      <div className="p-4 text-center lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl lg:mx-10">
+      <div className="p-4 text-center max-w-[1480px] lg:px-10 bg-white rounded-xl text-[1rem] lg:text-2xl lg:mx-10">
         <h2
           data-aos="fade-left"
           className={`${fuenteTitulo.className} text-4xl p-5 bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text drop-shadow-[2px_2px_2px_rgba(0,0,0)] lg:text-7xl`}
@@ -133,8 +133,8 @@ const LineasModulo = () => {
           <Link href="/identidad">nuestras necesidades identitarias</Link>. En los talleres, los estudiantes más
           avanzados enseñan a los más nuevos, y así practican también la didáctica. El material generado durante las
           clases particulares se pone a disposición como recursos para que sirva a autodidactas y otrxs profes. En los
-          seminarios directamente se dispensa formación técnica a chorro. Y en el blog se escribe sobre
-          pedagogía y enseñanza al público más maduro.
+          seminarios directamente se dispensa formación técnica a chorro. Y en el blog se escribe sobre pedagogía y
+          enseñanza al público más maduro.
         </p>
         <Link href="https://instagram.com/ludidactas">¡Consultanos!</Link>
       </div>
@@ -217,7 +217,7 @@ const LineasModulo = () => {
 
 const Tecnologias = () => {
   return (
-    <div className="mx-8 lg:m-20 rounded-xl bg-slate-100/50">
+    <div className="mx-8 max-w-[1480px] lg:m-20 rounded-xl bg-slate-100/50">
       <h1
         data-aos="fade-left"
         className={`${fuenteTitulo.className} m-4 lg:m-10 py-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] text-4xl text-center lg:text-7xl bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text`}

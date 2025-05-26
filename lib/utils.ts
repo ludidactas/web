@@ -13,20 +13,20 @@ export function cn(...inputs: ClassValue[]) {
  *
  * E.g:
  *
- * dt = 300 ms
- * mdt = 300 / 3 = 100 ms
+ *     dt = 300 ms
+ *     mdt = 300 / 3 = 100 ms
  *
- * i = 0 -> i * mdt = 0, (i + 1) * mdt = 100
- * i = 1 -> i * mdt = 100, (i + 1) * mdt = 200
- * i = 2 -> i * mdt = 200, (i + 1) * mdt = 300
+ *     i = 0 -> i * mdt = 0, (i + 1) * mdt = 100
+ *     i = 1 -> i * mdt = 100, (i + 1) * mdt = 200
+ *     i = 2 -> i * mdt = 200, (i + 1) * mdt = 300
  *
- * | id1 | id2 | id3 |
- * | 0   | 1   | 2   |
- * | X   |     |     |
- * |     | X   |     |
- * |     |     | X   |
- * | mdt | mdt | mdt |
- * |       dt        |
+ *     | id1 | id2 | id3 |
+ *     | 0   | 1   | 2   |
+ *     | X   |     |     |
+ *     |     | X   |     |
+ *     |     |     | X   |
+ *     | mdt | mdt | mdt |
+ *     |       dt        |
  *
  * @param ids
  * @param duracion

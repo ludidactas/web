@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils'
 import SvgEscritorio from '@/svg/escritorio'
 import SvgPibis from '@/svg/pibis'
 
+import PjCarousel from '@/svg/pjCarousel'
+import SvgBiclope from '@/svg/dist/identidad/biclope.svg'
+
 function SpeechBubble({ children }: PropsWithChildren) {
   return (
     <div className="flex items-center justify-center m-4 rounded-lg bg-gray-100">
@@ -100,61 +103,42 @@ export default function Page() {
                 que nos permita:
               </h1>
 
+              {/* Carousel de personajes */}
               <Carousel className="w-[60vw] mx-4 lg:w-[400px] lg:ml-10">
                 <CarouselContent>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xs lg:text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      El <span className="text-cyan-500">diálogo e integración</span> entre diversas áreas y
-                      &quot;niveles&quot; de la educación. ¡El proceso de enseñanza-aprendizaje es un único fenómeno!
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel2.png'}
-                      alt={''}
-                      width={200}
-                      height={200}
-                    ></Image>
+                  <CarouselItem>
+                    <PjCarousel personaje="biclope">
+                      <p className="text-3xl">
+                        El <span className="text-cyan-500">diálogo e integración</span> entre diversas áreas y
+                        &quot;niveles&quot; de la educación. ¡El proceso de enseñanza-aprendizaje es un único fenómeno!
+                      </p>
+                    </PjCarousel>
                   </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      Comprender que las condiciones para el aprendizaje no están dadas por procedimientos mecánicos
-                      sino por un proceso vivo, con{' '}
-                      <span className="text-cyan-500">el juego como motor organizador</span>
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel3.png'}
-                      alt={''}
-                      width={200}
-                      height={200}
-                    ></Image>
+                  <CarouselItem>
+                    <PjCarousel personaje="ojito">
+                      <p className="text-3xl">
+                        Comprender que las condiciones para el aprendizaje no están dadas por procedimientos mecánicos
+                        sino por un proceso vivo, con{' '}
+                        <span className="text-cyan-500">el juego como motor organizador</span>
+                      </p>
+                    </PjCarousel>
                   </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      Desarrollar <span className="text-cyan-500">procesos educativos flexibles</span> que nos permitan
-                      recibir y armonizar la diversidad de individualidades en el aula, taller o sala, adaptándonos a
-                      diferentes necesidades y estilos de aprendizaje.
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel4.png'}
-                      alt={''}
-                      width={200}
-                      height={200}
-                    ></Image>
+                  <CarouselItem>
+                    <PjCarousel personaje="pulpo">
+                      <p className="text-3xl">
+                        Desarrollar <span className="text-cyan-500">procesos educativos flexibles</span> que nos
+                        permitan recibir y armonizar la diversidad de individualidades en el aula, taller o sala,
+                        adaptándonos a diferentes necesidades y estilos de aprendizaje.
+                      </p>
+                    </PjCarousel>
                   </CarouselItem>
-                  <CarouselItem className="flex flex-col place-content-center items-center text-xl bg-gradient-to-r from-cyan-500/50 to-blue-500/50">
-                    <SpeechBubble>
-                      La formación en el <span className="text-cyan-500">uso creativo</span> de tecnologías
-                      contemporáneas, lo que hace a la diferencia entre usuario y consumidor.
-                    </SpeechBubble>
-                    <Image
-                      className="m-6 p-2  bg-white rounded-xl"
-                      src={'/img/Pixel1.png'}
-                      alt={''}
-                      width={200}
-                      height={200}
-                    ></Image>
+                  <CarouselItem>
+                    <PjCarousel personaje="robot">
+                      <p className="text-3xl">
+                        La formación en el <span className="text-cyan-500">uso creativo</span> de tecnologías
+                        contemporáneas, lo que hace a la diferencia entre usuario y consumidor.
+                      </p>
+                    </PjCarousel>
                   </CarouselItem>
                 </CarouselContent>
 

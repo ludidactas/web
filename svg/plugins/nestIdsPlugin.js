@@ -18,7 +18,6 @@ const nestIdsPlugin = {
           const idAttr = node.attributes.id;
           
           if (idAttr) {
-            console.log(`Entrando en node: ${idAttr}, stack es ${idPath}`);
             // Store the original ID
             const originalId = idAttr;
             

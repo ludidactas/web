@@ -1,7 +1,7 @@
 import { LdSvg } from '@/components/custom/ld-svg';
 import { titulo } from '@/components/fonts'
 import { secuenciar } from '@/lib/utils';
-import CajaTexto from '@/svg/CajaTextoPre.svg'
+import CajaTexto from '@/svg/CajaTextoSVGO.svg'
 
 
 export interface PantallaProps {
@@ -25,27 +25,27 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
           {title}
         </h2>
 
-        <div className={`flex items-center mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+        <div className={`flex items-center gap-20 mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
 
           <div
-            className="w-full text-center bg-white/60 px-8 pt-10 pb-8"
+            className="w-full text-3xl text-center bg-white/60"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
-            <LdSvg className='text-2xl w-full'
+            <LdSvg className='text-2xl m-4 w-full'
               SvgComponent={CajaTexto}
-              ids={["cajaUno", "cajaDos"] as const}
-              animation={secuenciar(["cajaUno", "cajaDos"], 500)}
-              slots={{ 'slotCaja': one} as const}
+              ids={["uno", "dos", "tres", "slot", "slot2"] as const}
+              animation={secuenciar(["uno", "dos", "tres"], 700)}
+              slots={{ "slot": one, "slot2": btn } as const}
 
             />
           </div>
 
-          <div className="w-fit" data-aos={espejado ? 'fade-right' : 'fade-left'}>
+          <div className="w-full" data-aos={espejado ? 'fade-right' : 'fade-left'}>
             {two}
           </div>
         </div>
 
-        <div className="w-10 m-10 mb-10">{scroll}</div>
+        <div className=" m-10 mb-10">{scroll}</div>
       </div>
 
       {/* MOBILE */}

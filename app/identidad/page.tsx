@@ -8,20 +8,7 @@ import { Hl } from '../inicio/highlight'
 import { cn } from '@/lib/utils'
 import SvgEscritorio from '@/svg/escritorio'
 import SvgPibis from '@/svg/pibis'
-
 import PjCarousel from '@/svg/pjCarousel'
-import SvgBiclope from '@/svg/dist/identidad/biclope.svg'
-
-function SpeechBubble({ children }: PropsWithChildren) {
-  return (
-    <div className="flex items-center justify-center m-4 rounded-lg bg-gray-100">
-      <div className="relative bg-white text-black text-[1rem] font-bold p-4 rounded-lg shadow-lg max-w-xs">
-        {children}
-        <div className="absolute right-25 -bottom-2 w-0 h-0 border-l-8 border-l-transparent border-r-20 border-r-transparent border-t-8 border-t-white"></div>
-      </div>
-    </div>
-  )
-}
 
 export const metadata: Metadata = {
   title: 'Identidad',
@@ -199,8 +186,8 @@ export default function Page() {
         </TituloYDosColumnas>
 
         {/* Pie */}
-        <div className="w-[60vw] max-w-[1080px]">
-          <p className="p-10 text-[1.4rem]">
+        <div className="w-[60vw] min-w-[370px] max-w-[1080px]">
+          <p className="p-0 lg:p-10 text-[1.4rem]">
             {' '}
             Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
             nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el tejido creativo.

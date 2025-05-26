@@ -42,3 +42,12 @@ export function secuenciar(ids: string[], duracion: number): ComponentProps<type
     })
   }
 }
+
+export function oscilar(ids: string[], fr: number, a = 5, fase = 1): ComponentProps<typeof LdSvg>['animation'] {
+  return (nodos, t) => {
+    ids.forEach((id, i) => {
+      const ts = t / 1000 - fase * i // tiempo en segundos
+      nodos[id].dy(-Math.sin(fr * ts) * a)
+    })
+  }
+}

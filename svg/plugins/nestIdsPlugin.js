@@ -1,11 +1,11 @@
 /**
  * Plugin de SVGO para jerarquizar ids. <g id="uno"><g id="dos"/></g/> 
  * se convierte en <g id="uno"><g id="uno.dos"/></g/>
- * Usado en svgo.config.js
+ * Usado en svgo.config.js. Útil para evitar colisiones de IDs en SVGs anidados.
  */
 const nestIdsPlugin = {
   name: 'nestIds',
-  description: 'Nests element IDs by concatenating parent IDs with the current ID, separated by periods.',
+  description: 'Anida IDs en SVGs para evitar colisiones, separando los niveles con `.`',
   fn: () => {
     // Track the current ID path as we traverse the tree
     const idPath = [];

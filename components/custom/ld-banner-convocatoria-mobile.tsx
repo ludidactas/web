@@ -8,8 +8,8 @@ export default function LdBannerConvocatoriaMobile() {
     <div className="flex flex-col items-center h-full justify-around px-6">
       <p className="text-3xl text-center">
         {' '}
-        Convocamos a personas interesadas en practicar el rol docente, didáctico, pedagógico y dispuestas a ocupar también
-        el de aprendientes unxs con otrxs{' '}
+        Convocamos a personas interesadas en practicar el rol docente, didáctico, pedagógico y dispuestas a ocupar
+        también el de aprendientes unxs con otrxs{' '}
       </p>
       <p className="text-2xl text-center text-[#93278c]">
         ¡Si estás interesadx, accedé a la info completa y escribinos!
@@ -25,7 +25,7 @@ export default function LdBannerConvocatoriaMobile() {
       // El svg importado
       SvgComponent={ConvocatoriaSvg}
       // Los ids que le hayamos puesto a los elementos
-      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
+      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo', 'ld.slot.contenido'] as const}
       // Los slots que hayamos dejado, mapeando a su contenido
       slots={
         {

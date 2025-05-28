@@ -1,22 +1,20 @@
-import { LdSvg } from '@/components/custom/ld-svg';
+import { LdSvg } from '@/components/custom/ld-svg'
 import { titulo } from '@/components/fonts'
-import { secuenciar } from '@/lib/utils';
+import { secuenciar } from '@/lib/utils'
 import CajaTexto from '@/svg/CajaTextoPre.svg'
 
-
 export interface PantallaProps {
-  title: string,
-  one: JSX.Element,
-  two: JSX.Element,
-  btn: JSX.Element,
-  scroll: JSX.Element,
-  espejado?: boolean,
+  title: string
+  one: JSX.Element
+  two: JSX.Element
+  btn: JSX.Element
+  scroll: JSX.Element
+  espejado?: boolean
 }
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaProps) => {
   return (
     <div className="w-[100vw] h-[100vh] flex-col items-center place-content-center">
-
       {/* DESKTOP */}
       <div className="hidden lg:flex flex-col items-center mt-5 mb-20">
         <h2
@@ -26,17 +24,16 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
         </h2>
 
         <div className={`flex items-center mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
-
           <div
             className="w-full text-center bg-white/60 px-8 pt-10 pb-8"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
-            <LdSvg className='text-2xl w-full'
+            <LdSvg
+              className="text-2xl w-full"
               SvgComponent={CajaTexto}
-              ids={["cajaUno", "cajaDos"] as const}
-              animation={secuenciar(["cajaUno", "cajaDos"], 500)}
-              slots={{ 'slotCaja': one} as const}
-
+              ids={['cajaUno', 'cajaDos', 'slotCaja'] as const}
+              animation={secuenciar(['cajaUno', 'cajaDos'], 500)}
+              slots={{ slotCaja: one } as const}
             />
           </div>
 
@@ -76,9 +73,6 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
         </div>
       </div>
     </div>
-
-  );
+  )
 }
-export default Pantalla;
-
-
+export default Pantalla

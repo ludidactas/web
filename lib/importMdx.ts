@@ -30,7 +30,7 @@ const esUnidad = (md: Md): md is MdUnidad => {
 }
 
 export async function importarBiblioteca() {
-  console.log(`Levantando MDs!`)
+  // console.log(`Levantando MDs!`)
 
   // Obtenemos la ruta de la carpeta de mds...
   const mdDir = join(process.cwd(), 'md')

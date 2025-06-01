@@ -9,6 +9,11 @@ import bracketedSpans from 'remark-bracketed-spans'
 const nextConfig: NextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   reactStrictMode: true,
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

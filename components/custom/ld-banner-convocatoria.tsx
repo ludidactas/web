@@ -6,15 +6,15 @@ import BtnSketchy from './ld-btn-sketchy'
 export default function LdBannerConvocatoria({ className }: { className?: string }) {
   const mensaje = (
     <div className="flex flex-col items-center gap-1">
-      <p className="text-xs text-center">
+      <p className="text-2xl text-center">
         {' '}
         Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
         el de aprendientes{' '}
       </p>
-      <p className="text-xs text-center text-[#93278c]">
+      <p className="text-2xl text-center text-[#93278c]">
         ¡Si estás interesadx, accedé a la info completa y escribinos!
       </p>
-      <BtnSketchy className="h-[50px] text-center leading-[30px]" href="/convocatoria">
+      <BtnSketchy className="h-[120px] text-center text-3xl leading-[90px]" href="/convocatoria">
         Convocatoria
       </BtnSketchy>
     </div>
@@ -40,7 +40,7 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // Función loop
       animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.y(Math.sin(t / 600 + idx) * 5)
+          nodo.y(Math.sin(t / 600 + idx) * 0.9)
         })
       }}
       className={`w-4/5 ${className ?? ''}`}

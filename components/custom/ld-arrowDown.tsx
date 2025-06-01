@@ -1,6 +1,6 @@
 import { Link } from "react-scroll";
 import { LdSvg } from "./ld-svg";
-import ArrowDown from "@/svg/arrowDown.svg"
+import ArrowDown from "@/svg/dist/arrowDown.svg"
 
 interface ArrowDownLdProps{
     to:string

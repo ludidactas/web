@@ -7,7 +7,7 @@ import WithAOS from '@/components/ui/with-aos'
 import Hero from './hero'
 import { Metadata } from 'next'
 
-// Forzamos a que sea estática
+// Forzamos a que sea estática 
 // (por alguna razón Vercel buildea como si fuera ISR)
 export const dynamic = 'error'
 

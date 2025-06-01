@@ -10,6 +10,10 @@ import { Metadata } from 'next'
 // Forzamos a que sea estática 
 // (por alguna razón Vercel buildea como si fuera ISR)
 export const dynamic = 'error'
+export const revalidate = false
+export const fetchCache = 'force-cache'
+export const runtime = 'nodejs'
+export const preferredRegion = 'auto'
 
 export const metadata: Metadata = {
   title: 'Ludidactas',

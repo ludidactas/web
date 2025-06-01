@@ -4,7 +4,7 @@ import Propuestas from './propuestas'
 import Recursos from './recursos'
 import Contacto from './contacto'
 import WithAOS from '@/components/ui/with-aos'
-// import Hero from './hero'
+import Hero from './hero'
 import { Metadata } from 'next'
 
 // Forzamos a que sea estática 
@@ -29,7 +29,7 @@ export default function Page() {
   return (
     <div className="flex flex-col items-center justify-center">
       <WithAOS>
-        {/* <Hero /> */}
+        <Hero />
         <Portada />
         <Identidad />
         <Propuestas />

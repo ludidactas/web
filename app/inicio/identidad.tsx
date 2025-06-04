@@ -12,7 +12,7 @@ export default function Identidad() {
       <Pantalla
         title="¿Quiénes somos?"
         one={
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center mt-8 p-8 gap-2 text-2xl">
             <p>
               Ludidactas surge en el año 2020 como un <Hl>laboratorio didáctico</Hl> con el objetivo de gestar
               propuestas y recursos didácticos y pedagógics ( herramientas y recursos para la enseñanza) y de instancias
@@ -29,7 +29,7 @@ export default function Identidad() {
         }
         two={<Imagenes />}
         btn={
-          <BtnSketchy className="block mx-auto h-[90px] leading-[62px]" href="/identidad">
+          <BtnSketchy className="block hover:underline mx-auto text-2xl h-[110px] leading-[70px]" href="/identidad">
             {' '}
             Más sobre el proyecto{' '}
           </BtnSketchy>

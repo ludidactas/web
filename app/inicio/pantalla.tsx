@@ -1,7 +1,7 @@
 import { LdSvg } from '@/components/custom/ld-svg';
 import { titulo } from '@/components/fonts'
-import { secuenciar } from '@/lib/utils';
-import CajaTexto from '@/svg/CajaTextoSVGO.svg'
+// import { secuenciar } from '@/lib/utils';
+import CajaTexto from '@/svg/CajaPruebaSVGO.svg'
 
 
 export interface PantallaProps {
@@ -11,6 +11,7 @@ export interface PantallaProps {
   btn: JSX.Element,
   scroll: JSX.Element,
   espejado?: boolean,
+ 
 }
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaProps) => {
@@ -18,24 +19,32 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
     <div className="w-[100vw] h-[100vh] flex-col items-center place-content-center">
 
       {/* DESKTOP */}
-      <div className="hidden lg:flex flex-col items-center mt-5 mb-20">
+      <div className="hidden lg:flex flex-col items-center mt-5 ">
         <h2
-          className={`${titulo.className} my-8 text-6xl bg-gradient-to-r from-cyan-500 to-blue-500 drop-shadow-[2px_2px_2px_rgba(0,0,0)] text-transparent bg-clip-text`}
+          className={`${titulo.className} text-7xl drop-shadow-[2px_2px_2px_rgba(0,0,0)] text-pretty bg-gradient-to-r from-cyan-500 to-[#9B74D0] text-transparent bg-clip-text`}
         >
           {title}
         </h2>
 
-        <div className={`flex items-center gap-20 mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+        <div className={`flex items-center gap-10 mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
 
           <div
-            className="w-full text-3xl text-center bg-white/60"
+            className="w-full text-center bg-white/60"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
-            <LdSvg className='text-2xl m-4 w-full'
+            <LdSvg className='w-[650px] text-center place-content-center justify-center '
               SvgComponent={CajaTexto}
-              ids={["uno", "dos", "tres", "slot", "slot2"] as const}
-              animation={secuenciar(["uno", "dos", "tres"], 700)}
-              slots={{ "slot": one, "slot2": btn } as const}
+              ids={["uno", "dos", "slot", "slot2"] as const}
+              // animation={secuenciar(["uno", "dos"], 700)}
+              slots={{ "slot": one, "slot2": btn} as const}
+               // Función setup
+    
+      // Función loop
+      animation={(nodos, t) => {
+        Object.values(nodos).forEach((nodo, idx) => {
+          nodo.dy(Math.sin(t / 1000 + idx) * 0.3)
+        })
+      }}
 
             />
           </div>
@@ -45,7 +54,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
           </div>
         </div>
 
-        <div className=" m-10 mb-10">{scroll}</div>
+        <div className="">{scroll}</div>
       </div>
 
       {/* MOBILE */}

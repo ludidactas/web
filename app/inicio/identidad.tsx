@@ -15,7 +15,7 @@ export default function Identidad() {
           <div className="flex flex-col gap-2 max-w-[480px]">
             <p>
               Ludidactas surge en el año 2020 como un <Hl>laboratorio didáctico</Hl> con el objetivo de gestar
-              propuestas y recursos didácticos y pedagógics ( herramientas y recursos para la enseñanza) y de instancias
+              propuestas y recursos didácticos y pedagógicos (herramientas y recursos para la enseñanza) y de instancias
               educativas abiertas a todo público (talleres, cursos, encuentros) que atiendan de manera{' '}
               <Hl>flexible, responsable y eficiente</Hl> a las preguntas y problemáticas subyacentes a la educación de
               nuestro momento.

@@ -22,7 +22,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
 
         <div className={`flex items-center mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
           <div
-            className="text-center bg-white/60 px-8 pt-10 pb-8"
+            className="flex flex-col gap-4 bg-white/60 px-8 pt-10 pb-8"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
             { one }
@@ -33,6 +33,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
               animation={secuenciar(['cajaUno', 'cajaDos'], 500)}
               slots={{ slotCaja: one } as const}
             /> */}
+            { btn }
           </div>
 
           <div className="w-fit" data-aos={espejado ? 'fade-right' : 'fade-left'}>

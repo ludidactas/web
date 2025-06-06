@@ -12,7 +12,7 @@ export default function Identidad() {
       <Pantalla
         title="¿Quiénes somos?"
         one={
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-w-[480px]">
             <p>
               Ludidactas surge en el año 2020 como un <Hl>laboratorio didáctico</Hl> con el objetivo de gestar
               propuestas y recursos didácticos y pedagógics ( herramientas y recursos para la enseñanza) y de instancias

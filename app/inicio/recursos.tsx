@@ -12,16 +12,14 @@ export default function Recursos() {
         one={
           <div className="flex flex-col gap-4 max-w-[480px]">
             <p>
-              Los contenidos producidos en los talleres, cursos y seminarios los hemos hecho disponibles en el sitio
-              web, de modo que este funcione como biblioteca de recursos. Estos recursos funcionan como material de
-              referencia, abierto y gratuito.
+              Estamos trabajando en hacer disponibles en el sitio los contenidos producidos en los talleres, cursos y
+              seminarios de modo que este funcione como biblioteca de recursos como material de referencia, abierto y
+              gratuito, para docentes y talleristas.
             </p>
-
-            <p className="font-bold mt-4 text-[#46BFD7]">¡Explorá los recursos!</p>
           </div>
         }
         two={<Imagenes />}
-        btn={<p className="text-neutral-500">Próximamente...</p>}
+        btn={<p className="text-neutral-500">¡Proximamente!</p>}
         scroll={<ArrowDownLd to="contactoini" />}
       />
     </div>

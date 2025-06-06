@@ -12,7 +12,7 @@ export default function Propuestas() {
       <Pantalla
         title="Propuestas"
         one={
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 max-w-[480px]">
             <p>
               El proyecto nace, vive y se sostiene en su comunidad y se ordena en torno la visión de construir la
               educación que queremos ver.
@@ -33,8 +33,7 @@ export default function Propuestas() {
             </p>
 
             <p className="mt-4">
-              Organizamos el contenido y propuestas en tres líneas:{' '}
-              <Hl>técnica, didáctica y pedagógica. </Hl>
+              Organizamos el contenido y propuestas en tres líneas: <Hl>técnica, didáctica y pedagógica. </Hl>
             </p>
           </div>
         }
@@ -45,9 +44,7 @@ export default function Propuestas() {
             Ver propuestas{' '}
           </BtnSketchy>
         }
-        scroll={
-          <ArrowDownLd to='recursosini'/>
-        }
+        scroll={<ArrowDownLd to="recursosini" />}
         espejado={true}
       />
     </div>

@@ -25,16 +25,17 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
 
         <div className={`flex items-center mx-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
           <div
-            className="w-full text-center bg-white/60 px-8 pt-10 pb-8"
+            className="text-center bg-white/60 px-8 pt-10 pb-8"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
-            <LdSvg
+            { one }
+            {/* <LdSvg
               className="text-2xl w-full"
               SvgComponent={CajaTexto}
               ids={['cajaUno', 'cajaDos', 'slotCaja'] as const}
               animation={secuenciar(['cajaUno', 'cajaDos'], 500)}
               slots={{ slotCaja: one } as const}
-            />
+            /> */}
           </div>
 
           <div className="w-fit" data-aos={espejado ? 'fade-right' : 'fade-left'}>

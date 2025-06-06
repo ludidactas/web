@@ -1,7 +1,4 @@
-import { LdSvg } from '@/components/custom/ld-svg'
 import { titulo } from '@/components/fonts'
-import { secuenciar } from '@/lib/utils'
-import CajaTexto from '@/svg/CajaTextoPre.svg'
 
 export interface PantallaProps {
   title: string

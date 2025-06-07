@@ -1,7 +1,7 @@
 import { LdSvg } from '@/components/custom/ld-svg';
 import { titulo } from '@/components/fonts'
 // import { secuenciar } from '@/lib/utils';
-import CajaTexto from '@/svg/CajaPrueba2SVGO.svg'
+import CajaTexto from '@/svg/CajaPrueba3SVGO.svg'
 
 
 export interface PantallaProps {

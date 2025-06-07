@@ -9,10 +9,12 @@ import { cn } from '@/lib/utils'
 import SvgEscritorio from '@/svg/escritorio'
 import SvgPibis from '@/svg/pibis'
 import PjCarousel from '@/svg/pjCarousel'
+import CajaSimple from '@/svg/CajaSimple.svg'
 
 export const metadata: Metadata = {
   title: 'Identidad',
 }
+
 
 export default function Page() {
   return (
@@ -26,11 +28,12 @@ export default function Page() {
           La visión
         </h1>
         {/* Primeros párrafos */}
+
         <div className="mx-20 max-w-[1080px] pb-12 text-[1.6rem] space-y-4">
           <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
-            <span className="text-[#46BFD7] font-bold">crecimiento regenerativo de la educación</span>. Orgánico.
-            Comunitario. Con amor por la enseñanza, la técnica y la educación. De la mano con la comprensión,
+            <span className="text-[#8b5cf6] font-bold text-2xl pt-6">crecimiento regenerativo de la educación, orgánico y
+            comunitario, con amor por la enseñanza, la técnica y la educación.</span> De la mano con la comprensión,
             distinguiendo fines y medios.
           </p>
           <p>
@@ -47,6 +50,7 @@ export default function Page() {
             mundo, para un crecimiento rizomático, nodal, sostenible.
           </p>
         </div>
+
         {/* Foto */}
         <div className="flex justify-center border-solid">
           <Image
@@ -58,7 +62,7 @@ export default function Page() {
             height={1000}
           ></Image>
         </div>
-        <div className="mt-10 lg:mt-20">
+        <div className="mt-10 lg:mt-10">
           <h1
             data-aos="fade-left"
             className={`${fuenteTitulo.className} m-4 lg:m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl lg:text-7xl`}
@@ -66,7 +70,7 @@ export default function Page() {
             El hoy
           </h1>
 
-          <div className="flex flex-col items-center max-w-[1480px] mx-20 p-2 text-xl">
+          <div className="flex flex-col items-center max-w-[1480px] mx-20 p-2 text-2xl">
             {/* Párrafos "El hoy" */}
             <div className="max-w-[860px] flex flex-col gap-2">
               <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -186,13 +190,14 @@ export default function Page() {
         </TituloYDosColumnas>
 
         {/* Pie */}
-        <div className="w-[60vw] min-w-[370px] max-w-[1080px]">
+        <div className="text-xl mb-10 w-[60vw] min-w-[370px] max-w-[1080px] m-4 lg:text-[1.4rem]  lg:mx-10 bg-sky-200/30 rounded-xl">
+
           <p className="p-0 lg:p-10 text-[1.4rem]">
             {' '}
-            Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
+            Desde Ludidactas, <span className="text-[#8b5cf6] font-bold text-2xl pt-6">buscamos acometer esta labor desde una perspectiva lúdica y didáctica </span> (de allí nuestro
             nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el tejido creativo.
           </p>
-          <p className="px-10 pb-20 text-[1.4rem]">
+          <p className="px-10 pb-10 text-[1.4rem]">
             Para nosotros es importante cultivar la capacidad de hacer, no mediante procedimientos mecánicos, sino
             mediante <span className="text-[#46BFD7]">el juego</span> como via para enseñar con mayor inmunidad a{' '}
             <span className="text-[#46BFD7]">los síntomas de la repetición inadvertida</span>.

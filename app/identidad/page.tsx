@@ -164,7 +164,7 @@ export default function Page() {
           <>
             <SvgEscritorio />
             <P>
-              Una educación al servicio de la productividad mercantilista no podrá dejar nunca de comparar y
+              Una educación al servicio de las exigencias de la rentabilidad no podrá dejar nunca de comparar y
               cuantificar, ni de organizar el deber en función de metas y expectativas preestablecidas, con la ansiedad
               que inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no puede ser todos
               los lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}

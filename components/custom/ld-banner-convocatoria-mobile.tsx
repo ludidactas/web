@@ -1,20 +1,20 @@
 'use client'
-import ConvocatoriaSvg from '@/svg/convocatoria_mobile.svg'
+import ConvocatoriaSvg from '@/svg/dist/convocatoria_mobile.svg'
 import { LdSvg } from './ld-svg'
 import BtnSketchy from './ld-btn-sketchy'
 
 export default function LdBannerConvocatoriaMobile() {
   const mensaje = (
     <div className="flex flex-col items-center h-full justify-around px-6">
-      <p className="text-3xl text-center">
+      <p className="text-6xl text-center">
         {' '}
-        Convocamos a personas interesadas en practicar el rol docente, didáctico, pedagógico y dispuestas a ocupar también
-        el de aprendientes unxs con otrxs{' '}
+        Convocamos a personas interesadas en practicar el rol docente, didáctico, pedagógico y dispuestas a ocupar
+        también el de aprendientes unxs con otrxs{' '}
       </p>
-      <p className="text-2xl text-center text-[#93278c]">
+      <p className="text-5xl text-center text-[#93278c]">
         ¡Si estás interesadx, accedé a la info completa y escribinos!
       </p>
-      <BtnSketchy className="h-[5em] text-2xl text-center leading-[4em]" href="/convocatoria">
+      <BtnSketchy className="h-[12em] w-[9em] text-6xl text-center leading-[9.5em]" href="/convocatoria">
         Convocatoria
       </BtnSketchy>
     </div>
@@ -25,7 +25,7 @@ export default function LdBannerConvocatoriaMobile() {
       // El svg importado
       SvgComponent={ConvocatoriaSvg}
       // Los ids que le hayamos puesto a los elementos
-      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo'] as const}
+      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo', 'ld.slot.contenido'] as const}
       // Los slots que hayamos dejado, mapeando a su contenido
       slots={
         {
@@ -40,7 +40,7 @@ export default function LdBannerConvocatoriaMobile() {
       // Función loop
       animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.dy(Math.sin(t / 1000 + idx) * 0.04)
+          nodo.y(Math.sin(t / 1000 + idx) * 4)
         })
       }}
       // className="border-b-2 border-b-[#94268f]"

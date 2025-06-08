@@ -1,8 +1,7 @@
-import { LdSvg } from '@/components/custom/ld-svg';
+import { LdSvg } from '@/components/custom/ld-svg'
 import { titulo } from '@/components/fonts'
 // import { secuenciar } from '@/lib/utils';
 import CajaTexto from '@/svg/CajaPrueba3SVGO.svg'
-
 
 export interface PantallaProps {
   title: string,
@@ -101,9 +100,6 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
         </div>
       </div>
     </div>
-
-  );
+  )
 }
-export default Pantalla;
-
-
+export default Pantalla

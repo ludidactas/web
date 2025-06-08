@@ -53,8 +53,8 @@ const FormatosModulo = () => {
       <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between m-10 lg:m-20">
         <Formatos
           formato="Seminario"
-          descripcion="Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema
-            puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo."
+          descripcion="Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo
+          y para capacitaciones docentes."
         />
 
         <Formatos

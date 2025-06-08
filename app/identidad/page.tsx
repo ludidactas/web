@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils'
 import SvgEscritorio from '@/svg/escritorio'
 import SvgPibis from '@/svg/pibis'
 import PjCarousel from '@/svg/pjCarousel'
-import CajaSimple from '@/svg/CajaSimple.svg'
 
 export const metadata: Metadata = {
   title: 'Identidad',

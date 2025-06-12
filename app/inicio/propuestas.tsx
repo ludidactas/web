@@ -12,7 +12,7 @@ export default function Propuestas() {
       <Pantalla
         title="Propuestas"
         one={
-          <div className="flex flex-col max-w-[480px] items-center p-8 gap-2 text-xl">
+          <div className="flex flex-col max-w-[720px] items-center p-8 gap-2 text-xl">
             <p>
               El proyecto nace, vive y se sostiene en su comunidad y se ordena en torno la visión de construir la
               educación que queremos ver.

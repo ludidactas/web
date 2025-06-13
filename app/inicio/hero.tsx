@@ -1,6 +1,7 @@
 'use client'
 
-import LdBannerConvocatoria from '@/components/custom/ld-banner-convocatoria'
+import BannerClases from '@/components/custom/ld-banner-clases'
+// import LdBannerConvocatoria from '@/components/custom/ld-banner-convocatoria'
 import LdBannerConvocatoriaMobile from '@/components/custom/ld-banner-convocatoria-mobile'
 import { CircleChevronDown } from 'lucide-react'
 import { Link as Scroll } from 'react-scroll'
@@ -26,7 +27,7 @@ const Hero = () => {
         <HeroMobile />
       </div>
       <div className="hidden lg:block">
-        <LdBannerConvocatoria className="w-[80vw]" />
+        <BannerClases className="w-[80vw]" />
       </div>
     </>
   )

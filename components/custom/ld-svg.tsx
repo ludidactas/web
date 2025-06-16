@@ -144,6 +144,7 @@ function crearSlot(svg: SVGElement, id: string) {
   )
 
   // Reemplazamos
+  foreignObject.setAttribute('id', id)
   nodoTarget.parent().add(SVG(foreignObject) as SvgElement)
   nodoTarget.parent().removeElement(nodoTarget)
 

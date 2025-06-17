@@ -1,12 +1,13 @@
 'use client'
-import LdBannerVCabrera from '@/components/custom/ld-banner-vcabrera'
+// import LdBannerVCabrera from '@/components/custom/ld-banner-vcabrera'
+import LdBannerVCabreraMobile from '@/components/custom/ld-banner-vcabrera-mobile'
 
 export default function Page() {
 
   return (
-    <div className="h-screen w-screen mx-auto flex flex-col gap-8 items-center">
+    <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
       <div className="p-8 w-4/5">
-        <LdBannerVCabrera />
+        <LdBannerVCabreraMobile />
       </div>
 
       <div className="w-full h-24" />

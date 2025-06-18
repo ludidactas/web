@@ -11,7 +11,7 @@ export interface PantallaProps {
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaProps) => {
   return (
-    <div className="w-[100vw] md:h-[100vh] flex-col items-center place-content-center">
+    <div className="w-[100vw] lg:h-[100vh] flex-col items-center place-content-center">
       {/* DESKTOP */}
       <div className="hidden lg:flex flex-col items-center mt-5 mb-20">
         <h2

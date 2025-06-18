@@ -14,24 +14,16 @@ export default function LdBannerVCabreraMobile({ className }: { className?: stri
 
   return (
     <LdSvg
-      // El svg importado
       SvgComponent={ConvocatoriaSvg}
-      // Los ids que le hayamos puesto a los elementos
       ids={['mano', 'personajes', 'info', 'fondo', 'slot'] as const}
-      // Los slots que hayamos dejado, mapeando a su contenido
       slots={{ slot: boton } as const}
-      // Función setup
-      setup={(nodos) => {
-        // Le aplicamos el blend mode al cono
-        nodos['mano'].node.style.mixBlendMode = 'divide'
-      }}
       // Función loop
-      animation={(nodos, t) => {
-        ['mano', 'personajes', 'info', 'fondo', 'slot'].forEach((id, idx) => {
-          const nodo = nodos[id]
-          nodo.dy(Math.sin(t / 600 + idx) * 0.04)
-        })
-      }}
+      // animation={(nodos, t) => {
+      //   ['mano', 'personajes', 'info', 'fondo', 'slot'].forEach((id, idx) => {
+      //     const nodo = nodos[id]
+      //     nodo.dy(Math.sin(t / 600 + idx) * 0.04)
+      //   })
+      // }}
       className={`${className ?? ''}`}
     />
   )

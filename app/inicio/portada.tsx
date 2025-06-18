@@ -1,4 +1,3 @@
-'use client'
 import ArrowDownLd from '@/components/custom/ld-arrowDown'
 import { titulo } from '@/components/fonts'
 import Image from 'next/image'

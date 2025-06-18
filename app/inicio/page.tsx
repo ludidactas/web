@@ -1,4 +1,4 @@
-// import Portada from './portada'
+import Portada from './portada'
 import Identidad from './identidad'
 import Propuestas from './propuestas'
 import Recursos from './recursos'
@@ -22,7 +22,7 @@ export default function Page() {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <WithAOS>
         <Hero />
-        {/* <Portada /> */}
+        <Portada />
         <Identidad />
         <Propuestas />
         <Recursos />

@@ -17,16 +17,16 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <WithAOS>
-      <div className="flex flex-col items-center text-center">
+      <div className="w-screen flex flex-col items-center text-center gap-4">
         {/* Header */}
         <h1
           data-aos="fade-left"
-          className={`${fuenteTitulo.className} m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-7xl`}
+          className={`${fuenteTitulo.className} m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-6xl md:text-7xl`}
         >
           La visión
         </h1>
         {/* Primeros párrafos */}
-        <div className="mx-20 max-w-[1080px] pb-12 text-[1.6rem] space-y-4">
+        <div className="w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4">
           <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
             <span className="text-[#46BFD7] font-bold">crecimiento regenerativo de la educación</span>. Orgánico.
@@ -66,7 +66,7 @@ export default function Page() {
             El hoy
           </h1>
 
-          <div className="flex flex-col items-center max-w-[1480px] mx-20 p-2 text-xl">
+          <div className="flex flex-col items-center max-w-[1480px] mx-4 md:mx-20 p-2 text-xl ">
             {/* Párrafos "El hoy" */}
             <div className="max-w-[860px] flex flex-col gap-2">
               <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -84,14 +84,14 @@ export default function Page() {
             <div className="flex flex-col m-4 lg:grid lg:grid-cols-2 justify-items-center lg:m-10 justify-center items-center ">
               <h1
                 data-aos="fade-left"
-                className={`${fuenteTitulo.className} mb-4 lg:m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-4xl lg:text-5xl`}
+                className={`${fuenteTitulo.className} mb-4 lg:m-10 drop-shadow-lg bg-cyan-600 text-transparent bg-clip-text text-2xl md:text-4xl lg:text-5xl`}
               >
                 Es por ello que resulta necesario abordar los procesos de enseñanza y aprendizaje desde una perspectiva
                 que nos permita:
               </h1>
 
               {/* Carousel de personajes */}
-              <Carousel className="w-[60vw] mx-4 lg:w-[400px] lg:ml-10">
+              <Carousel className="w-[70vw] mx-4 lg:w-[400px] lg:ml-10">
                 <CarouselContent>
                   <CarouselItem>
                     <PjCarousel personaje="biclope">
@@ -186,13 +186,13 @@ export default function Page() {
         </TituloYDosColumnas>
 
         {/* Pie */}
-        <div className="w-[60vw] min-w-[370px] max-w-[1080px]">
-          <p className="p-0 lg:p-10 text-[1.4rem]">
+        <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4">
+          <p className="p-0 md:p-10 text-[1.2rem] md:text-[1.4rem]">
             {' '}
             Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
             nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el tejido creativo.
           </p>
-          <p className="px-10 pb-20 text-[1.4rem]">
+          <p className="md:px-10 pb-20 text-[1.2rem] md:text-[1.4rem]">
             Para nosotros es importante cultivar la capacidad de hacer, no mediante procedimientos mecánicos, sino
             mediante <span className="text-[#46BFD7]">el juego</span> como via para enseñar con mayor inmunidad a{' '}
             <span className="text-[#46BFD7]">los síntomas de la repetición inadvertida</span>.
@@ -212,16 +212,16 @@ interface TituloYDosColumnasProps extends PropsWithChildren {
  * Abstrae el layout en columnas que usamos en la última parte de la página
  */
 const TituloYDosColumnas = ({ titulo, children, invertido = false }: TituloYDosColumnasProps) => (
-  <div className="flex flex-col mx-20 max-w-[1480px]">
+  <div className="flex flex-col mx-4 md:mx-20 max-w-[1480px]">
     <h1
       data-aos="fade-left"
-      className={`${fuenteTitulo.className} m-20 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl lg:text-5xl`}
+      className={`${fuenteTitulo.className} my-8 lg:m-20 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl lg:text-5xl`}
     >
       {titulo}
     </h1>
 
     <div
-      className="grid grid-rows-2 lg:grid-cols-2 lg:grid-rows-none gap-8 items-center justify-items-center"
+      className="flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-none gap-8 items-center justify-items-center"
       style={invertido ? { direction: 'rtl' } : {}}
     >
       {children}
@@ -233,7 +233,7 @@ const P = ({ children, className }: ComponentProps<'p'>) => (
   <p
     data-aos="fade-up"
     data-aos-duration="500"
-    className={cn('text-2xl m-5 p-6 bg-white/50 border-4 border-dashed border-black rounded-xl', className)}
+    className={cn('lg:text-2xl lg:m-5 p-6 bg-white/50 border-4 border-dashed border-black rounded-xl', className)}
   >
     {children}
   </p>

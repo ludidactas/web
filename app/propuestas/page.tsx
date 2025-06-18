@@ -1,11 +1,16 @@
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
-import { titulo as fuenteTitulo } from '@/components/fonts'
-import { LogoTec } from '@/components/ui/logotec'
 import { Waypoints } from 'lucide-react'
 import { Metadata } from 'next'
-import Image from 'next/image'
 import NextLink from 'next/link'
 import { ComponentProps } from 'react'
+
+import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import { titulo as fuenteTitulo } from '@/components/fonts'
+
+import SvgTecnica from '@/svg/components/tecnica'
+import SvgDidactica from '@/svg/components/didactica'
+import SvgPedagogia from '@/svg/components/pedagogia'
+
+import { LogoTec } from '@/components/ui/logotec'
 
 const Link = (props: ComponentProps<typeof NextLink>) => (
   <NextLink
@@ -31,7 +36,7 @@ const Formatos = ({ formato, descripcion }: FormatosProps) => {
       data-aos="fade-left"
       data-aos-duration="2000"
       data-aos-delay="100"
-      className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl "
+      className="border-2 border-[#06b6d4] border-solid h-full p-4 rounded-xl w-[95vw] md:w-full"
     >
       <h1 className="flex text-xl lg:text-2xl font-bold place-content-center my-4 text-center text-[rgb(6,182,212)] drop-shadow-lg">
         <Waypoints className="w-20" />
@@ -50,7 +55,7 @@ const FormatosModulo = () => {
         Las propuestas se ofrecen en formato seminario, taller y clases particulares
       </h2>
 
-      <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between m-10 lg:m-20">
+      <div className="bg-white flex flex-col lg:grid lg:grid-cols-3 gap-4 place-content-between my-10 lg:m-20">
         <Formatos
           formato="Seminario"
           descripcion="Son instancias de una cantidad preestablecida de clases intensivas y largas en las que vemos de manera introductoria algún tema puntual. Es ideal para almas autodidactas que pueden aprovechar una introducción a un tema complejo
@@ -152,15 +157,7 @@ const LineasModulo = () => {
             Proximamente
           </BtnSketchy>
         }
-        imagen={
-          <Image
-            className="w-fit h-fit self-center rounded-full"
-            src="/img/grupopixel.jpeg"
-            alt=""
-            width={150}
-            height={150}
-          />
-        }
+        imagen={<SvgTecnica/>}
       />
 
       <Lineas
@@ -176,13 +173,7 @@ const LineasModulo = () => {
           </BtnSketchy>
         }
         imagen={
-          <Image
-            className="w-fit h-fit self-center rounded-full"
-            src="/img/grupopixel2.jpeg"
-            alt=""
-            height={150}
-            width={150}
-          />
+          <SvgDidactica/>
         }
       />
 
@@ -202,13 +193,7 @@ const LineasModulo = () => {
           </BtnSketchy>
         }
         imagen={
-          <Image
-            className="w-fit h-fit self-center rounded-full"
-            src="/img/grupopixel2.jpeg"
-            alt=""
-            height={150}
-            width={150}
-          />
+          <SvgPedagogia/>
         }
       />
     </div>

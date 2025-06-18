@@ -1,6 +1,5 @@
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
-import { GoogleTagManager } from '@next/third-parties/google'
-import { GoogleAnalytics } from '@next/third-parties/google'
 
 import type { Metadata } from 'next'
 
@@ -8,12 +7,11 @@ import './globals.css'
 import './md.css'
 
 import { BibliotecaRoot } from '@/components/contenido-provider'
-// import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
-import Menu from './inicio/menu'
-import LogoLema from './inicio/logoLema'
 import { body } from '@/components/fonts'
 import Textura from '@/components/fx/textura'
 import Footer from './inicio/footer'
+import LogoLema from './inicio/logoLema'
+import Menu from './inicio/menu'
 
 export const metadata: Metadata = {
   title: 'Ludidactas',
@@ -34,6 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <LogoLema />
               <Menu />
             </div>
+            {/* Cajita punteada exterior */}
             <div className="mx-2 lg:mx-10 border-x-4 border-slate-200 border-dashed flex flex-col items-center ">
               {children}
             </div>

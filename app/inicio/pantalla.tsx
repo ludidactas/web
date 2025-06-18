@@ -11,7 +11,7 @@ export interface PantallaProps {
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaProps) => {
   return (
-    <div className="w-[100vw] h-[100vh] flex-col items-center place-content-center">
+    <div className="w-[100vw] md:h-[100vh] flex-col items-center place-content-center">
       {/* DESKTOP */}
       <div className="hidden lg:flex flex-col items-center mt-5 mb-20">
         <h2
@@ -45,7 +45,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
       </div>
 
       {/* MOBILE */}
-      <div className="my-10 py-10 flex lg:hidden flex-col place-content-center items-center w-full h-full">
+      <div className="flex lg:hidden flex-col place-content-center items-center w-full h-full">
         <div className="flex flex-col mx-8 items-center text-[0.5em] text-center bg-white rounded-xl border-2 border-dashed border-slate-800 p-4">
           <h2
             data-aos="fade-down"

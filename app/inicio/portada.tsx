@@ -12,7 +12,7 @@ const Portada = () => {
         animaciones y los videojuegos.
       </h3>
 
-      <ArrowDownLd to="identidadini" />
+      <ArrowDownLd to="#identidadini" />
     </div>
   )
 }

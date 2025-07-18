@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "svgo": "svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive"
+    "svgo": "svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
+    "polls:start": "bun run polls/index.ts",
+    "polls:dev": "nodemon --watch polls/index.ts --exec bun run polls/index.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",
@@ -35,6 +37,7 @@
     "lucide-react": "^0.468.0",
     "next": "^15.1.1",
     "next-themes": "^0.4.4",
+    "nodemon": "^3.1.10",
     "p5": "^1.11.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -44,6 +47,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.0.0",
     "remeda": "^2.17.4",
+    "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

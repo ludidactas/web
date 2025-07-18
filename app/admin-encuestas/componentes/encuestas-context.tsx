@@ -1,8 +1,8 @@
 'use client'
 
+import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { setupSocketLogging } from './socketLoggingSetup'
 
 // Setup
 

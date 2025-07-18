@@ -2,7 +2,8 @@
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { Encuesta, useEncuesta } from './encuestas-context'
+import { useEncuesta } from './encuestas-context'
+import { Encuesta } from '@/polls/encuestas'
 
 export default function EncuestasAdmin() {
   return (
@@ -91,7 +92,7 @@ function AgregarPregunta() {
   const { enviarPregunta, error } = useEncuesta()
 
   const [pregunta, setPregunta] = useState('')
-  const [respuestas, setRespuestas] = useState<string[]>([''])
+  const [respuestas, setRespuestas] = useState<string[]>(['', ''])
 
   const agregarRespuesta = () => {
     setRespuestas((rs) => [...rs, ''])
@@ -114,7 +115,7 @@ function AgregarPregunta() {
   const postearPregunta = () => {
     enviarPregunta(pregunta, respuestas).then(() => {
       setPregunta('')
-      setRespuestas([''])
+      setRespuestas(['', ''])
     })
   }
 

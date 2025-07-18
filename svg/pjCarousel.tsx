@@ -1,12 +1,12 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
-import { oscilar } from '@/lib/utils'
 import { PropsWithChildren } from 'react'
 
 import Biclope from '@/svg/dist/identidad/biclope.svg'
 import Ojito from '@/svg/dist/identidad/ojito.svg'
 import Pulpo from '@/svg/dist/identidad/pulpo.svg'
 import Robot from '@/svg/dist/identidad/robot.svg'
+import { oscilar } from '@/lib/animaciones'
 
 const personajes = {
   biclope: Biclope,

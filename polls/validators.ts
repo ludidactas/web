@@ -11,5 +11,5 @@ export const pollCreator = pollValidator.extend({
 
 export const voteValidator = z.object({
   pollId: z.string().min(1, "El ID de la encuesta es obligatorio"),
-  optionId: z.number().int().nonnegative("El ID de la opción debe ser un número no negativo"),
+  optionId: z.string().min(1, "El ID de la opción es obligatorio"),
 });

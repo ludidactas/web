@@ -1,23 +1,10 @@
 'use client'
 
+import { CrearEncuesta, Encuesta } from '@/polls/encuestas'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 
-// Setup
-
-export interface Encuesta {
-  id: number
-  pregunta: string
-  opciones: { id: number; texto: string; votos: number }[]
-  createdAt: string
-  isActive: boolean
-}
-
-export interface CrearEncuesta extends Omit<Encuesta, 'opciones'> {
-  opciones: string[]
-  masterPassword: string
-}
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
 const useEncuestaState = () => {
@@ -38,7 +25,7 @@ const useEncuestaState = () => {
 
     const nuevaEncuesta: CrearEncuesta = {
       masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD,
-      id: Date.now(),
+      id: Date.now().toString(),
       pregunta,
       opciones: respuestas,
       createdAt: new Date().toISOString(),
@@ -49,17 +36,17 @@ const useEncuestaState = () => {
   }
 
   /** Postea al server la acción de borrar */
-  const borrarPregunta = (encuestaId: number) => {
+  const borrarPregunta = (encuestaId: string) => {
     socket.emit('poll:delete', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
   }
 
   /** Postea al server la acción de cerrar */
-  const cerrarPregunta = (encuestaId: number) => {
+  const cerrarPregunta = (encuestaId: string) => {
     socket.emit('poll:close', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
   }
 
   /** Postea un voto */
-  const votar = (encuestaId: number, opcionId: number) => { 
+  const votar = (encuestaId: string, opcionId: string) => { 
     socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
   }
 
@@ -79,7 +66,7 @@ const useEncuestaState = () => {
   }
 
   /** Borra una encuesta del buffer local */
-  const deleteEncuesta = ({ pollId }: { pollId: number }) => {
+  const deleteEncuesta = ({ pollId }: { pollId: string }) => {
     setEncuestas((encs) => encs.filter((e) => e.id != pollId))
   }
 

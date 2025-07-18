@@ -1,6 +1,6 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
-import { oscilar } from '@/lib/utils'
+import { oscilar } from '@/lib/animaciones'
 import SvgEscritorio from '@/svg/dist/identidad/escritorio.svg'
 
 export default function Escritorio() {

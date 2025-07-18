@@ -1,6 +1,6 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
-import { oscilar } from '@/lib/utils'
+import { oscilar } from '@/lib/animaciones'
 import SvgPibis from '@/svg/dist/identidad/pibis.svg'
 
 export default function Pibis() {

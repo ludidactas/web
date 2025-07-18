@@ -1,9 +1,10 @@
 'use client'
 import { useState } from 'react'
-import { Encuesta, useEncuesta } from './encuestas-context'
+import { useEncuesta } from './encuestas-context'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { Encuesta } from '@/polls/encuestas'
 
 export default function EncuestasCliente() {
   const { socket, encuestas } = useEncuesta()

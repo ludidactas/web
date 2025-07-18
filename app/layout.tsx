@@ -5,9 +5,6 @@ import type { Metadata } from 'next'
 
 import './globals.css'
 
-// Revisar:
-import './md.css'
-
 import { body } from '@/components/fonts'
 
 export const metadata: Metadata = {

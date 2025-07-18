@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Pantalla from './pantalla'
-import ArrowDownLd from '@/components/custom/ld-arrowDown'
+import ArrowDownLd from '@/components/custom/ld-arrow-down'
 
 export default function Recursos() {
   return (

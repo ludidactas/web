@@ -26,13 +26,6 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false }: PantallaPr
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
             { one }
-            {/* <LdSvg
-              className="text-2xl w-full"
-              SvgComponent={CajaTexto}
-              ids={['cajaUno', 'cajaDos', 'slotCaja'] as const}
-              animation={secuenciar(['cajaUno', 'cajaDos'], 500)}
-              slots={{ slotCaja: one } as const}
-            /> */}
             { btn }
           </div>
 

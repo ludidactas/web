@@ -1,4 +1,4 @@
-import ArrowDownLd from '@/components/custom/ld-arrowDown'
+import ArrowDownLd from '@/components/custom/ld-arrow-down'
 import { titulo } from '@/components/fonts'
 import Image from 'next/image'
 

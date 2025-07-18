@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import NextLink from 'next/link'
 import { ComponentProps } from 'react'
 
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import { titulo as fuenteTitulo } from '@/components/fonts'
 
 import SvgTecnica from '@/svg/components/tecnica'
@@ -153,9 +153,9 @@ const LineasModulo = () => {
           'Estructura modular. Los módulos siguen líneas, temas y relaciones. Así mismo, varios módulos pueden llegar a aparecer en un solo taller o encontrarse reiterados en varios talleres. No todas las correlatividades son difíciles.',
         ]}
         btn={
-          <BtnSketchy className="block text-xl h-[64px] leading-[44px] self-center" href={''} disabled>
+          <BtnSketchyGif className="block text-xl h-[64px] leading-[44px] self-center" href={''} disabled>
             Proximamente
-          </BtnSketchy>
+          </BtnSketchyGif>
         }
         imagen={<SvgTecnica/>}
       />
@@ -168,9 +168,9 @@ const LineasModulo = () => {
           'Las distintas modalidades se encuentran orientadas hacia poner en práctica las tecnologías y herramientas aprendidas en la etapa técnica',
         ]}
         btn={
-          <BtnSketchy className="block text-xl h-[64px] leading-[44px] self-center" href="/convocatoria">
+          <BtnSketchyGif className="block text-xl h-[64px] leading-[44px] self-center" href="/convocatoria">
             Convocatoria
-          </BtnSketchy>
+          </BtnSketchyGif>
         }
         imagen={
           <SvgDidactica/>
@@ -185,12 +185,12 @@ const LineasModulo = () => {
           'Expresada en encuentros, charlas, conversatorios y escritos',
         ]}
         btn={
-          <BtnSketchy
+          <BtnSketchyGif
             className="block text-xl h-[64px] leading-[44px] self-center"
             href="https://ludidactas.medium.com/"
           >
             Ver blog
-          </BtnSketchy>
+          </BtnSketchyGif>
         }
         imagen={
           <SvgPedagogia/>

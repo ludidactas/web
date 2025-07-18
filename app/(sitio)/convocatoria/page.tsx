@@ -1,4 +1,4 @@
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import { titulo } from '@/components/fonts'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/ld-carousel'
 import { Metadata } from 'next'
@@ -74,13 +74,13 @@ export default function Page() {
 
         <InfoConv />
 
-        <BtnSketchy
+        <BtnSketchyGif
           className="animate-bounce text-xl mb-10 text-center h-[3em] leading-8"
           target="_blank"
           href="https://docs.google.com/forms/d/e/1FAIpQLSeKNmg-ydPXK03bLYsI75M2lbodUWbcftTVDgTG2fLV2Wz8JA/viewform"
         >
           Inscripción
-        </BtnSketchy>
+        </BtnSketchyGif>
       </div>
 
       {/* Desktop */}

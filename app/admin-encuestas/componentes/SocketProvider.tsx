@@ -19,6 +19,7 @@ export interface CrearEncuesta extends Omit<Encuesta, 'opciones'> {
   masterPassword: string
 }
 
+/** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
 const useEncuestaState = () => {
   const [socket, setSocket] = useState<Socket>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
@@ -119,7 +120,7 @@ const useEncuestaState = () => {
     }
   }, [socket])
 
-  // Reseteamos el error en cada udpate
+  // Reseteamos el error en cada udpate (revisar)
   useEffect(() => {
     setError({message: ''})
    }, [encuestas])
@@ -128,13 +129,14 @@ const useEncuestaState = () => {
 }
 
 // Context
-
 const EncuestaContext = createContext<ReturnType<typeof useEncuestaState> | undefined>(undefined)
 
+// Provider
 export const EncuestaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <EncuestaContext.Provider value={useEncuestaState()}>{children}</EncuestaContext.Provider>
 }
 
+// Hook para usar el contexto de Encuesta
 export const useEncuesta = () => {
   const context = useContext(EncuestaContext)
   if (!context) {

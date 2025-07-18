@@ -4,7 +4,6 @@ import Propuestas from './propuestas'
 import Recursos from './recursos'
 import Contacto from './contacto'
 import WithAOS from '@/components/ui/with-aos'
-import Hero from './hero'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -21,7 +20,7 @@ export default function Page() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <WithAOS>
-        <Hero />
+        {/* <Hero /> */}
         <Portada />
         <Identidad />
         <Propuestas />

@@ -1,22 +1,22 @@
 'use client'
-import ConvocatoriaSvg from '@/svg/dist/banner.svg'
-import { LdSvg } from './ld-svg'
-import BtnSketchy from './ld-btn-sketchy'
+import ConvocatoriaSvg from '@/svg/dist/convocatoria_mobile.svg'
+import BtnSketchyGif from '../custom/ld-btn-sketchy-gif'
+import { LdSvg } from '../custom/ld-svg'
 
-export default function LdBannerConvocatoria({ className }: { className?: string }) {
+export default function LdBannerConvocatoriaMobile() {
   const mensaje = (
-    <div className="flex flex-col items-center gap-1">
-      <p className="text-2xl text-center">
+    <div className="flex flex-col items-center h-full justify-around px-6">
+      <p className="text-6xl text-center">
         {' '}
-        Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
-        el de aprendientes{' '}
+        Convocamos a personas interesadas en practicar el rol docente, didáctico, pedagógico y dispuestas a ocupar
+        también el de aprendientes unxs con otrxs{' '}
       </p>
-      <p className="text-2xl text-center text-[#93278c]">
+      <p className="text-5xl text-center text-[#93278c]">
         ¡Si estás interesadx, accedé a la info completa y escribinos!
       </p>
-      <BtnSketchy className="h-[120px] text-center text-3xl leading-[90px]" href="/convocatoria">
+      <BtnSketchyGif className="h-[12em] w-[9em] text-6xl text-center leading-[9.5em]" href="/convocatoria">
         Convocatoria
-      </BtnSketchy>
+      </BtnSketchyGif>
     </div>
   )
 
@@ -40,10 +40,10 @@ export default function LdBannerConvocatoria({ className }: { className?: string
       // Función loop
       animation={(nodos, t) => {
         Object.values(nodos).forEach((nodo, idx) => {
-          nodo.y(Math.sin(t / 600 + idx) * 0.9)
+          nodo.y(Math.sin(t / 1000 + idx) * 4)
         })
       }}
-      className={`w-4/5 ${className ?? ''}`}
+      // className="border-b-2 border-b-[#94268f]"
     />
   )
 }

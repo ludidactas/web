@@ -11,7 +11,7 @@ import { CircleDashed, CircleDot } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { capitalize, entries } from 'remeda'
 import { twMerge } from 'tailwind-merge'
-import { useBiblioteca } from '../context/contenido'
+import { useBiblioteca } from './biblioteca'
 import Image from 'next/image'
 
 /** Display de los metadatos de una materia */

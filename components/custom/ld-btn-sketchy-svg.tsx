@@ -5,7 +5,7 @@ import { LdSvg } from './ld-svg'
 import BotonSvg from '@/svg/dist/boton-2.svg'
 import { secuenciar } from '@/lib/utils'
 
-export default function BtnSketchy2(props: ComponentProps<typeof Link> & { disabled?: boolean }) {
+export default function BtnSketchySvg(props: ComponentProps<typeof Link> & { disabled?: boolean }) {
   return (
     <Link
       {...props}

@@ -1,8 +1,8 @@
 'use client'
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
-import ArrowUpLd from '@/components/custom/ld-arrowUp'
+import ArrowUpLd from '@/components/custom/ld-arrow-up'
 
 export default function Contacto() {
   return (
@@ -21,14 +21,14 @@ export default function Contacto() {
         }
         two={<Imagenes />}
         btn={
-          <BtnSketchy
+          <BtnSketchyGif
             className="block mx-auto h-[56px] leading-[36px]"
             target="_blank"
             href="http://www.instagram.com/ludidactas"
           >
             {' '}
             ¡Contactanos!{' '}
-          </BtnSketchy>
+          </BtnSketchyGif>
         }
         scroll={
          <ArrowUpLd to='portadaini'/>

@@ -1,6 +1,6 @@
 import { ComponentProps, useCallback, useState, useRef, memo } from 'react'
-import { LdSvg } from './ld-svg'
-import RoadmapDummy from '@/svg/roadmap_dummy_2.svg'
+import RoadmapDummy from '@/svg/dist/roadmap_dummy_2.svg'
+import { LdSvg } from '../custom/ld-svg'
 
 /**
  * Prueba de montaje de un roadmap usando el nuevo modelo de LdSvg <3
@@ -94,11 +94,7 @@ function LdRoadmapDummy() {
     [activos]
   )
 
-  return (
-    <>
-      <LdSvg SvgComponent={RoadmapDummy} ids={[] as Id[]} setup={setup} animation={animation} />
-    </>
-  )
+  return <LdSvg SvgComponent={RoadmapDummy} ids={[] as Id[]} setup={setup} animation={animation} />
 }
 
 // Export a memoized version of the component

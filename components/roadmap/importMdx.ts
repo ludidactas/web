@@ -1,4 +1,4 @@
-import { articuloMetaSchema, Meta, MetaMateria, MetaUnidad } from '@/md/schema'
+import { articuloMetaSchema, Meta, MetaMateria, MetaUnidad } from '@/components/roadmap/md/schema'
 import { glob } from 'fast-glob'
 import { join } from 'path'
 import { ZodError } from 'zod'

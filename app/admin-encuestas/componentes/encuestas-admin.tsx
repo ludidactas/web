@@ -1,36 +1,59 @@
 'use client'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { Encuesta, useEncuesta } from './SocketProvider'
+import { Encuesta, useEncuesta } from './encuestas-context'
 
 export default function EncuestasAdmin() {
-  const { socket, encuestas } = useEncuesta()
-
   return (
-    <div className="bg-white p-8">
+    <div className="bg-white p-8 flex flex-col items-center w-full">
+      <div className="w-[40em]">
+        <Status />
+        <hr className="invisible py-2" />
+        <AgregarPregunta />
+        <ListaEncuestas />
+      </div>
+    </div>
+  )
+}
+
+function Status() {
+  const { socket } = useEncuesta()
+  return (
+    <div className="flex items-center justify-between">
       <h1 className="text-3xl">Encuestas</h1>
       {socket?.connected ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
         <span className="text-red-700">Desconectado</span>
       )}
-      <h2 className="text-2xl mt-4">Crear:</h2>
-      <AgregarPregunta />
-      {encuestas.length > 0 && (
-        <>
-          <h2 className="text-2xl mt-4">Existentes:</h2>
-          {encuestas.map((e) => (
-            <DisplayEncuesta key={e.id} encuesta={e} />
-          ))}
-        </>
-      )}
     </div>
+  )
+}
+
+function ListaEncuestas() {
+  const { encuestas } = useEncuesta()
+  if (encuestas.length == 0)
+    return (
+      <div className="h-96 flex flex-col items-center justify-center">
+        <p className="text-gray-500 text-sm text-center ">No hay encuestas.</p>
+      </div>
+    )
+
+  return (
+    <>
+      <h2 className="text-2xl mt-4">Existentes:</h2>
+      {encuestas.map((e) => (
+        <DisplayEncuesta key={e.id} encuesta={e} />
+      ))}
+    </>
   )
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta } = useEncuesta()
   return (
-    <div className="py-4">
+    <div className="py-4 mx-auto">
       {/* Titulo y opciones */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
@@ -38,7 +61,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           {encuesta.isActive ? 'Abierta' : 'Cerrada'}
         </span>
       </div>
-      <span className="text-gray-500 text-sm">Creada {new Date(encuesta.createdAt).toISOString()}</span>
+      <span className="text-gray-500 text-sm">
+        Abierta {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
+      </span>
       <ul className="list-disc ml-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
@@ -94,11 +119,13 @@ function AgregarPregunta() {
   }
 
   return (
-    <div className="flex flex-col gap-2 max-w-[696px]">
-      <div className="flex gap-4">
-        <span>Pregunta:</span>
-        <input className="border-b w-full" type="text" value={pregunta} onChange={(e) => setPregunta(e.target.value)} />
-      </div>
+    <div className="flex flex-col gap-2">
+      <p>Pregunta:</p>
+      <textarea
+        className="border-b w-full resize-none"
+        value={pregunta}
+        onChange={(e) => setPregunta(e.target.value)}
+      />
 
       {respuestas.map((respuesta, index) => (
         <div key={index} className="flex gap-4 items-center">

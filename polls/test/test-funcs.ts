@@ -1,7 +1,6 @@
 import { io } from 'socket.io-client';
 
-// Utility de debugging para configurar el logging de eventos del socket a la consola 
-export async function setupSocketLogging(socket: ReturnType<typeof io>) {
+export async function setupSocketLogging(socket: ReturnType<typeof io>) { 
 
   const ready = new Promise<void>((resolve, reject) => {
     // Connection event handlers
@@ -17,7 +16,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     });
   });
 
-  const localPolls = new Map<number, { id: string; pregunta: string, opciones: { id: number; text: string; votos: number }[], createdAt: string; isActive: boolean }>();
+  const localPolls = new Map<number, { id: string; pregunta: string, opciones: { id: number; text: string;  votos: number}[], createdAt: string; isActive: boolean }>();
 
   socket.on('disconnect', () => {
     console.log('❌ Disconnected from server');
@@ -29,7 +28,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
 
     polls.forEach((poll: any) => {
       localPolls.set(poll.id, poll)
-    })
+     })
   });
 
   socket.on('poll:created', (poll) => {
@@ -62,4 +61,8 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
 
   await ready
   return { socket, localPolls }
+}
+
+export async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

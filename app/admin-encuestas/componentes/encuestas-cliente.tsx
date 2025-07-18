@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Encuesta, useEncuesta } from './SocketProvider'
+import { Encuesta, useEncuesta } from './encuestas-context'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'

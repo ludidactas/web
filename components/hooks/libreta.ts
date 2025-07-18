@@ -1,5 +1,5 @@
 import LibretaContext from '@/components/roadmaps/libreta'
-import { Nivel, nivelEnum } from '@/md/schema'
+import { Nivel, nivelEnum } from '@/components/roadmap/md/schema'
 import { useContext } from 'react'
 import { entries, find, first, fromEntries, isPlainObject, isString } from 'remeda'
 import { useBiblioteca } from '../roadmaps/biblioteca'

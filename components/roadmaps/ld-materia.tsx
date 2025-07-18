@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import Radar from '@/components/ui/radar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-import { MetaMateria, Nivel } from '@/md/schema'
+import { MetaMateria, Nivel } from '@/components/roadmap/md/schema'
 import { usePrevious } from '@uidotdev/usehooks'
 
 import { CircleDashed, CircleDot } from 'lucide-react'

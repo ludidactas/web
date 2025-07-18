@@ -1,6 +1,6 @@
 'use client'
 
-import { importarBiblioteca } from '@/lib/importMdx'
+import { importarBiblioteca } from '@/components/roadmap/importMdx'
 import { createContext, ReactNode, use } from 'react'
 
 type TBiblioteca = Awaited<ReturnType<typeof importarBiblioteca>>

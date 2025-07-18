@@ -1,7 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import { Meta } from '@/md/schema'
+import { Meta } from '@/components/roadmap/md/schema'
 import { useRouter } from 'next/navigation'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Drawer } from 'vaul'

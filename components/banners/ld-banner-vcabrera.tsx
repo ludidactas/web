@@ -1,14 +1,14 @@
 'use client'
 import ConvocatoriaSvg from '@/svg/dist/bannervcabrera.svg'
-import BtnSketchy2 from './ld-btn-sketchy-2'
-import { LdSvg } from './ld-svg'
+import BtnSketchySvg from '../custom/ld-btn-sketchy-svg'
+import { LdSvg } from '../custom/ld-svg'
 
 export default function LdBannerVCabrera({ className }: { className?: string }) {
   const boton = (
     <div className="w-full h-full flex items-center justify-center">
-      <BtnSketchy2 href="https://www.instagram.com/ludidactas" className='h-4/5'>
+      <BtnSketchySvg href="https://www.instagram.com/ludidactas" className='h-4/5'>
         <p className="text-center text-xl">Inscripción</p>
-      </BtnSketchy2>
+      </BtnSketchySvg>
     </div>
   )
 

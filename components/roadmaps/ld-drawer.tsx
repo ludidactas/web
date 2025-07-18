@@ -5,8 +5,8 @@ import { Meta } from '@/md/schema'
 import { useRouter } from 'next/navigation'
 import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Drawer } from 'vaul'
+import { useBiblioteca } from './biblioteca'
 import LdMateria from './ld-materia'
-import { useBiblioteca } from '../context/contenido'
 
 const LdDrawer = ({
   idArticulo,

@@ -1,5 +1,5 @@
 import { importarBiblioteca } from '@/lib/importMdx'
-import { BibliotecaProvider } from '@/components/context/contenido'
+import { BibliotecaProvider } from '@/components/roadmaps/biblioteca'
 
 // Server component. Carga los MDs y los inyecta en el MDXProvider
 

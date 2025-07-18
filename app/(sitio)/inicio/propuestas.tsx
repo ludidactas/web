@@ -1,10 +1,10 @@
 'use client'
 
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
 import { Hl } from './highlight'
-import ArrowDownLd from '@/components/custom/ld-arrowDown'
+import ArrowDownLd from '@/components/custom/ld-arrow-down'
 
 export default function Propuestas() {
   return (
@@ -39,10 +39,10 @@ export default function Propuestas() {
         }
         two={<Imagenes />}
         btn={
-          <BtnSketchy className="block mx-auto h-[64px] leading-[42px]" href="/propuestas">
+          <BtnSketchyGif className="block mx-auto h-[64px] leading-[42px]" href="/propuestas">
             {' '}
             Ver propuestas{' '}
-          </BtnSketchy>
+          </BtnSketchyGif>
         }
         scroll={<ArrowDownLd to="recursosini" />}
         espejado={true}

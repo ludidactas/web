@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 
+// Utility de debugging para configurar el logging de eventos del socket a la consola 
 export async function setupSocketLogging(socket: ReturnType<typeof io>) {
 
   const ready = new Promise<void>((resolve, reject) => {

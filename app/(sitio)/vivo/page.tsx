@@ -1,7 +1,7 @@
 'use client'
 
-import EncuestasCliente from '@/components/encuestas/encuestas-cliente'
-import { EncuestaProvider } from '@/components/encuestas/SocketProvider'
+import EncuestasCliente from '@/app/admin-encuestas/componentes/encuestas-cliente'
+import { EncuestaProvider } from '@/app/admin-encuestas/componentes/SocketProvider'
 
 export default function Page() {
   return (

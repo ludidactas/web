@@ -2,9 +2,9 @@
 
 import Image from 'next/image'
 import Pantalla from './pantalla'
-import BtnSketchy from '@/components/custom/ld-btn-sketchy'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import { Hl } from './highlight'
-import ArrowDownLd from '@/components/custom/ld-arrowDown'
+import ArrowDownLd from '@/components/custom/ld-arrow-down'
 
 export default function Identidad() {
   return (
@@ -28,10 +28,10 @@ export default function Identidad() {
       }
       two={<Imagenes />}
       btn={
-        <BtnSketchy className="block mx-auto h-[90px] leading-[62px]" href="/identidad">
+        <BtnSketchyGif className="block mx-auto h-[90px] leading-[62px]" href="/identidad">
           {' '}
           Más sobre el proyecto{' '}
-        </BtnSketchy>
+        </BtnSketchyGif>
       }
       scroll={<ArrowDownLd to="propuestasini" />}
     />

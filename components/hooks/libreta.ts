@@ -1,8 +1,8 @@
-import LibretaContext from '@/components/context/libreta'
+import LibretaContext from '@/components/roadmaps/libreta'
 import { Nivel, nivelEnum } from '@/md/schema'
 import { useContext } from 'react'
 import { entries, find, first, fromEntries, isPlainObject, isString } from 'remeda'
-import { useBiblioteca } from '../context/contenido'
+import { useBiblioteca } from '../roadmaps/biblioteca'
 
 export interface Requerimiento {
   materia: string

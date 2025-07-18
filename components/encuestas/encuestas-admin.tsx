@@ -13,6 +13,8 @@ export default function EncuestasAdmin() {
       ) : (
         <span className="text-red-700">Desconectado</span>
       )}
+      <h2 className="text-2xl mt-4">Crear:</h2>
+      <AgregarPregunta />
       {encuestas.length > 0 && (
         <>
           <h2 className="text-2xl mt-4">Existentes:</h2>
@@ -21,8 +23,6 @@ export default function EncuestasAdmin() {
           ))}
         </>
       )}
-      <h2 className="text-2xl mt-4">Crear:</h2>
-      <AgregarPregunta />
     </div>
   )
 }

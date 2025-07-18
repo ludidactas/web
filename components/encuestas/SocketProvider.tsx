@@ -24,6 +24,8 @@ const useEncuestaState = () => {
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
   const [error, setError] = useState<{ message: string } | null>(null)
 
+  // Emitters
+
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
     setError({ message: '' })
@@ -54,6 +56,13 @@ const useEncuestaState = () => {
   const cerrarPregunta = (encuestaId: number) => {
     socket.emit('poll:close', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
   }
+
+  /** Postea un voto */
+  const votar = (encuestaId: number, opcionId: number) => { 
+    socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
+  }
+
+  // Handlers
 
   /** Updatea el buffer local */
   const updateEncuesta = (encuesta: Encuesta) => {
@@ -115,7 +124,7 @@ const useEncuestaState = () => {
     setError({message: ''})
    }, [encuestas])
 
-  return { socket, encuestas, enviarPregunta, borrarPregunta, cerrarPregunta, error }
+  return { socket, encuestas, error, enviarPregunta, borrarPregunta, cerrarPregunta, votar }
 }
 
 // Context

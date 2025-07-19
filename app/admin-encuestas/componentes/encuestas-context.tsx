@@ -4,6 +4,7 @@ import { CrearEncuesta, Encuesta } from '@/polls/encuestas'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { toast } from 'sonner'
 
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
@@ -11,6 +12,10 @@ const useEncuestaState = () => {
   const [socket, setSocket] = useState<Socket>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
   const [error, setError] = useState<{ message: string } | null>(null)
+
+  const showError = ({ message }: { message: string }) => {
+    toast.error(message)
+  }
 
   // Emitters
 
@@ -116,7 +121,7 @@ const useEncuestaState = () => {
     if (socket) {
       setupSocketLogging(socket)
       socket.on('polls:list', setEncuestas)
-      socket.on('poll:error', setError)
+      socket.on('poll:error', showError)
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', deleteEncuesta)

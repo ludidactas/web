@@ -146,7 +146,7 @@ io.on('connection', (socket) => {
     if (!assertPollIsClosed(poll, socket)) return;
 
     poll.isActive = true;
-    io.emit('poll:opened', poll);
+    io.emit('poll:updated', poll);
 
     console.log(`Encuesta abierta: ${poll.pregunta}`);
   })
@@ -163,7 +163,7 @@ io.on('connection', (socket) => {
     if (!assertPollIsOpen(poll, socket)) return;
 
     poll.isActive = false;
-    io.emit('poll:closed', poll);
+    io.emit('poll:updated', poll);
 
     console.log(`Encuesta cerrada: ${poll.pregunta}`);
   });

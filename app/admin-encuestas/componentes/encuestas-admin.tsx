@@ -52,19 +52,24 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta } = useEncuesta()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuesta()
   return (
     <div className="py-4 mx-auto">
-      {/* Titulo y opciones */}
+      {/* Titulo y status */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
-        <span className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-700'}`}>
-          {encuesta.isActive ? 'Abierta' : 'Cerrada'}
-        </span>
+        <div className="flex flex-col items-end">
+          <span
+            className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+          >
+            {encuesta.isActive ? 'Abierta' : 'Cerrada'}
+          </span>
+          <span className="text-xs text-slate-400 whitespace-nowrap">
+            {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
+          </span>
+        </div>
       </div>
-      <span className="text-gray-500 text-sm">
-        Abierta {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
-      </span>
+
       <ul className="list-disc ml-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
@@ -74,18 +79,34 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       </ul>
 
       {/* Acciones */}
+
+      {/* Publicar/esconder */}
       <div className="flex items-center justify-end gap-4 my-2">
-        {encuesta.isActive && (
-          <button className="bg-blue-900 text-white px-4 py-2 rounded" onClick={() => cerrarPregunta(encuesta.id)}>
-            Cerrar
+        {!encuesta.isPublished && (
+          <button className="w-32 bg-green-700 text-white px-4 py-2 rounded" onClick={() => publicarPregunta(encuesta.id)}>
+            Publicar
           </button>
         )}
+        {encuesta.isPublished && (
+          <button className="w-32 bg-green-100 text-black px-4 py-2 rounded border border-green-900" onClick={() => esconderPregunta(encuesta.id)}>
+            Esconder
+          </button>
+        )}
+
+        {/* Abrir/Cerrar */}
         {!encuesta.isActive && (
-          <button className="bg-blue-900 text-white px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
+          <button className="w-32 bg-blue-900 text-white px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
             Abrir
           </button>
         )}
-        <button className="bg-red-700 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
+        {encuesta.isActive && (
+          <button className="w-32 bg-blue-100 text-black px-4 py-2 rounded border border-blue-900" onClick={() => cerrarPregunta(encuesta.id)}>
+            Cerrar
+          </button>
+        )}
+
+        {/* Eliminar */}
+        <button className="bg-red-800 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
           Eliminar
         </button>
       </div>

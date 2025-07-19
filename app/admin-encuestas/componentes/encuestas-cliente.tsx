@@ -9,8 +9,11 @@ import { Encuesta } from '@/polls/encuestas'
 export default function EncuestasCliente() {
   const { socket, encuestas } = useEncuesta()
 
+  const encuestasVisibles = encuestas.filter((e) => e.isPublished)
+
   return (
     <div className="bg-white p-8 max-w-[54em] mx-auto border-x">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl">Encuestas</h1>
@@ -20,14 +23,16 @@ export default function EncuestasCliente() {
           <span className="text-red-700">Desconectado</span>
         )}
       </div>
-      {encuestas.length > 0 && (
+
+      {encuestasVisibles.length > 0 && (
         <>
-          {encuestas.map((e) => (
+          {encuestasVisibles.map((e) => (
             <DisplayEncuesta key={e.id} encuesta={e} />
           ))}
         </>
       )}
-      {encuestas.length == 0 && (
+
+      {encuestasVisibles.length == 0 && (
         <div className="h-96 flex flex-col items-center justify-center">
           <p className="text-gray-500 text-sm text-center ">No hay encuestas activas.</p>
         </div>
@@ -46,16 +51,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       {/* Titulo y opciones */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
-        <span className={`text-sm ${encuesta.isActive ? 'text-emerald-700' : 'text-red-700'}`}>
-          {encuesta.isActive ? 'Abierta' : 'Cerrada'}
-        </span>
+        <div className='flex flex-col items-end'>
+          <span className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}>
+            {encuesta.isActive ? 'Abierta' : 'Cerrada'}
+          </span>
+          <span className='text-xs text-slate-400 whitespace-nowrap'>{formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}</span>
+        </div>
       </div>
-
-      {encuesta.isActive && (
-        <span className="text-gray-500 text-sm">
-          Abierta {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
-        </span>
-      )}
 
       {/* Una vez votado */}
       <ul className="list-disc ml-6">

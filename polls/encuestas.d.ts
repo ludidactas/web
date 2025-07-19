@@ -6,9 +6,11 @@ export interface Encuesta {
   opciones: { id: string; texto: string; votos: number }[]
   createdAt: string
   isActive: boolean
+  isPublished: boolean
 }
 
-export interface CrearEncuesta extends Omit<Encuesta, 'opciones'> {
+export interface CrearEncuesta  {
+  pregunta: string
   opciones: string[]
   masterPassword: string
 }

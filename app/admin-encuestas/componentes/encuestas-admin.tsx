@@ -52,13 +52,13 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta } = useEncuesta()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta } = useEncuesta()
   return (
     <div className="py-4 mx-auto">
       {/* Titulo y opciones */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
-        <span className={`text-sm ${encuesta.isActive ? 'text-emerald-700' : 'text-red-700'}`}>
+        <span className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-700'}`}>
           {encuesta.isActive ? 'Abierta' : 'Cerrada'}
         </span>
       </div>
@@ -78,6 +78,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.isActive && (
           <button className="bg-blue-900 text-white px-4 py-2 rounded" onClick={() => cerrarPregunta(encuesta.id)}>
             Cerrar
+          </button>
+        )}
+        {!encuesta.isActive && (
+          <button className="bg-blue-900 text-white px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
+            Abrir
           </button>
         )}
         <button className="bg-red-700 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>

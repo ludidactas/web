@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "svgo": "svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
-    "polls:start": "bun run polls/index.ts",
-    "polls:dev": "nodemon --watch polls/index.ts --exec bun run polls/index.ts"
+    "polls:start": "bun run polls/server.ts",
+    "polls:dev": "nodemon --watch polls/server.ts --exec bun run polls/server.ts"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",

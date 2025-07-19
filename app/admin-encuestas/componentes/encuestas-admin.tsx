@@ -165,10 +165,10 @@ function AgregarPregunta() {
           />
           {respuestas.length > 1 && (
             <button
-              className="bg-red-500 text-white px-2 py-1 rounded text-sm"
+              className="text-red-700 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-red-700 px-2 py-1 rounded text-sm transition-all duration-100 h-8"
               onClick={() => eliminarRespuesta(index)}
             >
-              ×
+              X
             </button>
           )}
         </div>

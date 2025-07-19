@@ -49,6 +49,12 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     localPolls.get(poll.id)!.isActive = false;
   });
 
+  socket.on('poll:opened', (poll) => {
+    console.log('\n🏁 Poll opened:', poll);
+
+    localPolls.get(poll.id)!.isActive = true;
+  });
+
   socket.on('poll:deleted', (data) => {
     console.log('\n🗑️  Poll deleted:', data.pollId);
 

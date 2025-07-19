@@ -45,6 +45,11 @@ const useEncuestaState = () => {
     socket.emit('poll:close', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
   }
 
+  /** Postea al server la acción de abrir */
+  const abrirPregunta = (encuestaId: string) => {
+    socket.emit('poll:open', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+  }
+
   /** Postea un voto */
   const votar = (encuestaId: string, opcionId: string) => { 
     socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
@@ -88,6 +93,18 @@ const useEncuestaState = () => {
     })
   }
 
+  const openEncuesta = (encuesta: Encuesta) => {
+    setEncuestas((encs) => {
+      const index = encs.findIndex((e) => e.id === encuesta.id)
+      if (index !== -1) {
+        const updatedEncuestas = [...encs]
+        updatedEncuestas[index].isActive = true
+        return updatedEncuestas
+      }
+      return encs
+    })
+  }
+
   // Conexión inicial
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
@@ -104,6 +121,7 @@ const useEncuestaState = () => {
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', deleteEncuesta)
       socket.on('poll:closed', closeEncuesta)
+      socket.on('poll:opened', openEncuesta)
     }
   }, [socket])
 
@@ -112,7 +130,7 @@ const useEncuestaState = () => {
     setError({message: ''})
    }, [encuestas])
 
-  return { socket, encuestas, error, enviarPregunta, borrarPregunta, cerrarPregunta, votar }
+  return { socket, encuestas, error, enviarPregunta, borrarPregunta, cerrarPregunta, abrirPregunta, votar }
 }
 
 // Context

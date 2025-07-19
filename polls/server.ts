@@ -23,6 +23,15 @@ if (!masterPwd) {
   process.exit(1);
 }
 
+/**  */
+// const pipeline = (...middlewares) => (data, socket) => {
+//   for (const middleware of middlewares) {
+//     const result = middleware(data, socket);
+//     if (!result) return false; // Stop if any middleware fails
+//   }
+//   return true;
+// };
+
 function assertValidPassword(pwd: string, socket: Socket) {
   if (pwd !== masterPwd) {
     socket.emit('poll:error', { message: 'Contraseña maestra incorrecta' });
@@ -72,6 +81,24 @@ function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string, socket: Sock
   return true;
 }
 
+function assertPollIsPublished(poll: Encuesta, socket: Socket): boolean {
+  if (!poll.isPublished) {
+    socket.emit('poll:error', { message: `La encuesta no está publicada!` });
+    return false;
+  }
+  return true;
+
+}
+
+function assertPollIsHidden(poll: Encuesta, socket: Socket): boolean {
+  if (poll.isPublished) {
+    socket.emit('poll:error', { message: `La encuesta ya está oculta!` });
+    return false;
+  }
+  return true;
+}
+
+
 io.on('connection', (socket) => {
 
   // function conErrorHandling(f: Parameters<typeof Socket['on']>[1]) {
@@ -100,7 +127,8 @@ io.on('connection', (socket) => {
       pregunta: pollData.pregunta,
       opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
       createdAt: new Date().toISOString(),
-      isActive: false
+      isActive: true,
+      isPublished: false,
     };
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto
@@ -166,6 +194,44 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll);
 
     console.log(`Encuesta cerrada: ${poll.pregunta}`);
+  });
+
+  // Handle closing a poll
+  socket.on('poll:publish', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+
+    console.log(`Request de publicación de encuesta ${pollId}`)
+
+    // Validamos
+    if (!assertValidPassword(masterPassword, socket)) return
+    if (!assertPollExists(pollId, socket)) return
+
+    const poll = polls.get(pollId);
+
+    if (!assertPollIsHidden(poll, socket)) return;
+
+    poll.isPublished = true;
+    io.emit('poll:updated', poll);
+
+    console.log(`Encuesta publicada: ${poll.pregunta}`);
+  });
+
+  // Handle closing a poll
+  socket.on('poll:hide', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+
+    console.log(`Request de ocultación de encuesta ${pollId}`)
+
+    // Validamos
+    if (!assertValidPassword(masterPassword, socket)) return
+    if (!assertPollExists(pollId, socket)) return
+
+    const poll = polls.get(pollId);
+
+    if (!assertPollIsPublished(poll, socket)) return;
+
+    poll.isPublished = false;
+    io.emit('poll:updated', poll);
+
+    console.log(`Encuesta ocultada: ${poll.pregunta}`);
   });
 
   // GET poll

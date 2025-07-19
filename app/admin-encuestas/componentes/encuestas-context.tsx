@@ -6,7 +6,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 
-
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
 const useEncuestaState = () => {
   const [socket, setSocket] = useState<Socket>(null)
@@ -30,11 +29,8 @@ const useEncuestaState = () => {
 
     const nuevaEncuesta: CrearEncuesta = {
       masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD,
-      id: Date.now().toString(),
       pregunta,
       opciones: respuestas,
-      createdAt: new Date().toISOString(),
-      isActive: true,
     }
 
     socket.emit('poll:create', nuevaEncuesta)
@@ -53,6 +49,16 @@ const useEncuestaState = () => {
   /** Postea al server la acción de abrir */
   const abrirPregunta = (encuestaId: string) => {
     socket.emit('poll:open', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+  }
+
+  /** Postea al sever la acción de publicar */
+  const publicarPregunta = (encuestaId: string) => {
+    socket.emit('poll:publish', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+  }
+
+  /** Postea al sever la acción de publicar */
+  const esconderPregunta = (encuestaId: string) => {
+    socket.emit('poll:hide', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
   }
 
   /** Postea un voto */
@@ -108,7 +114,18 @@ const useEncuestaState = () => {
     setError({ message: '' })
   }, [encuestas])
 
-  return { socket, encuestas, error, enviarPregunta, borrarPregunta, cerrarPregunta, abrirPregunta, votar }
+  return {
+    socket,
+    encuestas,
+    error,
+    enviarPregunta,
+    borrarPregunta,
+    cerrarPregunta,
+    abrirPregunta,
+    publicarPregunta,
+    esconderPregunta,
+    votar,
+  }
 }
 
 // Context

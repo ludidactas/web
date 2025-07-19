@@ -56,13 +56,23 @@ const useEncuestaState = () => {
   }
 
   /** Postea un voto */
-  const votar = (encuestaId: string, opcionId: string) => { 
+  const votar = (encuestaId: string, opcionId: string) => {
     socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
   }
 
   // Handlers
 
-  /** Updatea el buffer local */
+  /** Agrega una encuesta al buffer local */
+  const addEncuesta = (encuesta: Encuesta) => {
+    setEncuestas((encs) => [...encs, encuesta])
+  }
+
+  /** Borra una encuesta del buffer local */
+  const deleteEncuesta = ({ pollId }: { pollId: string }) => {
+    setEncuestas((encs) => encs.filter((e) => e.id != pollId))
+  }
+
+  /** Updatea el buffer local, pisando la encuesta existente */
   const updateEncuesta = (encuesta: Encuesta) => {
     setEncuestas((prev) => {
       const index = prev.findIndex((e) => e.id === encuesta.id)
@@ -72,41 +82,6 @@ const useEncuestaState = () => {
         return newEncuestas
       }
       return prev
-    })
-  }
-
-  /** Borra una encuesta del buffer local */
-  const deleteEncuesta = ({ pollId }: { pollId: string }) => {
-    setEncuestas((encs) => encs.filter((e) => e.id != pollId))
-  }
-
-  /** Agrega una encuesta al buffer local */
-  const addEncuesta = (encuesta: Encuesta) => {
-    setEncuestas((encs) => [...encs, encuesta])
-  }
-
-  /** Cierra una encuesta en el buffer local */
-  const closeEncuesta = (encuesta: Encuesta) => { 
-    setEncuestas((encs) => {
-      const index = encs.findIndex((e) => e.id === encuesta.id)
-      if (index !== -1) {
-        const updatedEncuestas = [...encs]
-        updatedEncuestas[index].isActive = false
-        return updatedEncuestas
-      }
-      return encs
-    })
-  }
-
-  const openEncuesta = (encuesta: Encuesta) => {
-    setEncuestas((encs) => {
-      const index = encs.findIndex((e) => e.id === encuesta.id)
-      if (index !== -1) {
-        const updatedEncuestas = [...encs]
-        updatedEncuestas[index].isActive = true
-        return updatedEncuestas
-      }
-      return encs
     })
   }
 
@@ -125,15 +100,13 @@ const useEncuestaState = () => {
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', deleteEncuesta)
-      socket.on('poll:closed', closeEncuesta)
-      socket.on('poll:opened', openEncuesta)
     }
   }, [socket])
 
   // Reseteamos el error en cada udpate (revisar)
   useEffect(() => {
-    setError({message: ''})
-   }, [encuestas])
+    setError({ message: '' })
+  }, [encuestas])
 
   return { socket, encuestas, error, enviarPregunta, borrarPregunta, cerrarPregunta, abrirPregunta, votar }
 }

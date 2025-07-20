@@ -1,200 +1,177 @@
-import { Server, Socket } from "socket.io";
-import { pollCreator, pollValidator, voteValidator } from "./validators";
-import type z from "zod";
-import { extractZodErrorMessages } from "./utils";
-import { Encuesta } from "./encuestas";
+import { Server } from "socket.io"
+import type z from "zod"
+import { Encuesta } from "./encuestas"
+import { extractZodErrorMessages } from "./utils"
+import { pollCreator, pollValidator, voteValidator } from "./validators"
 
-const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005;
+const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
 const io = new Server({
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
   }
-});
+})
 
 // Polls y votos activos
-const polls = new Map<string, Encuesta>();
-const votos = new Map<string, Set<string>>();
+const polls = new Map<string, Encuesta>()
+const votos = new Map<string, Set<string>>()
 
-const masterPwd = process.env.POLLS_ADMIN_PASS;
+const masterPwd = process.env.POLLS_ADMIN_PASS
 if (!masterPwd) {
-  console.error("Error: POLLS_ADMIN_PASS no está seteada.");
-  process.exit(1);
+  console.error("Error: POLLS_ADMIN_PASS no está seteada.")
+  process.exit(1)
 }
 
-/**  */
-// const pipeline = (...middlewares) => (data, socket) => {
-//   for (const middleware of middlewares) {
-//     const result = middleware(data, socket);
-//     if (!result) return false; // Stop if any middleware fails
-//   }
-//   return true;
-// };
-
-function assertValidPassword(pwd: string, socket: Socket) {
-  if (pwd !== masterPwd) {
-    socket.emit('poll:error', { message: 'Contraseña maestra incorrecta' });
-    return false;
-  }
-  return true;
+function assertValidPassword(pwd: string) {
+  if (pwd !== masterPwd) throw new Error('Contraseña maestra incorrecta')
 }
 
-function assertValidPoll(pollData: unknown, socket: Socket): boolean {
-  const { success, error } = pollValidator.safeParse(pollData);
-  if (!success) {
-    socket.emit('poll:error', { message: `Encuesta inválida: ${extractZodErrorMessages(error)}` });
-    return false;
-  }
-  return true;
+function assertValidPoll(pollData: unknown) {
+  const { error } = pollValidator.safeParse(pollData)
+  if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
 }
 
-function assertPollExists(pollId: string, socket: Socket): boolean {
-  if (!polls.has(pollId)) {
-    socket.emit('poll:error', { message: `La encuesta no existe!` });
-    return false;
-  }
-  return true;
+function assertPollExists(pollId: string) {
+  if (!polls.has(pollId)) throw new Error('La encuesta no existe!')
 }
 
-function assertPollIsOpen(poll: Encuesta, socket: Socket): boolean {
-  if (!poll.isActive) {
-    socket.emit('poll:error', { message: `La encuesta ya cerró!` });
-    return false;
-  }
-  return true;
+function assertPollIsOpen(poll: Encuesta) {
+  if (!poll.isActive) throw new Error('La encuesta ya cerró!')
 }
 
-function assertPollIsClosed(poll: Encuesta, socket: Socket): boolean {
-  if (poll.isActive) {
-    socket.emit('poll:error', { message: `La encuesta ya está abierta!!` });
-    return false;
-  }
-  return true;
+function assertPollIsClosed(poll: Encuesta) {
+  if (poll.isActive) throw new Error('La encuesta ya está abierta!!')
 }
 
-function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string, socket: Socket): boolean {
-  if (votos.get(poll.id).has(user)) {
-    socket.emit('poll:error', { message: 'Ya votaste en esta encuesta' });
-    return false;
-  }
-  return true;
+function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string) {
+  if (votos.get(poll.id).has(user)) throw new Error('Ya votaste en esta encuesta')
 }
 
-function assertPollIsPublished(poll: Encuesta, socket: Socket): boolean {
-  if (!poll.isPublished) {
-    socket.emit('poll:error', { message: `La encuesta no está publicada!` });
-    return false;
-  }
-  return true;
-
+function assertPollIsPublished(poll: Encuesta) {
+  if (!poll.isPublished) throw new Error('La encuesta no está publicada!')
 }
 
-function assertPollIsHidden(poll: Encuesta, socket: Socket): boolean {
-  if (poll.isPublished) {
-    socket.emit('poll:error', { message: `La encuesta ya está oculta!` });
-    return false;
-  }
-  return true;
+function assertPollIsHidden(poll: Encuesta) {
+  if (poll.isPublished) throw new Error('La encuesta ya está oculta!')
 }
 
 
 io.on('connection', (socket) => {
 
-  // function conErrorHandling(f: Parameters<typeof Socket['on']>[1]) {
-  //   try {
-  //     f();
-  //   } catch (error) {
-  //     console.error('Error en el handler:', error);
-  //     socket.emit('poll:error', { message: 'Error interno del servidor' });
-  //   }
-  // }
+  // Functiones de arquitectura, orquestan la ejecución de las otras:
+  type Middleware<T extends unknown[]> = (...args: T) => void
+
+  /** Wrapper de handlers que agrega error handling */
+  function conErrorHandling<T extends unknown[]>(f: Middleware<T>) {
+    return (...args: T) => {
+      try {
+        f(...args)
+      } catch (err: unknown) {
+        if (!(err instanceof Error)) {
+          console.error('Error inesperado:', err)
+          return
+        }
+        console.error('Error en el handler:', err.message)
+        socket.emit('poll:error', { message: err.message })
+      }
+    }
+  }
+
+  /** Recibe una lista de funciones y las corre en secuencia */
+  const pipeline = <T extends unknown[]>(...middlewares: Middleware<T>[]) => (...args: T): void => {
+    for (const middleware of middlewares) middleware(...args)
+  }
 
   // Le enviamos la lista de encuestas activas al cliente
-  socket.emit('polls:list', Array.from(polls.values()));
+  socket.emit('polls:list', Array.from(polls.values()))
 
   // Handle creating a new poll
-  socket.on('poll:create', (pollData: z.infer<typeof pollCreator>) => {
+  socket.on('poll:create', conErrorHandling(
+    pipeline(
+      (pollData: z.infer<typeof pollCreator>) => {
 
-    console.log(`Request de creación de `, pollData)
+        console.log(`Request de creación de `, pollData)
 
-    if (!assertValidPassword(pollData.masterPassword, socket)) return
-    if (!assertValidPoll(pollData, socket)) return
+        assertValidPassword(pollData.masterPassword)
+        assertValidPoll(pollData)
 
-    // La creamos
-    const poll: Encuesta = {
-      id: Date.now().toString(),
-      pregunta: pollData.pregunta,
-      opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
-      createdAt: new Date().toISOString(),
-      isActive: true,
-      isPublished: false,
-    };
+        // La creamos
+        const poll: Encuesta = {
+          id: Date.now().toString(),
+          pregunta: pollData.pregunta,
+          opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
+          createdAt: new Date().toISOString(),
+          isActive: true,
+          isPublished: false,
+        }
 
-    // La agregamos a los polls activos y creamos el tracker de quién ya voto
-    polls.set(poll.id, poll);
-    votos.set(poll.id, new Set());
+        // La agregamos a los polls activos y creamos el tracker de quién ya voto
+        polls.set(poll.id, poll)
+        votos.set(poll.id, new Set())
 
-    // La broadcasteamos
-    io.emit('poll:created', poll);
+        // La broadcasteamos
+        io.emit('poll:created', poll)
 
-    console.log(`Encuesta creada: ${poll.pregunta}`);
-  });
+        console.log(`Encuesta creada: ${poll.pregunta}`)
+      }
+    )
+  ))
 
   // Handle voting on a poll
   socket.on('poll:vote', (voteData: z.infer<typeof voteValidator>) => {
-    const { pollId, optionId } = voteData;
+    const { pollId, optionId } = voteData
 
-    const poll = polls.get(pollId);
-    const pollvotos = votos.get(pollId);
+    const poll = polls.get(pollId)
+    const pollvotos = votos.get(pollId)
 
     // Validamos
-    if (!assertPollExists(pollId, socket)) return
-    if (!assertPollIsOpen(poll, socket)) return
-    if (!assertElUsuarioNoVotoTodavia(poll, socket.id, socket)) return // Cambiar a socket.handshake.ip?
+    assertPollExists(pollId)
+    assertPollIsOpen(poll)
+    assertElUsuarioNoVotoTodavia(poll, socket.id) // Cambiar a socket.handshake.ip?
 
     // Guardamos el voto
-    pollvotos.add(socket.id);
-    poll.opciones[optionId].votos++;
+    pollvotos.add(socket.id)
+    poll.opciones[optionId].votos++
 
     // Broadcasteamos la poll updateada
-    io.emit('poll:updated', poll);
+    io.emit('poll:updated', poll)
 
-    console.log(`Voto grabado: Encuesta ${pollId}, opción ${optionId}`);
-  });
+    console.log(`Voto grabado: Encuesta ${pollId}, opción ${optionId}`)
+  })
 
   socket.on('poll:open', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
-    if (!assertValidPassword(masterPassword, socket)) return
-    if (!assertPollExists(pollId, socket)) return
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
 
-    const poll = polls.get(pollId);
+    const poll = polls.get(pollId)
 
-    if (!assertPollIsClosed(poll, socket)) return;
+    assertPollIsClosed(poll)
 
-    poll.isActive = true;
-    io.emit('poll:updated', poll);
+    poll.isActive = true
+    io.emit('poll:updated', poll)
 
-    console.log(`Encuesta abierta: ${poll.pregunta}`);
+    console.log(`Encuesta abierta: ${poll.pregunta}`)
   })
 
   // Handle closing a poll
   socket.on('poll:close', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
-    if (!assertValidPassword(masterPassword, socket)) return
-    if (!assertPollExists(pollId, socket)) return
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
 
-    const poll = polls.get(pollId);
+    const poll = polls.get(pollId)
 
-    if (!assertPollIsOpen(poll, socket)) return;
+    assertPollIsOpen(poll)
 
-    poll.isActive = false;
-    io.emit('poll:updated', poll);
+    poll.isActive = false
+    io.emit('poll:updated', poll)
 
-    console.log(`Encuesta cerrada: ${poll.pregunta}`);
-  });
+    console.log(`Encuesta cerrada: ${poll.pregunta}`)
+  })
 
   // Handle closing a poll
   socket.on('poll:publish', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
@@ -202,18 +179,18 @@ io.on('connection', (socket) => {
     console.log(`Request de publicación de encuesta ${pollId}`)
 
     // Validamos
-    if (!assertValidPassword(masterPassword, socket)) return
-    if (!assertPollExists(pollId, socket)) return
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
 
-    const poll = polls.get(pollId);
+    const poll = polls.get(pollId)
 
-    if (!assertPollIsHidden(poll, socket)) return;
+    assertPollIsHidden(poll)
 
-    poll.isPublished = true;
-    io.emit('poll:updated', poll);
+    poll.isPublished = true
+    io.emit('poll:updated', poll)
 
-    console.log(`Encuesta publicada: ${poll.pregunta}`);
-  });
+    console.log(`Encuesta publicada: ${poll.pregunta}`)
+  })
 
   // Handle closing a poll
   socket.on('poll:hide', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
@@ -221,69 +198,69 @@ io.on('connection', (socket) => {
     console.log(`Request de ocultación de encuesta ${pollId}`)
 
     // Validamos
-    if (!assertValidPassword(masterPassword, socket)) return
-    if (!assertPollExists(pollId, socket)) return
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
 
-    const poll = polls.get(pollId);
+    const poll = polls.get(pollId)
 
-    if (!assertPollIsPublished(poll, socket)) return;
+    assertPollIsPublished(poll)
 
-    poll.isPublished = false;
-    io.emit('poll:updated', poll);
+    poll.isPublished = false
+    io.emit('poll:updated', poll)
 
-    console.log(`Encuesta ocultada: ${poll.pregunta}`);
-  });
+    console.log(`Encuesta ocultada: ${poll.pregunta}`)
+  })
 
   // GET poll
   socket.on('poll:results', (pollId) => {
-    const poll = polls.get(pollId);
+    const poll = polls.get(pollId)
     if (poll) {
-      socket.emit('poll:results', poll);
+      socket.emit('poll:results', poll)
     }
-  });
+  })
 
   // DELETE poll
   socket.on('poll:delete', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
-    if (!assertValidPassword(masterPassword, socket)) return;
-    if (!assertPollExists(pollId, socket)) return;
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
 
     if (polls.has(pollId)) {
-      polls.delete(pollId);
-      votos.delete(pollId);
-      io.emit('poll:deleted', { pollId });
-      console.log(`Poll deleted: ${pollId}`);
+      polls.delete(pollId)
+      votos.delete(pollId)
+      io.emit('poll:deleted', { pollId })
+      console.log(`Poll deleted: ${pollId}`)
     }
-  });
+  })
 
   // Handle disconnection
   socket.on('disconnect', () => {
-    console.log(`Se desconectó ${socket.id}`);
-  });
-});
+    console.log(`Se desconectó ${socket.id}`)
+  })
+})
 
 // Start the server
-io.listen(PORT);
+io.listen(PORT)
 
-console.log(`🚀 Live Polls server running on port ${PORT}`);
+console.log(`🚀 Live Polls server running on port ${PORT}`)
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n📡 Shutting down server...');
+  console.log('\n📡 Shutting down server...')
   io.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+    console.log('Server closed')
+    process.exit(0)
+  })
+})
 
 // Error handling
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
+  console.error('Uncaught Exception:', error)
+  process.exit(1)
+})
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  process.exit(1)
+})

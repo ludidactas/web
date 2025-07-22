@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
   ))
 
   // Handle voting on a poll
-  socket.on('poll:vote', (voteData: z.infer<typeof voteValidator>) => {
+  socket.on('poll:vote', conErrorHandling((voteData: z.infer<typeof voteValidator>) => {
     const { pollId, optionId } = voteData
 
     const poll = polls.get(pollId)
@@ -138,9 +138,9 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll)
 
     console.log(`Voto grabado: Encuesta ${pollId}, opción ${optionId}`)
-  })
+  }))
 
-  socket.on('poll:open', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  socket.on('poll:open', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
     assertValidPassword(masterPassword)
@@ -154,10 +154,10 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll)
 
     console.log(`Encuesta abierta: ${poll.pregunta}`)
-  })
+  }))
 
   // Handle closing a poll
-  socket.on('poll:close', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  socket.on('poll:close', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
     assertValidPassword(masterPassword)
@@ -171,10 +171,10 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll)
 
     console.log(`Encuesta cerrada: ${poll.pregunta}`)
-  })
+  }))
 
   // Handle closing a poll
-  socket.on('poll:publish', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  socket.on('poll:publish', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     console.log(`Request de publicación de encuesta ${pollId}`)
 
@@ -190,10 +190,10 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll)
 
     console.log(`Encuesta publicada: ${poll.pregunta}`)
-  })
+  }))
 
   // Handle closing a poll
-  socket.on('poll:hide', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  socket.on('poll:hide', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     console.log(`Request de ocultación de encuesta ${pollId}`)
 
@@ -209,18 +209,18 @@ io.on('connection', (socket) => {
     io.emit('poll:updated', poll)
 
     console.log(`Encuesta ocultada: ${poll.pregunta}`)
-  })
+  }))
 
   // GET poll
-  socket.on('poll:results', (pollId) => {
+  socket.on('poll:results', conErrorHandling((pollId) => {
     const poll = polls.get(pollId)
     if (poll) {
       socket.emit('poll:results', poll)
     }
-  })
+  }))
 
   // DELETE poll
-  socket.on('poll:delete', ({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  socket.on('poll:delete', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
 
     // Validamos
     assertValidPassword(masterPassword)
@@ -232,12 +232,12 @@ io.on('connection', (socket) => {
       io.emit('poll:deleted', { pollId })
       console.log(`Poll deleted: ${pollId}`)
     }
-  })
+  }))
 
   // Handle disconnection
-  socket.on('disconnect', () => {
+  socket.on('disconnect', conErrorHandling(() => {
     console.log(`Se desconectó ${socket.id}`)
-  })
+  }))
 })
 
 // Start the server

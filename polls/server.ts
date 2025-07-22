@@ -79,16 +79,15 @@ io.on('connection', (socket) => {
   }
 
   /** Recibe una lista de funciones y las corre en secuencia */
-  const pipeline = <T extends unknown[]>(...middlewares: Middleware<T>[]) => (...args: T): void => {
-    for (const middleware of middlewares) middleware(...args)
-  }
+  // const pipeline = <T extends unknown[]>(...middlewares: Middleware<T>[]) => (...args: T): void => {
+  //   for (const middleware of middlewares) middleware(...args)
+  // }
 
   // Le enviamos la lista de encuestas activas al cliente
   socket.emit('polls:list', Array.from(polls.values()))
 
   // Handle creating a new poll
   socket.on('poll:create', conErrorHandling(
-    pipeline(
       (pollData: z.infer<typeof pollCreator>) => {
 
         console.log(`Request de creación de `, pollData)
@@ -116,7 +115,7 @@ io.on('connection', (socket) => {
         console.log(`Encuesta creada: ${poll.pregunta}`)
       }
     )
-  ))
+  )
 
   // Handle voting on a poll
   socket.on('poll:vote', conErrorHandling((voteData: z.infer<typeof voteValidator>) => {

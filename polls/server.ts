@@ -1,6 +1,6 @@
-import { Server } from "socket.io"
+import { Server, Socket } from "socket.io"
 import type z from "zod"
-import { Encuesta } from "./encuestas"
+import { Encuesta, EncuestaHidratada } from "./encuestas"
 import { extractZodErrorMessages } from "./utils"
 import { pollCreator, pollValidator, voteValidator } from "./validators"
 
@@ -15,7 +15,8 @@ const io = new Server({
 
 // Polls y votos activos
 const polls = new Map<string, Encuesta>()
-const votos = new Map<string, Set<string>>()
+const votantes = new Map<string, Set<string>>()
+const votos = new Map<string, Map<string, string>>()
 
 const masterPwd = process.env.POLLS_ADMIN_PASS
 if (!masterPwd) {
@@ -45,7 +46,7 @@ function assertPollIsClosed(poll: Encuesta) {
 }
 
 function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string) {
-  if (votos.get(poll.id).has(user)) throw new Error('Ya votaste en esta encuesta')
+  if (votantes.get(poll.id).has(user)) throw new Error('Ya votaste en esta encuesta')
 }
 
 function assertPollIsPublished(poll: Encuesta) {
@@ -56,8 +57,15 @@ function assertPollIsHidden(poll: Encuesta) {
   if (poll.isPublished) throw new Error('La encuesta ya está oculta!')
 }
 
+function id(socket: Socket) {
+  return socket.handshake.address
+  return socket.id
+}
+
 
 io.on('connection', (socket) => {
+
+  const userId = id(socket)
 
   // Functiones de arquitectura, orquestan la ejecución de las otras:
   type Middleware<T extends unknown[]> = (...args: T) => void
@@ -83,38 +91,46 @@ io.on('connection', (socket) => {
   //   for (const middleware of middlewares) middleware(...args)
   // }
 
+  /** Hidrata una encuesta con la info del cliente */
+  const hidratar = (poll: Encuesta): EncuestaHidratada => ({
+    ...poll,
+    puedoVotar: !votantes.get(poll.id).has(userId),
+    votoEmitido: votantes.get(poll.id).has(userId) ? votos.get(poll.id).get(userId) : undefined
+  })
+
   // Le enviamos la lista de encuestas activas al cliente
-  socket.emit('polls:list', Array.from(polls.values()))
+  socket.emit('polls:list', Array.from(polls.values()).map(hidratar))
 
   // Handle creating a new poll
   socket.on('poll:create', conErrorHandling(
-      (pollData: z.infer<typeof pollCreator>) => {
+    (pollData: z.infer<typeof pollCreator>) => {
 
-        console.log(`Request de creación de `, pollData)
+      console.log(`Request de creación de `, pollData)
 
-        assertValidPassword(pollData.masterPassword)
-        assertValidPoll(pollData)
+      assertValidPassword(pollData.masterPassword)
+      assertValidPoll(pollData)
 
-        // La creamos
-        const poll: Encuesta = {
-          id: Date.now().toString(),
-          pregunta: pollData.pregunta,
-          opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
-          createdAt: new Date().toISOString(),
-          isActive: true,
-          isPublished: false,
-        }
-
-        // La agregamos a los polls activos y creamos el tracker de quién ya voto
-        polls.set(poll.id, poll)
-        votos.set(poll.id, new Set())
-
-        // La broadcasteamos
-        io.emit('poll:created', poll)
-
-        console.log(`Encuesta creada: ${poll.pregunta}`)
+      // La creamos
+      const poll: Encuesta = {
+        id: Date.now().toString(),
+        pregunta: pollData.pregunta,
+        opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
+        createdAt: new Date().toISOString(),
+        isActive: true,
+        isPublished: false,
       }
-    )
+
+      // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
+      polls.set(poll.id, poll)
+      votantes.set(poll.id, new Set())
+      votos.set(poll.id, new Map())
+
+      // La broadcasteamos
+      io.emit('poll:created', poll)
+
+      console.log(`Encuesta creada: ${poll.pregunta}`)
+    }
+  )
   )
 
   // Handle voting on a poll
@@ -122,21 +138,39 @@ io.on('connection', (socket) => {
     const { pollId, optionId } = voteData
 
     const poll = polls.get(pollId)
-    const pollvotos = votos.get(pollId)
+    const personasQueYaVotaron = votantes.get(pollId)
+    const votosEmitidos = votos.get(pollId)
 
     // Validamos
     assertPollExists(pollId)
     assertPollIsOpen(poll)
-    assertElUsuarioNoVotoTodavia(poll, socket.id) // Cambiar a socket.handshake.ip?
+    assertElUsuarioNoVotoTodavia(poll, userId) // Cambiar a socket.handshake.ip?
 
     // Guardamos el voto
-    pollvotos.add(socket.id)
     poll.opciones[optionId].votos++
+    personasQueYaVotaron.add(userId)
+    votosEmitidos.set(userId, optionId)
 
     // Broadcasteamos la poll updateada
-    io.emit('poll:updated', poll)
+    io.emit('poll:updated', hidratar(poll))
 
     console.log(`Voto grabado: Encuesta ${pollId}, opción ${optionId}`)
+  }))
+
+  socket.on('poll:votantes', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+    assertValidPassword(masterPassword)
+    assertPollExists(pollId)
+
+    const poll = polls.get(pollId)
+    const votantesSet = votantes.get(pollId)
+
+    if (poll && votantesSet) {
+      const votantesList = Array.from(votantesSet).map(user => ({
+        userId: user,
+        voto: votos.get(pollId).get(user)
+      }))
+      socket.emit('poll:votantes', { pollId, votantes: votantesList })
+    }
   }))
 
   socket.on('poll:open', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
@@ -150,7 +184,7 @@ io.on('connection', (socket) => {
     assertPollIsClosed(poll)
 
     poll.isActive = true
-    io.emit('poll:updated', poll)
+    io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta abierta: ${poll.pregunta}`)
   }))
@@ -167,7 +201,7 @@ io.on('connection', (socket) => {
     assertPollIsOpen(poll)
 
     poll.isActive = false
-    io.emit('poll:updated', poll)
+    io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta cerrada: ${poll.pregunta}`)
   }))
@@ -186,7 +220,7 @@ io.on('connection', (socket) => {
     assertPollIsHidden(poll)
 
     poll.isPublished = true
-    io.emit('poll:updated', poll)
+    io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta publicada: ${poll.pregunta}`)
   }))
@@ -205,7 +239,7 @@ io.on('connection', (socket) => {
     assertPollIsPublished(poll)
 
     poll.isPublished = false
-    io.emit('poll:updated', poll)
+    io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta ocultada: ${poll.pregunta}`)
   }))
@@ -214,7 +248,7 @@ io.on('connection', (socket) => {
   socket.on('poll:results', conErrorHandling((pollId) => {
     const poll = polls.get(pollId)
     if (poll) {
-      socket.emit('poll:results', poll)
+      socket.emit('poll:results', hidratar(poll))
     }
   }))
 
@@ -227,7 +261,7 @@ io.on('connection', (socket) => {
 
     if (polls.has(pollId)) {
       polls.delete(pollId)
-      votos.delete(pollId)
+      votantes.delete(pollId)
       io.emit('poll:deleted', { pollId })
       console.log(`Poll deleted: ${pollId}`)
     }

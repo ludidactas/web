@@ -9,6 +9,11 @@ export interface Encuesta {
   isPublished: boolean
 }
 
+export interface EncuestaHidratada extends Encuesta {
+  puedoVotar?: boolean
+  votoEmitido?: string
+}
+
 export interface CrearEncuesta  {
   pregunta: string
   opciones: string[]

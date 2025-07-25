@@ -5,7 +5,7 @@ import { setupSocketLogging, sleep } from './test-funcs';
 
 // const host = process.env.HOST || 'localhost';
 // const puerto = process.env.PORT && parseInt(process.env.PORT) || 3005;
-const host = 'localhost';
+const host = 'ws.ludidactas.com';
 const puerto = 3005;
 
 console.log(`🔌 Connecting to server at http://${host}:${puerto}...`);

@@ -3,18 +3,10 @@ import type z from "zod"
 import { Encuesta, EncuestaHidratada } from "./encuestas"
 import { extractZodErrorMessages } from "./utils"
 import { pollCreator, pollValidator, voteValidator } from "./validators"
-import { createServer } from 'https'
-import { readFileSync } from 'fs'
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
-const httpsServer = createServer({
-  key: readFileSync("/etc/letsencrypt/live/yourdomain.com/privkey.pem"),
-  cert: readFileSync("/etc/letsencrypt/live/yourdomain.com/fullchain.pem")
-});
-
-
-const io = new Server(httpsServer, {
+const io = new Server({
   cors: {
     origin: "*",
     methods: ["GET", "POST"]

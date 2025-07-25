@@ -3,10 +3,18 @@ import type z from "zod"
 import { Encuesta, EncuestaHidratada } from "./encuestas"
 import { extractZodErrorMessages } from "./utils"
 import { pollCreator, pollValidator, voteValidator } from "./validators"
+import { createServer } from 'https'
+import { readFileSync } from 'fs'
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
-const io = new Server({
+const httpsServer = createServer({
+  key: readFileSync("/etc/letsencrypt/live/yourdomain.com/privkey.pem"),
+  cert: readFileSync("/etc/letsencrypt/live/yourdomain.com/fullchain.pem")
+});
+
+
+const io = new Server(httpsServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
@@ -66,6 +74,8 @@ function id(socket: Socket) {
 io.on('connection', (socket) => {
 
   const userId = id(socket)
+
+  console.log(`Conexión de ${userId}`)
 
   // Functiones de arquitectura, orquestan la ejecución de las otras:
   type Middleware<T extends unknown[]> = (...args: T) => void

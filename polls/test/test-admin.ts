@@ -8,10 +8,10 @@ import { setupSocketLogging, sleep } from './test-funcs';
 const host = 'ws.ludidactas.com';
 const puerto = 3005;
 
-console.log(`🔌 Connecting to server at http://${host}:${puerto}...`);
+console.log(`🔌 Connecting to server at https://${host}...`);
 
 // Connect to your server
-const { socket } = await setupSocketLogging(io(`http://${host}:${puerto}`))
+const { socket } = await setupSocketLogging(io(`wss://${host}`))
 
 // Test functions you can call manually
 function createPoll(pregunta: string, opciones: string[]) {

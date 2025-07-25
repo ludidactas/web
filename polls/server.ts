@@ -58,8 +58,13 @@ function assertPollIsHidden(poll: Encuesta) {
 }
 
 function id(socket: Socket) {
-  return socket.handshake.address
-  return socket.id
+  // En prod usamos el IP forwardeado por nginx
+  const forwarded = socket.handshake.headers['x-forwarded-for']
+  const ip = typeof forwarded === 'string'
+    ? forwarded.split(',')[0].trim()
+    : socket.handshake.address
+
+  return ip
 }
 
 

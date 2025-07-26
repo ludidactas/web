@@ -38,11 +38,11 @@ function assertPollExists(pollId: string) {
 }
 
 function assertPollIsOpen(poll: Encuesta) {
-  if (!poll.isActive) throw new Error('La encuesta ya cerró!')
+  if (!poll.isOpen) throw new Error('La encuesta ya cerró!')
 }
 
 function assertPollIsClosed(poll: Encuesta) {
-  if (poll.isActive) throw new Error('La encuesta ya está abierta!!')
+  if (poll.isOpen) throw new Error('La encuesta ya está abierta!!')
 }
 
 function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string) {
@@ -123,7 +123,7 @@ io.on('connection', (socket) => {
         pregunta: pollData.pregunta,
         opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
         createdAt: new Date().toISOString(),
-        isActive: true,
+        isOpen: true,
         isPublished: false,
       }
 
@@ -190,7 +190,7 @@ io.on('connection', (socket) => {
 
     assertPollIsClosed(poll)
 
-    poll.isActive = true
+    poll.isOpen = true
     io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta abierta: ${poll.pregunta}`)
@@ -207,7 +207,7 @@ io.on('connection', (socket) => {
 
     assertPollIsOpen(poll)
 
-    poll.isActive = false
+    poll.isOpen = false
     io.emit('poll:updated', hidratar(poll))
 
     console.log(`Encuesta cerrada: ${poll.pregunta}`)

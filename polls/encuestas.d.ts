@@ -5,7 +5,7 @@ export interface Encuesta {
   pregunta: string
   opciones: { id: string; texto: string; votos: number }[]
   createdAt: string
-  isActive: boolean
+  isOpen: boolean
   isPublished: boolean
 }
 

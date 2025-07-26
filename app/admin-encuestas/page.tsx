@@ -9,7 +9,7 @@ export default function Page() {
     <EncuestaProvider>
       <Toaster/>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <div className="p-8 w-4/5">
+        <div className="p-2 sm:p-8 w-4/5">
           <EncuestasAdmin />
         </div>
 

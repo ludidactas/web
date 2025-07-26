@@ -49,13 +49,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   return (
     <div className="py-4 max-w-[32em] mx-auto">
       {/* Titulo y opciones */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
         <div className="flex flex-col items-end">
           <span
-            className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
           >
-            {encuesta.isActive ? 'Abierta' : 'Cerrada'}
+            {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
@@ -73,10 +73,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
               'text-slate-300': yaVotado && opcion.id !== seleccion,
             })}
             onClick={() => {
-              if (encuesta.isActive && !yaVotado) setSeleccion(opcion.id)
+              if (encuesta.isOpen && !yaVotado) setSeleccion(opcion.id)
             }}
           >
-            {opcion.texto} {(yaVotado || !encuesta.isActive) && <>- {opcion.votos} votos</>}
+            {opcion.texto} {(yaVotado || !encuesta.isOpen) && <>- {opcion.votos} votos</>}
           </li>
         ))}
       </ul>
@@ -84,7 +84,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
       {/* Acciones */}
       <div className="flex items-center justify-end gap-4 my-2">
         {yaVotado && <p className='text-xs text-slate-400'>Ya votaste</p>}
-        {encuesta.isActive && seleccion && !yaVotado && (
+        {encuesta.isOpen && seleccion && !yaVotado && (
           <button
             className="bg-blue-900 text-white px-4 py-2 rounded"
             onClick={() => {

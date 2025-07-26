@@ -4,7 +4,7 @@ import { es } from 'date-fns/locale'
 import { useState } from 'react'
 import { useEncuesta } from './encuestas-context'
 import { Encuesta } from '@/polls/encuestas'
-import { pollValidator } from '@/polls/validators'
+import { pollBase } from '@/polls/validators'
 import { cn } from '@/lib/utils'
 
 export default function EncuestasAdmin() {
@@ -147,7 +147,7 @@ function AgregarPregunta() {
   const [pregunta, setPregunta] = useState('')
   const [respuestas, setRespuestas] = useState<string[]>(['', ''])
 
-  const { success } = pollValidator.safeParse({ pregunta, opciones: respuestas })
+  const { success } = pollBase.safeParse({ pregunta, opciones: respuestas })
 
   const agregarRespuesta = () => {
     setRespuestas((rs) => [...rs, ''])

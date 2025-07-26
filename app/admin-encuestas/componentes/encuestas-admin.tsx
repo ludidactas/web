@@ -2,10 +2,10 @@
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { useEncuesta } from './encuestas-context'
 import { Encuesta } from '@/polls/encuestas'
 import { pollBase } from '@/polls/validators'
 import { cn } from '@/lib/utils'
+import { useEncuestaAdmin } from './encuestas-admin-context'
 
 export default function EncuestasAdmin() {
   return (
@@ -21,7 +21,7 @@ export default function EncuestasAdmin() {
 }
 
 function Status() {
-  const { socket } = useEncuesta()
+  const { socket } = useEncuestaAdmin()
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between">
       <h1 className="text-3xl">Encuestas</h1>
@@ -35,7 +35,7 @@ function Status() {
 }
 
 function ListaEncuestas() {
-  const { encuestas } = useEncuesta()
+  const { encuestas } = useEncuestaAdmin()
   if (encuestas.length == 0)
     return (
       <div className="h-96 flex flex-col items-center justify-center">
@@ -54,7 +54,7 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuesta()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
 
   const status =
     encuesta.isOpen && encuesta.isPublished
@@ -142,7 +142,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 }
 
 function AgregarPregunta() {
-  const { enviarPregunta, error } = useEncuesta()
+  const { enviarPregunta } = useEncuestaAdmin()
 
   const [pregunta, setPregunta] = useState('')
   const [respuestas, setRespuestas] = useState<string[]>(['', ''])
@@ -226,7 +226,7 @@ function AgregarPregunta() {
       >
         &gt; Enviar pregunta
       </button>
-      {error && <p className="text-xs text-red-900">{error.message}</p>}
+
     </div>
   )
 }

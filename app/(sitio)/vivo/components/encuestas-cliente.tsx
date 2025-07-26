@@ -4,10 +4,10 @@ import { EncuestaHidratada } from '@/polls/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { useEncuesta } from './encuestas-context'
+import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
 export default function EncuestasCliente() {
-  const { socket, encuestas } = useEncuesta()
+  const { socket, encuestas } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -42,7 +42,7 @@ export default function EncuestasCliente() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
-  const { votar, error } = useEncuesta()
+  const { votar } = useEncuestaEstudiante()
   const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id']>(encuesta.votoEmitido)
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
@@ -96,11 +96,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
           </button>
         )}
       </div>
-
-      {/* Error */}
-      {error && <div className="text-red-600 text-sm">{error.message}</div>}
-
-      {/* Footer */}
     </div>
   )
 }

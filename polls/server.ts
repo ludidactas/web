@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io"
 import { conAuth } from "./auth"
 import { conErrorHandling, conUserId } from "./middleware"
 import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, polls, updatePoll, votar } from "./polls"
+import { RolEncuesta } from "./encuestas"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -58,10 +59,11 @@ io.of('/polls/estudiante').on('connection', (socket: Socket) => {
   socket.on('poll:results', safe(({ pollId }) => socket.emit('poll:results', consultarResultados(pollId))))
 })
 
-
-
 io.on('connection', (socket) => {
-  console.log(`Conexión iniciada por ${socket.data.userId}, con handshake:`, socket.handshake, 'y data: ', socket.data)
+  console.log(`Conexión iniciada por ${socket.data.userId}, con auth:`, socket.handshake.auth, 'y data: ', socket.data)
+
+  if (socket.handshake.auth.rol === RolEncuesta.Admin) { socket.join('/polls/admin') }
+  if (socket.handshake.auth.rol === RolEncuesta.Estudiante) { socket.join('/polls/estudiante') }
 
   // Handle disconnection
   socket.on('disconnect', () => {

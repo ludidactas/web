@@ -1,32 +1,24 @@
 'use client'
 
-import { CrearEncuesta, Encuesta } from '@/polls/encuestas'
+import { CrearEncuesta, Encuesta, RolEncuesta } from '@/polls/encuestas'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
-const useEncuestaState = () => {
+const useEncuestaAdminState = () => {
   const [socket, setSocket] = useState<Socket>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
-  const [error, setError] = useState<{ message: string } | null>(null)
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
   }
 
-  // Emitters
+  const conPassword = (payload: any) => ({...payload, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD})
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
-    setError({ message: '' })
-
-    if (!socket || !socket.connected) {
-      setError({ message: 'Socket no conectado' })
-      return
-    }
-
     const nuevaEncuesta: CrearEncuesta = {
       masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD,
       pregunta,
@@ -38,32 +30,27 @@ const useEncuestaState = () => {
 
   /** Postea al server la acción de borrar */
   const borrarPregunta = (encuestaId: string) => {
-    socket.emit('poll:delete', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+    socket.emit('poll:delete', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al server la acción de cerrar */
   const cerrarPregunta = (encuestaId: string) => {
-    socket.emit('poll:close', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+    socket.emit('poll:close', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al server la acción de abrir */
   const abrirPregunta = (encuestaId: string) => {
-    socket.emit('poll:open', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+    socket.emit('poll:open', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al sever la acción de publicar */
   const publicarPregunta = (encuestaId: string) => {
-    socket.emit('poll:publish', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
+    socket.emit('poll:publish', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al sever la acción de publicar */
   const esconderPregunta = (encuestaId: string) => {
-    socket.emit('poll:hide', { masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD, pollId: encuestaId })
-  }
-
-  /** Postea un voto */
-  const votar = (encuestaId: string, opcionId: string) => {
-    socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
+    socket.emit('poll:hide', conPassword({ pollId: encuestaId }))
   }
 
   // Handlers
@@ -94,7 +81,7 @@ const useEncuestaState = () => {
   // Conexión inicial
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
-    setSocket(io(process.env.NEXT_PUBLIC_ENCUESTA_HOST))
+    setSocket(io(process.env.NEXT_PUBLIC_ENCUESTA_HOST, { auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD } }))
   }, [])
 
   // Conectamos el socket a sus handlers
@@ -109,38 +96,31 @@ const useEncuestaState = () => {
     }
   }, [socket])
 
-  // Reseteamos el error en cada udpate (revisar)
-  useEffect(() => {
-    setError({ message: '' })
-  }, [encuestas])
-
   return {
     socket,
     encuestas,
-    error,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,
     abrirPregunta,
     publicarPregunta,
     esconderPregunta,
-    votar,
   }
 }
 
 // Context
-const EncuestaContext = createContext<ReturnType<typeof useEncuestaState> | undefined>(undefined)
+const EncuestaAdminContext = createContext<ReturnType<typeof useEncuestaAdminState> | undefined>(undefined)
 
 // Provider
-export const EncuestaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <EncuestaContext.Provider value={useEncuestaState()}>{children}</EncuestaContext.Provider>
+export const EncuestaAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <EncuestaAdminContext.Provider value={useEncuestaAdminState()}>{children}</EncuestaAdminContext.Provider>
 }
 
 // Hook para usar el contexto de Encuesta
-export const useEncuesta = () => {
-  const context = useContext(EncuestaContext)
+export const useEncuestaAdmin = () => {
+  const context = useContext(EncuestaAdminContext)
   if (!context) {
-    throw new Error('Intentando usar useEncuesta fuera del EncuestaProvider')
+    throw new Error('Intentando usar useEncuestaAdmin fuera del EncuestaAdminProvider')
   }
   return context
 }

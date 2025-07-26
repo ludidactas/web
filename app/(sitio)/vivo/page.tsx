@@ -1,11 +1,11 @@
 'use client'
 
-import EncuestasCliente from '@/app/admin-encuestas/componentes/encuestas-cliente'
-import { EncuestaProvider } from '@/app/admin-encuestas/componentes/encuestas-context'
+import EncuestasCliente from '@/app/(sitio)/vivo/components/encuestas-cliente'
+import { EncuestaEstudianteProvider } from './components/encuestas-estudiante-context'
 
 export default function Page() {
   return (
-    <EncuestaProvider>
+    <EncuestaEstudianteProvider>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <div className="p-8 w-4/5">
           <EncuestasCliente />
@@ -13,6 +13,6 @@ export default function Page() {
 
         <div className="w-full h-24" />
       </div>
-    </EncuestaProvider>
+    </EncuestaEstudianteProvider>
   )
 }

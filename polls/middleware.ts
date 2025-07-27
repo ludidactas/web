@@ -20,23 +20,3 @@ export const conErrorHandling = (socket: Socket) =>
     }
   }
 
-/** 
- * Función para derivar el id del socket. Por ahora usa la IP del cliente. 
- * 
- * En el futuro vamos a establecer una sesión de cookie/localStorage. 
- * Ver https://socket.io/get-started/private-messaging-part-2/.
- */
-export function userId(socket: Socket) {
-  // En prod usamos el IP forwardeado por nginx
-  const forwarded = socket.handshake.headers['x-forwarded-for']
-  const ip = typeof forwarded === 'string'
-    ? forwarded.split(',')[0].trim()
-    : socket.handshake.address
-
-  return ip
-}
-
-export const conUserId = (socket: Socket, next: () => void) => { 
-  socket.data.userId = userId(socket)
-  next()
-}

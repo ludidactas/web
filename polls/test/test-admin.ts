@@ -15,7 +15,7 @@ const { socket } = await setupSocketLogging(io(`wss://${host}`))
 
 // Test functions you can call manually
 function createPoll(pregunta: string, opciones: string[]) {
-  socket.emit('poll:create', { pregunta, opciones, masterPassword: 'dificildeaveriguar' });
+  socket.emit('poll:create', { pregunta, opciones, password: 'dificildeaveriguar' });
 }
 
 function closePoll(pollId: number) {

@@ -20,8 +20,8 @@ export const hidratar = (poll: Encuesta, uid: string): EncuestaHidratada => {
   }
 }
 
-/** Devuelve la lista de encuestas activas hidratadas para un user  */
-export const hidratadas = (uid: string) => Array.from(polls.values()).map(poll => hidratar(poll, uid))
+/** Devuelve la lista de encuestas publicadas hidratadas para un user  */
+export const hidratadas = (uid: string) => Array.from(polls.values()).filter(e => e.isPublished).map(poll => hidratar(poll, uid))
 
 // Assertions para validar los eventos
 

@@ -6,7 +6,7 @@ export const pollBase = z.object({
 })
 
 export const pollCreator = pollBase.extend({
-  masterPassword: z.string().min(1, "La contraseña maestra es obligatoria"),
+  password: z.string().min(1, "La contraseña maestra es obligatoria"),
 });
 
 export const voteValidator = z.object({

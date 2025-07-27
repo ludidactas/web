@@ -17,7 +17,7 @@ export interface EncuestaHidratada extends Encuesta {
 export interface CrearEncuesta  {
   pregunta: string
   opciones: string[]
-  masterPassword: string
+  password: string
 }
 
 export enum RolEncuesta {

@@ -7,16 +7,20 @@ import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
 export default function EncuestasCliente() {
-  const { socket, encuestas } = useEncuestaEstudiante()
+  const { socket, encuestas, session } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
     <div className="bg-white p-8 max-w-[54em] mx-auto border-x">
-
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl">Encuestas</h1>
+        <div>
+          <h1 className="text-3xl">Encuestas</h1>
+          <p className="text-xs text-slate-500">
+            [{session?.sessionId}] {session?.rol}, {session?.username} ({session?.userId}) - {session?.userIp}
+          </p>
+        </div>
         {socket?.connected ? (
           <span className="text-emerald-700 animate-pulse">Conectado</span>
         ) : (

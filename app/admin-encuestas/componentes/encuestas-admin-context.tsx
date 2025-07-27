@@ -1,6 +1,7 @@
 'use client'
 
 import { CrearEncuesta, Encuesta, RolEncuesta } from '@/polls/encuestas'
+import { PollsSession } from '@/polls/session'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
@@ -10,17 +11,18 @@ import { toast } from 'sonner'
 const useEncuestaAdminState = () => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
+  const [session, setSession] = useState<PollsSession | null>(null)
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
   }
 
-  const conPassword = (payload: any) => ({ ...payload, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD })
+  const conPassword = (payload: any) => ({ ...payload, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD })
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
     const nuevaEncuesta: CrearEncuesta = {
-      masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD!,
+      password: process.env.NEXT_PUBLIC_ENCUESTA_PWD!,
       pregunta,
       opciones: respuestas,
     }
@@ -81,9 +83,11 @@ const useEncuestaAdminState = () => {
   // Conexión inicial
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
+
+    // Conectamos al namespace de admin con la contraseña
     setSocket(
       io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
-        auth: { rol: RolEncuesta.Admin, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
+        auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
       })
     )
   }, [])
@@ -92,6 +96,17 @@ const useEncuestaAdminState = () => {
   useEffect(() => {
     if (socket) {
       setupSocketLogging(socket)
+
+      socket.on('session:opened', ({ sessionId, userId, userIp, username, rol }: PollsSession) => {
+        console.log(`Sesión abierta: ${sessionId} para ${username} (${userId}) desde ${userIp} con rol ${rol}`)
+
+        // Guardamos el id de sesión para las siguientes conexiones
+        socket.auth = { sessionId }
+
+        // Local state para verla en pantalla
+        setSession({ sessionId, userId, userIp, username, rol })
+      })
+      
       socket.on('polls:list', setEncuestas)
       socket.on('poll:error', showError)
       socket.on('poll:updated', updateEncuesta)
@@ -103,6 +118,7 @@ const useEncuestaAdminState = () => {
   return {
     socket,
     encuestas,
+    session,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,

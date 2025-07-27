@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io"
-import { conAuth } from "./auth"
-import { conErrorHandling, conUserId } from "./middleware"
-import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, hidratar, polls, updatePoll, votarUser } from "./polls"
 import { Encuesta } from "./encuestas"
+import { conErrorHandling } from "./middleware"
+import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, hidratar, polls, updatePoll, votarUser } from "./polls"
+import { conSession, esAdmin } from "./session"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -29,12 +29,12 @@ const bradcastPoll = (event: string, poll: Encuesta) => {
 }
 
 // Acciones Polls Admin
-io.of('/polls/admin').use(conUserId).use(conAuth).on('connection', (socket: Socket) => {
+io.of('/polls/admin').use(conSession).use(esAdmin).on('connection', (socket: Socket) => {
   const safe = conErrorHandling(socket)
 
   console.log(`Admin conectado: ${socket.data.userId}`)
 
-  // Al conectarse el admin, le enviamos la lista de encuestas activas
+  // Al conectarse el admin, le enviamos la lista de encuestas
   socket.emit('polls:list', Array.from(polls.values()))
 
   // Admin puede crear una encuesta
@@ -61,7 +61,7 @@ io.of('/polls/admin').use(conUserId).use(conAuth).on('connection', (socket: Sock
 })
 
 // Namespace para polls
-io.of('/polls/estudiante').use(conUserId).on('connection', (socket: Socket) => {
+io.of('/polls/estudiante').use(conSession).on('connection', (socket: Socket) => {
   const safe = conErrorHandling(socket)
 
   console.log(`Estudiante conectado: ${socket.data.userId}`)

@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io"
 import { conAuth } from "./auth"
 import { conErrorHandling, conUserId } from "./middleware"
-import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, polls, updatePoll, votar } from "./polls"
-import { RolEncuesta } from "./encuestas"
+import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, hidratar, polls, updatePoll, votarUser } from "./polls"
+import { Encuesta } from "./encuestas"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -13,62 +13,72 @@ const io = new Server({
   }
 })
 
-// Middleware de userId
-io.use(conUserId)
+/** Envía a estudiantes y admin */
+const broadcast = (event: string, data: unknown) => {
+  io.of('/polls/admin').emit(event, data)
+  io.of('/polls/estudiante').emit(event, data)
+}
 
-// Middleware de admin
-io.of('/admin').use(conAuth)
+/** Envía a estudiantes y admin  */
+const bradcastPoll = (event: string, poll: Encuesta) => {
+  io.of('/polls/admin').emit(event, poll)
+  io.of('/polls/estudiante').sockets.forEach((socketEstudiante) => {
+    const hydratedPoll = hidratar(poll, socketEstudiante.data.userId)
+    socketEstudiante.emit(event, hydratedPoll)
+  })
+}
 
 // Acciones Polls Admin
-io.of('/polls/admin').on('connection', (socket: Socket) => {
+io.of('/polls/admin').use(conUserId).use(conAuth).on('connection', (socket: Socket) => {
   const safe = conErrorHandling(socket)
+
+  console.log(`Admin conectado: ${socket.data.userId}`)
 
   // Al conectarse el admin, le enviamos la lista de encuestas activas
   socket.emit('polls:list', Array.from(polls.values()))
 
   // Admin puede crear una encuesta
-  socket.on('poll:create', safe((poll: unknown) => { crearPoll(poll); io.emit('poll:created', poll) }))
+  socket.on('poll:create', safe((poll: unknown) => {
+    bradcastPoll('poll:created', crearPoll(poll))
+  }))
 
   // Admin puede consultar los votantes de una encuesta
-  socket.on('poll:votantes', safe(({ pollId }) => { socket.emit('poll:votantes', { votantes: consultarVotantes({ pollId }) }) }))
+  socket.on('poll:votantes', safe(({ pollId }) => {
+    socket.emit('poll:votantes', { votantes: consultarVotantes({ pollId }) })
+  }))
 
   // Admin puede updatear una encuesta
-  socket.on('poll:open', safe(({ pollId }) => io.emit('poll:updated', updatePoll(pollId, { isOpen: true }))))
-  socket.on('poll:close', safe(({ pollId }) => io.emit('poll:updated', updatePoll(pollId, { isOpen: false }))))
-  socket.on('poll:publish', safe(({ pollId }) => io.emit('poll:updated', updatePoll(pollId, { isPublished: true }))))
-  socket.on('poll:hide', safe(({ pollId }) => io.emit('poll:updated', updatePoll(pollId, { isPublished: false }))))
+  socket.on('poll:open', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: true }))))
+  socket.on('poll:close', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: false }))))
+  socket.on('poll:publish', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: true }))))
+  socket.on('poll:hide', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: false }))))
 
   // Admin puede borrar
   socket.on('poll:delete', safe(({ pollId }) => {
     deletePoll({ pollId })
-    io.emit('poll:deleted', { pollId })
+    broadcast('poll:deleted', { pollId })
   }))
 })
 
 // Namespace para polls
-io.of('/polls/estudiante').on('connection', (socket: Socket) => {
+io.of('/polls/estudiante').use(conUserId).on('connection', (socket: Socket) => {
   const safe = conErrorHandling(socket)
+
+  console.log(`Estudiante conectado: ${socket.data.userId}`)
 
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', hidratadas(socket.data.userId))
 
-  // Estudiantes votan. Broadcasteamos la poll updateada
-  socket.on('poll:vote', safe(() => { io.emit('poll:updated', votar(socket.data.userId)) }))
+  // Estudiantes votan. Broadcasteamos la poll updateada.
+  const votar = votarUser(socket.data.userId)
+  socket.on('poll:vote', safe(({ pollId, optionId }) => {
+    bradcastPoll('poll:updated', votar({pollId, optionId }))
+  }))
 
   // Estudiantes pueden consultar los resultados de una encuesta.
-  socket.on('poll:results', safe(({ pollId }) => socket.emit('poll:results', consultarResultados(pollId))))
-})
-
-io.on('connection', (socket) => {
-  console.log(`Conexión iniciada por ${socket.data.userId}, con auth:`, socket.handshake.auth, 'y data: ', socket.data)
-
-  if (socket.handshake.auth.rol === RolEncuesta.Admin) { socket.join('/polls/admin') }
-  if (socket.handshake.auth.rol === RolEncuesta.Estudiante) { socket.join('/polls/estudiante') }
-
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log(`Se desconectó ${socket.id}`)
-  })
+  socket.on('poll:results', safe(({ pollId }) => {
+    socket.emit('poll:results', consultarResultados(pollId))
+  }))
 })
 
 // Start the server

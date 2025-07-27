@@ -15,7 +15,7 @@ const useEncuestaAdminState = () => {
     toast.error(message)
   }
 
-  const conPassword = (payload: any) => ({...payload, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD})
+  const conPassword = (payload: any) => ({ ...payload, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD })
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
@@ -81,7 +81,11 @@ const useEncuestaAdminState = () => {
   // Conexión inicial
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
-    setSocket(io(process.env.NEXT_PUBLIC_ENCUESTA_HOST, { auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD } }))
+    setSocket(
+      io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
+        auth: { rol: RolEncuesta.Admin, masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
+      })
+    )
   }, [])
 
   // Conectamos el socket a sus handlers

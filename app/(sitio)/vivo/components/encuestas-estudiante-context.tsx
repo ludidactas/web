@@ -48,7 +48,9 @@ const useEncuestaEstudianteState = () => {
   // Conexión inicial
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
-    setSocket(io(process.env.NEXT_PUBLIC_ENCUESTA_HOST, {auth: { rol: RolEncuesta.Estudiante }}))
+    setSocket(
+      io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/estudiante`, { auth: { rol: RolEncuesta.Estudiante } })
+    )
   }, [])
 
   // Conectamos el socket a sus handlers

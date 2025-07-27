@@ -74,6 +74,8 @@ export const crearPoll = (pollData: z.infer<typeof pollCreator>) => {
   votos.set(poll.id, new Map())
 
   console.log(`Encuesta creada: ${poll.pregunta}`)
+
+  return poll
 }
 
 export const consultarVotantes = ({ pollId }: { pollId: string }) => {
@@ -102,11 +104,12 @@ export const updatePoll = (pollId: string, update: Partial<Encuesta>) => {
   if (update.isPublished === true) assertPollIsHidden(poll)
   if (update.isPublished === false) assertPollIsPublished(poll)
 
-  polls.set(pollId, merge(poll, update) as Encuesta)
+  const nueva = merge(poll, update) as Encuesta
+  polls.set(pollId, nueva)
   console.log(`Encuesta updateada: ${poll.pregunta}`)
-  // console.log(`(Updatea: ${update}`)
+  // console.log(`(Update:`, update, `)`)
 
-  return poll
+  return nueva
 }
 
 export const deletePoll = ({ pollId }: { pollId: string }) => {
@@ -117,15 +120,15 @@ export const deletePoll = ({ pollId }: { pollId: string }) => {
   if (polls.has(pollId)) {
     polls.delete(pollId)
     votantes.delete(pollId)
-    console.log(`Poll deleted: ${pollId}`)
+    console.log(`Encuesta borrada: ${pollId}`)
   }
 }
 
 // Acciones de estudiante:
 
-export const votar = (uid: string) => (voteData: z.infer<typeof voteValidator>) => {
+export const votarUser = (uid: string) => (voteData: z.infer<typeof voteValidator>) => {
     const { pollId, optionId } = voteData
-
+    console.log(`Request de voto: Encuesta ${pollId}, opción ${optionId}, usuario ${uid}`)
     const poll = polls.get(pollId)
     const personasQueYaVotaron = votantes.get(pollId)
     const votosEmitidos = votos.get(pollId)

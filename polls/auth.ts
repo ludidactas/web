@@ -17,6 +17,6 @@ export function assertValidPassword(pwd: string) {
  * Auth middleware.
  */
 export function conAuth(socket: Socket, next: () => void) {
-  assertValidPassword(socket.handshake.auth.masterPassword)
-  next()
+  if (socket.handshake.auth.masterPassword === masterPwd) next()
+  else { socket.emit('poll:error', { message: 'Contraseña maestra incorrecta' }); socket.disconnect(true) }
 }

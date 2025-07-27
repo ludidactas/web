@@ -19,7 +19,7 @@ const broadcast = (event: string, data: unknown) => {
   io.of('/polls/estudiante').emit(event, data)
 }
 
-/** Envía a estudiantes y admin  */
+/** Envía a admin y a estudiantes una poll pero hidratada para cada quien  */
 const bradcastPoll = (event: string, poll: Encuesta) => {
   io.of('/polls/admin').emit(event, poll)
   io.of('/polls/estudiante').sockets.forEach((socketEstudiante) => {

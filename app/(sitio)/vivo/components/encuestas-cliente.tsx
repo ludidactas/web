@@ -43,7 +43,7 @@ export default function EncuestasCliente() {
 
 function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const { votar } = useEncuestaEstudiante()
-  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id']>(encuesta.votoEmitido)
+  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(encuesta.votoEmitido)
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
   return (

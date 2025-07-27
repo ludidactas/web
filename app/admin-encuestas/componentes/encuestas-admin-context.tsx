@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
 const useEncuestaAdminState = () => {
-  const [socket, setSocket] = useState<Socket>(null)
+  const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
 
   const showError = ({ message }: { message: string }) => {
@@ -20,37 +20,37 @@ const useEncuestaAdminState = () => {
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
     const nuevaEncuesta: CrearEncuesta = {
-      masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD,
+      masterPassword: process.env.NEXT_PUBLIC_ENCUESTA_PWD!,
       pregunta,
       opciones: respuestas,
     }
 
-    socket.emit('poll:create', nuevaEncuesta)
+    socket!.emit('poll:create', nuevaEncuesta)
   }
 
   /** Postea al server la acción de borrar */
   const borrarPregunta = (encuestaId: string) => {
-    socket.emit('poll:delete', conPassword({ pollId: encuestaId }))
+    socket!.emit('poll:delete', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al server la acción de cerrar */
   const cerrarPregunta = (encuestaId: string) => {
-    socket.emit('poll:close', conPassword({ pollId: encuestaId }))
+    socket!.emit('poll:close', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al server la acción de abrir */
   const abrirPregunta = (encuestaId: string) => {
-    socket.emit('poll:open', conPassword({ pollId: encuestaId }))
+    socket!.emit('poll:open', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al sever la acción de publicar */
   const publicarPregunta = (encuestaId: string) => {
-    socket.emit('poll:publish', conPassword({ pollId: encuestaId }))
+    socket!.emit('poll:publish', conPassword({ pollId: encuestaId }))
   }
 
   /** Postea al sever la acción de publicar */
   const esconderPregunta = (encuestaId: string) => {
-    socket.emit('poll:hide', conPassword({ pollId: encuestaId }))
+    socket!.emit('poll:hide', conPassword({ pollId: encuestaId }))
   }
 
   // Handlers

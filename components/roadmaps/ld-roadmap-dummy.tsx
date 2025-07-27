@@ -30,7 +30,7 @@ function LdRoadmapDummy() {
   const setupCorrio = useRef(false)
 
   // Función setup
-  const setup = useCallback<ComponentProps<typeof LdSvg<Id>>['setup']>((nodos) => {
+  const setup = useCallback<NonNullable<ComponentProps<typeof LdSvg<Id>>['setup']>>((nodos) => {
     if (setupCorrio.current) return
 
     Object.entries(nodos).forEach(([id, nodo]) => {
@@ -44,7 +44,7 @@ function LdRoadmapDummy() {
         (id.startsWith('nodo.') || id.startsWith('camino.')) &&
         (id.endsWith('.activo') || id.endsWith('.inactivo'))
       ) {
-        const parentId = nodo.parent().id() as Id
+        const parentId = nodo.parent()!.id() as Id
 
         // Create a handler that closes over the current parentId
         const handleClick = () => {
@@ -63,10 +63,10 @@ function LdRoadmapDummy() {
     setupCorrio.current = true
   }, []) // Empty dependency array
 
-  const animation = useCallback<ComponentProps<typeof LdSvg<Id>>['animation']>(
+  const animation = useCallback<NonNullable<ComponentProps<typeof LdSvg<Id>>['animation']>>(
     (nodos) => {
       Object.entries(nodos).forEach(([id, nodo]) => {
-        const parentId = nodo.parent().id() as Id
+        const parentId = nodo.parent()!.id() as Id
 
         // Si está activo, lo mostramos, corta
         if (id.startsWith('nodo.')) {

@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
 const useEncuestaEstudianteState = () => {
-  const [socket, setSocket] = useState<Socket>(null)
+  const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
 
   const showError = ({ message }: { message: string }) => {
@@ -17,7 +17,7 @@ const useEncuestaEstudianteState = () => {
 
   /** Postea un voto */
   const votar = (encuestaId: string, opcionId: string) => {
-    socket.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
+    socket!.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
   }
 
   // Handlers

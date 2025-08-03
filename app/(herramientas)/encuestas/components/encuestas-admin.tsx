@@ -22,7 +22,10 @@ function Status() {
   const { socket } = useEncuesta()
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-3xl">Encuestas</h1>
+      <div>
+        <h1 className="text-3xl">Encuestas</h1>
+        <p></p>
+      </div>
       {socket?.connected ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (

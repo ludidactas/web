@@ -1,4 +1,5 @@
-import { auth, signIn, signOut } from '@/app/auth'
+import { auth } from '@/app/auth'
+import { SignIn, SignOut } from './components/botones'
 
 export default async function LoginPage() { 
   const session = await auth()
@@ -19,28 +20,3 @@ export default async function LoginPage() {
   )
 }
 
-export function SignIn() {
-  return (
-    <form
-      action={async () => {
-        'use server'
-        await signIn('google')
-      }}
-    >
-      <button className="p-2 border border-black border-b-2 border-r-2" type="submit">Conectarse con Google</button>
-    </form>
-  )
-}
-
-export function SignOut() {
-  return (
-    <form
-      action={async () => {
-        'use server'
-        await signOut()
-      }}
-    >
-      <button className="p-2 border border-black border-b-2 border-r-2" type="submit">Cerrar sesión</button>
-    </form>
-  )
-}

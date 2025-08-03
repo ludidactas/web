@@ -6,7 +6,7 @@ import { es } from 'date-fns/locale'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
-export default function EncuestasCliente() {
+export default function EncuestasEstudiante() {
   const { socket, encuestas, session } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)

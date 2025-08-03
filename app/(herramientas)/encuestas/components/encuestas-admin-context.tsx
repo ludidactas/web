@@ -85,11 +85,17 @@ const useEncuestaAdminState = () => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
 
     // Conectamos al namespace de admin con la contraseña
-    setSocket(
-      io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
-        auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
-      })
-    )
+    try {
+      setSocket(
+        io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
+          auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
+        })
+      )
+    } catch (err) { 
+      console.error('Error al conectar con el servidor de encuestas:', err)
+      return 
+    }
+
   }, [])
 
   // Conectamos el socket a sus handlers

@@ -3,7 +3,7 @@ import Link from 'next/link'
 export default function Privacidad() {
   return (
     <div className="max-w-[640px] flex flex-col gap-4 mt-12 mb-24">
-      <h1 className="text-2xl">Política de Privacidad</h1>
+      <h1 className="text-4xl">Política de Privacidad</h1>
       <p>¿Quiénes son ustedes? ¿Por qué tengo que registrarme? ¿Qué información solicitan y para qué la van a usar? </p>
       <p>
         <b>Ludidactas</b> es un laboratorio didáctico contemporáneo donde, entre otras actividades, diseñamos e

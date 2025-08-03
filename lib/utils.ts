@@ -5,3 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function nombre(username: string) {
+  if (username.includes(' ')) return username.split(' ')[0]
+  return username
+}

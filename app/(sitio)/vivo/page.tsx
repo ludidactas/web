@@ -1,6 +1,6 @@
 'use client'
 
-import EncuestasCliente from '@/app/(sitio)/vivo/components/encuestas-cliente'
+import EncuestasCliente from '@/app/(herramientas)/encuestas/components/encuestas-cliente'
 import { EncuestaEstudianteProvider } from './components/encuestas-estudiante-context'
 
 export default function Page() {

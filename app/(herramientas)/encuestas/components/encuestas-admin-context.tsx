@@ -1,6 +1,6 @@
 'use client'
 
-import { CrearEncuesta, Encuesta, RolEncuesta } from '@/polls/encuestas'
+import { CrearEncuesta, Encuesta } from '@/polls/encuestas'
 import { PollsSession } from '@/polls/session'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
 import React, { createContext, useContext, useEffect, useState } from 'react'
@@ -82,20 +82,25 @@ const useEncuestaAdminState = () => {
 
   // Conexión inicial
   useEffect(() => {
-    console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
+    console.log(`Obteniendo token del server...`)
 
-    // Conectamos al namespace de admin con la contraseña
-    try {
-      setSocket(
-        io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
-          auth: { rol: RolEncuesta.Admin, password: process.env.NEXT_PUBLIC_ENCUESTA_PWD },
-        })
-      )
-    } catch (err) { 
-      console.error('Error al conectar con el servidor de encuestas:', err)
-      return 
-    }
+    fetch('/api/auth/token')
+      .then((res) => res.json())
+      .then(({ token }) => {
+        console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST} con token ${JSON.stringify(token)}...`)
 
+        // Conectamos al namespace de admin con la contraseña
+        try {
+          setSocket(
+            io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
+              auth: { token },
+            })
+          )
+        } catch (err) {
+          console.error('Error al conectar con el servidor de encuestas:', err)
+          return
+        }
+      })
   }, [])
 
   // Conectamos el socket a sus handlers
@@ -112,7 +117,7 @@ const useEncuestaAdminState = () => {
         // Local state para verla en pantalla
         setSession({ sessionId, userId, userIp, username, rol })
       })
-      
+
       socket.on('polls:list', setEncuestas)
       socket.on('poll:error', showError)
       socket.on('poll:updated', updateEncuesta)

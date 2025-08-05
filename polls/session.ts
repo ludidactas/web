@@ -2,12 +2,14 @@ import { randomUUID } from "crypto"
 import { Socket } from "socket.io"
 import { RolEncuesta } from "./encuestas"
 import { closeWithError } from "./utils"
+import jwt from 'jsonwebtoken'
+
 
 // Cargamos la password maestra desde las variables de entorno. 
 // Si no está seteada, tiramos un error para que no arranque el server.
-const masterPwd = process.env.POLLS_ADMIN_PASS
-if (!masterPwd) {
-  console.error("Error: POLLS_ADMIN_PASS no está seteada.")
+const secret = process.env.NEXTAUTH_SECRET
+if (!secret) {
+  console.error("Error: NEXTAUTH_SECRET no está seteada.")
   process.exit(1)
 }
 
@@ -64,21 +66,38 @@ export const openSession = (socket: Socket, rol: RolEncuesta, username: string) 
   socket.emit("session:opened", session)
 }
 
-const login = (socket: Socket) => {
-  const authData = socket.handshake.auth
+/** Autentica un JWT emitido por el servidor Next */
+const login = async (socket: Socket) => {
+  const token = socket.handshake.auth.token
 
-  console.log(`Efectuando login con `, authData)
-
-  // Admin
-  if (authData.rol === RolEncuesta.Admin) {
-    if (!authData.password) closeWithError(socket, 'Contraseña maestra requerida para rol Admin')
-    if (authData.password !== process.env.NEXT_PUBLIC_ENCUESTA_PWD) closeWithError(socket, 'Contraseña maestra incorrecta')
-    openSession(socket, RolEncuesta.Admin, authData.username || 'Admin')
+  // Si no hay token, abrimos una sesión anónima (de estudiante)
+  if (!token) { 
+    openSession(socket, RolEncuesta.Estudiante, 'Anónimo')
+    return
   }
 
-  // Estudiante
-  else if (authData.rol === RolEncuesta.Estudiante) {
-    openSession(socket, RolEncuesta.Estudiante, authData.username || 'Anónimo')
+  // Si hay token, lo verificamos
+  try {
+    const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string }
+
+    // Verificar que el token no haya expirado
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return closeWithError(socket, 'Sesión expirada')
+    }
+
+    if (!payload) return closeWithError(socket, 'Token de autenticación inválido')
+    if (!payload.email) return closeWithError(socket, 'Token de autenticación inválido. Falta email!')
+
+    socket.data.user = {
+      email: payload.email,
+      name: payload.name,
+    }
+
+    openSession(socket, RolEncuesta.Admin, payload.email)
+
+  } catch (err) {
+    console.error('Error al verificar el token:', err)
+    return closeWithError(socket, 'Token de autenticación inválido')
   }
 
 }
@@ -86,8 +105,6 @@ const login = (socket: Socket) => {
 /** Middleware de sesión */
 export const conSession = (socket: Socket, next: () => void) => {
   const sessionId = socket.handshake.auth.sessionId
-
-  console.log(`Se conectó alguien ${sessionId ? `con sesión ${sessionId}` : 'sin sesión'}`)
 
   // Si ya hay sesión, attacheamos la data al socket y seguimos
   if (sessionId) {
@@ -99,8 +116,6 @@ export const conSession = (socket: Socket, next: () => void) => {
   }
 
   login(socket)
-
-  console.log(`Sesión abierta! Derivando al canal...`)
 
   next()
 }

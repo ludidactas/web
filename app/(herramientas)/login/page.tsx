@@ -14,7 +14,7 @@ export default async function LoginPage() {
     <div className="flex flex-col gap-2 items-center justify-center h-screen">
       <p>Te conectaste con {session.user.email}!</p>
       <p>{session.user.name}</p>
-      <img src={session.user.image} alt="User Avatar" />
+      <img src={session.user.image!} alt="User Avatar" />
       <SignOut />
     </div>
   )

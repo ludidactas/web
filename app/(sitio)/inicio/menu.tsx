@@ -1,5 +1,4 @@
 'use client'
-import { titulo } from '@/components/fonts'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AlignJustify } from 'lucide-react'
 import Link from 'next/link'
@@ -82,7 +81,7 @@ const Menu = () => (
     <div className="block w-10 lg:hidden">
       <MenuMobile />
     </div>
-    <div className={`${titulo.className} text-4xl hidden lg:block`}>
+    <div className="text-4xl hidden lg:block">
       <MenuDesktop />
     </div>
   </>

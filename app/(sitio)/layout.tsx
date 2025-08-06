@@ -1,6 +1,6 @@
 import Textura from '@/components/fx/textura'
 import LogoLema from './inicio/logoLema'
-import { Menu } from 'lucide-react'
+import Menu from './inicio/menu'
 import Footer from './inicio/footer'
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

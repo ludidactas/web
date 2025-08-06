@@ -7,8 +7,8 @@ import { Encuesta } from '@/polls/encuestas'
 
 export default function EncuestasAdmin() {
   return (
-    <div className="bg-white p-8 flex flex-col items-center w-full">
-      <div className="w-[40em]">
+    <div className="rounded-xl px-20 flex flex-col items-center w-full">
+      <div className="w-[40em] bg-white p-10  rounded-xl">
         <Status />
         <hr className="invisible py-2" />
         <AgregarPregunta />

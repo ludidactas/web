@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'Ludidactas',
   description: 'Laboratorio didáctico-pedagógico.',
   openGraph: {
-    title: 'Ludidactas - Edudación emergente',
+    title: 'Ludidactas - Educación emergente',
     description: 'Laboratorio didáctico-pedagógico',
     images: ['https://ludidactas.com/img/Compo.png'],
   },

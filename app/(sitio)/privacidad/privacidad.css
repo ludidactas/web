@@ -1,0 +1,41 @@
+h1{
+    font-size: 2.8em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+h2{
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-left: 10px;
+}
+
+h3{
+    margin-top: 10px;
+    margin-left:20px;
+    font-size: large;
+    font-weight: bold;
+}
+
+.politicas > p{
+    @apply pl-6;
+    margin-top: 10px;
+}
+
+ul{
+    list-style: disc;
+    margin-left:40px;
+    margin-top: 10px;
+
+}
+
+span{
+    font-size: larger;
+    text-align: center;
+    margin-left: 20px;
+    margin-top: 30px;
+}
+

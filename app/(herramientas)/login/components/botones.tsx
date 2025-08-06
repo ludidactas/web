@@ -8,7 +8,7 @@ export function SignIn() {
         await signIn('google', { redirectTo: '/encuestas' })
       }}
     >
-      <button className="p-2 border border-black border-b-2 border-r-2" type="submit">
+      <button className="p-2 border rounded-lg border-black border-b-2 border-r-2  hover:text-teal-600 hover:border-teal-600" type="submit">
         Conectarse con Google
       </button>
     </form>
@@ -23,7 +23,7 @@ export function SignOut() {
         await signOut()
       }}
     >
-      <button className="p-2" type="submit">
+      <button className="p-2 border rounded-lg border-black border-b-2 border-r-2 hover:text-teal-600 hover:border-teal-600" type="submit">
         Cerrar sesión
       </button>
     </form>

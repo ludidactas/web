@@ -55,13 +55,13 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
       // Seleccionamos todos los nodos listados en la lista de ids **y slots**
       // y los pasamos por el constructor de SVG (de la librería @svgdotjs/svg.js)
       // Tira error si no encuentra el id
-      const nodosSvg = [...ids, ...Object.keys(slots)].map((id) => [id, crearElem(svgRef.current, id)])
+      const nodosSvg = [...ids, ...Object.keys(slots)].map((id) => [id, crearElem(svgRef.current!, id)])
 
       // Construimos el mapeo de id a nodos
       nodosRef.current = Object.fromEntries(nodosSvg)
 
       // Creamos los slots y los devolvemos
-      const idsSlots = Object.keys(slots).map((id) => [id, crearSlot(svgRef.current, id)])
+      const idsSlots = Object.keys(slots).map((id) => [id, crearSlot(svgRef.current!, id)])
 
       // Lo convertimos en map
       slotsRef.current = Object.fromEntries(idsSlots)
@@ -70,7 +70,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
       // los que no se hayan indicado en la lista de `ids`. (No tiran error).
       svgRef.current.querySelectorAll('[id]').forEach((nodo) => {
         if (!ids.includes(nodo.id as SvgIds)) {
-          nodosRef.current[nodo.id] = SVG(nodo)
+          nodosRef.current![nodo.id as SvgIds] = SVG(nodo)
         }
       })
 
@@ -92,7 +92,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
     }
 
     // Aplicar setup
-    if (setup) setup(nodosRef.current)
+    if (setup && nodosRef.current) setup(nodosRef.current)
 
     // Arrancar main loop
     animationFrameRef.current = requestAnimationFrame(updateAnimation)
@@ -111,7 +111,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
       <SvgComponent className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
       {/* Le chantamos el contenido en los slots */}
       {slotsRef.current &&
-        entries(slotsRef.current).map(([slotId, container]) => createPortal(slots[slotId], container, slotId))}
+        entries(slotsRef.current).map(([slotId, container]) => createPortal(slots[slotId as SvgSlotIds], container, slotId))}
     </>
   )
 }
@@ -145,8 +145,12 @@ function crearSlot(svg: SVGElement, id: string) {
 
   // Reemplazamos
   foreignObject.setAttribute('id', id)
-  nodoTarget.parent().add(SVG(foreignObject) as SvgElement)
-  nodoTarget.parent().removeElement(nodoTarget)
+  const parent = nodoTarget.parent()
+
+  if (!parent) throw new LdSvgError(`El slot con id ${id} no tiene un parent dentro del SVG`)
+
+  parent.add(SVG(foreignObject) as SvgElement)
+  parent.removeElement(nodoTarget)
 
   return foreignObject
 }

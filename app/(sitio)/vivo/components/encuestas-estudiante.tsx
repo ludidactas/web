@@ -4,19 +4,23 @@ import { EncuestaHidratada } from '@/polls/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { useEncuesta } from './encuestas-context'
+import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
-export default function EncuestasCliente() {
-  const { socket, encuestas } = useEncuesta()
+export default function EncuestasEstudiante() {
+  const { socket, encuestas, session } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
     <div className="bg-white p-8 max-w-[54em] mx-auto border-x">
-
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl">Encuestas</h1>
+        <div>
+          <h1 className="text-3xl">Encuestas</h1>
+          <p className="text-xs text-slate-500">
+            [{session?.sessionId}] {session?.rol}, {session?.username} ({session?.userId}) - {session?.userIp}
+          </p>
+        </div>
         {socket?.connected ? (
           <span className="text-emerald-700 animate-pulse">Conectado</span>
         ) : (
@@ -42,20 +46,20 @@ export default function EncuestasCliente() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
-  const { votar, error } = useEncuesta()
-  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id']>(encuesta.votoEmitido)
+  const { votar } = useEncuestaEstudiante()
+  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(encuesta.votoEmitido)
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
   return (
     <div className="py-4 max-w-[32em] mx-auto">
       {/* Titulo y opciones */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h3 className="text-xl">{encuesta.pregunta}</h3>
         <div className="flex flex-col items-end">
           <span
-            className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
           >
-            {encuesta.isActive ? 'Abierta' : 'Cerrada'}
+            {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
@@ -73,10 +77,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
               'text-slate-300': yaVotado && opcion.id !== seleccion,
             })}
             onClick={() => {
-              if (encuesta.isActive && !yaVotado) setSeleccion(opcion.id)
+              if (encuesta.isOpen && !yaVotado) setSeleccion(opcion.id)
             }}
           >
-            {opcion.texto} {(yaVotado || !encuesta.isActive) && <>- {opcion.votos} votos</>}
+            {opcion.texto} {(yaVotado || !encuesta.isOpen) && <>- {opcion.votos} votos</>}
           </li>
         ))}
       </ul>
@@ -84,7 +88,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
       {/* Acciones */}
       <div className="flex items-center justify-end gap-4 my-2">
         {yaVotado && <p className='text-xs text-slate-400'>Ya votaste</p>}
-        {encuesta.isActive && seleccion && !yaVotado && (
+        {encuesta.isOpen && seleccion && !yaVotado && (
           <button
             className="bg-blue-900 text-white px-4 py-2 rounded"
             onClick={() => {
@@ -96,11 +100,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
           </button>
         )}
       </div>
-
-      {/* Error */}
-      {error && <div className="text-red-600 text-sm">{error.message}</div>}
-
-      {/* Footer */}
     </div>
   )
 }

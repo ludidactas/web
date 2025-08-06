@@ -2,8 +2,8 @@
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
-import { useEncuesta } from './encuestas-context'
 import { Encuesta } from '@/polls/encuestas'
+import { useEncuestaAdmin } from './encuestas-admin-context'
 
 export default function EncuestasAdmin() {
   return (
@@ -19,13 +19,10 @@ export default function EncuestasAdmin() {
 }
 
 function Status() {
-  const { socket } = useEncuesta()
+  const { socket } = useEncuestaAdmin()
   return (
     <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl">Encuestas</h1>
-        <p></p>
-      </div>
+      <h1 className="text-3xl">Encuestas</h1>
       {socket?.connected ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
@@ -36,7 +33,7 @@ function Status() {
 }
 
 function ListaEncuestas() {
-  const { encuestas } = useEncuesta()
+  const { encuestas } = useEncuestaAdmin()
   if (encuestas.length == 0)
     return (
       <div className="h-96 flex flex-col items-center justify-center">
@@ -55,7 +52,7 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuesta()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
   return (
     <div className="py-4 mx-auto">
       {/* Titulo y status */}
@@ -63,9 +60,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         <h3 className="text-xl">{encuesta.pregunta}</h3>
         <div className="flex flex-col items-end">
           <span
-            className={`text-sm ${encuesta.isActive ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
           >
-            {encuesta.isActive ? 'Abierta' : 'Cerrada'}
+            {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
@@ -97,12 +94,12 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
 
         {/* Abrir/Cerrar */}
-        {!encuesta.isActive && (
+        {!encuesta.isOpen && (
           <button className="w-32 bg-blue-900 text-white px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
             Abrir
           </button>
         )}
-        {encuesta.isActive && (
+        {encuesta.isOpen && (
           <button className="w-32 bg-blue-100 text-black px-4 py-2 rounded border border-blue-900" onClick={() => cerrarPregunta(encuesta.id)}>
             Cerrar
           </button>
@@ -118,7 +115,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 }
 
 function AgregarPregunta() {
-  const { enviarPregunta, error } = useEncuesta()
+  const { enviarPregunta } = useEncuestaAdmin()
 
   const [pregunta, setPregunta] = useState('')
   const [respuestas, setRespuestas] = useState<string[]>(['', ''])
@@ -183,7 +180,7 @@ function AgregarPregunta() {
       <button className="bg-emerald-900 text-white px-4 py-2 rounded" onClick={postearPregunta}>
         &gt; Enviar pregunta
       </button>
-      {error && <p className="text-xs text-red-900">{error.message}</p>}
+
     </div>
   )
 }

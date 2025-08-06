@@ -5,8 +5,8 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,         // Ojo
-    "noImplicitAny": false,  // Ojo
-    "strictNullChecks": false, // Ojo
+    "noImplicitAny": true,
+    "strictNullChecks": true, 
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

@@ -12,13 +12,15 @@ export default function LdBannerVCabrera({ className }: { className?: string }) 
     </div>
   )
 
+  const ids = ['mano', 'personajes', 'info', 'fondo', 'slot'] as const
+
   return (
     <LdSvg
       SvgComponent={ConvocatoriaSvg}
-      ids={['mano', 'personajes', 'info', 'fondo', 'slot'] as const}
+      ids={ids}
       slots={{ slot: boton } as const}
       animation={(nodos, t) => {
-        ['mano', 'personajes', 'info', 'fondo', 'slot'].forEach((id, idx) => {
+        ids.forEach((id, idx) => {
           const nodo = nodos[id]
           nodo.dy(Math.sin(t / 600 + idx) * 0.04)
         })

@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io"
-import type z from "zod"
-import { Encuesta, EncuestaHidratada } from "./encuestas"
-import { extractZodErrorMessages } from "./utils"
-import { pollCreator, pollValidator, voteValidator } from "./validators"
+import { Encuesta } from "./encuestas"
+import { conErrorHandling } from "./middleware"
+import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, hidratar, polls, updatePoll, votarUser } from "./polls"
+import { conSession, esAdmin } from "./session"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -13,294 +13,95 @@ const io = new Server({
   }
 })
 
-// Polls y votos activos
-const polls = new Map<string, Encuesta>()
-const votantes = new Map<string, Set<string>>()
-const votos = new Map<string, Map<string, string>>()
-
-const masterPwd = process.env.POLLS_ADMIN_PASS
-if (!masterPwd) {
-  console.error("Error: POLLS_ADMIN_PASS no está seteada.")
-  process.exit(1)
+/** Envía a estudiantes y admin */
+const broadcast = (event: string, data: unknown) => {
+  io.of('/polls/admin').emit(event, data)
+  io.of('/polls/estudiante').emit(event, data)
 }
 
-function assertValidPassword(pwd: string) {
-  if (pwd !== masterPwd) throw new Error('Contraseña maestra incorrecta')
-}
-
-function assertValidPoll(pollData: unknown) {
-  const { error } = pollValidator.safeParse(pollData)
-  if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
-}
-
-function assertPollExists(pollId: string) {
-  if (!polls.has(pollId)) throw new Error('La encuesta no existe!')
-}
-
-function assertPollIsOpen(poll: Encuesta) {
-  if (!poll.isActive) throw new Error('La encuesta ya cerró!')
-}
-
-function assertPollIsClosed(poll: Encuesta) {
-  if (poll.isActive) throw new Error('La encuesta ya está abierta!!')
-}
-
-function assertElUsuarioNoVotoTodavia(poll: Encuesta, user: string) {
-  if (votantes.get(poll.id).has(user)) throw new Error('Ya votaste en esta encuesta')
-}
-
-function assertPollIsPublished(poll: Encuesta) {
-  if (!poll.isPublished) throw new Error('La encuesta no está publicada!')
-}
-
-function assertPollIsHidden(poll: Encuesta) {
-  if (poll.isPublished) throw new Error('La encuesta ya está oculta!')
-}
-
-function id(socket: Socket) {
-  // En prod usamos el IP forwardeado por nginx
-  const forwarded = socket.handshake.headers['x-forwarded-for']
-  const ip = typeof forwarded === 'string'
-    ? forwarded.split(',')[0].trim()
-    : socket.handshake.address
-
-  return ip
-}
-
-
-io.on('connection', (socket) => {
-
-  const userId = id(socket)
-
-  console.log(`Conexión de ${userId}`)
-
-  // Functiones de arquitectura, orquestan la ejecución de las otras:
-  type Middleware<T extends unknown[]> = (...args: T) => void
-
-  /** Wrapper de handlers que agrega error handling */
-  function conErrorHandling<T extends unknown[]>(f: Middleware<T>) {
-    return (...args: T) => {
-      try {
-        f(...args)
-      } catch (err: unknown) {
-        if (!(err instanceof Error)) {
-          console.error('Error inesperado:', err)
-          return
-        }
-        console.error('Error en el handler:', err.message)
-        socket.emit('poll:error', { message: err.message })
-      }
-    }
-  }
-
-  /** Recibe una lista de funciones y las corre en secuencia */
-  // const pipeline = <T extends unknown[]>(...middlewares: Middleware<T>[]) => (...args: T): void => {
-  //   for (const middleware of middlewares) middleware(...args)
-  // }
-
-  /** Hidrata una encuesta con la info del cliente */
-  const hidratar = (poll: Encuesta): EncuestaHidratada => ({
-    ...poll,
-    puedoVotar: !votantes.get(poll.id).has(userId),
-    votoEmitido: votantes.get(poll.id).has(userId) ? votos.get(poll.id).get(userId) : undefined
+/** Envía a admin y a estudiantes una poll pero hidratada para cada quien  */
+const bradcastPoll = (event: string, poll: Encuesta) => {
+  io.of('/polls/admin').emit(event, poll)
+  io.of('/polls/estudiante').sockets.forEach((socketEstudiante) => {
+    const hydratedPoll = hidratar(poll, socketEstudiante.data.userId)
+    socketEstudiante.emit(event, hydratedPoll)
   })
+}
 
-  // Le enviamos la lista de encuestas activas al cliente
-  socket.emit('polls:list', Array.from(polls.values()).map(hidratar))
+// Acciones Polls Admin
+io.of('/polls/admin').use(conSession).use(esAdmin).on('connection', (socket: Socket) => {
+  const safe = conErrorHandling(socket)
 
-  // Handle creating a new poll
-  socket.on('poll:create', conErrorHandling(
-    (pollData: z.infer<typeof pollCreator>) => {
+  console.log(`Admin conectado: ${socket.data.userId}`)
 
-      console.log(`Request de creación de `, pollData)
+  // Al conectarse el admin, le enviamos la lista de encuestas
+  socket.emit('polls:list', Array.from(polls.values()))
 
-      assertValidPassword(pollData.masterPassword)
-      assertValidPoll(pollData)
-
-      // La creamos
-      const poll: Encuesta = {
-        id: Date.now().toString(),
-        pregunta: pollData.pregunta,
-        opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
-        createdAt: new Date().toISOString(),
-        isActive: true,
-        isPublished: false,
-      }
-
-      // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
-      polls.set(poll.id, poll)
-      votantes.set(poll.id, new Set())
-      votos.set(poll.id, new Map())
-
-      // La broadcasteamos
-      io.emit('poll:created', poll)
-
-      console.log(`Encuesta creada: ${poll.pregunta}`)
-    }
-  )
-  )
-
-  // Handle voting on a poll
-  socket.on('poll:vote', conErrorHandling((voteData: z.infer<typeof voteValidator>) => {
-    const { pollId, optionId } = voteData
-
-    const poll = polls.get(pollId)
-    const personasQueYaVotaron = votantes.get(pollId)
-    const votosEmitidos = votos.get(pollId)
-
-    // Validamos
-    assertPollExists(pollId)
-    assertPollIsOpen(poll)
-    assertElUsuarioNoVotoTodavia(poll, userId) // Cambiar a socket.handshake.ip?
-
-    // Guardamos el voto
-    poll.opciones[optionId].votos++
-    personasQueYaVotaron.add(userId)
-    votosEmitidos.set(userId, optionId)
-
-    // Broadcasteamos la poll updateada
-    io.emit('poll:updated', hidratar(poll))
-
-    console.log(`Voto grabado: Encuesta ${pollId}, opción ${optionId}`)
+  // Admin puede crear una encuesta
+  socket.on('poll:create', safe((poll: unknown) => {
+    bradcastPoll('poll:created', crearPoll(poll))
   }))
 
-  socket.on('poll:votantes', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
-
-    const poll = polls.get(pollId)
-    const votantesSet = votantes.get(pollId)
-
-    if (poll && votantesSet) {
-      const votantesList = Array.from(votantesSet).map(user => ({
-        userId: user,
-        voto: votos.get(pollId).get(user)
-      }))
-      socket.emit('poll:votantes', { pollId, votantes: votantesList })
-    }
+  // Admin puede consultar los votantes de una encuesta
+  socket.on('poll:votantes', safe(({ pollId }) => {
+    socket.emit('poll:votantes', { votantes: consultarVotantes({ pollId }) })
   }))
 
-  socket.on('poll:open', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
+  // Admin puede updatear una encuesta
+  socket.on('poll:open', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: true }))))
+  socket.on('poll:close', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: false }))))
+  socket.on('poll:publish', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: true }))))
+  socket.on('poll:hide', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: false }))))
 
-    // Validamos
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
+  // Admin puede borrar
+  socket.on('poll:delete', safe(({ pollId }) => {
+    deletePoll({ pollId })
+    broadcast('poll:deleted', { pollId })
+  }))
+})
 
-    const poll = polls.get(pollId)
+// Namespace para polls
+io.of('/polls/estudiante').use(conSession).on('connection', (socket: Socket) => {
+  const safe = conErrorHandling(socket)
 
-    assertPollIsClosed(poll)
+  console.log(`Estudiante conectado: ${socket.data.userId}`)
 
-    poll.isActive = true
-    io.emit('poll:updated', hidratar(poll))
+  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
+  socket.emit('polls:list', hidratadas(socket.data.userId))
 
-    console.log(`Encuesta abierta: ${poll.pregunta}`)
+  // Estudiantes votan. Broadcasteamos la poll updateada.
+  const votar = votarUser(socket.data.userId)
+  socket.on('poll:vote', safe(({ pollId, optionId }) => {
+    bradcastPoll('poll:updated', votar({pollId, optionId }))
   }))
 
-  // Handle closing a poll
-  socket.on('poll:close', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
-
-    // Validamos
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
-
-    const poll = polls.get(pollId)
-
-    assertPollIsOpen(poll)
-
-    poll.isActive = false
-    io.emit('poll:updated', hidratar(poll))
-
-    console.log(`Encuesta cerrada: ${poll.pregunta}`)
-  }))
-
-  // Handle closing a poll
-  socket.on('poll:publish', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
-
-    console.log(`Request de publicación de encuesta ${pollId}`)
-
-    // Validamos
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
-
-    const poll = polls.get(pollId)
-
-    assertPollIsHidden(poll)
-
-    poll.isPublished = true
-    io.emit('poll:updated', hidratar(poll))
-
-    console.log(`Encuesta publicada: ${poll.pregunta}`)
-  }))
-
-  // Handle closing a poll
-  socket.on('poll:hide', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
-
-    console.log(`Request de ocultación de encuesta ${pollId}`)
-
-    // Validamos
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
-
-    const poll = polls.get(pollId)
-
-    assertPollIsPublished(poll)
-
-    poll.isPublished = false
-    io.emit('poll:updated', hidratar(poll))
-
-    console.log(`Encuesta ocultada: ${poll.pregunta}`)
-  }))
-
-  // GET poll
-  socket.on('poll:results', conErrorHandling((pollId) => {
-    const poll = polls.get(pollId)
-    if (poll) {
-      socket.emit('poll:results', hidratar(poll))
-    }
-  }))
-
-  // DELETE poll
-  socket.on('poll:delete', conErrorHandling(({ pollId, masterPassword }: { pollId: string, masterPassword: string }) => {
-
-    // Validamos
-    assertValidPassword(masterPassword)
-    assertPollExists(pollId)
-
-    if (polls.has(pollId)) {
-      polls.delete(pollId)
-      votantes.delete(pollId)
-      io.emit('poll:deleted', { pollId })
-      console.log(`Poll deleted: ${pollId}`)
-    }
-  }))
-
-  // Handle disconnection
-  socket.on('disconnect', conErrorHandling(() => {
-    console.log(`Se desconectó ${socket.id}`)
+  // Estudiantes pueden consultar los resultados de una encuesta.
+  socket.on('poll:results', safe(({ pollId }) => {
+    socket.emit('poll:results', consultarResultados(pollId))
   }))
 })
 
 // Start the server
 io.listen(PORT)
 
-console.log(`🚀 Live Polls server running on port ${PORT}`)
+console.log(`🚀 Servidor de polls corriendo en el puerto ${PORT}`)
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n📡 Shutting down server...')
+  console.log('\n📡 Cerrando server...')
   io.close(() => {
-    console.log('Server closed')
+    console.log('Server cerrado!')
     process.exit(0)
   })
 })
 
 // Error handling
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error)
+  console.error('Error inesperado:', error)
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  console.error('Rejeccion inesperada en:', promise, 'reason:', reason)
   process.exit(1)
 })

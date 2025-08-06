@@ -17,7 +17,6 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     // Dejemos esto solo para customizar el nivel funcional.
     img: (props) => (
       <Image
-        alt=''
         width={1000}
         height={1000}
         {...(props as ImageProps)}

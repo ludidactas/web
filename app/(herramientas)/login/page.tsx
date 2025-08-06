@@ -27,7 +27,7 @@ export default async function LoginPage() {
         <Link href="/encuestas">
           <div className='flex flex-col items-center my-4 justify-center p-8 gap-4 hover:bg-cyan-600/10 border-2 rounded-xl hover:cursor-pointer'>
             <p className='font-bold'>{session.user.name}</p>
-            <img className='rounded-full w-20' src={session.user.image} alt="User Avatar" />
+            {session.user.image && <img className='rounded-full w-20' src={session.user.image} alt="User Avatar" />}
             <p className='hover:underline'>Ir a tu sesión</p>
           </div>
         </Link>

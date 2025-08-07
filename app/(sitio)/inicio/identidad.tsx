@@ -8,10 +8,11 @@ import ArrowDownLd from '@/components/custom/ld-arrow-down'
 
 export default function Identidad() {
   return (
+    <div className="identidadini">
     <Pantalla
       title="¿Quiénes somos?"
       one={
-        <div id="identidadini" className="flex flex-col gap-2 max-w-[480px]">
+        <div className="flex flex-col gap-2 md:gap-8 md:max-w-[35vw] text-[1.5em] md:text-[1.1em]">
           <p>
             Ludidactas surge en el año 2020 como un <Hl>laboratorio didáctico</Hl> con el objetivo de gestar propuestas
             y recursos didácticos y pedagógicos (herramientas y recursos para la enseñanza) y de instancias educativas
@@ -28,13 +29,14 @@ export default function Identidad() {
       }
       two={<Imagenes />}
       btn={
-        <BtnSketchyGif className="block mx-auto h-[90px] leading-[62px]" href="/identidad">
+        <BtnSketchyGif className="block text-[1.5em] md:text-[1.1em] mx-auto h-[90px] leading-[62px]" href="/identidad">
           {' '}
           Más sobre el proyecto{' '}
         </BtnSketchyGif>
       }
       scroll={<ArrowDownLd to="propuestasini" />}
-    />
+      />
+      </div>
   )
 }
 

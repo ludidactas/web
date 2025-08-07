@@ -22,5 +22,6 @@ export interface CrearEncuesta  {
 
 export enum RolEncuesta {
   Admin = 'admin',
+  Profe = 'profe',
   Estudiante = 'estudiante'
 }

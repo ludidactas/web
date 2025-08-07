@@ -6,13 +6,24 @@ import { Encuesta } from '@/polls/encuestas'
 import { useEncuestaAdmin } from './encuestas-admin-context'
 
 export default function EncuestasAdmin() {
+  const { socket } = useEncuestaAdmin()
   return (
     <div className="rounded-xl px-20 flex flex-col items-center w-full">
       <div className="w-[40em] bg-white p-10  rounded-xl">
         <Status />
         <hr className="invisible py-2" />
-        <AgregarPregunta />
-        <ListaEncuestas />
+        {socket?.connected && (
+          <>
+            <AgregarPregunta />
+            <ListaEncuestas />
+          </>
+        )}
+        {!socket?.connected && (
+          <>
+            <p>No se puede conectar con el servidor! </p>
+            <p>Checkeá tu conexión o envianos un mensaje a ludidactas.adm@gmail.com</p>
+          </>
+        )}
       </div>
     </div>
   )
@@ -83,12 +94,18 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       {/* Publicar/esconder */}
       <div className="flex items-center justify-end gap-4 my-2">
         {!encuesta.isPublished && (
-          <button className="w-32 bg-green-700 text-white px-4 py-2 rounded" onClick={() => publicarPregunta(encuesta.id)}>
+          <button
+            className="w-32 bg-green-700 text-white px-4 py-2 rounded"
+            onClick={() => publicarPregunta(encuesta.id)}
+          >
             Publicar
           </button>
         )}
         {encuesta.isPublished && (
-          <button className="w-32 bg-green-100 text-black px-4 py-2 rounded border border-green-900" onClick={() => esconderPregunta(encuesta.id)}>
+          <button
+            className="w-32 bg-green-100 text-black px-4 py-2 rounded border border-green-900"
+            onClick={() => esconderPregunta(encuesta.id)}
+          >
             Esconder
           </button>
         )}
@@ -100,7 +117,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           </button>
         )}
         {encuesta.isOpen && (
-          <button className="w-32 bg-blue-100 text-black px-4 py-2 rounded border border-blue-900" onClick={() => cerrarPregunta(encuesta.id)}>
+          <button
+            className="w-32 bg-blue-100 text-black px-4 py-2 rounded border border-blue-900"
+            onClick={() => cerrarPregunta(encuesta.id)}
+          >
             Cerrar
           </button>
         )}
@@ -180,7 +200,6 @@ function AgregarPregunta() {
       <button className="bg-emerald-900 text-white px-4 py-2 rounded" onClick={postearPregunta}>
         &gt; Enviar pregunta
       </button>
-
     </div>
   )
 }

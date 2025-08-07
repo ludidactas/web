@@ -1,5 +1,6 @@
 'use client'
 
+import { auth } from '@/app/auth'
 import { CrearEncuesta, Encuesta } from '@/polls/encuestas'
 import { PollsSession } from '@/polls/session'
 import { setupSocketLogging } from '@/polls/test/test-funcs'
@@ -8,7 +9,7 @@ import { io, Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
-const useEncuestaAdminState = () => {
+const useEncuestaProfeState = (email: string) => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
   const [session, setSession] = useState<PollsSession | null>(null)
@@ -80,27 +81,40 @@ const useEncuestaAdminState = () => {
     })
   }
 
-  // Conexión inicial
-  useEffect(() => {
+  /** Inicializa el socket y se conecta al servidor de encuestas */
+  function conectarConServer() {
     console.log(`Obteniendo token del server...`)
-
     fetch('/api/auth/token')
       .then((res) => res.json())
       .then(({ token }) => {
-        console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST} con token ${JSON.stringify(token)}...`)
+        console.log(
+          `Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST} con token ${JSON.stringify(
+            token
+          )}...`
+        )
 
-        // Conectamos al namespace de admin con la contraseña
-        try {
-          setSocket(
-            io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, {
-              auth: { token },
-            })
+        if (!token)
+          throw new Error(
+            `Se require una sesión activa y un token de sesión de Google para conectarse al servidor de encuestas`
           )
+
+        // Conectamos al namespace de profe con el token de sesión de Google
+        try {
+          setSocket(io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${email}/profe`, { auth: { token } }))
         } catch (err) {
           console.error('Error al conectar con el servidor de encuestas:', err)
           return
         }
       })
+      .catch((err) => {
+        console.error('Error al obtener el token del servidor:', err)
+        toast.error('Error al conectar con el servidor de encuestas. Por favor, inténtalo de nuevo más tarde.')
+      })
+  }
+
+  // Conexión inicial
+  useEffect(() => {
+    conectarConServer()
   }, [])
 
   // Conectamos el socket a sus handlers
@@ -108,14 +122,14 @@ const useEncuestaAdminState = () => {
     if (socket) {
       setupSocketLogging(socket)
 
-      socket.on('session:opened', ({ sessionId, userId, userIp, username, rol }: PollsSession) => {
-        console.log(`Sesión abierta: ${sessionId} para ${username} (${userId}) desde ${userIp} con rol ${rol}`)
+      socket.on('session:opened', ({ sessionId, userIp, username, rol }: PollsSession) => {
+        console.log(`Sesión abierta: ${sessionId} para ${username} (}) desde ${userIp} con rol ${rol}`)
 
         // Guardamos el id de sesión para las siguientes conexiones
         socket.auth = { sessionId }
 
         // Local state para verla en pantalla
-        setSession({ sessionId, userId, userIp, username, rol })
+        setSession({ sessionId, userIp, username, rol })
       })
 
       socket.on('polls:list', setEncuestas)
@@ -140,11 +154,11 @@ const useEncuestaAdminState = () => {
 }
 
 // Context
-const EncuestaAdminContext = createContext<ReturnType<typeof useEncuestaAdminState> | undefined>(undefined)
+const EncuestaAdminContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
 
 // Provider
-export const EncuestaAdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <EncuestaAdminContext.Provider value={useEncuestaAdminState()}>{children}</EncuestaAdminContext.Provider>
+export const EncuestaAdminProvider: React.FC<{ email: string; children: React.ReactNode }> = ({ email, children }) => {
+  return <EncuestaAdminContext.Provider value={useEncuestaProfeState(email)}>{children}</EncuestaAdminContext.Provider>
 }
 
 // Hook para usar el contexto de Encuesta

@@ -6,8 +6,8 @@
  * que sale lado a lado o dentro de un drawer dependiendo del tamaño de pantalla
  */
 
-import RoadmapDrawer from '@/components/custom/ld-drawer'
-import LdMateria from '@/components/custom/ld-materia'
+import RoadmapDrawer from '@/components/roadmaps/ld-drawer'
+import LdMateria from '@/components/roadmaps/ld-materia'
 import FadeTransition from '@/components/fx/transition'
 import SvgRoadmap from '@/components/roadmap/svg'
 import { useMediaQuery } from '@uidotdev/usehooks'

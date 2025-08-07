@@ -1,19 +1,11 @@
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
-import { GoogleTagManager } from '@next/third-parties/google'
-import { GoogleAnalytics } from '@next/third-parties/google'
 
 import type { Metadata } from 'next'
 
 import './globals.css'
-import './md.css'
 
-import { BibliotecaRoot } from '@/components/contenido-provider'
-// import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
-import Menu from './inicio/menu'
-import LogoLema from './inicio/logoLema'
 import { body } from '@/components/fonts'
-import Textura from '@/components/fx/textura'
-import Footer from './inicio/footer'
 
 export const metadata: Metadata = {
   title: 'Ludidactas',
@@ -22,25 +14,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    // Warning: suppressHydrationWarning está porque https://github.com/shadcn-ui/ui/issues/5552
-    <html lang="en">
+    <html lang="es">
       <body className={`${body.className} antialiased`}>
         <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <VercelAnalytics />
-        <BibliotecaRoot>
-          <Textura>
-            <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4">
-              <LogoLema />
-              <Menu />
-            </div>
-            <div className="mx-2 lg:mx-10 border-x-4 border-slate-200 border-dashed flex flex-col items-center ">
-              {children}
-            </div>
-
-            <Footer />
-          </Textura>
-        </BibliotecaRoot>
+        { children }
       </body>
     </html>
   )

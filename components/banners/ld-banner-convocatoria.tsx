@@ -1,0 +1,49 @@
+'use client'
+import ConvocatoriaSvg from '@/svg/dist/banner.svg'
+import BtnSketchyGif from '../custom/ld-btn-sketchy-gif'
+import { LdSvg } from '../custom/ld-svg'
+
+export default function LdBannerConvocatoria({ className }: { className?: string }) {
+  const mensaje = (
+    <div className="flex flex-col items-center gap-1">
+      <p className="text-2xl text-center">
+        {' '}
+        Convocamos a personas interesadas en practicar el rol docente/didáctico/pedagógico y dispuestas a ocupar también
+        el de aprendientes{' '}
+      </p>
+      <p className="text-2xl text-center text-[#93278c]">
+        ¡Si estás interesadx, accedé a la info completa y escribinos!
+      </p>
+      <BtnSketchyGif className="h-[120px] text-center text-3xl leading-[90px]" href="/convocatoria">
+        Convocatoria
+      </BtnSketchyGif>
+    </div>
+  )
+
+  return (
+    <LdSvg
+      // El svg importado
+      SvgComponent={ConvocatoriaSvg}
+      // Los ids que le hayamos puesto a los elementos
+      ids={['ld.cono', 'ld.llamada', 'ld.globos', 'ld.fondo', 'ld.slot.contenido'] as const}
+      // Los slots que hayamos dejado, mapeando a su contenido
+      slots={
+        {
+          'ld.slot.contenido': mensaje,
+        } as const
+      }
+      // Función setup
+      setup={(nodos) => {
+        // Le aplicamos el blend mode al cono
+        nodos['ld.cono'].node.style.mixBlendMode = 'screen'
+      }}
+      // Función loop
+      animation={(nodos, t) => {
+        Object.values(nodos).forEach((nodo, idx) => {
+          nodo.y(Math.sin(t / 600 + idx) * 0.9)
+        })
+      }}
+      className={`w-4/5 ${className ?? ''}`}
+    />
+  )
+}

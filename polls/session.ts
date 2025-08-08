@@ -5,11 +5,12 @@ import { closeWithError } from "./utils"
 import jwt from 'jsonwebtoken'
 
 
-// Cargamos la password maestra desde las variables de entorno. 
+// Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno. 
 // Si no está seteada, tiramos un error para que no arranque el server.
 const secret = process.env.NEXTAUTH_SECRET
-if (!secret) {
-  console.error("Error: NEXTAUTH_SECRET no está seteada.")
+const ADMINS = process.env.POLLS_ADMINS?.split(',').map(email => email.trim())
+if (!secret || !ADMINS) {
+  console.error("Error: NEXTAUTH_SECRET o POLLS_ADMINS no están seteadas.")
   process.exit(1)
 }
 
@@ -22,7 +23,6 @@ export interface AuthData {
 
 // Sesión del server
 export interface PollsSession {
-  userId: string
   sessionId: string
   userIp: string
   username: string
@@ -44,7 +44,6 @@ export const deleteSession = (sessionId: string) => {
 }
 
 export const createSession = (socket: Socket, rol: RolEncuesta, username: string): PollsSession => ({
-  userId: randomUUID(),
   sessionId: randomUUID(),
   userIp: socketIp(socket),
   rol,
@@ -72,6 +71,9 @@ const login = async (socket: Socket) => {
 
   // Si no hay token, abrimos una sesión anónima (de estudiante)
   if (!token) { 
+    // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
+    if (!socket.handshake.auth.sala) closeWithError(socket, 'Clientes anónimos tienen que proveer sala en auth')
+    socket.data.sala = socket.handshake.auth.sala
     openSession(socket, RolEncuesta.Estudiante, 'Anónimo')
     return
   }
@@ -93,7 +95,11 @@ const login = async (socket: Socket) => {
       name: payload.name,
     }
 
-    openSession(socket, RolEncuesta.Admin, payload.email)
+    if (ADMINS.includes(payload.email)) {
+      openSession(socket, RolEncuesta.Admin, payload.email)
+    } else { 
+      openSession(socket, RolEncuesta.Profe, payload.email)
+    }
 
   } catch (err) {
     console.error('Error al verificar el token:', err)
@@ -123,6 +129,13 @@ export const conSession = (socket: Socket, next: () => void) => {
 export const esAdmin = (socket: Socket, next: () => void) => { 
   if (socket.data.rol !== RolEncuesta.Admin)
     return closeWithError(socket, 'Acción solo permitida para administradores')
+  next()
+}
+
+
+export const esProfe = (socket: Socket, next: () => void) => { 
+  if (socket.data.rol !== RolEncuesta.Profe && socket.data.rol !== RolEncuesta.Admin)
+    return closeWithError(socket, 'Acción solo permitida para profes')
   next()
 }
 

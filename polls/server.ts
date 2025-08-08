@@ -1,8 +1,9 @@
 import { Server, Socket } from "socket.io"
 import { Encuesta } from "./encuestas"
 import { conErrorHandling } from "./middleware"
-import { consultarResultados, consultarVotantes, crearPoll, deletePoll, hidratadas, hidratar, polls, updatePoll, votarUser } from "./polls"
-import { conSession, esAdmin } from "./session"
+import { estudianteSala, hidratar, profeSala } from "./polls"
+import { conSession, esProfe } from "./session"
+import { randomUUID } from "crypto"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -13,72 +14,101 @@ const io = new Server({
   }
 })
 
-/** Envía a estudiantes y admin */
-const broadcast = (event: string, data: unknown) => {
-  io.of('/polls/admin').emit(event, data)
-  io.of('/polls/estudiante').emit(event, data)
+// Email_profe: id_sala
+const owners_salas = new Map<string, string>()
+const salas_owners = new Map<string, string>()
+
+/** Obtiene el ID de la sala del profe, creandola si no existe */
+const getSala = (email: string) => { 
+  if (!owners_salas.has(email)) { 
+    const id = randomUUID().split('-')[0]
+    console.log(`Creando sala ${id} para profe ${email}`)
+    crearSala(id)
+    owners_salas.set(email, id)
+    salas_owners.set(id, email)
+  }
+  return owners_salas.get(email)!
 }
 
-/** Envía a admin y a estudiantes una poll pero hidratada para cada quien  */
-const bradcastPoll = (event: string, poll: Encuesta) => {
-  io.of('/polls/admin').emit(event, poll)
-  io.of('/polls/estudiante').sockets.forEach((socketEstudiante) => {
-    const hydratedPoll = hidratar(poll, socketEstudiante.data.userId)
-    socketEstudiante.emit(event, hydratedPoll)
+const getOwner = (salaId: string) => {
+  return salas_owners.get(salaId) || "Desconocido"
+}
+
+/** Crea y hace el setup del canal para estudiantes de la sala */
+const crearSala = (salaId: string) => { 
+  // Namespace para estudiantes DE ESTA SALA
+  io.of(`/polls/${salaId}/estudiante`).use(conSession).on('connection', (socket: Socket) => {
+    const safe = conErrorHandling(socket)
+
+    const user = socket.data.sessionId
+    console.log(`Estudiante conectado: ${socket.data.sessionId} (sala ${salaId} de ${getOwner(salaId)})`)
+
+    const estudiante = estudianteSala(salaId, user)
+
+    // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
+    socket.emit('polls:list', estudiante.listar())
+
+    // Estudiantes votan. Broadcasteamos la poll updateada.
+    socket.on('poll:vote', safe(({ pollId, optionId }) => {
+      bradcastPoll(salaId, 'poll:updated', estudiante.votar({ pollId, optionId }))
+    }))
   })
 }
 
-// Acciones Polls Admin
-io.of('/polls/admin').use(conSession).use(esAdmin).on('connection', (socket: Socket) => {
+/** Envía a admin, profe y estudiantes de la sala */
+const broadcast = (salaId: string, event: string, data: unknown) => {
+  io.of('/polls/admin').emit(event, data)
+  io.of(`/polls/${getOwner(salaId)}/profe`).emit(event, data)
+  io.of(`/polls/${salaId}/estudiante`).emit(event, data)
+}
+
+/** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
+const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
+  console.log(`Broadcasting poll ${poll.id} to sala ${salaId} (${getOwner(salaId)})`)
+  io.of('/polls/admin').emit(event, poll)
+  io.of(`/polls/${getOwner(salaId)}/profe`).emit(event, poll)
+  io.of(`/polls/${salaId}/estudiante`).sockets.forEach((socketEstudiante) => {
+    const pollHidratada = hidratar(salaId, poll, socketEstudiante.data.sessionId)
+    socketEstudiante.emit(event, pollHidratada)
+  })
+}
+
+io.of(/^\/polls\/.+\/profe$/).use(conSession).use(esProfe).on('connection', socket => { 
   const safe = conErrorHandling(socket)
 
-  console.log(`Admin conectado: ${socket.data.userId}`)
+  // Se conectó un profe, le armamos una sala con su email como key:
+  const email = socket.data.user.email
+  const salaId = getSala(email)
+  console.log(`Se conectó profe ${email}, sala ${salaId}`)
 
-  // Al conectarse el admin, le enviamos la lista de encuestas
-  socket.emit('polls:list', Array.from(polls.values()))
+  const profe = profeSala(salaId)
 
-  // Admin puede crear una encuesta
+  // Al conectarse el profe, le enviamos la lista de encuestas de su sala
+  socket.emit('polls:list', profe.listar())
+
+  // Profe puede crear una encuesta
   socket.on('poll:create', safe((poll: unknown) => {
-    bradcastPoll('poll:created', crearPoll(poll))
+    bradcastPoll(salaId, 'poll:created', profe.crearPoll(poll))
   }))
 
-  // Admin puede consultar los votantes de una encuesta
+  // Profe puede consultar los votantes de una encuesta
   socket.on('poll:votantes', safe(({ pollId }) => {
-    socket.emit('poll:votantes', { votantes: consultarVotantes({ pollId }) })
+    socket.emit('poll:votantes', { votantes: profe.consultarVotantes({ pollId }) })
   }))
 
-  // Admin puede updatear una encuesta
-  socket.on('poll:open', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: true }))))
-  socket.on('poll:close', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isOpen: false }))))
-  socket.on('poll:publish', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: true }))))
-  socket.on('poll:hide', safe(({ pollId }) => bradcastPoll('poll:updated', updatePoll(pollId, { isPublished: false }))))
+  // Profe puede updatear una encuesta
+  socket.on('poll:open', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isOpen: true }))))
+  socket.on('poll:close', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isOpen: false }))))
+  socket.on('poll:publish', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isPublished: true }))))
+  socket.on('poll:hide', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isPublished: false }))))
 
-  // Admin puede borrar
+  // Profe puede borrar
   socket.on('poll:delete', safe(({ pollId }) => {
-    deletePoll({ pollId })
-    broadcast('poll:deleted', { pollId })
-  }))
-})
-
-// Namespace para polls
-io.of('/polls/estudiante').use(conSession).on('connection', (socket: Socket) => {
-  const safe = conErrorHandling(socket)
-
-  console.log(`Estudiante conectado: ${socket.data.userId}`)
-
-  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
-  socket.emit('polls:list', hidratadas(socket.data.userId))
-
-  // Estudiantes votan. Broadcasteamos la poll updateada.
-  const votar = votarUser(socket.data.userId)
-  socket.on('poll:vote', safe(({ pollId, optionId }) => {
-    bradcastPoll('poll:updated', votar({pollId, optionId }))
+    profe.deletePoll({ pollId })
+    broadcast(salaId, 'poll:deleted', { pollId })
   }))
 
-  // Estudiantes pueden consultar los resultados de una encuesta.
-  socket.on('poll:results', safe(({ pollId }) => {
-    socket.emit('poll:results', consultarResultados(pollId))
-  }))
+  socket.emit('sala:creada', { salaId })
 })
 
 // Start the server

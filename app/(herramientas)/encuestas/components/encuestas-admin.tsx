@@ -55,11 +55,7 @@ function Status() {
 function ListaEncuestas() {
   const { encuestas } = useEncuestaAdmin()
   if (encuestas.length == 0)
-    return (
-      <div className="h-96 flex flex-col items-center justify-center">
-        <p className="text-gray-500 text-sm text-center ">No hay encuestas.</p>
-      </div>
-    )
+    return <></>
 
   return (
     <>

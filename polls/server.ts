@@ -16,15 +16,22 @@ const io = new Server({
 
 // Email_profe: id_sala
 const owners_salas = new Map<string, string>()
+const salas_owners = new Map<string, string>()
 
 /** Obtiene el ID de la sala del profe, creandola si no existe */
 const getSala = (email: string) => { 
   if (!owners_salas.has(email)) { 
     const id = randomUUID().split('-')[0]
+    console.log(`Creando sala ${id} para profe ${email}`)
     crearSala(id)
     owners_salas.set(email, id)
+    salas_owners.set(id, email)
   }
   return owners_salas.get(email)!
+}
+
+const getOwner = (salaId: string) => {
+  return salas_owners.get(salaId) || "Desconocido"
 }
 
 /** Crea y hace el setup del canal para estudiantes de la sala */
@@ -34,7 +41,7 @@ const crearSala = (salaId: string) => {
     const safe = conErrorHandling(socket)
 
     const user = socket.data.sessionId
-    console.log(`Estudiante conectado: ${socket.data.sessionId} (sala ${salaId})`)
+    console.log(`Estudiante conectado: ${socket.data.sessionId} (sala ${salaId} de ${getOwner(salaId)})`)
 
     const estudiante = estudianteSala(salaId, user)
 
@@ -57,6 +64,7 @@ const broadcast = (salaId: string, event: string, data: unknown) => {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
+  console.log(`Broadcasting poll ${poll.id} to sala ${salaId} (${getOwner(salaId)})`)
   io.of('/polls/admin').emit(event, poll)
   io.of(`/polls/${salaId}/profe`).emit(event, poll)
   io.of(`/polls/${salaId}/estudiante`).sockets.forEach((socketEstudiante) => {

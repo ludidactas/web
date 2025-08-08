@@ -8,7 +8,7 @@ import { io, Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 
 /** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
-const useEncuestaEstudianteState = () => {
+const useEncuestaEstudianteState = (idSala: string) => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
   const [session, setSession] = useState<PollsSession | null>(null)
@@ -51,22 +51,32 @@ const useEncuestaEstudianteState = () => {
   useEffect(() => {
     console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
 
-    const sessionStr = localStorage.getItem('polls-session')
-    if (sessionStr) { 
-      const sessionData: PollsSession = JSON.parse(sessionStr)
-      console.log(`Reusando sesión existente: ${sessionData.sessionId} para ${sessionData.username} (${sessionData.userId})`)
-      setSession(sessionData)
+    fetch('/api/auth/token')
+      .then((res) => res.json())
+      .then(({ token }) => {
+        console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`)
 
-      // Si ya tenemos una sesión, la usamos para conectarnos
-      setSocket(
-        io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/estudiante`, { auth: { sessionId: sessionData.sessionId } })
-      )
-      return
-    }
+        const sessionStr = localStorage.getItem('polls-session')
+        if (sessionStr) {
+          const sessionData: PollsSession = JSON.parse(sessionStr)
+          console.log(`Reusando sesión existente: ${sessionData.sessionId} para ${sessionData.username} `)
+          setSession(sessionData)
 
-    setSocket(
-      io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/estudiante`, { auth: { rol: RolEncuesta.Estudiante } })
-    )
+          // Si ya tenemos una sesión, la usamos para conectarnos
+          setSocket(
+            io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${idSala}/estudiante`, {
+              auth: { sessionId: sessionData.sessionId, token },
+            })
+          )
+          return
+        }
+
+        setSocket(
+          io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${idSala}/estudiante`, {
+            auth: { token },
+          })
+        )
+      })
   }, [])
 
   // Conectamos el socket a sus handlers
@@ -74,17 +84,17 @@ const useEncuestaEstudianteState = () => {
     if (socket) {
       setupSocketLogging(socket)
 
-      socket.on('session:opened', ({ sessionId, userId, userIp, username, rol }: PollsSession) => {
-        console.log(`Sesión abierta: ${sessionId} para ${username} (${userId}) desde ${userIp} con rol ${rol}`)
+      socket.on('session:opened', ({ sessionId, userIp, username, rol }: PollsSession) => {
+        console.log(`Sesión abierta: ${sessionId} para ${username} (desde ${userIp} con rol ${rol}`)
 
         // Guardamos la sesión en localStorage para persistencia
-        localStorage.setItem('polls-session', JSON.stringify({ sessionId, userId, userIp, username, rol }))
+        localStorage.setItem('polls-session', JSON.stringify({ sessionId, userIp, username, rol }))
 
         // Guardamos el id de sesión para las siguientes conexiones
         socket.auth = { sessionId }
 
         // Local state para verla en pantalla
-        setSession({ sessionId, userId, userIp, username, rol })
+        setSession({ sessionId, userIp, username, rol })
       })
 
       socket.on('polls:list', setEncuestas)
@@ -107,9 +117,12 @@ const useEncuestaEstudianteState = () => {
 const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
 
 // Provider
-export const EncuestaEstudianteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const EncuestaEstudianteProvider: React.FC<{ idSala: string; children: React.ReactNode }> = ({
+  idSala,
+  children,
+}) => {
   return (
-    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState()}>
+    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala)}>
       {children}
     </EncuestaEstudianteContext.Provider>
   )

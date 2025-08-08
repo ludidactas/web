@@ -17,9 +17,6 @@ export default function EncuestasEstudiante() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl">Encuestas</h1>
-          <p className="text-xs text-slate-500">
-            [{session?.sessionId}] {session?.rol}, {session?.username} ({session?.userId}) - {session?.userIp}
-          </p>
         </div>
         {socket?.connected ? (
           <span className="text-emerald-700 animate-pulse">Conectado</span>

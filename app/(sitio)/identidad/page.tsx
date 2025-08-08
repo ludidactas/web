@@ -14,7 +14,6 @@ export const metadata: Metadata = {
   title: 'Identidad',
 }
 
-
 export default function Page() {
   return (
     <WithAOS>
@@ -48,7 +47,7 @@ export default function Page() {
             mundo, para un crecimiento rizomático, nodal, sostenible.
           </p>
         </div>
-
+        
         {/* Foto */}
         <div className="flex justify-center border-solid">
           <Image
@@ -60,7 +59,7 @@ export default function Page() {
             height={1000}
           ></Image>
         </div>
-        <div className="mt-10 lg:mt-10">
+        <div className="mt-10 lg:mt-20">
           <h1
             data-aos="fade-left"
             className={`${fuenteTitulo.className} m-4 lg:m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl lg:text-7xl`}

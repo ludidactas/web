@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import type z from 'zod';
-import type { pollValidator } from '../validators';
+import type { pollBase } from '../validators';
 import { setupSocketLogging, sleep } from './test-funcs';
 
 // const host = process.env.HOST || 'localhost';
@@ -15,7 +15,7 @@ const { socket } = await setupSocketLogging(io(`wss://${host}`))
 
 // Test functions you can call manually
 function createPoll(pregunta: string, opciones: string[]) {
-  socket.emit('poll:create', { pregunta, opciones, masterPassword: 'dificildeaveriguar' });
+  socket.emit('poll:create', { pregunta, opciones, password: 'dificildeaveriguar' });
 }
 
 function closePoll(pollId: number) {
@@ -28,7 +28,7 @@ function deletePoll(pollId: number) {
 
 await sleep(1000); // Wait for connection to stabilize
 
-const testPoll: z.infer<typeof pollValidator> = {
+const testPoll: z.infer<typeof pollBase> = {
   pregunta: "Cuál es tu lenguaje de programación favorito?",
   opciones: ["JavaScript", "Python", "Java", "Go", "Rust"]
 };

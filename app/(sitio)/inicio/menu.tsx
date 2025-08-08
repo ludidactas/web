@@ -7,7 +7,7 @@ import { ComponentProps, useState } from 'react'
 const MenuMobile = () => {
   const [open, setOpen] = useState(false)
 
-  const handleOpenChange = (isOpen) => {
+  const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen)
   }
 

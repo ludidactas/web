@@ -16,7 +16,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     });
   });
 
-  const localPolls = new Map<number, { id: string; pregunta: string, opciones: { id: number; text: string;  votos: number}[], createdAt: string; isActive: boolean }>();
+  const localPolls = new Map<number, { id: string; pregunta: string, opciones: { id: number; text: string;  votos: number}[], createdAt: string; isOpen: boolean }>();
 
   socket.on('disconnect', () => {
     console.log('❌ Disconnected from server');

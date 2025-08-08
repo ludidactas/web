@@ -1,5 +1,4 @@
 import EncuestasAdmin from '@/app/(herramientas)/encuestas/components/encuestas-admin'
-import { EncuestaProvider } from '@/app/(herramientas)/encuestas/components/encuestas-context'
 import { auth } from '@/app/auth'
 import { Toaster } from '@/components/ui/sonner'
 import { nombre } from '@/lib/utils'
@@ -7,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
 import Image from 'next/image'
 import { titulo } from '@/components/fonts'
-
+import { EncuestaAdminProvider } from './components/encuestas-admin-context'
 
 export default async function Page() {
   const session = await auth()
@@ -15,7 +14,7 @@ export default async function Page() {
   if (!session || !session.user) redirect('/login')
 
   return (
-    <EncuestaProvider>
+    <EncuestaAdminProvider>
       <Toaster />
       <div className="min-h-screen  w-screen mx-auto flex flex-col gap-8 items-center">
         <div className='bg-white m-4 w-screen'>
@@ -43,6 +42,6 @@ export default async function Page() {
 
         <div className="w-full h-24" />
       </div>
-    </EncuestaProvider>
+    </EncuestaAdminProvider>
   )
 }

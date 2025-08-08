@@ -11,11 +11,11 @@ export const conErrorHandling = (socket: Socket) =>
         handler(...args)
       } catch (err: unknown) {
         if (!(err instanceof Error)) {
-          console.error('Error inesperado:', err)
-          return
+          throw err
         }
-        console.error('Error en el handler:', err.message)
+        // console.error('Error en el handler:', err.message)
         socket.emit('poll:error', { message: err.message })
+        throw err
       }
     }
   }

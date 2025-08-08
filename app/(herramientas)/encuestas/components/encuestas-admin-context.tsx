@@ -56,6 +56,10 @@ const useEncuestaProfeState = (email: string) => {
     socket!.emit('poll:hide', conPassword({ pollId: encuestaId }))
   }
 
+  const recibirIdEncuesta = ({ salaId }: {salaId: string}) => {
+    toast.info(`Recibido id de encuesta: ${salaId}`)
+  }
+
   // Handlers
 
   /** Agrega una encuesta al buffer local */
@@ -100,7 +104,14 @@ const useEncuestaProfeState = (email: string) => {
 
         // Conectamos al namespace de profe con el token de sesión de Google
         try {
-          setSocket(io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${email}/profe`, { auth: { token } }))
+          const sock = io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${email}/profe`, { auth: { token } })
+
+          sock.on('connect_error', (error) => {
+            console.error('Socket connection error:', error)
+            toast.error(`Error de conexión: ${error.message}`)
+          })
+
+          setSocket(sock)
         } catch (err) {
           console.error('Error al conectar con el servidor de encuestas:', err)
           return
@@ -137,6 +148,7 @@ const useEncuestaProfeState = (email: string) => {
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', deleteEncuesta)
+      socket.on('sala:creada', recibirIdEncuesta)
     }
   }, [socket])
 

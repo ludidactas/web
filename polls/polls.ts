@@ -1,8 +1,8 @@
+import { merge } from "remeda"
 import { z } from "zod"
 import { Encuesta, EncuestaHidratada } from "./encuestas"
 import { extractZodErrorMessages } from "./utils"
-import { pollBase, pollCreator, voteValidator } from "./validators"
-import { merge } from "remeda"
+import { pollBase, voteValidator } from "./validators"
 
 // Polls y votos activos
 const salas = new Map<string, { polls: Map<string, Encuesta>, votantes: Map<string, Set<string>>, votos: Map<string, Map<string, string>> }>()
@@ -36,7 +36,7 @@ export function profeSala(salaId: string){
 
     // Parseamos con el validator
     assertValidPoll(pollDataUnknown)
-    const pollData = pollCreator.parse(pollDataUnknown)
+    const pollData = pollBase.parse(pollDataUnknown)
 
     // La creamos
     const poll: Encuesta = {

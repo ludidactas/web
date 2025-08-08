@@ -13,6 +13,7 @@ const useEncuestaProfeState = (email: string) => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [encuestas, setEncuestas] = useState<Encuesta[]>([])
   const [session, setSession] = useState<PollsSession | null>(null)
+  const [linkSala, setLinkSala] = useState<string | null>(null)
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -58,6 +59,7 @@ const useEncuestaProfeState = (email: string) => {
 
   const recibirIdEncuesta = ({ salaId }: {salaId: string}) => {
     toast.info(`Recibido id de encuesta: ${salaId}`)
+    setLinkSala(`https://ludidactas.com/sala/${salaId}/`)
   }
 
   // Handlers
@@ -156,6 +158,7 @@ const useEncuestaProfeState = (email: string) => {
     socket,
     encuestas,
     session,
+    linkEncuesta: linkSala,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,

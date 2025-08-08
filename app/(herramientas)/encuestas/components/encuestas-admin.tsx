@@ -4,12 +4,21 @@ import { es } from 'date-fns/locale'
 import { useState } from 'react'
 import { Encuesta } from '@/polls/encuestas'
 import { useEncuestaAdmin } from './encuestas-admin-context'
+import Link from 'next/link'
 
 export default function EncuestasAdmin() {
-  const { socket } = useEncuestaAdmin()
+  const { socket, linkEncuesta } = useEncuestaAdmin()
   return (
     <div className="rounded-xl px-20 flex flex-col items-center w-full">
       <div className="w-[40em] bg-white p-10  rounded-xl">
+        {linkEncuesta && (
+          <p>
+            Tu sala:{' '}
+            <Link href={linkEncuesta} className="text-blue-700 hover:underline">
+              {linkEncuesta}
+            </Link>
+          </p>
+        )}
         <Status />
         <hr className="invisible py-2" />
         {socket?.connected && (

@@ -20,7 +20,7 @@ const owners_salas = new Map<string, string>()
 /** Obtiene el ID de la sala del profe, creandola si no existe */
 const getSala = (email: string) => { 
   if (!owners_salas.has(email)) { 
-    const id = randomUUID()
+    const id = randomUUID().split('-')[0]
     crearSala(id)
     owners_salas.set(email, id)
   }

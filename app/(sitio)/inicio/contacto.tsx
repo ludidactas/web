@@ -10,7 +10,7 @@ export default function Contacto() {
       <Pantalla
         title="Contacto"
         one={
-          <div className='flex flex-col gap-4 max-w-[480px]'>
+          <div className='flex flex-col max-w-[720px] items-center mt-40 p-8 text-3xl gap-4'>
             <p className="text-[#46BFD7] font-bold mb-4">
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>

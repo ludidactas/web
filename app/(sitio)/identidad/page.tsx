@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: 'Identidad',
 }
 
+
 export default function Page() {
   return (
     <WithAOS>
@@ -29,8 +30,8 @@ export default function Page() {
         <div className="w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4">
           <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
-            <span className="text-[#46BFD7] font-bold">crecimiento regenerativo de la educación</span>. Orgánico.
-            Comunitario. Con amor por la enseñanza, la técnica y la educación. De la mano con la comprensión,
+            <span className="text-[#8b5cf6] font-bold text-2xl pt-6">crecimiento regenerativo de la educación, orgánico y
+            comunitario, con amor por la enseñanza, la técnica y la educación.</span> De la mano con la comprensión,
             distinguiendo fines y medios.
           </p>
           <p>
@@ -47,6 +48,7 @@ export default function Page() {
             mundo, para un crecimiento rizomático, nodal, sostenible.
           </p>
         </div>
+
         {/* Foto */}
         <div className="flex justify-center border-solid">
           <Image
@@ -58,7 +60,7 @@ export default function Page() {
             height={1000}
           ></Image>
         </div>
-        <div className="mt-10 lg:mt-20">
+        <div className="mt-10 lg:mt-10">
           <h1
             data-aos="fade-left"
             className={`${fuenteTitulo.className} m-4 lg:m-10 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-5xl lg:text-7xl`}
@@ -189,7 +191,7 @@ export default function Page() {
         <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4">
           <p className="p-0 md:p-10 text-[1.2rem] md:text-[1.4rem]">
             {' '}
-            Desde Ludidactas, buscamos acometer esta labor desde una perspectiva lúdica y didáctica (de allí nuestro
+            Desde Ludidactas, <span className="text-[#8b5cf6] font-bold text-2xl pt-6">buscamos acometer esta labor desde una perspectiva lúdica y didáctica </span> (de allí nuestro
             nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el tejido creativo.
           </p>
           <p className="md:px-10 pb-20 text-[1.2rem] md:text-[1.4rem]">

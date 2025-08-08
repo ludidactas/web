@@ -28,10 +28,10 @@ export default function EncuestasAdmin() {
           </>
         )}
         {!socket?.connected && (
-          <>
-            <p>No se puede conectar con el servidor! </p>
-            <p>Checkeá tu conexión o envianos un mensaje a ludidactas.adm@gmail.com</p>
-          </>
+          <div className='text-center'>
+            <p className='text-xl m-4'>¡Ups! No se puede conectar con el servidor</p>
+            <p>Checkeá tu conexión o envianos un mensaje <span className='text-cyan-500'>ludidactas.adm@gmail.com</span></p>
+          </div>
         )}
       </div>
     </div>

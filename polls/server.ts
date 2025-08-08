@@ -58,7 +58,7 @@ const crearSala = (salaId: string) => {
 /** Envía a admin, profe y estudiantes de la sala */
 const broadcast = (salaId: string, event: string, data: unknown) => {
   io.of('/polls/admin').emit(event, data)
-  io.of(`/polls/${salaId}/profe`).emit(event, data)
+  io.of(`/polls/${getOwner(salaId)}/profe`).emit(event, data)
   io.of(`/polls/${salaId}/estudiante`).emit(event, data)
 }
 
@@ -66,7 +66,7 @@ const broadcast = (salaId: string, event: string, data: unknown) => {
 const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
   console.log(`Broadcasting poll ${poll.id} to sala ${salaId} (${getOwner(salaId)})`)
   io.of('/polls/admin').emit(event, poll)
-  io.of(`/polls/${salaId}/profe`).emit(event, poll)
+  io.of(`/polls/${getOwner(salaId)}/profe`).emit(event, poll)
   io.of(`/polls/${salaId}/estudiante`).sockets.forEach((socketEstudiante) => {
     const pollHidratada = hidratar(salaId, poll, socketEstudiante.data.sessionId)
     socketEstudiante.emit(event, pollHidratada)

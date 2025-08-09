@@ -53,13 +53,13 @@ export const createSession = (socket: Socket, rol: RolEncuesta, username: string
 export const openSession = (socket: Socket, rol: RolEncuesta, username: string) => {
 
   // Creamos el objeto
-  const session = createSession(socket, rol, username)
+  const session = { ...socket.data || {}, ...createSession(socket, rol, username) }
 
   // Guardamos la sesión
   setSession(session.sessionId, session)
 
   // La adjuntamos al socket
-  socket.data = { ...socket.data || {}, ...session }
+  socket.data = session
 
   // La emitimos al cliente
   socket.emit("session:opened", session)
@@ -71,15 +71,18 @@ const login = async (socket: Socket) => {
 
   // Si no hay token, abrimos una sesión anónima (de estudiante)
   if (!token) { 
+    console.log(`Iniciando sesión anónima en la sala ${socket.handshake.auth.sala} desde IP ${socketIp(socket)}`)
     // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
-    if (!socket.handshake.auth.sala) closeWithError(socket, 'Clientes anónimos tienen que proveer sala en auth')
-    socket.data.sala = socket.handshake.auth.sala
+    if (!socket.handshake.auth.idSala) closeWithError(socket, 'Clientes anónimos tienen que proveer sala en auth')
+    socket.data.sala = socket.handshake.auth.idSala
     openSession(socket, RolEncuesta.Estudiante, 'Anónimo')
     return
   }
 
   // Si hay token, lo verificamos
   try {
+    // Verificamos el token con el secret de NextAuth
+    console.log(`Verificando token desde IP ${socketIp(socket)}`)
     const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string }
 
     // Verificar que el token no haya expirado
@@ -114,9 +117,12 @@ const login = async (socket: Socket) => {
 export const conSession = (socket: Socket, next: () => void) => {
   const sessionId = socket.handshake.auth.sessionId
 
+  console.log(`Conexión solicitada de ${socket.id} desde IP ${socketIp(socket)} con sesión ${sessionId}`)
+
   // Si ya hay sesión, attacheamos la data al socket y seguimos
   if (sessionId) {
     const session = getSession(sessionId)
+    console.log(`Reutilizando sesión ${sessionId} para ${session?.username} (${session?.rol}) desde IP ${socketIp(socket)}`)
     if (session) {
       socket.data = { ...socket.data || {}, ...session }
       return next()

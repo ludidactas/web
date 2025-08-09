@@ -10,7 +10,7 @@ import { useServerEncuestas } from '../../encuestas/components/use-server-encues
 const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
 
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket } = useServerEncuestas({ nombre , idSala, rol: RolEncuesta.Estudiante })
+  const { socket, session } = useServerEncuestas({ nombre , idSala, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -36,16 +36,17 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
       socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
       
       return () => {
-        socket.off('polls:list')
-        socket.off('poll:error')
-        socket.off('poll:updated')
-        socket.off('poll:created')
-        socket.off('poll:deleted')
+        socket.removeAllListeners('polls:list')
+        socket.removeAllListeners('poll:error')
+        socket.removeAllListeners('poll:updated')
+        socket.removeAllListeners('poll:created')
+        socket.removeAllListeners('poll:deleted')
       }
     }
   }, [socket])
 
   return {
+    session,
     conectado: socket && socket.connected,
     encuestas,
     votar,

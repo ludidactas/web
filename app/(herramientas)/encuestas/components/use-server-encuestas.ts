@@ -1,74 +1,73 @@
 import { RolEncuesta } from '@/polls/encuestas'
 import { PollsServerSession } from '@/polls/session'
-import { setupSocketLogging } from '@/polls/test/test-funcs'
 import { useLocalStorage } from '@uidotdev/usehooks'
 import { useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
+import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
+import { conectarSocket, SocketServerAuth, solicitarAuth } from './server-encuestas'
 
-interface SocketServerAuth {
-  // Nombre que den en la ui
-  nombre?: string
-  // El email para profes y admins, el idSala de la url para estudiantes
-  idSala?: string
-  // Rol de la persona que se conecta
-  rol?: RolEncuesta
-}
+export function useServerEncuestas({ idSala, rol }: SocketServerAuth) {
 
-export function useServerEncuestas({ nombre, idSala, rol }: SocketServerAuth) {
+  // Chance deba convertir socket en ref en lugar de state, para tener siempre la instancia fresca.
   const [socket, setSocket] = useState<Socket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [conectando, setConectando] = useState<boolean>(false)
-  
-  // Persistimos la sesión en localStorage
-  const [session, saveSession] = useLocalStorage<PollsServerSession | null>("drawing", null);
 
-  /** 
-   * Le pide al server de next, que es el que autentica con Google,
-   * un token JWT para conectarse al server de encuestas.
-   */
-  async function solicitarAuth() {
-    console.log(`Obteniendo token del server...`)
-    const respuesta = await fetch('/api/auth/token')
-    const payload = await respuesta.json()
-    return payload.token as string
+  // Persistimos la sesión en localStorage
+  const [session, saveSession] = useLocalStorage<PollsServerSession | null>("sesion-guardada", null);
+
+  const onConnect = (sock: Socket) => {
+    console.log('Socket conectado:', sock.id)
+    setSocket(sock)
+    setConectando(false)
   }
 
-  /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
-  async function conectarSocket({ idSala, rol, token, nombre, onConnect, onError, onDisconect }: {
-    token: string,
-    rol: RolEncuesta,
-    idSala?: string
-    nombre?: string,
-    onConnect: (socket: Socket) => void,
-    onError: (error: Error) => void,
-    onDisconect: (socket: Socket, reason: string) => void
-  }) {
+  const onError = (sock: Socket, error: Error) => {
+    console.error('Error de conexión al servidor de encuestas:', error.message)
+    if (error.message === 'Invalid namespace') toast.error(`La sala no existe`)
+    else toast.error(`Error de conexión con el servidor de encuestas: ${error.message}`)
+    setError(`Error de conexión con el servidor de encuestas: ${error.message}`)
+    setConectando(false)
+  }
 
-    if (!token) throw new Error(`Se require una sesión de Google para conectarse al servidor de encuestas`)
+  const onDisconect = (sock: Socket, reason: string) => {
+    console.log('Socket desconectado:', reason)
+    toast.error(`Desconectado del servidor de encuestas: ${reason}`)
+    setSocket(null)
+  }
 
-    // Rol debería venir del server de next, en el token, que es el que autentica con Google.
-    let sock
-    if (rol === RolEncuesta.Estudiante) {
-      console.log(`Conectando como estudiante a la sala ${idSala}...`)
-      sock = io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${idSala}/estudiante`, { auth: { token, nombre } })
-    } else if (rol === RolEncuesta.Admin) {
-      sock = io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth: { token, nombre } })
-    } else if (rol === RolEncuesta.Profe) {
-      sock = io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth: { token, nombre } })
+  const onSession = (sock: Socket, { sessionId, userIp, username, rol }: PollsServerSession) => {
+    console.log(`Sesión abierta: ${sessionId} para ${username} (${rol}) desde IP ${userIp}`)
+
+    // Guardamos la sesión en localStorage para persistencia
+    saveSession({ sessionId, userIp, username, rol })
+
+    // Le attacheamos la sesión que nos mandó el server al socket local
+    sock.auth = { sessionId }
+  }
+
+  const onTokenError = (error: Error) => {
+    console.error('Error de autenticación:', error.message)
+    toast.error(`Error de autenticación con el servidor de encuestas: ${error.message}`)
+    setError(`Error de autenticación con el servidor de encuestas: ${error.message}`)
+    setConectando(false)
+  }
+
+  const efectuarConexion = async () => {
+    // Si ya hay una sesión de ws guardada, la reutilizamos
+    if (session) {
+      console.log(`Reutilizando sesión ${session.sessionId} para conectar al servidor de encuestas...`)
+      conectarSocket({ auth: { rol, sessionId: session.sessionId, idSala }, onConnect, onError, onDisconect, onSession })
     } else {
-      throw new Error(`Rol desconocido: ${rol}`)
+      // Sino creamos una iniciando la conexión con un token de autenticación de nuestra api de next
+      if (rol === RolEncuesta.Estudiante) {
+        conectarSocket({ auth: { rol, idSala }, onConnect, onError, onDisconect, onSession })
+      } else {
+        solicitarAuth().then((token) => {
+          conectarSocket({ auth: { rol, token }, onConnect, onError, onDisconect, onSession })
+        }).catch(onTokenError)
+      }
     }
-
-    sock.on('connect_error', onError)
-    sock.on('disconnect', (reason: string) => onDisconect(sock, reason))
-    sock.on('connect', () => onConnect(sock))
-    sock.on('connect_timeout', (error) => {
-      console.error('Connection timeout:', error)
-      onError(new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
-    })
-
-    return sock
   }
 
   /**
@@ -81,65 +80,19 @@ export function useServerEncuestas({ nombre, idSala, rol }: SocketServerAuth) {
 
     setConectando(true)
 
-    solicitarAuth().then((token) => {
-      conectarSocket({
-        token,
-        nombre,
-        idSala,
-        rol,
-        onConnect: (sock) => {
-          console.log('Socket connected:', sock.id)
-          setSocket(sock)
-        },
-        onError: (error) => {
-          console.error('Connection error:', error)
-          toast.error(`Error de conexión con el servidor de encuestas: ${error.message}`)
-        },
-        onDisconect: (sock, reason) => {
-          console.log('Socket disconnected:', reason)
-          toast.error(`Desconectado del servidor de encuestas: ${reason}`)
-          saveSession(null)
-          setSocket(null)
-        }
-      })
-    }).catch((err) => {
-      console.error('Error al obtener el token de autenticación:', err)
-      toast.error(`Error al obtener el token de autenticación: ${err.message}`)
-      setError(`Error al obtener el token de autenticación: ${err.message}`)
-      setConectando(false)
-    })
+    console.log(`Conectando al servidor de encuestas como ${rol}...`, session)
+
+    // Efectuamos la conexión
+    efectuarConexion()
 
     // Cleanup al desmontar
     return () => {
       if (socket) {
         socket.disconnect()
-        saveSession(null)
         setSocket(null)
       }
     }
   }, [])
-
-  // Al obtener el socket...
-  useEffect(() => {
-    if (socket) {
-      // Le attacheamos los listeners de consola. Debug.
-      setupSocketLogging(socket)
-
-      // Suscribimos a la sesión abierta
-      socket.on('session:opened', ({ sessionId, userIp, username, rol }: PollsServerSession) => {
-
-        // Guardamos la sesión en localStorage para persistencia
-        saveSession({ sessionId, userIp, username, rol })
-
-        // Le attacheamos la sesión que nos mandó el server al socket local
-        socket.auth = { sessionId }
-
-        // Local state para verla en pantalla
-        saveSession({ sessionId, userIp, username, rol })
-      })
-    }
-  }, [saveSession, socket])
-
 
   return {
     socket,

@@ -3,13 +3,12 @@ import { cn } from '@/lib/utils'
 import { EncuestaHidratada } from '@/polls/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import Image from 'next/image'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
-import Image from 'next/image'
-import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
 
 export default function EncuestasEstudiante() {
-  const { conectado, encuestas } = useEncuestaEstudiante()
+  const { conectado, encuestas, session } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -26,8 +25,6 @@ export default function EncuestasEstudiante() {
           <span className="text-red-700">Desconectado</span>
         )}
       </div>
-
-      {JSON.stringify(encuestas)}
 
       {encuestasVisibles.length > 0 && (
         <>

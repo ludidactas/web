@@ -20,9 +20,16 @@ export const useEncuestaStore = create<EncuestaStore>()(
     setSocket: (socket) => set({ socket }),
     addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),
     updateEncuesta: (encuesta) =>
-      set((state) => ({
-        encuestas: state.encuestas.map((e) => (e.id === encuesta.id ? ({...encuesta}) : e)),
-      })),
+      // Si la encuentra updatea, sino agrega
+      set((state) =>
+        state.encuestas.find((e) => e.id === encuesta.id)
+          ? {
+              encuestas: state.encuestas.map((e) => (e.id === encuesta.id ? { ...encuesta } : e)),
+            }
+          : {
+              encuestas: [...state.encuestas, encuesta],
+            }
+      ),
     deleteEncuesta: (pollId) =>
       set((state) => ({
         encuestas: state.encuestas.filter((e) => e.id !== pollId),

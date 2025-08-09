@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useState } from 'react'
 import { Encuesta } from '@/polls/encuestas'
-import { useEncuestaAdmin } from './encuestas-admin-context'
+import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
 
 export default function EncuestasAdmin() {

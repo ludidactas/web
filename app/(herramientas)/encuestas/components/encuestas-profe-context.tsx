@@ -70,6 +70,16 @@ const useEncuestaProfeState = (nombre?: string) => {
         // Al abrir la sala, le pedimos al server la lista de encuestas, por si la sala ya estaba activa
         setEncuestas(polls)
       })
+
+      return () => {
+        socket.removeAllListeners('polls:list')
+        socket.removeAllListeners('poll:updated')
+        socket.removeAllListeners('poll:created')
+        socket.removeAllListeners('poll:deleted')
+        socket.removeAllListeners('poll:error')
+        socket.removeAllListeners('disconnect')
+        socket.removeAllListeners('sala:abierta')
+      }
     }
 
   }, [socket])

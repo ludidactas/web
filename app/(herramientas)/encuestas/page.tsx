@@ -1,10 +1,10 @@
-import EncuestasAdmin from '@/app/(herramientas)/encuestas/components/encuestas-admin'
+import EncuestasAdmin from '@/app/(herramientas)/encuestas/components/encuestas-profe'
 import { auth } from '@/app/auth'
 import { Toaster } from '@/components/ui/sonner'
 import { nombre } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
-import { EncuestaAdminProvider } from './components/encuestas-admin-context'
+import { EncuestaAdminProvider } from './components/encuestas-profe-context'
 import HeaderSala from '../sala/components/header-sala'
 
 export default async function Page() {

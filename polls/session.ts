@@ -22,20 +22,20 @@ export interface AuthData {
 }
 
 // Sesión del server
-export interface PollsSession {
+export interface PollsServerSession {
   sessionId: string
   userIp: string
   username: string
   rol: RolEncuesta
 }
 
-const sessions = new Map<string, PollsSession>()
+const sessions = new Map<string, PollsServerSession>()
 
 export const getSession = (sessionId: string) => {
   return sessions.get(sessionId)
 }
 
-export const setSession = (sessionId: string, data: PollsSession) => {
+export const setSession = (sessionId: string, data: PollsServerSession) => {
   sessions.set(sessionId, data)
 }
 
@@ -43,7 +43,7 @@ export const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-export const createSession = (socket: Socket, rol: RolEncuesta, username: string): PollsSession => ({
+export const createSession = (socket: Socket, rol: RolEncuesta, username: string): PollsServerSession => ({
   sessionId: randomUUID(),
   userIp: socketIp(socket),
   rol,
@@ -90,11 +90,13 @@ const login = async (socket: Socket) => {
     if (!payload) return closeWithError(socket, 'Token de autenticación inválido')
     if (!payload.email) return closeWithError(socket, 'Token de autenticación inválido. Falta email!')
 
+    // Le seteamos al user el email y el nombre del token emitido por next
     socket.data.user = {
       email: payload.email,
       name: payload.name,
     }
 
+    // Si está en la lista de admins, lo tratamos como admin, sino como profe
     if (ADMINS.includes(payload.email)) {
       openSession(socket, RolEncuesta.Admin, payload.email)
     } else { 

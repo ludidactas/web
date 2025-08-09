@@ -7,19 +7,25 @@ import { useEncuestaAdmin } from './encuestas-admin-context'
 import Link from 'next/link'
 
 export default function EncuestasAdmin() {
-  const { socket, linkEncuesta } = useEncuestaAdmin()
+  const { socket, linkSala } = useEncuestaAdmin()
   return (
     <div className="rounded-xl px-20 flex flex-col items-center w-full">
+
+      {/* Link de sala */}
       <div className="w-[40em] bg-white p-10  rounded-xl">
-        {linkEncuesta && (
+        {linkSala && (
           <p>
             Tu sala:{' '}
-            <Link href={linkEncuesta} className="text-blue-700 hover:underline">
-              {linkEncuesta}
+            <Link href={linkSala} className="text-blue-700 hover:underline">
+              {linkSala}
             </Link>
           </p>
         )}
+        {!linkSala && <span>Link de sala no recibido</span>}
+        
+        {/* Barra de status */}
         <Status />
+
         <hr className="invisible py-2" />
         {socket?.connected && (
           <>

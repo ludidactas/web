@@ -7,9 +7,7 @@ export default async function Page({ params }: { params: Promise<{ idSala: strin
   return (
     <EncuestaEstudianteProvider idSala={idSala}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className='grid grid-cols-2'>
-          {idSala}
-        </HeaderSala>
+        <HeaderSala className='grid grid-cols-2'/>
 
         <div className="p-8 w-4/5">
           <EncuestasEstudiante />

@@ -6,9 +6,10 @@ import { es } from 'date-fns/locale'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import Image from 'next/image'
+import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
 
 export default function EncuestasEstudiante() {
-  const { socket, encuestas, session } = useEncuestaEstudiante()
+  const { conectado, encuestas } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -19,12 +20,14 @@ export default function EncuestasEstudiante() {
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
         </div>
-        {socket?.connected ? (
+        {conectado ? (
           <span className="text-emerald-700 animate-pulse">Conectado</span>
         ) : (
           <span className="text-red-700">Desconectado</span>
         )}
       </div>
+
+      {JSON.stringify(encuestas)}
 
       {encuestasVisibles.length > 0 && (
         <>

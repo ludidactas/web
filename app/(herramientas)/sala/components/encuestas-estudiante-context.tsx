@@ -1,17 +1,16 @@
 'use client'
 
 import { Encuesta, RolEncuesta } from '@/polls/encuestas'
-import { PollsSession } from '@/polls/session'
-import { setupSocketLogging } from '@/polls/test/test-funcs'
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
+import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
+import { useServerEncuestas } from '../../encuestas/components/use-server-encuestas'
 
-/** Definición del estado y las funciones que representan las encuestas (abstraen el socket) */
-const useEncuestaEstudianteState = (idSala: string) => {
-  const [socket, setSocket] = useState<Socket | null>(null)
-  const [encuestas, setEncuestas] = useState<Encuesta[]>([])
-  const [session, setSession] = useState<PollsSession | null>(null)
+/** Cose el socket con el state para estudiante */
+const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
+
+  const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
+  const { socket } = useServerEncuestas({ nombre , idSala, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -22,92 +21,32 @@ const useEncuestaEstudianteState = (idSala: string) => {
     socket!.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
   }
 
-  // Handlers
-
-  /** Agrega una encuesta al buffer local */
-  const addEncuesta = (encuesta: Encuesta) => {
-    setEncuestas((encs) => [...encs, encuesta])
-  }
-
-  /** Borra una encuesta del buffer local */
-  const deleteEncuesta = ({ pollId }: { pollId: string }) => {
-    setEncuestas((encs) => encs.filter((e) => e.id != pollId))
-  }
-
-  /** Updatea el buffer local, pisando la encuesta existente */
-  const updateEncuesta = (encuesta: Encuesta) => {
-    setEncuestas((prev) => {
-      const index = prev.findIndex((e) => e.id === encuesta.id)
-      if (index !== -1) {
-        const newEncuestas = [...prev]
-        newEncuestas[index] = encuesta
-        return newEncuestas
-      }
-      return prev
-    })
-  }
-
-  // Conexión inicial
-  useEffect(() => {
-    console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}...`)
-
-    fetch('/api/auth/token')
-      .then((res) => res.json())
-      .then(({ token }) => {
-        console.log(`Conectando con servidor de encuestas en ${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`)
-
-        const sessionStr = localStorage.getItem('polls-session')
-        if (sessionStr) {
-          const sessionData: PollsSession = JSON.parse(sessionStr)
-          console.log(`Reusando sesión existente: ${sessionData.sessionId} para ${sessionData.username} `)
-          setSession(sessionData)
-
-          // Si ya tenemos una sesión, la usamos para conectarnos
-          setSocket(
-            io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${idSala}/estudiante`, {
-              auth: { sessionId: sessionData.sessionId, token },
-            })
-          )
-          return
-        }
-
-        setSocket(
-          io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${idSala}/estudiante`, {
-            auth: { token },
-          })
-        )
-      })
-  }, [])
-
-  // Conectamos el socket a sus handlers
+  // Cuando el socket conecta...
   useEffect(() => {
     if (socket) {
-      setupSocketLogging(socket)
+      // Pedimos la lista exitente de encuestas al conectarse
+      console.log(`Pidiendo encuestas al servidor para la sala ${idSala}...`)
+      socket.emit('polls:list')
 
-      socket.on('session:opened', ({ sessionId, userIp, username, rol }: PollsSession) => {
-        console.log(`Sesión abierta: ${sessionId} para ${username} (desde ${userIp} con rol ${rol}`)
-
-        // Guardamos la sesión en localStorage para persistencia
-        localStorage.setItem('polls-session', JSON.stringify({ sessionId, userIp, username, rol }))
-
-        // Guardamos el id de sesión para las siguientes conexiones
-        socket.auth = { sessionId }
-
-        // Local state para verla en pantalla
-        setSession({ sessionId, userIp, username, rol })
-      })
-
+      // Conectamos el socket a sus handlers
       socket.on('polls:list', setEncuestas)
       socket.on('poll:error', showError)
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
-      socket.on('poll:deleted', deleteEncuesta)
+      socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+      
+      return () => {
+        socket.off('polls:list')
+        socket.off('poll:error')
+        socket.off('poll:updated')
+        socket.off('poll:created')
+        socket.off('poll:deleted')
+      }
     }
   }, [socket])
 
   return {
-    socket,
-    session,
+    conectado: socket && socket.connected,
     encuestas,
     votar,
   }

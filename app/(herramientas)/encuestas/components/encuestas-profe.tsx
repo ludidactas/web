@@ -9,12 +9,12 @@ import Link from 'next/link'
 export default function EncuestasAdmin() {
   const { socket, linkSala } = useEncuestaAdmin()
   return (
-    <div className="rounded-xl px-20 flex flex-col items-center w-full">
+    <div className="rounded-xl flex flex-col items-center w-full">
 
       {/* Link de sala */}
-      <div className="w-[40em] bg-white p-10  rounded-xl">
+      <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
         {linkSala && (
-          <p>
+          <p className='text-center px-2 mb-4 text-xs md:text-lg'>
             Tu sala:{' '}
             <Link href={linkSala} className="text-blue-700 hover:underline">
               {linkSala}
@@ -48,9 +48,9 @@ function Status() {
   const { socket } = useEncuestaAdmin()
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-3xl">Encuestas</h1>
-      {socket?.connected ? (
-        <span className="text-emerald-700 animate-pulse">Conectado</span>
+          <h1 className="text-xl md:text-4xl drop-shadow-md font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
+          {socket?.connected ? (
+        <span className="text-emerald-700 animate-pulse text-sm md:text-xl">Conectado</span>
       ) : (
         <span className="text-red-700">Desconectado</span>
       )}
@@ -65,7 +65,7 @@ function ListaEncuestas() {
 
   return (
     <>
-      <h2 className="text-2xl mt-4">Existentes:</h2>
+      <h2 className="text-xl md:text-2xl mt-4">Existentes:</h2>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -76,10 +76,10 @@ function ListaEncuestas() {
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
   return (
-    <div className="py-4 mx-auto">
+    <div className="py-4">
       {/* Titulo y status */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl">{encuesta.pregunta}</h3>
+        <h3 className="text-xs md:text-xl">{encuesta.pregunta}</h3>
         <div className="flex flex-col items-end">
           <span
             className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
@@ -106,7 +106,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       <div className="flex items-center justify-end gap-4 my-2">
         {!encuesta.isPublished && (
           <button
-            className="w-32 bg-green-700 text-white px-4 py-2 rounded"
+            className="w-20 text-xs md:text-xl md:w-32 bg-green-700 text-white px-4 py-2 rounded"
             onClick={() => publicarPregunta(encuesta.id)}
           >
             Publicar
@@ -114,7 +114,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
         {encuesta.isPublished && (
           <button
-            className="w-32 bg-green-100 text-black px-4 py-2 rounded border border-green-900"
+            className="w-20 text-xs md:text-xl md:w-32 bg-green-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
             onClick={() => esconderPregunta(encuesta.id)}
           >
             Esconder
@@ -123,13 +123,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
         {/* Abrir/Cerrar */}
         {!encuesta.isOpen && (
-          <button className="w-32 bg-blue-900 text-white px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
+          <button className="w-20 text-xs md:text-xl md:w-32 bg-blue-900 text-white px-2 md:px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
             Abrir
           </button>
         )}
         {encuesta.isOpen && (
           <button
-            className="w-32 bg-blue-100 text-black px-4 py-2 rounded border border-blue-900"
+            className="w-20 text-xs md:text-xl md:w-32 bg-blue-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
             onClick={() => cerrarPregunta(encuesta.id)}
           >
             Cerrar
@@ -137,7 +137,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
 
         {/* Eliminar */}
-        <button className="bg-red-800 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
+        <button className="w-20 text-xs md:text-xl md:w-32 bg-red-800 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
           Eliminar
         </button>
       </div>
@@ -177,7 +177,7 @@ function AgregarPregunta() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col bg-slate-200 p-4 gap-2">
       <p>Pregunta:</p>
       <textarea
         className="border-b w-full resize-none"
@@ -205,10 +205,10 @@ function AgregarPregunta() {
         </div>
       ))}
 
-      <button className="bg-blue-900 text-white px-4 py-2 rounded" onClick={agregarRespuesta}>
+      <button className="bg-blue-900 text-white px-2 md:px-4 py-2 rounded" onClick={agregarRespuesta}>
         + Agregar opción
       </button>
-      <button className="bg-emerald-900 text-white px-4 py-2 rounded" onClick={postearPregunta}>
+      <button className="bg-emerald-900 text-white px-2 md:px-4 py-2 rounded" onClick={postearPregunta}>
         &gt; Enviar pregunta
       </button>
     </div>

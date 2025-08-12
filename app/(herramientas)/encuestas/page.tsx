@@ -17,13 +17,13 @@ export default async function Page() {
       <Toaster />
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
        <HeaderSala className='grid grid-cols-3'>
-            <p className="text-3xl text-center rounded-xl">¡Hola {nombre(session.user.name)}!</p>
+            <p className="text-md md:text-3xl text-center rounded-xl">¡Hola {nombre(session.user.name)}!</p>
             <div className="text-right items-center justify-center">
               <SignOut />
             </div>
        </HeaderSala>
          
-        <div className="px-20 w-4/5">
+        <div className="px-10 md:px-20 md:w-4/5">
           <EncuestasAdmin />
         </div>
 

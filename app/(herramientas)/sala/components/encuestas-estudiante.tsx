@@ -13,11 +13,11 @@ export default function EncuestasEstudiante() {
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
-    <div className="bg-white p-14 max-w-[54em] mx-auto rounded-xl">
+    <div className="bg-white p-4 md:p-14 md:max-w-[54em] mx-auto rounded-xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
+          <h1 className="text-xl md:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
         </div>
         {conectado ? (
           <span className="text-emerald-700 animate-pulse">Conectado</span>
@@ -50,15 +50,15 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
   return (
-    <div className="flex flex-col gap-4 p-4 m-10 shadow-lg border border-indigo-200 shadow-indigo-200 rounded-xl">
+    <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 shadow-lg border border-indigo-200 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
-      <div className="flex gap-6 items-center p-4 rounded-xl justify-between ">
-        <div className='flex items-center gap-4'>
-          <Image className='w-10 h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' />
-          <h3 className="text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
+      <div className="flex md:gap-6 items-center p-4 rounded-xl">
+        <div className='flex items-center md:gap-4'>
+          <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' />
+          <h3 className="text-lg md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
         </div>
 
-        <div className="flex flex-col items-end">
+        <div className="flex  flex-col items-end">
           <span
             className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
           >

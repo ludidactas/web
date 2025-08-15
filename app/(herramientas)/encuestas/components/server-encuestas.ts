@@ -1,6 +1,6 @@
 import { RolEncuesta } from "@/polls/encuestas"
 import { PollsServerSession } from "@/polls/session"
-import { setupSocketLogging } from "@/polls/test/test-funcs"
+// import { setupSocketLogging } from "@/polls/test/test-funcs"
 import { io, Socket } from "socket.io-client"
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
@@ -28,7 +28,7 @@ export const conectar = {
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
-export async function conectarSocket({ auth, onConnect, onError, onDisconect, onSession }: {
+export async function conectarSocket({ auth, listeners }: {
   auth: {
     /** Sesión del localStorage emitida por el server de ws */
     sessionId?: string,
@@ -41,13 +41,17 @@ export async function conectarSocket({ auth, onConnect, onError, onDisconect, on
     /** Opcionalmente puede attachear un nombre custom */
     nombre?: string
   },
-  onConnect: (socket: Socket) => void,
-  onError: (socket: Socket, error: Error) => void,
-  onDisconect: (socket: Socket, reason: string) => void
-  onSession: (socket: Socket, session: PollsServerSession) => void
+  listeners: {
+    onConnect: (socket: Socket) => void,
+    onError: (socket: Socket, error: Error) => void,
+    onDisconect: (socket: Socket, reason: string) => void
+    onSession: (socket: Socket, session: PollsServerSession) => void
+    onExpired: (socket: Socket) => void
+  }
 }) {
 
   const { sessionId, token, rol, idSala, nombre } = auth
+  const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
 
   let sock
   if (sessionId) {
@@ -56,7 +60,7 @@ export async function conectarSocket({ auth, onConnect, onError, onDisconect, on
     if (rol === RolEncuesta.Estudiante && !idSala)
       throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
     // Conectamos el socket con sessionId
-    sock = conectar[rol]({ sessionId, rol, idSala })
+    sock = conectar[rol]({ token, sessionId, rol, idSala })
 
   } else {
     // Sino, creamos una nueva sesión usando el token que nos dió next
@@ -66,7 +70,9 @@ export async function conectarSocket({ auth, onConnect, onError, onDisconect, on
   }
 
   // En cualquier caso, le suscribimos unos handlers básicos
-  sock.on('connect_error', error => onError(sock, error))
+  sock.on('connect_error', error => {
+    onError(sock, error)
+  })
   sock.on('disconnect', (reason: string) => onDisconect(sock, reason))
   sock.on('connect', () => onConnect(sock))
   sock.on('connect_timeout', (error) => {
@@ -75,10 +81,11 @@ export async function conectarSocket({ auth, onConnect, onError, onDisconect, on
   })
 
   // Los de console.log
-  setupSocketLogging(sock)
+  // setupSocketLogging(sock)
 
   // Suscribimos a la sesión abierta y la persistimos
   sock.on('session:opened', session => onSession(sock, session))
+  sock.on('session:expired', () => onExpired(sock))
 
   // Una vez que le suscribimos listeners, le mandamos mecha
   sock.connect()
@@ -91,8 +98,17 @@ export async function conectarSocket({ auth, onConnect, onError, onDisconect, on
  * un token JWT para conectarse al server de encuestas.
  */
 export async function solicitarAuth() {
-  console.log(`Obteniendo token del server...`)
+  console.log(`Obteniendo token de auth del server de next...`)
   const respuesta = await fetch('/api/auth/token')
   const payload = await respuesta.json()
   return payload.token as string
+}
+
+export const limpiarListeners = (socket: Socket) => { 
+  socket.off('connect_error')
+  socket.off('disconnect')
+  socket.off('connect')
+  socket.off('connect_timeout')
+  socket.off('session:opened')
+  socket.off('session:expired')
 }

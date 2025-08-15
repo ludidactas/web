@@ -21,7 +21,7 @@ export default function EncuestasAdmin() {
             </Link>
           </p>
         )}
-        {!linkSala && <span>Link de sala no recibido</span>}
+        {!linkSala && <p className='text-center text-xs md:text-lg pb-6'>Link de sala no recibido</p>}
         
         {/* Barra de status */}
         <Status />

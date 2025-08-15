@@ -1,3 +1,4 @@
+'use client'
 import { RolEncuesta } from '@/polls/encuestas'
 import { PollsServerSession } from '@/polls/session'
 import { useLocalStorage } from '@uidotdev/usehooks'

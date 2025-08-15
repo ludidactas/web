@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken'
 export async function GET(req: Request) {
   const sessionToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   if (!sessionToken) return new NextResponse('No autorizado', { status: 401 })
-  
+  console.log("creando token...", sessionToken.email,sessionToken.name )
   const token = jwt.sign(
     {
       email: sessionToken.email,

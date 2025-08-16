@@ -127,7 +127,7 @@ const login = (socket: Socket) => {
 
 const validarSession = (socket: Socket) => {
   // Si estamos acá, es porque socket.handshake.auth.sessionId está definido
-  const { sessionId, token } = socket.handshake.auth
+  const { sessionId, token, rol: rolSolicitado } = socket.handshake.auth
 
   try {
 
@@ -141,6 +141,17 @@ const validarSession = (socket: Socket) => {
     // Si el id que nos mandaron no coincide con el de la sesión, bochamos
     if (!session) throw new Error(`Sesión ${sessionId} no encontrada!`)
 
+    // Sesión de estudiante (anónima)
+    // Válida para profes o admins si están solicitando entrar como estudiantes
+    if (rolSolicitado === RolEncuesta.Estudiante && session.rol === RolEncuesta.Estudiante) {
+
+      // Llegados a este punto tenemos un estudiante anónimo válido
+      console.log(`Reutilizando sesión ${sessionId} para ${session?.username} (${session?.rol}) desde IP ${socketIp(socket)}`)
+
+      // Le attacheamos al socket la data de sesión
+      socket.data = { ...socket.data || {}, ...session }
+    }
+
     // Sesión de profe o admin
     if (session.rol === RolEncuesta.Profe || session.rol === RolEncuesta.Admin) {
 
@@ -153,16 +164,6 @@ const validarSession = (socket: Socket) => {
       if (session.username !== payload.email) throw new Error(`Sesión ${sessionId} no válida para el usuario ${payload.email}!`)
 
       // Llegados a este punto tenemos un profe o admin válido
-      console.log(`Reutilizando sesión ${sessionId} para ${session?.username} (${session?.rol}) desde IP ${socketIp(socket)}`)
-
-      // Le attacheamos al socket la data de sesión
-      socket.data = { ...socket.data || {}, ...session }
-    }
-
-    // Sesión de estudiante (anónima)
-    if (session.rol === RolEncuesta.Estudiante) {
-
-      // Llegados a este punto tenemos un estudiante anónimo válido
       console.log(`Reutilizando sesión ${sessionId} para ${session?.username} (${session?.rol}) desde IP ${socketIp(socket)}`)
 
       // Le attacheamos al socket la data de sesión

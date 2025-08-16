@@ -2,6 +2,7 @@ import { randomUUID } from "crypto"
 import jwt from 'jsonwebtoken'
 import { ExtendedError, Socket } from "socket.io"
 import { RolEncuesta } from "./encuestas"
+import { salas } from "./polls"
 
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno. 
@@ -95,11 +96,14 @@ const login = (socket: Socket) => {
 
   // Si no hay token, abrimos una sesión anónima (de estudiante)
   if (!token) {
-    console.log(`Iniciando sesión anónima en la sala ${socket.handshake.auth.sala} desde IP ${socketIp(socket)}`)
+    console.log(`Iniciando sesión anónima en la sala ${socket.handshake.auth.idSala} desde IP ${socketIp(socket)}`)
 
     // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
     if (!socket.handshake.auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
 
+    // Verificamos que la sala exista
+    if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
+    
     socket.data.sala = socket.handshake.auth.idSala
     openSession(socket, RolEncuesta.Estudiante, 'Anónimo') // Acá podría crearle un nombre aleatorio
 

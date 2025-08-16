@@ -10,7 +10,7 @@ import { useServerWebsockets } from '../../encuestas/components/use-server-encue
 const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
 
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket, session, conectado } = useServerWebsockets({ nombre , idSala, rol: RolEncuesta.Estudiante })
+  const { socket, session, conectado, error } = useServerWebsockets({ nombre , idSala, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -48,6 +48,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
   return {
     session,
     conectado,
+    error,
     encuestas,
     votar,
   }

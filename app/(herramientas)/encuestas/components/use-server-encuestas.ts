@@ -1,19 +1,19 @@
 'use client'
 import { RolEncuesta } from '@/polls/encuestas'
 import { PollsServerSession } from '@/polls/session'
-import { useLocalStorage } from '@uidotdev/usehooks'
 import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { funnel, isEmpty, isNonNullish } from 'remeda'
+import { funnel, isNonNullish } from 'remeda'
 import { ExtendedError } from 'socket.io'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } from './server-encuestas'
+import { useLocalStorage } from 'usehooks-ts'
 
 /** Levanta la sesión guardada, valida que coincida con el usuario actual de google, y la reinicia en caso contrario */
 function useSesionGuardada() {
   const [ready, setReady] = useState(false)
-  const [session, saveSession] = useLocalStorage<PollsServerSession | null>("sesion-guardada", null);
+  const [session, saveSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
 
   // Obtiene la sesión de next-auth
   const { data, status } = useSession()
@@ -43,6 +43,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
   // Chance deba convertir socket en ref en lugar de state, para tener siempre la instancia fresca.
   // const [socket, setSocket] = useState<Socket | null>(null)
+  console.log(`Montando socket para rol ${rol} en sala ${idSala}...`)
 
   const socket = useRef<Socket | null>(null)
 
@@ -104,11 +105,22 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
     const onError = (sock: Socket, error: ExtendedError & { type?: string }) => {
       console.log('Error de conexión al servidor de encuestas:', error.message, JSON.stringify(error))
 
+      // Sala inexistente
+      if (error.message === 'Invalid namespace') {
+        toast.error(`No estás conectado a la sala correcta. Por favor, verificá el ID de la sala.`)
+        setConectado(false)
+        setConectando(false)
+        setError('No estás conectado a la sala correcta. Por favor, verificá el ID de la sala.')
+        return
+      }
+
       // Server down
-      if (error.type && error.type == 'TransportError') {
+      if (error.type && error.type === 'TransportError') {
         toast.error(`El servidor de encuestas no responde. Reintentando...`)
         return
       }
+
+
 
       // Sesión expirada
       if (error.data && error.data.action === 'clear_session') {

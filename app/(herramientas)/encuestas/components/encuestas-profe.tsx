@@ -7,10 +7,9 @@ import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
 
 export default function EncuestasAdmin() {
-  const { socket, linkSala } = useEncuestaAdmin()
+  const { conectado, linkSala } = useEncuestaAdmin()
   return (
     <div className="rounded-xl px-20 flex flex-col items-center w-full">
-
       {/* Link de sala */}
       <div className="w-[40em] bg-white p-10  rounded-xl">
         {linkSala && (
@@ -22,21 +21,23 @@ export default function EncuestasAdmin() {
           </p>
         )}
         {!linkSala && <span>Link de sala no recibido</span>}
-        
+
         {/* Barra de status */}
         <Status />
 
         <hr className="invisible py-2" />
-        {socket?.connected && (
+        {conectado && (
           <>
             <AgregarPregunta />
             <ListaEncuestas />
           </>
         )}
-        {!socket?.connected && (
-          <div className='text-center'>
-            <p className='text-xl m-4'>¡Ups! No se puede conectar con el servidor</p>
-            <p>Checkeá tu conexión o envianos un mensaje <span className='text-cyan-500'>ludidactas.adm@gmail.com</span></p>
+        {!conectado && (
+          <div className="text-center">
+            <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
+            <p>
+              Checkeá tu conexión o envianos un mensaje <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+            </p>
           </div>
         )}
       </div>
@@ -45,11 +46,11 @@ export default function EncuestasAdmin() {
 }
 
 function Status() {
-  const { socket } = useEncuestaAdmin()
+  const { conectado } = useEncuestaAdmin()
   return (
     <div className="flex items-center justify-between">
       <h1 className="text-3xl">Encuestas</h1>
-      {socket?.connected ? (
+      {conectado ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
         <span className="text-red-700">Desconectado</span>

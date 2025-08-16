@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
 export default function EncuestasEstudiante() {
-  const { conectado, encuestas, session } = useEncuestaEstudiante()
+  const { conectado, encuestas } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 

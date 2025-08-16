@@ -4,13 +4,13 @@ import { Encuesta, RolEncuesta } from '@/polls/encuestas'
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
-import { useServerEncuestas } from '../../encuestas/components/use-server-encuestas'
+import { useServerWebsockets } from '../../encuestas/components/use-server-encuestas'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
 
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket, session } = useServerEncuestas({ nombre , idSala, rol: RolEncuesta.Estudiante })
+  const { socket, session, conectado } = useServerWebsockets({ nombre , idSala, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -47,7 +47,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
 
   return {
     session,
-    conectado: socket && socket.connected,
+    conectado,
     encuestas,
     votar,
   }

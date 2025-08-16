@@ -36,7 +36,7 @@ export default function EncuestasAdmin() {
           <div className="text-center">
             <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
             <p>
-              Checkeá tu conexión o envianos un mensaje <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+              Checkeá tu conexión, actualizá la página, o envianos un mensaje <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
             </p>
           </div>
         )}

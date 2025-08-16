@@ -204,7 +204,7 @@ export const conSession = (socket: Socket, next: (err?: ExtendedError) => void) 
   } catch (err) {
 
     err.data = {
-      type: 'session_error',
+      type: 'SessionError',
       action: 'clear_session', // Le decimos al cliente que porfa limpie la sesión
       message: err.message ?? 'Error de sesión'
     }

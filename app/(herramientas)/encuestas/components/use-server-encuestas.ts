@@ -13,7 +13,9 @@ import { useLocalStorage } from 'usehooks-ts'
 /** Levanta la sesión guardada, valida que coincida con el usuario actual de google, y la reinicia en caso contrario */
 function useSesionGuardada() {
   const [ready, setReady] = useState(false)
-  const [session, saveSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
+
+  // Obtiene la sesión del server de websockets almacenada en localStorage
+  const [session, saveSession, clearSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
 
   // Obtiene la sesión de next-auth
   const { data, status } = useSession()
@@ -26,15 +28,16 @@ function useSesionGuardada() {
     // (en caso de anónimo, ni limpiarla)
     if (session && data?.user?.email && session.username !== data?.user?.email) {
       console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`)
-      saveSession(null)
+      clearSession()
     }
 
     setReady(true)
-  }, [data?.user?.email, saveSession, session, status])
+  }, [data?.user?.email, clearSession, session, status])
 
   return {
     session,
     saveSession: saveSession,
+    clearSession,
     ready
   }
 }
@@ -52,79 +55,88 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
   const [conectado, setConectado] = useState<boolean>(false)
 
   // Persistimos la sesión en localStorage
-  const { session, saveSession, ready: sessionReady } = useSesionGuardada();
+  const { session, saveSession, clearSession, ready: sessionReady } = useSesionGuardada();
 
   const conectar = useCallback(async () => {
 
     // Listeners de eventos base del socket:
 
     const onConnect = (sock: Socket) => {
-      console.log('Socket conectado:', sock.id)
+      console.log('✅ Socket conectado:', sock.id)
       socket.current = sock
       setConectado(true)
       setConectando(false)
     }
 
-    // Esperamos un segundo para limpiar el socket, para no cambiar el estado de la UI al actualizar la página
-    const onDisconect = funnel(
-      (data: { sock: Socket, reason: string }) => {
-        console.log('Socket desconectado:', data.reason)
-        toast.error(`Desconectado del servidor de encuestas: ${data.reason}`)
-        socket.current = null
-        setConectado(false)
-        setConectando(false)
-      },
-      {
-        minQuietPeriodMs: 1000,
-        triggerAt: 'end',
-        reducer: (prev, sock: Socket, reason: string) => ({ sock, reason })
-      }
-    ).call
+    // TEMPORARILY REMOVE THE FUNNEL to see if it's causing issues
+    const onDisconect = (sock: Socket, reason: string) => {
+      console.log('❌ Socket desconectado inmediatamente:', reason)
+      console.log('Socket auth at disconnect:', sock.auth)
+      console.log('Socket connected state:', sock.connected)
+
+      toast.error(`Desconectado del servidor de encuestas: ${reason}`)
+      socket.current = null
+      setConectado(false)
+      setConectando(false)
+    }
 
     const onSession = (sock: Socket, { sessionId, userIp, username, rol }: PollsServerSession) => {
-      console.log(`Sesión abierta: ${sessionId} para ${username} (${rol}) desde IP ${userIp}`)
+      console.log(`✅ Sesión abierta: ${sessionId} para ${username} (${rol}) desde IP ${userIp}`)
 
       // Guardamos la sesión en localStorage para persistencia
       saveSession({ sessionId, userIp, username, rol })
 
       // Le attacheamos la sesión que nos mandó el server al socket local
-      sock.auth = { sessionId }
+      sock.auth = { ...sock.auth, sessionId }
+      console.log('Updated socket auth:', sock.auth)
     }
 
     const onExpired = (sock: Socket) => {
-      console.warn('Sesión expirada, limpiando localStorage...')
-      saveSession(null) // Limpiamos la sesión guardada
+      console.warn('⚠️ Sesión expirada, limpiando localStorage...')
+      clearSession() // Limpiamos la sesión guardada
       sock.auth = {} // Limpiamos la sesión del socket
 
       setConectado(false)
       setConectando(false)
 
-      setTimeout(conectar, 1000) // Reintentamos conectar después de un segundo
+      // Don't immediately reconnect to avoid infinite loops
+      console.log('Intentando reconectar en 2 segundos...')
+      setTimeout(() => {
+        console.log('Intentado reconectar luego de sesión caduca...')
+        conectar()
+      }, 2000)
     }
 
     const onError = (sock: Socket, error: ExtendedError & { type?: string }) => {
-      console.log('Error de conexión al servidor de encuestas:', error.message, JSON.stringify(error))
+      console.log('🔥 Error de conexión al servidor de encuestas:', error.message)
+      console.log('Error details:', JSON.stringify(error, null, 2))
+      console.log('Socket state:', {
+        connected: sock.connected,
+        disconnected: sock.disconnected,
+        auth: sock.auth
+      })
+
+      // Sesión expirada
+      if (error.data && error.data.action === 'clear_session') {
+        console.warn('Sesión expirada, delegando a onExpired...')
+        onExpired(sock)
+        return
+      }
 
       // Sala inexistente
       if (error.message === 'Invalid namespace') {
-        toast.error(`No estás conectado a la sala correcta. Por favor, verificá el ID de la sala.`)
+        toast.error(`Esta sala no existe! Por favor, verificá el ID.`)
+        setError('Esta sala no existe! Por favor, verificá el ID.')
         setConectado(false)
         setConectando(false)
-        setError('No estás conectado a la sala correcta. Por favor, verificá el ID de la sala.')
         return
       }
 
       // Server down
       if (error.type && error.type === 'TransportError') {
         toast.error(`El servidor de encuestas no responde. Reintentando...`)
-        return
-      }
-
-
-
-      // Sesión expirada
-      if (error.data && error.data.action === 'clear_session') {
-        onExpired(sock) // Si el error es de sesión, limpiamos la sesión
+        setError('El servidor de encuestas no responde. Reintentando...')
+        setConectado(false)
         return
       }
 
@@ -136,40 +148,36 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
     const listeners = { onConnect, onError, onDisconect, onSession, onExpired }
 
     try {
+      console.log('🚀 Iniciando conexión...')
+      console.log('Session data:', session)
+      console.log('Rol:', rol, 'IdSala:', idSala)
+
       // Si ya hay una sesión de ws guardada, la reutilizamos
       if (session) {
 
         if (rol === RolEncuesta.Estudiante) {
-          console.log(`Reutilizando sesión de estudiante ${session.sessionId} para conectar al servidor de encuestas en sala ${idSala}...`)
-
-          // Si es de estudiante, le pasamos el idSala para que se conecte al namespace correcto
+          console.log(`♻️ Reutilizando sesión de estudiante ${session.sessionId} para conectar al servidor de encuestas en sala ${idSala}...`)
           await conectarSocket({ auth: { rol, sessionId: session.sessionId, idSala }, listeners })
 
         } else {
-          console.log(`Reutilizando sesión de profe/admin ${session.sessionId} para conectar con token al servidor de encuestas...`)
-
-          // Si es de profe o admin, buscamos un token de auth
+          console.log(`♻️ Reutilizando sesión de profe/admin ${session.sessionId} para conectar con token al servidor de encuestas...`)
           const token = await solicitarAuth()
+          console.log('Token obtenido:', token ? 'SI' : 'NO')
           await conectarSocket({ auth: { rol, sessionId: session.sessionId, token }, listeners })
-
         }
 
       } else {
 
         // Sino pedimos que nos cree una sesión nueva
         if (rol === RolEncuesta.Estudiante) {
-          console.log(`Conectando como estudiante anónimo a la sala ${idSala}...`)
-
-          // Sin token pero con idSala el estudiante
+          console.log(`🆕 Conectando como estudiante anónimo a la sala ${idSala}...`)
           await conectarSocket({ auth: { rol, idSala }, listeners })
 
         } else {
-          console.log(`Conectando como profe o admin al servidor de encuestas...`)
-
-          // Con token de auth de google el profe o admin
+          console.log(`🆕 Conectando como profe o admin al servidor de encuestas...`)
           const token = await solicitarAuth()
+          console.log('Token obtenido:', token ? 'SI' : 'NO')
           await conectarSocket({ auth: { rol, token }, listeners })
-
         }
       }
 
@@ -178,16 +186,14 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
         return () => limpiarListeners(socket.current!)
 
     } catch (err) {
-
-      console.error('Error de autenticación con el servidor de next:', err.message)
+      console.error('💥 Error de autenticación con el servidor de next:', err.message)
+      console.error('Stack trace:', err.stack)
       toast.error(`Error de autenticación con el servidor de next: ${err.message}`)
       setError(`Error de autenticación con el servidor de next: ${err.message}`)
       setConectando(false)
       setConectado(false)
-      setError(`Error de conexión con el servidor de next: ${err.message}`)
-
     }
-  }, [idSala, rol, saveSession, session])
+  }, [idSala, rol, saveSession, clearSession, session])
 
   /**
    * Conexión inicial on mount. Pide auth del server de ws al server de next. 
@@ -220,7 +226,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
         setConectando(false)
       }
     }
-  }, [sessionReady])
+  }, [sessionReady, session])
 
   return {
     socket: socket.current,

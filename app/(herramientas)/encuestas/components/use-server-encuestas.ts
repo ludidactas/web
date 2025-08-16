@@ -24,7 +24,7 @@ function useSesionGuardada() {
     // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
     // (en caso de anónimo, ni limpiarla)
     if (session && data?.user?.email && session.username !== data?.user?.email) {
-      console.log(`"Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada."`)
+      console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`)
       saveSession(null)
     }
 
@@ -73,8 +73,8 @@ export function useServerEncuestas({ idSala, rol }: SocketServerAuth) {
 
       if (error.data && error.data.action === 'clear_session') {
         console.log(`Limpiando sesión!`)
-        // saveSession(null) // Limpiamos la sesión guardada
-        // sock.auth = {} // Limpiamos la sesión del socket
+        saveSession(null) // Limpiamos la sesión guardada
+        sock.auth = {} // Limpiamos la sesión del socket
       }
 
       setError(`Error de conexión con el servidor de encuestas: ${error.message}`)

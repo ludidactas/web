@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { useServerEncuestas } from './use-server-encuestas'
+import { useServerWebsockets } from './use-server-encuestas'
 import { useEncuestaStore } from './encuestas-store'
 
 import { Encuesta, RolEncuesta, type CrearEncuesta } from '@/polls/encuestas'
@@ -15,7 +15,7 @@ const useEncuestaProfeState = (nombre?: string) => {
   const [linkSala, setLinkSala] = useState<string | null>(null)
   
   // El profe se conecta con su email como idSala
-  const { socket } = useServerEncuestas({ nombre, rol: RolEncuesta.Profe })
+  const { socket, conectado, conectando, error } = useServerWebsockets({ nombre, rol: RolEncuesta.Profe })
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta} = useEncuestaStore()
 
   /** Postea al server la acción de crear */
@@ -56,7 +56,7 @@ const useEncuestaProfeState = (nombre?: string) => {
       })
 
       socket.on('disconnect', () => { 
-        setLinkSala(null) 
+        setTimeout(() => setLinkSala(null), 1000)
       })
 
       // Pedimos la sala al server
@@ -86,6 +86,9 @@ const useEncuestaProfeState = (nombre?: string) => {
 
   return {
     socket,
+    conectado,
+    conectando,
+    error,
     encuestas,
     linkSala,
     enviarPregunta,

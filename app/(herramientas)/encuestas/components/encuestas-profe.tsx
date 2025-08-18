@@ -7,10 +7,9 @@ import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
 
 export default function EncuestasAdmin() {
-  const { socket, linkSala } = useEncuestaAdmin()
+  const { conectado, linkSala } = useEncuestaAdmin()
   return (
-    <div className="rounded-xl flex flex-col items-center w-full">
-
+    <div className="rounded-xl px-20 flex flex-col items-center w-full">
       {/* Link de sala */}
       <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
         {linkSala && (
@@ -21,22 +20,24 @@ export default function EncuestasAdmin() {
             </Link>
           </p>
         )}
-        {!linkSala && <p className='text-center text-xs md:text-lg pb-6'>Link de sala no recibido</p>}
-        
+        {!linkSala && <span>Link de sala no recibido</span>}
+
         {/* Barra de status */}
         <Status />
 
         <hr className="invisible py-2" />
-        {socket?.connected && (
+        {conectado && (
           <>
             <AgregarPregunta />
             <ListaEncuestas />
           </>
         )}
-        {!socket?.connected && (
-          <div className='text-center'>
-            <p className='text-xl m-4'>¡Ups! No se puede conectar con el servidor</p>
-            <p>Checkeá tu conexión o envianos un mensaje <span className='text-cyan-500'>ludidactas.adm@gmail.com</span></p>
+        {!conectado && (
+          <div className="text-center">
+            <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
+            <p>
+              Checkeá tu conexión, actualizá la página, o envianos un mensaje <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+            </p>
           </div>
         )}
       </div>
@@ -45,12 +46,12 @@ export default function EncuestasAdmin() {
 }
 
 function Status() {
-  const { socket } = useEncuestaAdmin()
+  const { conectado } = useEncuestaAdmin()
   return (
     <div className="flex items-center justify-between">
-          <h1 className="text-xl md:text-4xl drop-shadow-md font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
-          {socket?.connected ? (
-        <span className="text-emerald-700 animate-pulse text-sm md:text-xl">Conectado</span>
+      <h1 className="text-3xl">Encuestas</h1>
+      {conectado ? (
+        <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
         <span className="text-red-700">Desconectado</span>
       )}

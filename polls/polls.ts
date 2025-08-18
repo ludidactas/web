@@ -5,7 +5,7 @@ import { extractZodErrorMessages } from "./utils"
 import { pollBase, voteValidator } from "./validators"
 
 // Polls y votos activos
-const salas = new Map<string, { polls: Map<string, Encuesta>, votantes: Map<string, Set<string>>, votos: Map<string, Map<string, string>> }>()
+export const salas = new Map<string, { polls: Map<string, Encuesta>, votantes: Map<string, Set<string>>, votos: Map<string, Map<string, string>> }>()
 
 // Cuando se pide una sala, si no existe se la crea
 const getSala = (salaId: string) => {

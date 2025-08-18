@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 
 export default function EncuestasEstudiante() {
-  const { conectado, encuestas, session } = useEncuestaEstudiante()
+  const { conectado, encuestas, error } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -37,7 +37,7 @@ export default function EncuestasEstudiante() {
       {encuestasVisibles.length == 0 && (
         <div className="h-full flex flex-col items-center justify-center">
           <Image className='rounded-full grayscale m-16 shadow-xl' height={300} src={'/img/svgilustracion.png'} width={300} alt='' />
-          <p className="text-gray-500 text-lg text-center ">¡Ups! Parece que no hay encuestas activas.</p>
+          <p className="text-gray-500 text-lg text-center ">{ error ? error : '¡Ups! Parece que no hay encuestas activas.'}</p>
         </div>
       )}
     </div>

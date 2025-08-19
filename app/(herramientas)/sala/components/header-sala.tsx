@@ -3,7 +3,7 @@ import { PropsWithChildren } from 'react'
 import { titulo } from '@/components/fonts'
 
 interface HeaderProps extends PropsWithChildren {
-    className: string,
+    className?: string,
   }
 
 export default function HeaderSala({ className, children }: HeaderProps) {

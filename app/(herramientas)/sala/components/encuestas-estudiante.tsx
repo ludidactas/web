@@ -6,6 +6,9 @@ import { es } from 'date-fns/locale'
 import Image from 'next/image'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
+import { LdSvg } from '@/components/custom/ld-svg'
+import DibuEstudiante from '/svg/Ups2.svg'
+import { oscilar } from '@/lib/animaciones'
 
 export default function EncuestasEstudiante() {
   const { conectado, encuestas, error } = useEncuestaEstudiante()
@@ -35,9 +38,16 @@ export default function EncuestasEstudiante() {
       )}
 
       {encuestasVisibles.length == 0 && (
-        <div className="h-full flex flex-col items-center justify-center">
-          <Image className='rounded-full grayscale m-16 shadow-xl' height={300} src={'/img/svgilustracion.png'} width={300} alt='' />
-          <p className="text-gray-500 text-lg text-center ">{ error ? error : '¡Ups! Parece que no hay encuestas activas.'}</p>
+        <div className="flex flex-col mt-10 items-center justify-center">
+<h2 className='text-3xl text-gray-500 '>¡Ups!</h2>
+          <LdSvg 
+          className="w-[500px]" 
+          SvgComponent={DibuEstudiante}
+          ids={['tetris', 'signo1', 'signo2', 'personaje'] as const}
+          animation={oscilar(['personaje', 'signo1', 'signo2'], 2, 1, 0.4)}/>
+
+<p className="text-gray-500 text-xl w-[400px] text-center ">{error ? error : 'Parece que no hay encuestas activas.'}</p>
+
         </div>
       )}
     </div>

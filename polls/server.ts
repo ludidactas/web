@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io"
 import { Encuesta } from "./encuestas"
 import { conErrorHandling } from "./middleware"
 import { estudianteSala, hidratar, profeSala } from "./polls"
-import { conSession, esProfe } from "./session"
+import { conSession, esProfe, SocketConSesion } from "./session"
 import { randomUUID } from "crypto"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
@@ -38,13 +38,13 @@ const getOwner = (salaId: string) => {
 /** Crea y hace el setup del canal para estudiantes de la sala */
 const crearSala = (salaId: string) => {
   // Namespace para estudiantes DE ESTA SALA
-  io.of(`/polls/${salaId}/estudiante`).use(conSession).on('connection', (socket: Socket) => {
+  io.of(`/polls/${salaId}/estudiante`).use(conSession).on('connection', (socket: SocketConSesion) => {
     const safe = conErrorHandling(socket)
 
-    const user = socket.data.sessionId
-    console.log(`Estudiante conectado: ${socket.data.sessionId} (sala ${salaId} de ${getOwner(salaId)})`)
+    const user = socket.data.session.nombre
+    console.log(`Estudiante conectado: ${user} (sala ${salaId} de ${getOwner(salaId)})`)
 
-    const estudiante = estudianteSala(salaId, user)
+    const estudiante = estudianteSala(salaId, socket.data.session.sessionId)
 
     // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
     socket.emit('polls:list', estudiante.listar())
@@ -84,11 +84,11 @@ const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
   })
 }
 
-io.of('/polls/profe').use(conSession).use(esProfe).on('connection', socket => {
+io.of('/polls/profe').use(conSession).use(esProfe).on('connection', (socket: SocketConSesion) => {
   const safe = conErrorHandling(socket)
 
   // Se conectó un profe, le armamos una sala con su email como key:
-  const email = socket.data.user.email
+  const email = socket.data.user.email!
   const salaId = getSala(email)
   console.log(`Se conectó profe ${email}, sala ${salaId}`)
 

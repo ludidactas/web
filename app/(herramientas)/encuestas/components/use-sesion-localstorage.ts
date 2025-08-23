@@ -8,10 +8,10 @@ export default function useSesionGuardada() {
   const [ready, setReady] = useState(false)
 
   // Obtiene la sesión del server de websockets almacenada en localStorage
-  const [session, saveSession, clearSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
+  const [storedSession, saveSession, clearSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
 
   // Obtiene la sesión de next-auth
-  const { data, status } = useSession()
+  const { data: nextSession, status } = useSession()
 
   useEffect(() => {
     // Esperamos a que la sesión esté lista
@@ -19,16 +19,17 @@ export default function useSesionGuardada() {
 
     // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
     // (en caso de anónimo, ni limpiarla)
-    if (session && data?.user?.email && session.username !== data?.user?.email) {
-      console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`)
+    if (storedSession && nextSession?.user?.email && storedSession.email !== nextSession?.user?.email) {
+      console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`, storedSession, nextSession)
       clearSession()
+      return
     }
 
     setReady(true)
-  }, [data?.user?.email, clearSession, session, status])
+  }, [nextSession?.user?.email, clearSession, storedSession, status])
 
   return {
-    session,
+    session: storedSession,
     saveSession: saveSession,
     clearSession,
     ready

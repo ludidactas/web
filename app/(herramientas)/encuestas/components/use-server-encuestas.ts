@@ -11,8 +11,6 @@ import useSesionGuardada from './use-sesion-localstorage'
 
 export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
-  console.log(`Montando socket para rol ${rol} ${rol === RolEncuesta.Estudiante ? `en sala ${idSala}` : ''}...`)
-
   const socket = useRef<Socket | null>(null)
 
   const [error, setError] = useState<string | null>(null)
@@ -45,14 +43,14 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
       setConectando(false)
     }
 
-    const onSession = (sock: Socket, { sessionId, userIp, username, rol }: PollsServerSession) => {
-      console.log(`✅ Sesión abierta: ${sessionId} para ${username} (${rol}) desde IP ${userIp}`)
+    const onSession = (sock: Socket, session: PollsServerSession) => {
+      console.log(`✅ Sesión abierta: ${session.sessionId}`)
 
       // Guardamos la sesión en localStorage para persistencia
-      saveSession({ sessionId, userIp, username, rol })
+      saveSession(session)
 
       // Le attacheamos la sesión que nos mandó el server al socket local
-      sock.auth = { ...sock.auth, sessionId }
+      sock.auth = { ...sock.auth, sessionId: session.sessionId }
       console.log('Updated socket auth:', sock.auth)
     }
 
@@ -169,7 +167,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
     if (!sessionReady) return 
 
     // Si ya está conectado o conectando, no hacemos nada
-    // if (conectado || conectando) return 
+    if (conectado || conectando) return 
 
     // Si es para estudiante y no hay idSala, bochamos
     if (!rol || (rol === RolEncuesta.Estudiante && !idSala))
@@ -191,7 +189,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
         setConectando(false)
       }
     }
-  }, [sessionReady, session])
+  }, [sessionReady, session, conectado, conectando, idSala, rol, conectar])
 
   return {
     socket: socket.current,

@@ -5,21 +5,48 @@ import { useState } from 'react'
 import { Encuesta } from '@/polls/encuestas'
 import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
+import { useCopyToClipboard } from 'usehooks-ts'
+import { Copy, SquareCheckBig } from 'lucide-react'
 
 export default function EncuestasAdmin() {
   const { conectado, linkSala } = useEncuestaAdmin()
+  const [_copiedText, copy] = useCopyToClipboard()
+  const [justCopied, setJustCopied] = useState(false)
+
+  const handleCopy = (text: string) => () => {
+    copy(text)
+      .then(() => {
+        console.log('Copied!', { text })
+        setJustCopied(true)
+
+        setTimeout(() => {
+          setJustCopied(false)
+        }, 3000)
+      })
+      .catch(error => {
+        console.error('Failed to copy!', error)
+      })
+  }
+
   return (
-    <div className="rounded-xl px-20 flex flex-col items-center w-full">
-      {/* Link de sala */}
-      <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
-        {linkSala && (
-          <p className='text-center px-2 mb-4 text-xs md:text-lg'>
-            Tu sala:{' '}
-            <Link href={linkSala} className="text-blue-700 hover:underline">
-              {linkSala}
-            </Link>
-          </p>
-        )}
+      <div className="rounded-xl px-20 flex flex-col items-center w-full">
+        {/* Link de sala */}
+        <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
+          {linkSala && (
+            <div className='flex items-center gap-4 justify-center mb-8'>
+            <p className='text-center leading-normal text-xs md:text-lg'>
+              Tu sala:{' '}
+              <Link href={linkSala} className="text-blue-700 hover:underline">
+                {linkSala}
+              </Link>
+            </p>
+            <button  onClick={handleCopy(linkSala)}
+              > 
+                {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+              </button>
+          </div>
+          )}
+  
         {!linkSala && <span>Link de sala no recibido</span>}
 
         {/* Barra de status */}

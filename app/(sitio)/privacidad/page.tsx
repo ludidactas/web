@@ -1,6 +1,5 @@
-import Link from 'next/link'
-import Politicas from './privacidad.mdx'
 import './privacidad.css'
+import Politicas from './privacidad.mdx'
 
 export default function Privacidad() {
   return (

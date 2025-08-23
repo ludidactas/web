@@ -1,7 +1,7 @@
 import ClasesSVG from '@/svg/bannerclasesSVGO.svg'
 import { LdSvg } from './ld-svg'
-import { secuenciar } from '@/lib/utils'
 import BtnNew from '@/svg/btnNuevoSVGO.svg'
+import { secuenciar } from '@/lib/animaciones'
 
 
 export default function BannerClases({ className }: { className?: string }) {
@@ -22,7 +22,7 @@ export default function BannerClases({ className }: { className?: string }) {
         animation={(nodos, t) => {
 
             ['personajes', 'mano', 'info', 'slot'].forEach((id, idx) => {
-                const nodo = nodos[id]
+                const nodo = (nodos as any)[id]
                 nodo.dy(Math.sin(t / 600 + idx) * 0.09)
             })
         }}

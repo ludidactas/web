@@ -1,7 +1,7 @@
 'use client'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Encuesta } from '@/polls/encuestas'
 import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
@@ -12,6 +12,8 @@ export default function EncuestasAdmin() {
   const { conectado, linkSala } = useEncuestaAdmin()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
+
+  useEffect(() => { console.log(_copiedText) }, [])
 
   const handleCopy = (text: string) => () => {
     copy(text)

@@ -7,6 +7,7 @@ if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
 }
 
+/** Auth que espera el server de sockets */
 export interface SocketServerAuth {
   // Rol con el que se conecta
   rol: RolEncuesta

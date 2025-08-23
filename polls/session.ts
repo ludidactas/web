@@ -19,7 +19,7 @@ if (!secret || !ADMINS) {
  * @param token 
  * @returns { exp: number, email: string, name?: string }
  */
-const decodearTokenNextAuth = (socket: Socket, token: string) => {
+const decodearTokenNextAuth = (token: string) => {
   // Verificar que el token no haya expirado
   const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string }
 
@@ -29,14 +29,6 @@ const decodearTokenNextAuth = (socket: Socket, token: string) => {
   if (payload.exp < Math.floor(Date.now() / 1000)) throw new Error('Sesión expirada')
 
   return payload
-}
-
-
-// Payload de login
-export interface AuthData {
-  username: string
-  rol: RolEncuesta
-  password?: string
 }
 
 // Sesión del server
@@ -71,7 +63,7 @@ export const createSession = (socket: Socket, rol: RolEncuesta, username: string
 export const openSession = (socket: Socket, rol: RolEncuesta, username: string) => {
 
   // Creamos el objeto - Ojo que le estoy agregando info arbitraria que venga en el data
-  const session = { ...socket.data || {}, ...createSession(socket, rol, username) }
+  const session = createSession(socket, rol, username)
 
   // Guardamos la sesión
   setSession(session.sessionId, session)
@@ -85,7 +77,7 @@ export const openSession = (socket: Socket, rol: RolEncuesta, username: string) 
 
 
 /** 
- * Hace login al server de websockets
+ * Hace login al server de websockets.
  * 
  * Si hay token, autentica que sea emitido por el servidor Next y usa su info para abrir una sesión.
  * 
@@ -112,7 +104,7 @@ const login = (socket: Socket) => {
 
   // Si hay token, lo verificamos
   console.log(`Verificando token desde IP ${socketIp(socket)}`)
-  const payload = decodearTokenNextAuth(socket, token)
+  const payload = decodearTokenNextAuth(token)
 
   // Le seteamos al user el email y el nombre del token emitido por next
   socket.data.user = {
@@ -162,7 +154,7 @@ const validarSession = (socket: Socket) => {
       // Si es profe o admin y no hay token, bochamos
       if (!token) throw new Error(`Se requiere un token de autenticación para conectarse como profe o admin`)
 
-      const payload = decodearTokenNextAuth(socket, token)
+      const payload = decodearTokenNextAuth(token)
 
       // Si el username de sesión no coincide con el email del token, bochamos
       if (session.username !== payload.email) throw new Error(`Sesión ${sessionId} no válida para el usuario ${payload.email}!`)

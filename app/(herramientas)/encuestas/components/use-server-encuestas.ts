@@ -1,52 +1,17 @@
 'use client'
 import { RolEncuesta } from '@/polls/encuestas'
 import { PollsServerSession } from '@/polls/session'
-import { useSession } from 'next-auth/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { funnel, isNonNullish } from 'remeda'
+import { isNonNullish } from 'remeda'
 import { ExtendedError } from 'socket.io'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } from './server-encuestas'
-import { useLocalStorage } from 'usehooks-ts'
-
-/** Levanta la sesión guardada, valida que coincida con el usuario actual de google, y la reinicia en caso contrario */
-function useSesionGuardada() {
-  const [ready, setReady] = useState(false)
-
-  // Obtiene la sesión del server de websockets almacenada en localStorage
-  const [session, saveSession, clearSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
-
-  // Obtiene la sesión de next-auth
-  const { data, status } = useSession()
-
-  useEffect(() => {
-    // Esperamos a que la sesión esté lista
-    if (status === "loading") return
-
-    // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
-    // (en caso de anónimo, ni limpiarla)
-    if (session && data?.user?.email && session.username !== data?.user?.email) {
-      console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`)
-      clearSession()
-    }
-
-    setReady(true)
-  }, [data?.user?.email, clearSession, session, status])
-
-  return {
-    session,
-    saveSession: saveSession,
-    clearSession,
-    ready
-  }
-}
+import useSesionGuardada from './use-sesion-localstorage'
 
 export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
-  // Chance deba convertir socket en ref en lugar de state, para tener siempre la instancia fresca.
-  // const [socket, setSocket] = useState<Socket | null>(null)
-  console.log(`Montando socket para rol ${rol} en sala ${idSala}...`)
+  console.log(`Montando socket para rol ${rol} ${rol === RolEncuesta.Estudiante ? `en sala ${idSala}` : ''}...`)
 
   const socket = useRef<Socket | null>(null)
 

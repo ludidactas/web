@@ -1,7 +1,7 @@
 'use client'
 import { Encuesta } from "@/polls/encuestas";
 import { SVG } from "@svgdotjs/svg.js";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 interface EstadisticaSvgProps {
   data: Encuesta[]
 }

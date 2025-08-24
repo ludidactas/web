@@ -187,7 +187,7 @@ export default function TestEstadisticaApp() {
       <EstadisticaSvg data={data} />
 
       <div className="mt-4 text-sm text-gray-600">
-        <p>Haz clic en "Actualizar Datos" para ver las animaciones en acción.</p>
+        <p>Haz clic en &quot;Actualizar Datos&quot; para ver las animaciones en acción.</p>
         <p>Las barras se animan suavemente cuando cambian los datos.</p>
       </div>
     </div>

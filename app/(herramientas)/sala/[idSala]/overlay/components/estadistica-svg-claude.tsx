@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 
 // Tipos para nuestros datos
 interface Opcion {
@@ -17,16 +18,27 @@ interface EstadisticaSvgProps {
   data: Encuesta[]
 }
 
+export default function EstadisticaLiveSvg() { 
+  const { conectado, encuestas, error } = useEncuestaEstudiante()
+  return (
+    <div className="min-w-[100vw]">
+      { !conectado && <p>Conectando...</p>}
+      { error && <p className="text-red-500">Error: {error}</p> }
+      {conectado && <EstadisticaSvg data={encuestas ?? []} />}
+    </div>
+  )
+}
+
 // Componente principal con SVG artesanal
 export function EstadisticaSvg({ data }: EstadisticaSvgProps) {
   return (
-    <div className="space-y-8">
-      <EncuestaSVG  encuesta={data[0]} />
+    <>
+      {data.length > 0 && <EncuestaSVG encuesta={data[0]} />}
 
       {/* {data.map((encuesta, encuestaIdx) => (
         <EncuestaSVG key={encuestaIdx} encuesta={encuesta} />
       ))} */}
-    </div>
+    </>
   )
 }
 
@@ -219,8 +231,9 @@ function BarraEstadistica({
   )
 }
 
+
 // Componente de ejemplo con datos de prueba
-export default function App() {
+export function TestApp() {
   const [data, setData] = useState<Encuesta[]>([
     {
       pregunta: '¿Cuál es tu lenguaje de programación favorito?',

@@ -100,7 +100,7 @@ export async function conectarSocket({ auth, listeners }: {
  */
 export async function solicitarAuth() {
   console.log(`Obteniendo token de auth del server de next...`)
-  const respuesta = await fetch('/api/auth/token')
+  const respuesta = await fetch('/api/auth/token', { credentials: 'include'})
   const payload = await respuesta.json()
   return payload.token as string
 }

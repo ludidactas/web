@@ -6,7 +6,10 @@ import jwt from 'jsonwebtoken'
 // (para autenticarlo en el servidor de websockets)
 export async function GET(req: Request) {
   const sessionToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (!sessionToken) return new NextResponse('No autorizado', { status: 401 })
+  if (!sessionToken) {
+    console.error("No token, cookies?", { cookies: req.headers.get("cookie") })
+    return new NextResponse('No autorizado', { status: 401 })
+  }
   console.log("creando token...", sessionToken.email,sessionToken.name )
   const token = jwt.sign(
     {

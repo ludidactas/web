@@ -62,7 +62,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   return (
     <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 shadow-lg border border-indigo-200 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
-      <div className="flex md:gap-6 items-center p-4 rounded-xl">
+      <div className="flex md:gap-6 items-center justify-between p-4 rounded-xl">
         <div className='flex items-center md:gap-4'>
           <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' />
           <h3 className="text-lg md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>

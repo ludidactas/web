@@ -88,8 +88,8 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
       // Sala inexistente
       if (error.message === 'Invalid namespace') {
-        toast.error(`Esta sala no existe! Por favor, verificá el ID.`)
-        setError('Esta sala no existe! Por favor, verificá el ID.')
+        toast.error(`¡Esta sala no existe! Por favor, verificá el ID.`)
+        setError('¡Esta sala no existe! Por favor, verificá el ID.')
         setConectado(false)
         setConectando(false)
         return

@@ -18,6 +18,8 @@ export default function EncuestasAdmin() {
       .then(() => {
         setJustCopied(true)
 
+        console.log(_copiedText)
+
         setTimeout(() => {
           setJustCopied(false)
         }, 3000)

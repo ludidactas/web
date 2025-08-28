@@ -127,6 +127,13 @@ io.of('/polls/profe').use(conSession).use(esProfe).on('connection', (socket: Soc
   }))
 })
 
+io.of('/test').on('connection', (socket: Socket) => { 
+  console.log('Tester conectado')
+  socket.on('ping', () => socket.emit('pong', {
+    profes: io.of('/polls/profe').sockets.size,
+  }))
+})
+
 // Start the server
 io.listen(PORT)
 

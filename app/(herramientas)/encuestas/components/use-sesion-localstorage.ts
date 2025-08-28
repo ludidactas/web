@@ -3,7 +3,10 @@ import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { useLocalStorage } from "usehooks-ts"
 
-/** Levanta la sesión guardada en localStorage, valida que coincida con el usuario actual de google, y la reinicia en caso contrario */
+/** 
+ * Levanta la sesión guardada en localStorage, valida que coincida con el usuario actual de google, y la reinicia en caso contrario. 
+ * Depende de useSession de next-auth para saber el usuario actual.
+ */
 export default function useSesionGuardada() {
   const [ready, setReady] = useState(false)
 

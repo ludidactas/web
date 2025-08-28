@@ -7,6 +7,9 @@ import { useEncuestaAdmin } from './encuestas-profe-context'
 import Link from 'next/link'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { Copy, SquareCheckBig } from 'lucide-react'
+import { LdSvg } from '@/components/custom/ld-svg'
+import EncuestasIcon from '@/svg/encuestas.svg'
+import PollsIcon from '@/svg/pollsvgo.svg'
 
 export default function EncuestasAdmin() {
   const { conectado, linkSala } = useEncuestaAdmin()
@@ -31,28 +34,28 @@ export default function EncuestasAdmin() {
   }
 
   return (
-      <div className="rounded-xl px-20 flex flex-col items-center w-full">
-        {/* Link de sala */}
-        <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
-          {linkSala && (
-            <div className='flex items-center gap-4 justify-center mb-8'>
-            <p className='text-center leading-normal text-xs md:text-lg'>
+    <div className="rounded-xl md:px-20 flex flex-col items-center w-full">
+      {/* Link de sala */}
+      <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
+        <Status />
+        {linkSala && (
+          <div className='flex items-center justify-center gap-4 my-10'>
+            <p className='leading-normal text-center text-xs md:text-lg'>
               Tu sala:{' '}
               <Link href={linkSala} className="text-blue-700 hover:underline">
                 {linkSala}
               </Link>
             </p>
-            <button  onClick={handleCopy(linkSala)}
-              > 
-                {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-              </button>
+            <button title='Copiar' onClick={handleCopy(linkSala)}
+            >
+              {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+            </button>
           </div>
-          )}
-  
+        )}
+
         {!linkSala && <span>Link de sala no recibido</span>}
 
         {/* Barra de status */}
-        <Status />
 
         <hr className="invisible py-2" />
         {conectado && (
@@ -77,8 +80,15 @@ export default function EncuestasAdmin() {
 function Status() {
   const { conectado } = useEncuestaAdmin()
   return (
-    <div className="flex items-center justify-between">
-      <h1 className="text-3xl">Encuestas</h1>
+    <div className='relative flex items-center justify-between pr-4 mb-4'>
+      <div className='absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24' />
+
+      <div className="flex relative items-center justify-between">
+        <LdSvg className='w-40' SvgComponent={EncuestasIcon} />
+        <h1 className="text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
+      </div>
+
+      {/* <h1 className="text-3xl">Encuestas</h1> */}
       {conectado ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
@@ -94,25 +104,30 @@ function ListaEncuestas() {
     return <></>
 
   return (
-    <>
-      <h2 className="text-xl md:text-2xl mt-4">Existentes:</h2>
+    <div className='p-4'>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
-    </>
+    </div>
   )
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
   return (
-    <div className="py-4">
+    <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
+      
+      
       {/* Titulo y status */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs md:text-xl">{encuesta.pregunta}</h3>
+      <div className="flex items-center px-4 justify-between">
+        <div className='flex gap-4 items-center'>
+
+          <LdSvg className='w-10' SvgComponent={PollsIcon} />
+          <h3 className="text-sm md:text-xl">{encuesta.pregunta}</h3>
+        </div>
         <div className="flex flex-col items-end">
           <span
-            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-rose-800'}`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
@@ -122,21 +137,24 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         </div>
       </div>
 
-      <ul className="list-disc ml-6">
+      <ol className="list-[lower-latin] px-8 m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            {opcion.texto} - {opcion.votos} votos
+            <div className='flex gap-2'>
+              {opcion.texto} - <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
+            </div>
+
           </li>
         ))}
-      </ul>
+      </ol>
 
       {/* Acciones */}
 
       {/* Publicar/esconder */}
-      <div className="flex items-center justify-end gap-4 my-2">
+      <div className="flex items-center justify-center gap-4 my-2">
         {!encuesta.isPublished && (
           <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-green-700 text-white px-4 py-2 rounded"
+            className="w-20 text-xs md:text-xl md:w-32 bg-emerald-500 text-white px-4 py-2 rounded"
             onClick={() => publicarPregunta(encuesta.id)}
           >
             Publicar
@@ -144,7 +162,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
         {encuesta.isPublished && (
           <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-green-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
+            className="w-20 text-xs md:text-xl md:w-32 bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
             onClick={() => esconderPregunta(encuesta.id)}
           >
             Esconder
@@ -153,13 +171,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
         {/* Abrir/Cerrar */}
         {!encuesta.isOpen && (
-          <button className="w-20 text-xs md:text-xl md:w-32 bg-blue-900 text-white px-2 md:px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
+          <button className="w-20 text-xs md:text-xl md:w-32 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
             Abrir
           </button>
         )}
         {encuesta.isOpen && (
           <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-blue-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
+            className="w-20 text-xs md:text-xl md:w-32 bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
             onClick={() => cerrarPregunta(encuesta.id)}
           >
             Cerrar
@@ -167,7 +185,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
 
         {/* Eliminar */}
-        <button className="w-20 text-xs md:text-xl md:w-32 bg-red-800 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
+        <button className="w-20 text-xs md:text-xl md:w-32 bg-rose-800/90 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
           Eliminar
         </button>
       </div>
@@ -207,27 +225,31 @@ function AgregarPregunta() {
   }
 
   return (
-    <div className="flex flex-col bg-slate-200 p-4 gap-2">
-      <p>Pregunta:</p>
+    <div className="flex flex-col rounded-xl bg-indigo-50 p-4 gap-2">
+      <p className='text-xl'>Pregunta:</p>
       <textarea
-        className="border-b w-full resize-none"
+        className="border-b w-full p-2 resize-none"
         value={pregunta}
         onChange={(e) => setPregunta(e.target.value)}
+        tabIndex={1}
+
       />
 
       {respuestas.map((respuesta, index) => (
         <div key={index} className="flex gap-4 items-center">
           <span className="whitespace-nowrap">Opc. {index + 1}</span>
           <input
-            className="border-b w-full"
+            className="border-b w-full p-1"
             type="text"
             value={respuesta}
             onChange={(e) => actualizarRespuesta(index, e.target.value)}
+            tabIndex={index + 2}
           />
           {respuestas.length > 1 && (
             <button
-              className="text-red-700 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-red-700 px-2 py-1 rounded text-sm transition-all duration-100 h-8"
+              className="text-rose-600 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-rose-700 px-2 py-1 rounded text-sm transition-all duration-100 w-8 h-8"
               onClick={() => eliminarRespuesta(index)}
+              tabIndex={-1}
             >
               X
             </button>
@@ -235,10 +257,15 @@ function AgregarPregunta() {
         </div>
       ))}
 
-      <button className="bg-blue-900 text-white px-2 md:px-4 py-2 rounded" onClick={agregarRespuesta}>
+      <button className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+        onClick={agregarRespuesta}
+        tabIndex={respuestas.length + 2}
+      >
         + Agregar opción
       </button>
-      <button className="bg-emerald-900 text-white px-2 md:px-4 py-2 rounded" onClick={postearPregunta}>
+      <button className="bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
+        onClick={postearPregunta}
+        tabIndex={respuestas.length + 2} >
         &gt; Enviar pregunta
       </button>
     </div>

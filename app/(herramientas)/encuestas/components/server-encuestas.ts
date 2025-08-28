@@ -23,6 +23,7 @@ export interface SocketServerAuth {
 
 /** Contiene los endpoints para cada rol */
 export const conectar = {
+  [RolEncuesta.Tester]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/test`, { auth, autoConnect: false }),
   [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false }),
   [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false }),
   [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false }),
@@ -96,7 +97,7 @@ export async function conectarSocket({ auth, listeners }: {
 
 /** 
  * Le pide al server de next, que es el que autentica con Google,
- * un token JWT para conectarse al server de encuestas.
+ * un token JWT para conectarse al server de encuestas. Stateless.
  */
 export async function solicitarAuth() {
   console.log(`Obteniendo token de auth del server de next...`)

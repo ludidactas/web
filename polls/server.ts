@@ -181,6 +181,13 @@ io.on('connection', (socket) => {
   console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`)
 })
 
+io.of('/test').on('connection', (socket: Socket) => { 
+  console.log('Tester conectado')
+  socket.on('ping', () => socket.emit('pong', {
+    profes: io.of('/polls/profe').sockets.size,
+  }))
+})
+
 // Start the server
 io.listen(PORT)
 

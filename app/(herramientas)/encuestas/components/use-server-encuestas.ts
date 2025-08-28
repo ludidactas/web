@@ -115,6 +115,12 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
       console.log('Session data:', session)
       console.log('Rol:', rol, 'IdSala:', idSala)
 
+      // Caso test va directo, sin sesión, sin idSala, nada
+      if (rol === RolEncuesta.Tester) {
+        await conectarSocket({ auth: { rol }, listeners })
+        return
+       }
+
       // Si ya hay una sesión de ws guardada, la reutilizamos
       if (session) {
 

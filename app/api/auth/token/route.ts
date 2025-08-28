@@ -10,8 +10,6 @@ export async function GET() {
   if (!session || !session.user || !session.user.email) {
     return new NextResponse('No autorizado', { status: 401 })
   }
-
-  console.log("creando token...", session.user.email, session.user.name)
   
   const token = jwt.sign(
     {

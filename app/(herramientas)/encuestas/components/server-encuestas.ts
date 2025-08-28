@@ -23,10 +23,10 @@ export interface SocketServerAuth {
 
 /** Contiene los endpoints para cada rol */
 export const conectar = {
-  [RolEncuesta.Tester]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/test`, { auth, autoConnect: false }),
-  [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false }),
-  [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false }),
-  [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false }),
+  [RolEncuesta.Tester]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/test`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */

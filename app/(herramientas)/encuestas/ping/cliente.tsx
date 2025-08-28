@@ -19,17 +19,22 @@ export default function PingClient() {
     }
   }, [socket])
 
-  if (!socket) return <div className='p-8'>No hay socket...</div>
-
   return (
-    <div className='p-8'>
+    <div className="p-8">
       <Toaster />
-      <pre>{JSON.stringify(resto, null, 2)}</pre>
-      <pre>Socket active?: {JSON.stringify(socket?.active, null, 2)}</pre>
-      <pre>Socket connected?: {JSON.stringify(socket?.connected, null, 2)}</pre>
-      <pre>Socket recovered?: {JSON.stringify(socket.recovered, null, 2)}</pre>
-      <pre>Socket id: {JSON.stringify(socket?.id, null, 2)}</pre>
-      <pre>Socket auth: {JSON.stringify(socket?.auth, null, 2)}</pre>
+      <pre>Error: {resto.error}</pre>
+      <pre>Conectado: {JSON.stringify(resto.conectado)}</pre>
+      <pre>Conectando: {JSON.stringify(resto.conectando)}</pre>
+      {socket && (
+        <>
+          <pre>{JSON.stringify(resto, null, 2)}</pre>
+          <pre>Socket active?: {JSON.stringify(socket.active, null, 2)}</pre>
+          <pre>Socket connected?: {JSON.stringify(socket.connected, null, 2)}</pre>
+          <pre>Socket recovered?: {JSON.stringify(socket.recovered, null, 2)}</pre>
+          <pre>Socket id: {JSON.stringify(socket.id, null, 2)}</pre>
+          <pre>Socket auth: {JSON.stringify(socket.auth, null, 2)}</pre>
+        </>
+      )}
       <Button onClick={() => socket?.emit('ping', { mensaje: 'ping desde el cliente' })}>Enviar ping</Button>
     </div>
   )

@@ -25,7 +25,6 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
   useEffect(() => {
     if (socket) {
       // Pedimos la lista exitente de encuestas al conectarse
-      console.log(`Pidiendo encuestas al servidor para la sala ${idSala}...`)
       socket.emit('polls:list')
 
       // Conectamos el socket a sus handlers

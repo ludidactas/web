@@ -58,7 +58,7 @@ export async function conectarSocket({ auth, listeners }: {
   let sock
   if (sessionId) {
     // Si hay una sesión guardada, la reutilizamos
-    console.log(`Reestableciendo sesión ${sessionId} con el servidor de encuestas...`)
+    console.log(`Creando socket: Reestableciendo sesión ${sessionId} con el servidor de encuestas como ${rol}...`)
     if (rol === RolEncuesta.Estudiante && !idSala)
       throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
     // Conectamos el socket con sessionId
@@ -66,7 +66,7 @@ export async function conectarSocket({ auth, listeners }: {
 
   } else {
     // Sino, creamos una nueva sesión usando el token que nos dió next
-    console.log(`Iniciando nueva sesión el server de encuestas...`)
+    console.log(`Creando socket: Iniciando nueva sesión el server de encuestas como ${rol}...`)
     // if (!token) throw new Error(`Se require una sesión de Google para conectarse al servidor de encuestas`)
     sock = conectar[rol]({ token, nombre, rol, idSala })
   }
@@ -81,9 +81,6 @@ export async function conectarSocket({ auth, listeners }: {
     console.error('Connection timeout:', error)
     onError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
   })
-
-  // Los de console.log
-  // setupSocketLogging(sock)
 
   // Suscribimos a la sesión abierta y la persistimos
   sock.on('session:opened', session => onSession(sock, session))

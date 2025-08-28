@@ -12,9 +12,6 @@ const io = new Server({
     origin: "*",
     methods: ["GET", "POST"]
   },
-  // Add these options for better compatibility
-  transports: ['websocket', 'polling'],
-  allowEIO3: true // Allow Engine.IO v3 clients if needed
 })
 
 // Bun-compatible debugging (without io.engine)

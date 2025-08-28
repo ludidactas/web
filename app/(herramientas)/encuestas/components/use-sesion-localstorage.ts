@@ -23,7 +23,6 @@ export default function useSesionGuardada() {
     // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
     // (en caso de anónimo, ni limpiarla)
     if (storedSession && nextSession?.user?.email && storedSession.email !== nextSession?.user?.email) {
-      console.log(`Sesión guardada no coincide con el usuario de google actual. Limpiando sesión guardada.`, storedSession, nextSession)
       clearSession()
       return
     }

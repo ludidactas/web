@@ -11,8 +11,14 @@ const io = new Server({
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  // Add these options for better compatibility
+  transports: ['websocket', 'polling'],
+  allowEIO3: true // Allow Engine.IO v3 clients if needed
 })
+
+// Bun-compatible debugging (without io.engine)
+console.log("🚀 Setting up Socket.io server...")
 
 // Email_profe: id_sala
 const owners_salas = new Map<string, string>()
@@ -37,12 +43,16 @@ const getOwner = (salaId: string) => {
 
 /** Crea y hace el setup del canal para estudiantes de la sala */
 const crearSala = (salaId: string) => {
+  console.log(`🏫 Creating namespace for sala: /polls/${salaId}/estudiante`)
+  
   // Namespace para estudiantes DE ESTA SALA
-  io.of(`/polls/${salaId}/estudiante`).use(conSession).on('connection', (socket: SocketConSesion) => {
+  const estudianteNamespace = io.of(`/polls/${salaId}/estudiante`)
+  
+  estudianteNamespace.use(conSession).on('connection', (socket: SocketConSesion) => {
     const safe = conErrorHandling(socket)
 
     const user = socket.data.session.nombre
-    console.log(`Estudiante conectado: ${user} (sala ${salaId} de ${getOwner(salaId)})`)
+    console.log(`✅ Estudiante conectado: ${user} (sala ${salaId} de ${getOwner(salaId)})`)
 
     const estudiante = estudianteSala(salaId, socket.data.session.sessionId)
 
@@ -58,8 +68,21 @@ const crearSala = (salaId: string) => {
     socket.on('poll:vote', safe(({ pollId, optionId }) => {
       bradcastPoll(salaId, 'poll:updated', estudiante.votar({ pollId, optionId }))
     }))
+    
+    socket.on('disconnect', (reason) => {
+      console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+    })
+  })
+  
+  // Add error handling for the namespace
+  estudianteNamespace.on('connect_error', (error) => {
+    console.log(`❌ Error en namespace estudiante ${salaId}:`, error.message)
   })
 }
+
+// Create some test salas on startup for debugging
+console.log("🧪 Creating test sala for debugging...")
+crearSala("test123")
 
 /** Envía a admin, profe y estudiantes de la sala */
 const broadcast = (salaId: string, event: string, data: unknown) => {
@@ -71,7 +94,7 @@ const broadcast = (salaId: string, event: string, data: unknown) => {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
-  console.log(`Broadcasting poll ${JSON.stringify(poll)} to sala ${salaId} (${getOwner(salaId)})`)
+  console.log(`📡 Broadcasting poll ${poll.id || 'unknown'} to sala ${salaId} (${getOwner(salaId)})`)
 
   // La emitimos al profe y admin
   sockets_profes.get(getOwner(salaId))?.emit(event, poll)
@@ -84,36 +107,37 @@ const bradcastPoll = (salaId: string, event: string, poll: Encuesta) => {
   })
 }
 
-io.of('/polls/profe').use(conSession).use(esProfe).on('connection', (socket: SocketConSesion) => {
+// Setup profe namespace with better logging
+console.log("🧪 Setting up /polls/profe namespace...")
+const profeNamespace = io.of('/polls/profe')
+
+profeNamespace.use(conSession).use(esProfe).on('connection', (socket: SocketConSesion) => {
   const safe = conErrorHandling(socket)
 
   // Se conectó un profe, le armamos una sala con su email como key:
   const email = socket.data.user.email!
   const salaId = getSala(email)
-  console.log(`Se conectó profe ${email}, sala ${salaId}`)
+  console.log(`✅ Se conectó profe ${email}, sala ${salaId}`)
 
   const profe = profeSala(salaId)
 
   // Al conectarse el profe, le enviamos la lista de encuestas de su sala
   socket.emit('polls:list', profe.listar())
 
-  // Profe puede crear una encuesta
+  // All the profe event handlers...
   socket.on('poll:create', safe((poll: unknown) => {
     bradcastPoll(salaId, 'poll:created', profe.crearPoll(poll))
   }))
 
-  // Profe puede consultar los votantes de una encuesta
   socket.on('poll:votantes', safe(({ pollId }) => {
     socket.emit('poll:votantes', { votantes: profe.consultarVotantes({ pollId }) })
   }))
 
-  // Profe puede updatear una encuesta
   socket.on('poll:open', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isOpen: true }))))
   socket.on('poll:close', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isOpen: false }))))
   socket.on('poll:publish', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isPublished: true }))))
   socket.on('poll:hide', safe(({ pollId }) => bradcastPoll(salaId, 'poll:updated', profe.updatePoll(pollId, { isPublished: false }))))
 
-  // Profe puede borrar
   socket.on('poll:delete', safe(({ pollId }) => {
     profe.deletePoll({ pollId })
     broadcast(salaId, 'poll:deleted', { pollId })
@@ -125,12 +149,43 @@ io.of('/polls/profe').use(conSession).use(esProfe).on('connection', (socket: Soc
   socket.on('sala:abrir', safe(() => {
     socket.emit('sala:abierta', { salaId, polls: profe.listar() })
   }))
+  
+  socket.on('disconnect', (reason) => {
+    console.log(`❌ Profe ${email} desconectado: ${reason}`)
+    sockets_profes.delete(email)
+  })
+})
+
+profeNamespace.on('connect_error', (error) => {
+  console.log(`❌ Error en namespace profe:`, error.message)
+})
+
+// Setup admin namespace
+console.log("🧪 Setting up /polls/admin namespace...")
+const adminNamespace = io.of('/polls/admin')
+
+adminNamespace.on('connection', (socket) => {
+  console.log(`✅ Admin connected: ${socket.id}`)
+  
+  socket.on('disconnect', (reason) => {
+    console.log(`❌ Admin ${socket.id} desconectado: ${reason}`)
+  })
+})
+
+adminNamespace.on('connect_error', (error) => {
+  console.log(`❌ Error en namespace admin:`, error.message)
+})
+
+// Global connection logging
+io.on('connection', (socket) => {
+  console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`)
 })
 
 // Start the server
 io.listen(PORT)
 
 console.log(`🚀 Servidor de polls corriendo en el puerto ${PORT}`)
+console.log(`📍 Available namespaces will be created dynamically`)
 
 // Graceful shutdown
 process.on('SIGINT', () => {

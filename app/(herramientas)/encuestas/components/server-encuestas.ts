@@ -1,5 +1,5 @@
-import { RolEncuesta } from "@/polls/encuestas"
-import { PollsServerSession } from "@/polls/session"
+import { PollsServerSession } from "@/wss/session"
+import { RolEncuesta } from "@/wss/tipos"
 // import { setupSocketLogging } from "@/polls/test/test-funcs"
 import { io, Socket } from "socket.io-client"
 

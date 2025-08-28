@@ -5,8 +5,8 @@ import { toast } from 'sonner'
 
 import { useServerWebsockets } from './use-server-encuestas'
 import { useEncuestaStore } from './encuestas-store'
+import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
 
-import { Encuesta, RolEncuesta, type CrearEncuesta } from '@/polls/encuestas'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (nombre?: string) => {

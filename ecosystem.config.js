@@ -2,9 +2,9 @@
 module.exports = {
   apps: [
     {
-      name: 'polls',
+      name: 'wss',
       script: 'bun',
-      args: 'polls/server.ts',
+      args: 'wss/server.ts',
       cwd: '/home/vlad/poc_roadmaps/',
       interpreter: 'none',
       env: {

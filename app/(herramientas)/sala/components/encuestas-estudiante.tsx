@@ -1,6 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { EncuestaHidratada } from '@/polls/encuestas'
+import { EncuestaHidratada } from '@/wss/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Image from 'next/image'

@@ -1,6 +1,5 @@
 'use client'
-import { RolEncuesta } from '@/polls/encuestas'
-import { PollsServerSession } from '@/polls/session'
+import { PollsServerSession } from '@/wss/session'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isNonNullish } from 'remeda'
 import { ExtendedError } from 'socket.io'
@@ -8,6 +7,7 @@ import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } from './server-encuestas'
 import useSesionGuardada from './use-sesion-localstorage'
+import { RolEncuesta } from '@/wss/tipos'
 
 export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
@@ -166,7 +166,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
         setConectando(false)
       }
     }
-  }, [sessionReady, conectando, idSala, rol, conectar])
+  }, [sessionReady, conectando, puedeConectar, idSala, rol, conectar])
 
   return {
     socket: socket.current,

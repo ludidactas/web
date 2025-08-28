@@ -1,4 +1,4 @@
-import { PollsServerSession } from "@/polls/session"
+import { PollsServerSession } from "@/wss/session"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { useLocalStorage } from "usehooks-ts"

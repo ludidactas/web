@@ -1,6 +1,6 @@
 'use client'
 
-import { RolEncuesta } from '@/polls/encuestas'
+import { RolEncuesta } from '@/wss/encuestas'
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../../encuestas/components/encuestas-store'

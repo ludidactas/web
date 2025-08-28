@@ -1,28 +1,16 @@
 import { merge } from "remeda"
 import { z } from "zod"
-import { Encuesta, EncuestaHidratada } from "./encuestas"
-import { extractZodErrorMessages } from "./utils"
-import { pollBase, voteValidator } from "./validators"
+import { extractZodErrorMessages } from "../utils"
+import { pollBase, voteValidator } from "../validators"
+import { getOrCreateSala, getSala } from "../salas/app"
+import { Encuesta, EncuestaHidratada } from "../tipos"
 
-// Polls y votos activos
-export const salas = new Map<string, { polls: Map<string, Encuesta>, votantes: Map<string, Set<string>>, votos: Map<string, Map<string, string>> }>()
 
-// Cuando se pide una sala, si no existe se la crea
-const getSala = (salaId: string) => {
-  if (!salas.has(salaId)) { 
-    salas.set(salaId, {
-      polls: new Map<string, Encuesta>(),
-      votantes: new Map<string, Set<string>>(),
-      votos: new Map<string, Map<string, string>>(),
-    })
-  }
-  return salas.get(salaId)!
-}
 
 /** Crea un closure para operar los componentes de una sala */
-export function profeSala(salaId: string){ 
+export function profeSala(email: string){ 
 
-  const { votos, votantes, polls } = getSala(salaId)
+  const { id: salaId, votos, votantes, polls } = getOrCreateSala(email)
   
   // Acciones de profe: 
 
@@ -172,18 +160,22 @@ export function estudianteSala(idSala: string, sessionId: string) {
 }
 
 
-
-/** Hidrata una encuesta con la info del cliente */
+/** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
 export function hidratar(salaId: string, poll: Encuesta, sessionId: string): EncuestaHidratada {
+
   const { votos } = getSala(salaId)
+
   const votosPoll = votos.get(poll.id)
+
   if (!votosPoll) throw new Error(`Encuesta no encontrada o no tiene votantes registrados (hidratando ${poll.id} para uid ${sessionId})`)
+  
   return {
     ...poll,
     puedoVotar: !votosPoll.has(sessionId),
     votoEmitido: votosPoll.has(sessionId) ? votosPoll.get(sessionId) : undefined
   }
 }
+
 
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export function hidratadas(salaId: string, sessionId: string) {
@@ -198,6 +190,7 @@ export function assertValidPoll(pollData: unknown) {
   const { error } = pollBase.safeParse(pollData)
   if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
 }
+
 
 function assertPollExists(idSala: string, idPoll: string) {
   const { polls } = getSala(idSala)

@@ -1,5 +1,4 @@
 'use client'
-import { Encuesta } from '@/polls/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Copy, SquareCheckBig } from 'lucide-react'
@@ -7,6 +6,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaAdmin } from './encuestas-profe-context'
+import { Encuesta } from '@/wss/tipos'
 
 export default function EncuestasAdmin() {
   const { conectado, linkSala } = useEncuestaAdmin()

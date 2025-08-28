@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto"
 import jwt from 'jsonwebtoken'
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
-import { RolEncuesta } from "./encuestas"
-import { salas } from "./polls"
 import { pick } from "remeda"
+import { RolEncuesta } from "./tipos"
+import { salas } from "./salas/app"
 
 // Sesión del server
 export interface PollsServerSession {
@@ -104,7 +104,7 @@ const login = (socket: SocketConSesion) => {
     // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
     if (!socket.handshake.auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
 
-    // Verificamos que la sala exista
+    // Verificamos que la sala exista - Dependencia de salas!
     if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
 
     socket.data.sala = socket.handshake.auth.idSala

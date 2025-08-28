@@ -1,5 +1,5 @@
 'use client'
-import { Encuesta } from "@/polls/encuestas";
+import { Encuesta } from "@/wss/encuestas";
 import { SVG } from "@svgdotjs/svg.js";
 import { useEffect, useRef } from "react";
 interface EstadisticaSvgProps {

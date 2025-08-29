@@ -1,6 +1,5 @@
 'use client'
 import { cn } from '@/lib/utils'
-import { EncuestaHidratada } from '@/wss/encuestas'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Image from 'next/image'
@@ -9,6 +8,7 @@ import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { LdSvg } from '@/components/custom/ld-svg'
 import DibuEstudiante from '/svg/Ups2.svg'
 import { oscilar } from '@/lib/animaciones'
+import { EncuestaHidratada } from '@/wss/tipos'
 
 export default function EncuestasEstudiante() {
   const { conectado, encuestas, error } = useEncuestaEstudiante()

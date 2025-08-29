@@ -1,10 +1,10 @@
 'use client'
 
-import { RolEncuesta } from '@/wss/encuestas'
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
 import { useServerWebsockets } from '../../encuestas/components/use-server-encuestas'
+import { RolEncuesta } from '@/wss/tipos'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {

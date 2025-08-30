@@ -2,11 +2,13 @@
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import Image from 'next/image'
+// import Image from 'next/image'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { LdSvg } from '@/components/custom/ld-svg'
-import DibuEstudiante from '/svg/Ups2.svg'
+import DibuEstudiante from '/svg/upssvgo.svg'
+import Cabeza from '/svg/cabeza.svg'
+import Polls from '/svg/pollsvgo.svg'
 import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
 
@@ -16,19 +18,25 @@ export default function EncuestasEstudiante() {
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
-    <div className="bg-white p-4 md:p-14 md:max-w-[54em] mx-auto rounded-xl">
+    <div className="bg-white p-4 md:px-14 md:max-w-[54em] mx-auto rounded-xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">Encuestas</h1>
-        </div>
-        {conectado ? (
-          <span className="text-emerald-700 animate-pulse">Conectado</span>
-        ) : (
-          <span className="text-red-700">Desconectado</span>
-        )}
-      </div>
+      <div className="relative">
+        <div className='absolute inset-y-16 z-10 w-full h-24 bg-indigo-200/30 rounded-xl' />
+        <div className="relative z-20 flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <LdSvg className="w-[150px]" SvgComponent={Cabeza}
+              ids={['cabeza'] as const}
+              animation={oscilar(['cabeza'], 2, 1, 0.4)} />
+            <h1 className="text-xl md:text-[3em] font-bold text-indigo-500">Encuestas</h1>
+          </div>
 
+          {conectado ? (
+            <span className="text-emerald-700 animate-pulse">Conectado</span>
+          ) : (
+            <span className="text-red-700">Desconectado</span>
+          )}
+        </div>
+      </div>
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (
@@ -38,15 +46,14 @@ export default function EncuestasEstudiante() {
       )}
 
       {encuestasVisibles.length == 0 && (
-        <div className="flex flex-col mt-10 items-center justify-center">
-<h2 className='text-3xl text-gray-500 '>¡Ups!</h2>
-          <LdSvg 
-          className="w-[500px]" 
-          SvgComponent={DibuEstudiante}
-          ids={['tetris', 'signo1', 'signo2', 'personaje'] as const}
-          animation={oscilar(['personaje', 'signo1', 'signo2'], 2, 1, 0.4)}/>
+        <div className="flex flex-col  items-center mb-10 justify-center">
+          <LdSvg
+            className="w-[500px] grayscale"
+            SvgComponent={DibuEstudiante}
+            ids={['signo1', 'signo2'] as const}
+            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
 
-<p className="text-gray-500 text-xl w-[400px] text-center ">{error ? error : 'Parece que no hay encuestas activas.'}</p>
+          <p className="text-gray-500 text-xl font-bold w-[400px] text-center ">{error ? error : 'Parece que no hay encuestas activas.'}</p>
 
         </div>
       )}
@@ -60,11 +67,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
   return (
-    <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 shadow-lg border border-indigo-200 shadow-indigo-200 rounded-xl">
+    <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 border-dashed border-8 border-indigo-50 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
-      <div className="flex md:gap-6 items-center justify-between p-4 rounded-xl">
-        <div className='flex items-center md:gap-4'>
-          <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' />
+      <div className="flex md:gap-6 items-center p-4 justify-between rounded-xl">
+        <div className={`flex items-center md:gap-4 ${yaVotado ? 'grayscale' : ''}`}>
+          <LdSvg className='w-14' SvgComponent={Polls}
+          />
+          {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
           <h3 className="text-lg md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
         </div>
 
@@ -100,7 +109,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
       {/* Acciones */}
       <div className="flex items-center justify-center gap-4 my-2">
-        {yaVotado && <p className='text-md text-red-900'>Ya votaste</p>}
+        {yaVotado && <p className='text-md text-red-800'>Ya votaste</p>}
         {encuesta.isOpen && seleccion && !yaVotado && (
           <button
             className="bg-blue-900 text-white px-4 py-2 rounded"

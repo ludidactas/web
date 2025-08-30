@@ -32,6 +32,8 @@ export const conectar = {
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function conectarSocket({ auth, listeners }: {
   auth: {
+    test?: boolean,
+    url?: string,
     /** Sesión del localStorage emitida por el server de ws */
     sessionId?: string,
     /** Token de autenticación de sesión de google en next */
@@ -52,11 +54,15 @@ export async function conectarSocket({ auth, listeners }: {
   }
 }) {
 
-  const { sessionId, token, rol, idSala, nombre } = auth
+  const { sessionId, token, rol, idSala, nombre, test, url } = auth
   const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
 
   let sock
-  if (sessionId) {
+  if (test) {
+    console.log(`Creando socket: Conectando en modo test...`)
+    sock = io(url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
+
+  } else if (sessionId) {
     // Si hay una sesión guardada, la reutilizamos
     console.log(`Creando socket: Reestableciendo sesión ${sessionId} con el servidor de encuestas como ${rol}...`)
     if (rol === RolEncuesta.Estudiante && !idSala)

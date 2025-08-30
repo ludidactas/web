@@ -9,7 +9,7 @@ import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } fro
 import useSesionGuardada from './use-sesion-localstorage'
 import { RolEncuesta } from '@/wss/tipos'
 
-export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
+export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {url?: string}) {
 
   const socket = useRef<Socket | null>(null)
 
@@ -96,7 +96,7 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
 
       // Caso test va directo, sin sesión, sin idSala, nada
       if (rol === RolEncuesta.Tester) {
-        await conectarSocket({ auth: { rol }, listeners })
+        await conectarSocket({ auth: { test: true, rol, url }, listeners })
         return
        }
 

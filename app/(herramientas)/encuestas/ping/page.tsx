@@ -1,10 +1,12 @@
 import { SessionProvider } from "next-auth/react";
-import PingClient from "./cliente";
+import PingClient from "./ping";
+import TestClient from "./cliente";
 
 export default async function PingPage() {
+
   return (
     <SessionProvider>
-      <PingClient />
+      <TestClient />
     </SessionProvider>
   )
 }

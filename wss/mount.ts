@@ -15,6 +15,10 @@ export const mount = (port: number) => {
   // Start the server
   io.listen(port)
 
+  io.engine.on("connection_error", (err) => {
+    console.log("❌ Error de engine: ", err.message);
+  });
+
   console.log(`🚀 Servidor de polls corriendo en el puerto ${port}`)
 
   // Graceful shutdown

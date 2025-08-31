@@ -33,14 +33,9 @@ export const crearSala = (email: string) => {
   owners_salas.set(email, id)
   salas_owners.set(id, email)
 
-  console.log(`Creando sala ${id} para profe ${email}`)
+  console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
 
-}
-
-export const getOrCreateSala = (email: string) => {
-  if (!owners_salas.has(email)) crearSala(email)
-  const salaId = owners_salas.get(email)!
-  return salas.get(salaId)!
+  return salas.get(id)!
 }
 
 /** Obtiene el ID de la sala del profe, _creandola si no existe_ */
@@ -60,11 +55,17 @@ export const getEmailProfeDeSala = (salaId: string) => {
  * Devuelve la data de polls, votantes y votos de la sala
  * @throws Error si la sala no existe
  */
-export const getSala = (salaId: string) => {
+export const getSalaById = (salaId: string) => {
   if (!salas.has(salaId)) {
     throw new Error(`La sala ${salaId} no existe`)
   }
   return salas.get(salaId)!
+}
+
+/** Devuelve la data de polls, votantes y votos de la sala del profe, dado su email */
+export const getSalaByEmail = (email: string) => {
+  const salaId = getSalaId(email)
+  return getSalaById(salaId)
 }
 
 

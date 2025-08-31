@@ -3,6 +3,7 @@ import { mount } from "./mount"
 import { handlersAdmin, handlersProfe } from "./salas/handlers"
 import { conSession, esAdmin, esProfe, SocketConSesion } from "./session"
 import { handlersTest } from "./test/handlers"
+import { salas_owners } from "./salas/app"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -30,3 +31,18 @@ io
   .on('connection', (socket) => { console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`) })
   .on('ping', (socket) => socket.emit('pong'))
 
+io.of(/polls\/.+?\/estudiante/).use((socket, next) => {
+  const matchSalaId = socket.nsp.name.match(/^\/polls\/([a-zA-Z0-9_-]{3,50})\/estudiante$/)
+  if (matchSalaId && salas_owners.has(matchSalaId[1])) {
+    next()
+  } else { 
+    console.log(`Intento de conexión a sala inválida: ${socket.nsp.name}`)
+    next(new Error(`Sala inválida`))
+  }
+})
+
+io.of(/polls\/.+?\/estudiante/)
+  .use((socket, next) => { 
+    console.log(`Intento de conexión a namespace ${socket.nsp.name}`)
+    next(new Error(`Namespace inválido`))
+  })

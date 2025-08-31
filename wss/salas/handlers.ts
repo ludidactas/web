@@ -1,9 +1,9 @@
 import { Server } from "socket.io"
-import { conSession, SocketConSesion } from "../session"
-import { crearSala, getEmailProfeDeSala, getOrCreateSala, sockets_profes } from "./app"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll } from "../polls/handlers"
+import { conSession, SocketConSesion } from "../session"
+import { crearSala, getEmailProfeDeSala, getSalaByEmail, owners_salas, sockets_profes } from "./app"
 
 export const handlersProfe = (io: Server, socket: SocketConSesion) => { 
   
@@ -13,10 +13,11 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
     // Se conectó un profe, le armamos una sala con su email como key:
     const email = socket.data.user.email!
-    const sala = getOrCreateSala(email)
-    console.log(`✅ Se conectó profe ${email}, sala ${sala.id}`)
+    const sala = obtenerOCrearSala(io, email)
+  
+    console.log(`🔌 Se conectó profe ${email}, sala ${sala.id}`)
 
-    const profe = profeSala(sala.id)
+    const profe = profeSala(email)
 
     // Al conectarse el profe, le enviamos la lista de encuestas de su sala
     socket.emit('polls:list', profe.listar())
@@ -75,7 +76,7 @@ export const broadcastASala = (io: Server, salaId: string, event: string, data: 
 
 /** Crea y hace el setup del canal para estudiantes de la sala */
 export const registrarSala = (io: Server, salaId: string) => {
-  console.log(`🏫 Creating namespace for sala: /polls/${salaId}/estudiante`)
+  console.log(`🏫 Creando namespace para sala: /polls/${salaId}/estudiante`)
 
   // Registramos la sala en el servidor (endpoint de estudiantes)
   const estudianteNamespace = io.of(`/polls/${salaId}/estudiante`)
@@ -94,7 +95,14 @@ export const registrarSala = (io: Server, salaId: string) => {
   estudianteNamespace.on('connect_error', (error) => {
     console.log(`❌ Error en namespace estudiante ${salaId}:`, error.message)
   })
+}
 
-  // La registramos en la memoria
-  crearSala(salaId)
+/** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
+export const obtenerOCrearSala = (io: Server, email: string) => { 
+  if (!owners_salas.has(email)) {
+    const sala = crearSala(email)
+    registrarSala(io, sala.id)
+    console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
+  }
+  return getSalaByEmail(email)!
 }

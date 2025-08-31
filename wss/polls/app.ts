@@ -1,16 +1,16 @@
 import { merge } from "remeda"
 import { z } from "zod"
+import { getSalaByEmail, getSalaById } from "../salas/app"
+import { Encuesta, EncuestaHidratada } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators"
-import { getOrCreateSala, getSala } from "../salas/app"
-import { Encuesta, EncuestaHidratada } from "../tipos"
 
 
 
 /** Crea un closure para operar los componentes de una sala */
 export function profeSala(email: string){ 
 
-  const { id: salaId, votos, votantes, polls } = getOrCreateSala(email)
+  const { id: salaId, votos, votantes, polls } = getSalaByEmail(email)
   
   // Acciones de profe: 
 
@@ -110,7 +110,7 @@ export function profeSala(email: string){
 
 
 export function estudianteSala(idSala: string, sessionId: string) { 
-  const { votos, votantes, polls } = getSala(idSala)
+  const { votos, votantes, polls } = getSalaById(idSala)
 
   // Acciones de estudiante:
 
@@ -163,7 +163,7 @@ export function estudianteSala(idSala: string, sessionId: string) {
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
 export function hidratar(salaId: string, poll: Encuesta, sessionId: string): EncuestaHidratada {
 
-  const { votos } = getSala(salaId)
+  const { votos } = getSalaById(salaId)
 
   const votosPoll = votos.get(poll.id)
 
@@ -179,7 +179,7 @@ export function hidratar(salaId: string, poll: Encuesta, sessionId: string): Enc
 
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export function hidratadas(salaId: string, sessionId: string) {
-  const { polls } = getSala(salaId)
+  const { polls } = getSalaById(salaId)
   return Array.from(polls.values()).filter(e => e.isPublished).map(poll => hidratar(salaId, poll, sessionId))
 } 
 
@@ -193,7 +193,7 @@ export function assertValidPoll(pollData: unknown) {
 
 
 function assertPollExists(idSala: string, idPoll: string) {
-  const { polls } = getSala(idSala)
+  const { polls } = getSalaById(idSala)
   if (!polls.has(idPoll)) throw new Error('La encuesta no existe!')
 }
 

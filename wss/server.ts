@@ -36,13 +36,7 @@ io.of(/polls\/.+?\/estudiante/).use((socket, next) => {
   if (matchSalaId && salas_owners.has(matchSalaId[1])) {
     next()
   } else { 
-    console.log(`Intento de conexión a sala inválida: ${socket.nsp.name}`)
+    console.log(`❌ Intento de conexión a sala inválida: ${socket.nsp.name}`)
     next(new Error(`Sala inválida`))
   }
 })
-
-io.of(/polls\/.+?\/estudiante/)
-  .use((socket, next) => { 
-    console.log(`Intento de conexión a namespace ${socket.nsp.name}`)
-    next(new Error(`Namespace inválido`))
-  })

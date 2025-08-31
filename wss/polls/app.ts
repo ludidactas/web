@@ -20,8 +20,6 @@ export function profeSala(email: string){
 
   function crearPoll(pollDataUnknown: unknown){
 
-    console.log(`Request de creación de `, pollDataUnknown)
-
     // Parseamos con el validator
     assertValidPoll(pollDataUnknown)
     const pollData = pollBase.parse(pollDataUnknown)
@@ -41,7 +39,7 @@ export function profeSala(email: string){
     votantes.set(poll.id, new Set())
     votos.set(poll.id, new Map())
 
-    console.log(`Encuesta creada: ${poll.pregunta}`)
+    console.log(`➕ Encuesta creada: ${poll.pregunta}`)
 
     return poll
   }
@@ -75,7 +73,7 @@ export function profeSala(email: string){
 
     const nueva = merge(poll, update) as Encuesta
     polls.set(pollId, nueva)
-    console.log(`Encuesta updateada: ${poll.pregunta}`)
+    console.log(`🔔 Encuesta updateada: ${poll.id}`)
 
     return nueva
   }
@@ -88,7 +86,7 @@ export function profeSala(email: string){
     if (polls.has(pollId)) {
       polls.delete(pollId)
       votantes.delete(pollId)
-      console.log(`Encuesta borrada: ${pollId}`)
+      console.log(`🗑️  Encuesta borrada: ${pollId}`)
     }
   }
 

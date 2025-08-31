@@ -1,7 +1,7 @@
 import { Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
-import { bradcastPoll } from "../polls/handlers"
+import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
 import { conSession, SocketConSesion } from "../session"
 import { crearSala, getEmailProfeDeSala, getSalaByEmail, owners_salas, sockets_profes } from "./app"
 
@@ -79,22 +79,9 @@ export const registrarSala = (io: Server, salaId: string) => {
   console.log(`🏫 Creando namespace para sala: /polls/${salaId}/estudiante`)
 
   // Registramos la sala en el servidor (endpoint de estudiantes)
-  const estudianteNamespace = io.of(`/polls/${salaId}/estudiante`)
-  estudianteNamespace.use(conSession).on('connection', (socket: SocketConSesion) => {
-
-    const user = socket.data.session.nombre
-
-    console.log(`✅ Estudiante conectado: ${user} (sala ${salaId} de ${getEmailProfeDeSala(salaId)})`)
-
-    socket.on('disconnect', (reason) => {
-      console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-    })
-  })
-
-  // Add error handling for the namespace
-  estudianteNamespace.on('connect_error', (error) => {
-    console.log(`❌ Error en namespace estudiante ${salaId}:`, error.message)
-  })
+  io.of(`/polls/${salaId}/estudiante`).use(conSession)
+    .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/estudiante:`, error.message) })
+    .on('connection', (socket: SocketConSesion) => handlersEstudiante(io, socket, salaId))
 }
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */

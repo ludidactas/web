@@ -6,7 +6,6 @@ export default async function OverlayEncuestas({ params }: { params: Promise<{ i
   return (
     <EncuestaEstudianteProvider idSala={idSala}>
       <div className="w-full h-full min-h-screen flex flex-col items-center justify-center">
-        {idSala}
         <TestEstadisticaApp />
       </div>
     </EncuestaEstudianteProvider>

@@ -23,16 +23,11 @@ export default async function Page() {
             <div className="text-right items-center justify-center">
               <SignOut />
             </div>
-       </HeaderSala>
-         
-        <div className="md:px-20 md:w-4/5">
-          <EncuestasAdmin />
-        </div>
+          </HeaderSala>
 
-          <div className="px-10 md:px-20 md:w-4/5">
+          <div className="md:px-20 md:w-4/5">
             <EncuestasAdmin />
           </div>
-
           <div className="w-full h-24" />
         </div>
       </EncuestaAdminProvider>

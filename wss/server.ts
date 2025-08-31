@@ -29,3 +29,4 @@ io
   .on('connect_error', (error) => { console.log(`❌ Error en /:`, error.message) })
   .on('connection', (socket) => { console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`) })
   .on('ping', (socket) => socket.emit('pong'))
+

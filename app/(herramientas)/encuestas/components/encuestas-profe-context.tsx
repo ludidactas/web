@@ -63,9 +63,10 @@ const useEncuestaProfeState = (nombre?: string) => {
       socket.emit('sala:abrir')
 
       // Suscribimos a su respuesta
-      socket.on('sala:abierta', ({ salaId, polls }: { salaId: string, polls: Encuesta[] }) => {
+      socket.on('sala:abierta', ({ salaId, polls }: { salaId: { id: string } , polls: Encuesta[] }) => {
         toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
-        setLinkSala(`https://ludidactas.com/sala/${salaId}/`)
+        console.log('Sala abierta', salaId)
+        setLinkSala(`https://ludidactas.com/sala/${salaId.id}/`)
 
         // Al abrir la sala, le pedimos al server la lista de encuestas, por si la sala ya estaba activa
         setEncuestas(polls)

@@ -31,7 +31,7 @@ export default function useSesionGuardada() {
   }, [nextSession?.user?.email, clearSession, storedSession, status])
 
   return {
-    session: storedSession,
+    storedSession,
     saveSession: saveSession,
     clearSession,
     ready

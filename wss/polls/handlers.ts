@@ -3,6 +3,7 @@ import { getEmailProfeDeSala, getSocketProfeDeSala } from "../salas/app"
 import { Encuesta } from "../tipos"
 import { estudianteSala, hidratar } from "./app"
 import { conErrorHandling } from "../middleware"
+import { SocketConSesion } from "../session"
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export const bradcastPoll = (io: Server, salaId: string, event: string, poll: Encuesta) => {
@@ -16,8 +17,9 @@ export const bradcastPoll = (io: Server, salaId: string, event: string, poll: En
 
   // La emitimos a los estudiantes de la sala también
   // (antes no estaba emitiendo si no estaba publicada, pero eso resultaba en que no llegaba la notificación de apertura :facepalm:)
-  io.of(`/polls/${salaId}/estudiante`).sockets.forEach((socketEstudiante) => {
-    const pollHidratada = hidratar(salaId, poll, socketEstudiante.data.sessionId)
+  io.of(`/polls/${salaId}/estudiante`).sockets.forEach((socketEstudiante: SocketConSesion) => {
+    console.log(`Enviando poll a estudiante ${socketEstudiante.data.session.nombre}`)
+    const pollHidratada = hidratar(salaId, poll, socketEstudiante.data.session.sessionId)
     socketEstudiante.emit(event, pollHidratada)
   })
 }

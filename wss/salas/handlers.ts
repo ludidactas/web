@@ -14,7 +14,7 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
     // Se conectó un profe, le armamos una sala con su email como key:
     const email = socket.data.user.email!
     const sala = getOrCreateSala(email)
-    console.log(`✅ Se conectó profe ${email}, sala ${sala}`)
+    console.log(`✅ Se conectó profe ${email}, sala ${sala.id}`)
 
     const profe = profeSala(sala.id)
 

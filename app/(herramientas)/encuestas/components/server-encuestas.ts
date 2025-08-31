@@ -92,6 +92,7 @@ export async function conectarSocket({ auth, listeners }: {
   sock.on('session:opened', session => onSession(sock, session))
   sock.on('session:expired', () => onExpired(sock))
 
+  console.log(`Intentando conectar con auth`, auth)
   // Una vez que le suscribimos listeners, le mandamos mecha
   sock.connect()
 

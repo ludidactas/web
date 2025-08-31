@@ -18,7 +18,13 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
   const [puedeConectar, setPuedeConectar] = useState<boolean>(true)
 
   // Persistimos la sesión en localStorage
-  const { session, saveSession, clearSession, ready: sessionReady } = useSesionGuardada();
+  const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada();
+
+  // Usamos un ref para tener el valor de la sesión siempre actualizado en los callbacks
+  const session = useRef(storedSession)
+  useEffect(() => {
+    session.current = storedSession
+  }, [storedSession])
 
   const conectar = useCallback(async () => {
 
@@ -56,7 +62,7 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
       setTimeout(() => {
         console.log('Intentado reconectar luego de sesión caduca...')
         conectar()
-      }, 2000)
+      }, 1000)
     }
 
     const onError = (sock: Socket, error: ExtendedError & { type?: string }) => {
@@ -64,15 +70,14 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
 
       // Server down
       if (error.message === 'xhr poll error' || (error.type && error.type === 'TransportError')) {
-        msg = 'El servidor de encuestas no responde'
+        msg = 'El servidor de encuestas no responde. Intentando reconectar...'
         setPuedeConectar(false)
       }
 
       // Sesión expirada
       if (error.data && error.data.action === 'clear_session') {
-        msg = 'Sesión expirada'
+        msg = 'Sesión expirada. Reestableciendo...'
         onExpired(sock)
-        setPuedeConectar(true)
       }
 
       // Sala inexistente
@@ -83,7 +88,7 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
         setPuedeConectar(false)
       }
 
-      console.log('💥', error.name, error.message, msg)
+      console.log('💥 [WSS] ', error.name, error.message, msg)
       toast.error(msg)
       setError(msg)
       setConectando(true)
@@ -101,14 +106,14 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
        }
 
       // Si ya hay una sesión de ws guardada, la reutilizamos
-      if (session) {
+      if (session.current) {
 
         if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, sessionId: session.sessionId, idSala }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, sessionId: session.sessionId, token }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token }, listeners })
         }
 
       } else {

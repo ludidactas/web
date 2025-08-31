@@ -9,6 +9,7 @@ export const mount = (port: number) => {
       origin: "*",
       methods: ["GET", "POST"]
     },
+    // serveClient: false
   })
 
   // Start the server

@@ -7,10 +7,10 @@ import ArrowUpLd from '@/components/custom/ld-arrow-up'
 export default function Contacto() {
   return (
     <div className="contactoini">
-      <Pantalla
+      <Pantalla classname='mb-0'
         title="Contacto"
         one={
-          <div className='flex flex-col max-w-[720px] items-center mt-40 p-8 text-3xl gap-4'>
+          <div className='flex flex-col max-w-[720px] items-center p-8 text-[1.5em] md:text-xl gap-4'>
             <p className="text-[#46BFD7] font-bold mb-4">
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>

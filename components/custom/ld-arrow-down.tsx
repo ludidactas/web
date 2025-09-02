@@ -7,7 +7,7 @@ interface ArrowDownLdProps {
 }
 export default function ArrowDownLd({ to }: ArrowDownLdProps) {
   return (
-    <div className="w-10 lg:w-16 hover:scale-125 ">
+    <div className="w-10 lg:w-16 hover:scale-125">
       <Link to={to} smooth={true} duration={500}>
         <Image
           src="/img/ArrowDown.gif"

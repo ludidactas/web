@@ -8,7 +8,7 @@ export default async function LoginPage() {
   const session = await auth()
 
   if (!session?.user) return (
-    <div className="flex flex-col items-center justify-center h-screen">
+    <div className="flex flex-col items-center bg-gradient-to-r from-cyan-200/70 to-indigo-200/70 justify-center h-[100vh] w-[100vw]">
       <Login />
     </div>
   )

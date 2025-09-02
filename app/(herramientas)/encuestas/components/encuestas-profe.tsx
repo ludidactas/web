@@ -1,28 +1,27 @@
 'use client'
-import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { useEffect, useState } from 'react'
-import { Encuesta } from '@/polls/encuestas'
-import { useEncuestaAdmin } from './encuestas-profe-context'
-import Link from 'next/link'
-import { useCopyToClipboard } from 'usehooks-ts'
-import { Copy, SquareCheckBig } from 'lucide-react'
 import { LdSvg } from '@/components/custom/ld-svg'
 import EncuestasIcon from '@/svg/encuestas.svg'
 import PollsIcon from '@/svg/pollsvgo.svg'
+import { Encuesta } from '@/wss/tipos'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Copy, SquareCheckBig } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { useCopyToClipboard } from 'usehooks-ts'
+import { useEncuestaAdmin } from './encuestas-profe-context'
 
 export default function EncuestasAdmin() {
   const { conectado, linkSala } = useEncuestaAdmin()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
-  useEffect(() => { console.log(_copiedText) }, [])
-
   const handleCopy = (text: string) => () => {
     copy(text)
       .then(() => {
-        console.log('Copied!', { text })
         setJustCopied(true)
+
+        console.log(_copiedText)
 
         setTimeout(() => {
           setJustCopied(false)

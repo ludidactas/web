@@ -1,17 +1,20 @@
-import { getToken } from 'next-auth/jwt'
-import { NextResponse } from 'next/server'
+import { auth } from '@/app/auth'
 import jwt from 'jsonwebtoken'
+import { NextResponse } from 'next/server'
 
 // Devuelve un token JWT firmado con la información del usuario autenticado 
 // (para autenticarlo en el servidor de websockets)
-export async function GET(req: Request) {
-  const sessionToken = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (!sessionToken) return new NextResponse('No autorizado', { status: 401 })
-  console.log("creando token...", sessionToken.email,sessionToken.name )
+export async function GET() {
+  const session = await auth()
+
+  if (!session || !session.user || !session.user.email) {
+    return new NextResponse('No autorizado', { status: 401 })
+  }
+  
   const token = jwt.sign(
     {
-      email: sessionToken.email,
-      name: sessionToken.name,
+      email: session.user.email,
+      name: session.user.name,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 horas
     },
     process.env.JWT_SECRET!,

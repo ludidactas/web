@@ -1,6 +1,5 @@
 'use client'
-import { RolEncuesta } from '@/polls/encuestas'
-import { PollsServerSession } from '@/polls/session'
+import { PollsServerSession } from '@/wss/session'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isNonNullish } from 'remeda'
 import { ExtendedError } from 'socket.io'
@@ -8,50 +7,48 @@ import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } from './server-encuestas'
 import useSesionGuardada from './use-sesion-localstorage'
+import { RolEncuesta } from '@/wss/tipos'
 
-export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
+export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {url?: string}) {
 
   const socket = useRef<Socket | null>(null)
 
   const [error, setError] = useState<string | null>(null)
   const [conectando, setConectando] = useState<boolean>(false)
-  const [conectado, setConectado] = useState<boolean>(false)
+  const [puedeConectar, setPuedeConectar] = useState<boolean>(true)
 
   // Persistimos la sesión en localStorage
-  const { session, saveSession, clearSession, ready: sessionReady } = useSesionGuardada();
+  const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada();
+
+  // Usamos un ref para tener el valor de la sesión siempre actualizado en los callbacks
+  const session = useRef(storedSession)
+  useEffect(() => {
+    session.current = storedSession
+  }, [storedSession])
 
   const conectar = useCallback(async () => {
 
     // Listeners de eventos base del socket:
 
     const onConnect = (sock: Socket) => {
-      console.log('✅ Socket conectado:', sock.id)
       socket.current = sock
-      setConectado(true)
+      // Si estamos conectados, bajamos los flags
+      setPuedeConectar(false)
       setConectando(false)
     }
 
-    // TEMPORARILY REMOVE THE FUNNEL to see if it's causing issues
     const onDisconect = (sock: Socket, reason: string) => {
-      console.log('❌ Socket desconectado inmediatamente:', reason)
-      console.log('Socket auth at disconnect:', sock.auth)
-      console.log('Socket connected state:', sock.connected)
-
       toast.error(`Desconectado del servidor de encuestas: ${reason}`)
-      socket.current = null
-      setConectado(false)
       setConectando(false)
     }
 
     const onSession = (sock: Socket, session: PollsServerSession) => {
-      console.log(`✅ Sesión abierta: ${session.sessionId}`)
 
       // Guardamos la sesión en localStorage para persistencia
       saveSession(session)
 
       // Le attacheamos la sesión que nos mandó el server al socket local
       sock.auth = { ...sock.auth, sessionId: session.sessionId }
-      console.log('Updated socket auth:', sock.auth)
     }
 
     const onExpired = (sock: Socket) => {
@@ -59,87 +56,74 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
       clearSession() // Limpiamos la sesión guardada
       sock.auth = {} // Limpiamos la sesión del socket
 
-      setConectado(false)
       setConectando(false)
 
-      // Don't immediately reconnect to avoid infinite loops
-      console.log('Intentando reconectar en 2 segundos...')
+      // Reconectamos en 2 segundos
       setTimeout(() => {
         console.log('Intentado reconectar luego de sesión caduca...')
         conectar()
-      }, 2000)
+      }, 1000)
     }
 
     const onError = (sock: Socket, error: ExtendedError & { type?: string }) => {
-      console.log('🔥 Error de conexión al servidor de encuestas:', error.message)
-      console.log('Error details:', JSON.stringify(error, null, 2))
-      console.log('Socket state:', {
-        connected: sock.connected,
-        disconnected: sock.disconnected,
-        auth: sock.auth
-      })
+      let msg = error.message ? `Error de conexión con el servidor de encuestas: ${error.message}`  : 'Error desconocido'
+
+      // Server down
+      if (error.message === 'xhr poll error' || (error.type && error.type === 'TransportError')) {
+        msg = 'El servidor de encuestas no responde. Intentando reconectar...'
+        setPuedeConectar(false)
+      }
 
       // Sesión expirada
       if (error.data && error.data.action === 'clear_session') {
-        console.warn('Sesión expirada, delegando a onExpired...')
+        msg = 'Sesión expirada. Reestableciendo...'
         onExpired(sock)
-        return
       }
 
       // Sala inexistente
       if (error.message === 'Invalid namespace') {
-        toast.error(`¡Esta sala no existe! Por favor, verificá el ID.`)
-        setError('¡Esta sala no existe! Por favor, verificá el ID.')
-        setConectado(false)
-        setConectando(false)
-        return
+        // Este error lo tira el server cuando el _canal_ no existe, pero estamos diciendo que es que la sala no existe
+        // Falta completar mensajes de error en el server
+        msg = `Esta sala no existe! Por favor, verificá el ID`
+        setPuedeConectar(false)
       }
 
-      // Server down
-      if (error.type && error.type === 'TransportError') {
-        toast.error(`El servidor de encuestas no responde. Reintentando...`)
-        setError('El servidor de encuestas no responde. Reintentando...')
-        setConectado(false)
-        return
-      }
-
-      setError(`Error de conexión con el servidor de encuestas: ${error.message}`)
-      setConectado(false)
-      setConectando(false)
+      console.log('💥 [WSS] ', error.name, error.message, msg)
+      toast.error(msg)
+      setError(msg)
+      setConectando(true)
     }
 
     const listeners = { onConnect, onError, onDisconect, onSession, onExpired }
 
     try {
-      console.log('🚀 Iniciando conexión...')
-      console.log('Session data:', session)
-      console.log('Rol:', rol, 'IdSala:', idSala)
+      console.log('🚀 Iniciando conexión desde el useEffect del useServerWebsockets...')
+
+      // Caso test va directo, sin sesión, sin idSala, nada
+      if (rol === RolEncuesta.Tester) {
+        await conectarSocket({ auth: { test: true, rol, url }, listeners })
+        return
+       }
 
       // Si ya hay una sesión de ws guardada, la reutilizamos
-      if (session) {
+      if (session.current) {
 
         if (rol === RolEncuesta.Estudiante) {
-          console.log(`♻️ Reutilizando sesión de estudiante ${session.sessionId} para conectar al servidor de encuestas en sala ${idSala}...`)
-          await conectarSocket({ auth: { rol, sessionId: session.sessionId, idSala }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala }, listeners })
 
         } else {
-          console.log(`♻️ Reutilizando sesión de profe/admin ${session.sessionId} para conectar con token al servidor de encuestas...`)
           const token = await solicitarAuth()
-          console.log('Token obtenido:', token ? 'SI' : 'NO')
-          await conectarSocket({ auth: { rol, sessionId: session.sessionId, token }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token }, listeners })
         }
 
       } else {
 
         // Sino pedimos que nos cree una sesión nueva
         if (rol === RolEncuesta.Estudiante) {
-          console.log(`🆕 Conectando como estudiante anónimo a la sala ${idSala}...`)
           await conectarSocket({ auth: { rol, idSala }, listeners })
 
         } else {
-          console.log(`🆕 Conectando como profe o admin al servidor de encuestas...`)
           const token = await solicitarAuth()
-          console.log('Token obtenido:', token ? 'SI' : 'NO')
           await conectarSocket({ auth: { rol, token }, listeners })
         }
       }
@@ -153,8 +137,6 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
       console.error('Stack trace:', err.stack)
       toast.error(`Error de autenticación con el servidor de next: ${err.message}`)
       setError(`Error de autenticación con el servidor de next: ${err.message}`)
-      setConectando(false)
-      setConectado(false)
     }
   }, [idSala, rol, saveSession, clearSession, session])
 
@@ -167,15 +149,16 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
     if (!sessionReady) return 
 
     // Si ya está conectado o conectando, no hacemos nada
-    if (conectado || conectando) return 
+    if (conectando) return 
+
+    // Si venimos de un error irrecuperable, no reconectamos
+    if (!puedeConectar) return
 
     // Si es para estudiante y no hay idSala, bochamos
     if (!rol || (rol === RolEncuesta.Estudiante && !idSala))
       throw new Error(`Se requiere un idSala y o rol de profe para conectarse al servidor de encuestas`)
 
     setConectando(true)
-
-    console.log(`Conectando al servidor de encuestas como ${rol}... la sesión es: `, session)
 
     // Efectuamos la conexión
     conectar()
@@ -185,17 +168,16 @@ export function useServerWebsockets({ idSala, rol }: SocketServerAuth) {
       if (isNonNullish(socket.current)) {
         socket.current.disconnect()
         socket.current = null
-        setConectado(false)
         setConectando(false)
       }
     }
-  }, [sessionReady, session, conectado, conectando, idSala, rol, conectar])
+  }, [sessionReady, conectando, puedeConectar, idSala, rol, conectar])
 
   return {
     socket: socket.current,
     session,
     conectando,
-    conectado,
+    conectado: socket.current?.connected ?? false,
     error,
   }
 }

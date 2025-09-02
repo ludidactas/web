@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto"
 import jwt from 'jsonwebtoken'
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
-import { RolEncuesta } from "./encuestas"
-import { salas } from "./polls"
 import { pick } from "remeda"
+import { RolEncuesta } from "./tipos"
+import { salas } from "./salas/app"
 
 // Sesión del server
 export interface PollsServerSession {
@@ -62,7 +62,7 @@ export const deleteSession = (sessionId: string) => {
 }
 
 export const createSession = (rol: RolEncuesta, email?: string, nombre?: string, userIp?: string): PollsServerSession => ({
-  sessionId: randomUUID(),
+  sessionId: randomUUID().split('-')[0],
   userIp,
   rol,
   email,
@@ -80,7 +80,7 @@ export const openSession = (socket: SocketConSesion, rol: RolEncuesta, email?: s
   // La adjuntamos al socket
   socket.data.session = session
 
-  console.log(`Abriendo sesión ${session.sessionId} para ${nombre || 'Anónimo'}`, session)
+  console.log(`🤝 Abriendo sesión ${session.sessionId} para ${nombre || 'Anónimo'}`)
 
   // La emitimos al cliente
   socket.emit("session:opened", session)
@@ -99,12 +99,12 @@ const login = (socket: SocketConSesion) => {
 
   if (!token) {
     // Si no hay token, abrimos una sesión anónima (de estudiante)
-    console.log(`Iniciando sesión anónima en la sala ${socket.handshake.auth.idSala} desde IP ${socketIp(socket)}...`)
+    console.log(`👤 Iniciando sesión anónima en la sala ${socket.handshake.auth.idSala} desde IP ${socketIp(socket)}...`)
 
     // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
     if (!socket.handshake.auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
 
-    // Verificamos que la sala exista
+    // Verificamos que la sala exista - Dependencia de salas!
     if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
 
     socket.data.sala = socket.handshake.auth.idSala
@@ -113,7 +113,7 @@ const login = (socket: SocketConSesion) => {
   } else {
 
     // Si hay token, lo verificamos
-    console.log(`Iniciando sesión con token desde IP ${socketIp(socket)}...`)
+    console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
     const payload = decodearTokenNextAuth(token)
 
     // Le seteamos al user el email y el nombre del token emitido por next
@@ -155,7 +155,7 @@ const validarSession = (socket: SocketConSesion) => {
     if (rolSolicitado === RolEncuesta.Estudiante) {
 
       // Llegados a este punto tenemos un estudiante anónimo válido
-      console.log(`Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
+      console.log(`🔄 Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
 
       // Le attacheamos al socket la data de sesión
       socket.data = { ...socket.data || {}, session }
@@ -175,7 +175,7 @@ const validarSession = (socket: SocketConSesion) => {
       if (session.email !== payload.email) throw new Error(`Sesión ${sessionId} no válida para el usuario ${payload.email}!`)
 
       // Llegados a este punto tenemos un profe o admin válido
-      console.log(`Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
+      console.log(`🔄 Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
 
       // Le attacheamos al socket la data de sesión
       socket.data = { ...socket.data || {}, session, user: pick(session, ['email', 'nombre']) }
@@ -185,7 +185,7 @@ const validarSession = (socket: SocketConSesion) => {
 
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error
-    console.log(`Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
+    console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
     deleteSession(sessionId)
     throw err
   }

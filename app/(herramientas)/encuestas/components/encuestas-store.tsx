@@ -1,4 +1,4 @@
-import { Encuesta } from '@/polls/encuestas'
+import { Encuesta } from '@/wss/tipos'
 import { Socket } from 'socket.io-client'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'

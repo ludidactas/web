@@ -1,5 +1,5 @@
-import { RolEncuesta } from "@/polls/encuestas"
-import { PollsServerSession } from "@/polls/session"
+import { PollsServerSession } from "@/wss/session"
+import { RolEncuesta } from "@/wss/tipos"
 // import { setupSocketLogging } from "@/polls/test/test-funcs"
 import { io, Socket } from "socket.io-client"
 
@@ -23,14 +23,17 @@ export interface SocketServerAuth {
 
 /** Contiene los endpoints para cada rol */
 export const conectar = {
-  [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false }),
-  [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false }),
-  [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false }),
+  [RolEncuesta.Tester]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/test`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function conectarSocket({ auth, listeners }: {
   auth: {
+    test?: boolean,
+    url?: string,
     /** Sesión del localStorage emitida por el server de ws */
     sessionId?: string,
     /** Token de autenticación de sesión de google en next */
@@ -51,13 +54,17 @@ export async function conectarSocket({ auth, listeners }: {
   }
 }) {
 
-  const { sessionId, token, rol, idSala, nombre } = auth
+  const { sessionId, token, rol, idSala, nombre, test, url } = auth
   const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
 
   let sock
-  if (sessionId) {
+  if (test) {
+    console.log(`Creando socket: Conectando en modo test...`)
+    sock = io(url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
+
+  } else if (sessionId) {
     // Si hay una sesión guardada, la reutilizamos
-    console.log(`Reestableciendo sesión ${sessionId} con el servidor de encuestas...`)
+    console.log(`Creando socket: Reestableciendo sesión ${sessionId} con el servidor de encuestas como ${rol}...`)
     if (rol === RolEncuesta.Estudiante && !idSala)
       throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
     // Conectamos el socket con sessionId
@@ -65,7 +72,7 @@ export async function conectarSocket({ auth, listeners }: {
 
   } else {
     // Sino, creamos una nueva sesión usando el token que nos dió next
-    console.log(`Iniciando nueva sesión el server de encuestas...`)
+    console.log(`Creando socket: Iniciando nueva sesión el server de encuestas como ${rol}...`)
     // if (!token) throw new Error(`Se require una sesión de Google para conectarse al servidor de encuestas`)
     sock = conectar[rol]({ token, nombre, rol, idSala })
   }
@@ -81,13 +88,11 @@ export async function conectarSocket({ auth, listeners }: {
     onError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
   })
 
-  // Los de console.log
-  // setupSocketLogging(sock)
-
   // Suscribimos a la sesión abierta y la persistimos
   sock.on('session:opened', session => onSession(sock, session))
   sock.on('session:expired', () => onExpired(sock))
 
+  console.log(`Intentando conectar con auth`, auth)
   // Una vez que le suscribimos listeners, le mandamos mecha
   sock.connect()
 
@@ -96,11 +101,11 @@ export async function conectarSocket({ auth, listeners }: {
 
 /** 
  * Le pide al server de next, que es el que autentica con Google,
- * un token JWT para conectarse al server de encuestas.
+ * un token JWT para conectarse al server de encuestas. Stateless.
  */
 export async function solicitarAuth() {
   console.log(`Obteniendo token de auth del server de next...`)
-  const respuesta = await fetch('/api/auth/token')
+  const respuesta = await fetch('/api/auth/token', { credentials: 'include'})
   const payload = await respuesta.json()
   return payload.token as string
 }

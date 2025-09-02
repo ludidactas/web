@@ -1,10 +1,10 @@
 'use client'
 
-import { RolEncuesta } from '@/polls/encuestas'
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
 import { useServerWebsockets } from '../../encuestas/components/use-server-encuestas'
+import { RolEncuesta } from '@/wss/tipos'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
@@ -25,7 +25,6 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
   useEffect(() => {
     if (socket) {
       // Pedimos la lista exitente de encuestas al conectarse
-      console.log(`Pidiendo encuestas al servidor para la sala ${idSala}...`)
       socket.emit('polls:list')
 
       // Conectamos el socket a sus handlers

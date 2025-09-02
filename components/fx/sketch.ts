@@ -149,7 +149,6 @@ export default function sketch(s: p5) {
   let tracer: Tracer
 
   function setup() {
-    console.log(`Creando canvas de ${s.windowWidth}x${s.windowHeight}px`)
     s.createCanvas(s.windowWidth, s.windowHeight)
     s.stroke(220, 200, 185)
     s.fill(220, 200, 185)

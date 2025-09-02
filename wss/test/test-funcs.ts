@@ -11,7 +11,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     });
 
     socket.on('connect_error', (error) => {
-      console.error('Error de ponepsión:', error);
+      console.error('Error de ponepsión:', error.message);
       reject(error); // Reject the promise on connection error
     });
   });

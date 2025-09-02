@@ -24,5 +24,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     }
   },
-  // secret: process.env.AUTH_SECRET, // Creo que no hace falta, que levanta la ENV automáticamente
 })

@@ -29,7 +29,7 @@ export default function Identidad() {
       }
       two={<Imagenes />}
       btn={
-        <BtnSketchyGif className="block text-[1.5em] md:text-[1.1em] mx-auto h-[90px] leading-[62px]" href="/identidad">
+        <BtnSketchyGif className="block text-[1.5em] md:text-[1em] mx-auto h-fit leading-[50px]" href="/identidad">
           {' '}
           Más sobre el proyecto{' '}
         </BtnSketchyGif>

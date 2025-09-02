@@ -5,8 +5,8 @@ import { toast } from 'sonner'
 
 import { useServerWebsockets } from './use-server-encuestas'
 import { useEncuestaStore } from './encuestas-store'
+import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
 
-import { Encuesta, RolEncuesta, type CrearEncuesta } from '@/polls/encuestas'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (nombre?: string) => {
@@ -63,9 +63,10 @@ const useEncuestaProfeState = (nombre?: string) => {
       socket.emit('sala:abrir')
 
       // Suscribimos a su respuesta
-      socket.on('sala:abierta', ({ salaId, polls }: { salaId: string, polls: Encuesta[] }) => {
+      socket.on('sala:abierta', ({ salaId, polls }: { salaId: { id: string } , polls: Encuesta[] }) => {
         toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
-        setLinkSala(`https://ludidactas.com/sala/${salaId}/`)
+        console.log('Sala abierta', salaId)
+        setLinkSala(`https://ludidactas.com/sala/${salaId.id}/`)
 
         // Al abrir la sala, le pedimos al server la lista de encuestas, por si la sala ya estaba activa
         setEncuestas(polls)

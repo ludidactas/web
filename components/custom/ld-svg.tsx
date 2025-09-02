@@ -73,8 +73,6 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
           nodosRef.current![nodo.id as SvgIds] = SVG(nodo)
         }
       })
-
-      // console.log(svgRef.current)
     }
   }, [svgRef])
 

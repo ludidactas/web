@@ -12,7 +12,7 @@ export default function Propuestas() {
       <Pantalla
         title="Propuestas"
         one={
-          <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.5em] md:text-lg">
+          <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.4em] md:text-[0.9em]">
             <p>
               El proyecto nace, vive y se sostiene en su comunidad y se ordena en torno la visión de construir la
               educación que queremos ver.
@@ -39,8 +39,7 @@ export default function Propuestas() {
         }
         two={<Imagenes />}
         btn={
-          // <BtnSketchy className="block hover:underline mx-auto text-2xl h-[110px] leading-[70px]" href="/propuestas">
-          <BtnSketchyGif className="block text-[1.5em] mx-auto h-[64px] leading-[42px]" href="/propuestas">
+          <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/propuestas">
             {' '}
             Ver propuestas{' '}
           </BtnSketchyGif>

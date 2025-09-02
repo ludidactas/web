@@ -118,11 +118,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       
       
       {/* Titulo y status */}
-      <div className="flex items-center px-4 justify-between">
-        <div className='flex gap-4 items-center'>
+      <div className="flex items-start px-4 justify-between">
+        <div className='flex gap-4'>
 
-          <LdSvg className='w-10' SvgComponent={PollsIcon} />
-          <h3 className="text-sm md:text-xl">{encuesta.pregunta}</h3>
+          <LdSvg className='w-[10%]' SvgComponent={PollsIcon} />
+          <h3 className="w-[90%] text-sm md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col items-end">
           <span
@@ -136,11 +136,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         </div>
       </div>
 
-      <ol className="list-[lower-latin] px-8 m-6">
+      <ol className="list-[lower-latin] p-8 m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            <div className='flex gap-2'>
-              {opcion.texto} - <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
+            <div className='flex items-center pb-2 gap-4'>
+              {opcion.texto} <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
             </div>
 
           </li>

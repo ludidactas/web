@@ -20,7 +20,7 @@ export const conErrorHandling = (socket: Socket) =>
         }
 
         socket.emit('poll:error', { message: err.message })
-        throw err
+        // throw err
       }
     }
   }

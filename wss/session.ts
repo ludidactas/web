@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
 import { pick } from "remeda"
 import { RolEncuesta } from "./tipos"
-import { salas } from "./salas/app"
+import { nombreDeFantasia, salas } from "./salas/app"
 
 // Sesión del server
 export interface PollsServerSession {
@@ -72,7 +72,7 @@ export const createSession = (rol: RolEncuesta, email?: string, nombre?: string,
 export const openSession = (socket: SocketConSesion, rol: RolEncuesta, email?: string, nombre?: string) => {
 
   // Creamos el objeto - Ojo que le estoy agregando info arbitraria que venga en el data
-  const session = createSession(rol, email, nombre, socketIp(socket))
+  const session = createSession(rol, email, nombre ?? nombreDeFantasia(), socketIp(socket))
 
   // Guardamos la sesión
   setSession(session.sessionId, session)
@@ -80,7 +80,7 @@ export const openSession = (socket: SocketConSesion, rol: RolEncuesta, email?: s
   // La adjuntamos al socket
   socket.data.session = session
 
-  console.log(`🤝 Abriendo sesión ${session.sessionId} para ${nombre || 'Anónimo'}`)
+  console.log(`🤝 Abriendo sesión ${session.sessionId} para ${nombre}`)
 
   // La emitimos al cliente
   socket.emit("session:opened", session)
@@ -108,7 +108,7 @@ const login = (socket: SocketConSesion) => {
     if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
 
     socket.data.sala = socket.handshake.auth.idSala
-    openSession(socket, RolEncuesta.Estudiante, undefined, socket.handshake.auth.nombre ?? 'Anónimo') // Acá podría crearle un nombre aleatorio
+    openSession(socket, RolEncuesta.Estudiante, undefined, socket.handshake.auth.nombre) // Acá podría crearle un nombre aleatorio
 
   } else {
 

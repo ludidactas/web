@@ -52,10 +52,10 @@ export const handlersEstudiante = (io: Server, socket: SocketConSesion, idSala: 
     bradcastPoll(io, idSala, 'poll:updated', estudiante.votar({ pollId, optionId }))
   }))
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', safe((reason) => {
     console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
     getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, false)
     getSocketProfeDeSala(idSala).emit('sala:estudiante_desconectado', { id: socket.data.session.sessionId })
-  })
+  }))
 
 }

@@ -9,7 +9,7 @@ import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } fro
 import useSesionGuardada from './use-sesion-localstorage'
 import { RolEncuesta } from '@/wss/tipos'
 
-export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {url?: string}) {
+export function useServerWebsockets({ nombre, idSala, rol, url }: SocketServerAuth & {url?: string}) {
 
   const socket = useRef<Socket | null>(null)
 
@@ -101,7 +101,7 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
 
       // Caso test va directo, sin sesión, sin idSala, nada
       if (rol === RolEncuesta.Tester) {
-        await conectarSocket({ auth: { test: true, rol, url }, listeners })
+        await conectarSocket({ auth: { test: true, rol, url, nombre }, listeners })
         return
        }
 
@@ -109,22 +109,22 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
       if (session.current) {
 
         if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala, nombre }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token, nombre }, listeners })
         }
 
       } else {
 
         // Sino pedimos que nos cree una sesión nueva
         if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, idSala }, listeners })
+          await conectarSocket({ auth: { rol, idSala, nombre }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, token }, listeners })
+          await conectarSocket({ auth: { rol, token, nombre }, listeners })
         }
       }
 
@@ -138,7 +138,7 @@ export function useServerWebsockets({ idSala, rol, url }: SocketServerAuth & {ur
       toast.error(`Error de autenticación con el servidor de next: ${err.message}`)
       setError(`Error de autenticación con el servidor de next: ${err.message}`)
     }
-  }, [idSala, rol, saveSession, clearSession, session])
+  }, [saveSession, clearSession, rol, url, nombre, idSala])
 
   /**
    * Conexión inicial on mount. Pide auth del server de ws al server de next. 

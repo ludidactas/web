@@ -60,7 +60,7 @@ export async function conectarSocket({ auth, listeners }: {
   let sock
   if (test) {
     console.log(`Creando socket: Conectando en modo test...`)
-    sock = io(url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
+    sock = io(url, { auth: { rol: RolEncuesta.Tester, nombre }, autoConnect: false, transports: ['websocket'] })
 
   } else if (sessionId) {
     // Si hay una sesión guardada, la reutilizamos
@@ -68,7 +68,7 @@ export async function conectarSocket({ auth, listeners }: {
     if (rol === RolEncuesta.Estudiante && !idSala)
       throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
     // Conectamos el socket con sessionId
-    sock = conectar[rol]({ token, sessionId, rol, idSala })
+    sock = conectar[rol]({ token, sessionId, rol, idSala, nombre })
 
   } else {
     // Sino, creamos una nueva sesión usando el token que nos dió next

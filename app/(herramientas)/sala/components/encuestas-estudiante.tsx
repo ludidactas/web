@@ -13,7 +13,7 @@ import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
 
 export default function EncuestasEstudiante() {
-  const { conectado, encuestas, error } = useEncuestaEstudiante()
+  const { conectado, encuestas, error, session } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -37,6 +37,7 @@ export default function EncuestasEstudiante() {
           )}
         </div>
       </div>
+      {session.current?.nombre && <p>Participando como { session.current.nombre }</p>}
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (

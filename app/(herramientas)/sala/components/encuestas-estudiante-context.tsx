@@ -57,12 +57,13 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
 const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
 
 // Provider
-export const EncuestaEstudianteProvider: React.FC<{ idSala: string; children: React.ReactNode }> = ({
+export const EncuestaEstudianteProvider: React.FC<{ idSala: string; nombre?: string; children: React.ReactNode }> = ({
   idSala,
+  nombre,
   children,
 }) => {
   return (
-    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala)}>
+    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala, nombre)}>
       {children}
     </EncuestaEstudianteContext.Provider>
   )

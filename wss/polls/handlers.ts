@@ -1,6 +1,6 @@
-import { Server, Socket } from "socket.io"
+import { Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
-import { getEmailProfeDeSala, getSocketProfeDeSala } from "../salas/app"
+import { getEmailProfeDeSala, getSalaById, getSocketProfeDeSala } from "../salas/app"
 import { SocketConSesion } from "../session"
 import { Encuesta } from "../tipos"
 import { estudianteSala, hidratar } from "./app"
@@ -24,7 +24,7 @@ export const bradcastPoll = (io: Server, salaId: string, event: string, poll: En
 }
 
 
-export const handlersEstudiante = (io: Server, socket: Socket, idSala: string) => {
+export const handlersEstudiante = (io: Server, socket: SocketConSesion, idSala: string) => {
 
   const safe = conErrorHandling(socket)
 
@@ -34,8 +34,9 @@ export const handlersEstudiante = (io: Server, socket: Socket, idSala: string) =
 
   console.log(`✅ Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)})`)
 
-  // Notificamos al profe que un estudiante se ha conectado
-  getSocketProfeDeSala(idSala).emit('sala:estudiante_conectado', { id: socket.data.session.sessionId, nombre: user })
+  // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
+  getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, true)
+  getSocketProfeDeSala(idSala).emit('sala:estudiante_conectado', socket.data.session)
 
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', estudiante.listar())
@@ -53,6 +54,7 @@ export const handlersEstudiante = (io: Server, socket: Socket, idSala: string) =
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+    getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, false)
     getSocketProfeDeSala(idSala).emit('sala:estudiante_desconectado', { id: socket.data.session.sessionId })
   })
 

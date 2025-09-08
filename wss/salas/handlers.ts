@@ -3,7 +3,7 @@ import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
 import { conSession, SocketConSesion } from "../session"
-import { crearSala, getEmailProfeDeSala, getSalaByEmail, owners_salas, sockets_profes } from "./app"
+import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmail, owners_salas, sockets_profes } from "./app"
 
 export const handlersProfe = (io: Server, socket: SocketConSesion) => { 
   
@@ -18,9 +18,10 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
     console.log(`🔌 Se conectó profe ${email}, sala ${sala.id}`)
 
     const profe = profeSala(email)
-
-    // Al conectarse el profe, le enviamos la lista de encuestas de su sala
-    socket.emit('polls:list', profe.listar())
+    
+    socket.on('sala:listar_estudiantes', safe(() => { 
+      socket.emit('sala:estudiantes', getEstudiantesEnSala(sala.id))
+    }))
 
     // All the profe event handlers...
     socket.on('poll:create', safe((poll: unknown) => {
@@ -45,7 +46,7 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
     sockets_profes.set(email, socket)
 
     socket.on('sala:abrir', safe(() => {
-      socket.emit('sala:abierta', { salaId: sala, polls: profe.listar() })
+      socket.emit('sala:abierta', { sala, polls: profe.listar(), estudiantes: getEstudiantesEnSala(sala.id) })
     }))
 
     socket.on('disconnect', (reason) => {

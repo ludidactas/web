@@ -78,7 +78,9 @@ export default function EncuestasAdmin() {
       {estudiantes.length > 0 && (
         <ul className="py-4">
           {estudiantes.map((e) => (
-            <li key={e.id} className={cn({'text-black': e.presente, 'text-slate-400': !e.presente})}>{e.nombre}</li>
+            <li key={e.sessionId} className={cn({ 'text-black': e.conectado, 'text-slate-400': !e.conectado })}>
+              {e.nombre} - {e.email ?? `Anónimo`}
+            </li>
           ))}
         </ul>
       )}

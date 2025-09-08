@@ -1,17 +1,19 @@
+import { PollsServerSession } from '@/wss/session'
 import { Encuesta } from '@/wss/tipos'
 import { Socket } from 'socket.io-client'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-export interface IdEstudiante{ id: string; nombre: string }
+export interface Estudiante extends PollsServerSession { conectado: boolean }
 
 interface EncuestaStore {
   encuestas: Encuesta[]
   socket: Socket | null
-  estudiantes: IdEstudiante[]
-  historico_estudiantes: (IdEstudiante & {presente: boolean})[]
-  addEstudiante: (estudiante: IdEstudiante) => void
+  estudiantes: Estudiante[]
+  historico_estudiantes: Estudiante[]
+  addEstudiante: (estudiante: Estudiante) => void
   removeEstudiante: (estudianteId: string) => void
+  setEstudiantes: (estudiantes: Estudiante[]) => void
   setSocket: (socket: Socket) => void
   addEncuesta: (encuesta: Encuesta) => void
   updateEncuesta: (encuesta: Encuesta) => void
@@ -27,15 +29,19 @@ export const useEncuestaStore = create<EncuestaStore>()(
     socket: null,
     addEstudiante: (estudiante) =>
       set((state) => ({
-        estudiantes: state.estudiantes.find(e => e.id === estudiante.id) ? state.estudiantes : [...state.estudiantes, estudiante],
-        historico_estudiantes: state.historico_estudiantes.find(e => e.id === estudiante.id) ?
-          state.historico_estudiantes.map(e => e.id === estudiante.id ? { ...e, presente: true } : e) :
-          [...state.historico_estudiantes, { ...estudiante, presente: true }]
+        estudiantes: state.estudiantes.find(e => e.sessionId === estudiante.sessionId) ? state.estudiantes : [...state.estudiantes, estudiante],
+        historico_estudiantes: state.historico_estudiantes.find(e => e.sessionId === estudiante.sessionId) ?
+          state.historico_estudiantes.map(e => e.sessionId === estudiante.sessionId ? { ...e, conectado: true } : e) :
+          [...state.historico_estudiantes, { ...estudiante, conectado: true }]
       })),
     removeEstudiante: (estudianteId) => set((state) => ({
-      estudiantes: state.estudiantes.filter(e => e.id !== estudianteId),
-      historico_estudiantes: state.historico_estudiantes.map(e => e.id === estudianteId ? { ...e, presente: false } : e)
+      estudiantes: state.estudiantes.filter(e => e.sessionId !== estudianteId),
+      historico_estudiantes: state.historico_estudiantes.map(e => e.sessionId === estudianteId ? { ...e, conectado: false } : e)
     })),
+    setEstudiantes: (estudiantes) => set({
+      estudiantes: [...estudiantes],
+      historico_estudiantes: [...estudiantes]
+    }),
     setSocket: (socket) => set({ socket }),
     addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),
     updateEncuesta: (encuesta) =>

@@ -2,12 +2,14 @@ import { randomUUID } from "crypto"
 import { capitalize, first, shuffle } from "remeda"
 import { Socket } from "socket.io"
 import { Encuesta } from "../tipos"
+import { getSession } from "../session"
 
 interface Sala { 
   id: string
   polls: Map<string, Encuesta>
   votantes: Map<string, Set<string>> // pollId -> set de userIds que han votado
   votos: Map<string, Map<string, string>> // pollId -> (userId -> optionId)
+  estudiantes: Map<string, boolean> // sessionId -> presente?
 }
 
 /** Data de polls por sala */
@@ -28,6 +30,7 @@ export const crearSala = (email: string) => {
     polls: new Map<string, Encuesta>(),
     votantes: new Map<string, Set<string>>(),
     votos: new Map<string, Map<string, string>>(),
+    estudiantes: new Map<string, boolean>(),
   })
 
   // Registramos owners
@@ -45,7 +48,7 @@ export const getSalaId = (email: string) => {
   return owners_salas.get(email)!
 }
 
-
+/** Obtiene el email del profe dueño de la sala, dado el id de la sala */
 export const getEmailProfeDeSala = (salaId: string) => {
   if (!salas_owners.has(salaId)) throw new Error(`Sala ${salaId} sin profe!`)
   return salas_owners.get(salaId)!
@@ -85,6 +88,10 @@ export const getSocketProfeDeSala = (salaId: string) => {
 export const getSocketProfe = (email: string) => {
   if (!sockets_profes.has(email)) throw new Error(`El profe ${email} no tiene socket registrado!`)
   return sockets_profes.get(email)!
+}
+
+export const getEstudiantesEnSala = (salaId: string) => {
+  return Array.from(getSalaById(salaId).estudiantes.entries()).map(([id, conectado]) => ({ ...getSession(id), conectado }))
 }
 
 // Generador de nombres de fantasía

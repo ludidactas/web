@@ -11,6 +11,7 @@ export interface PollsServerSession {
   userIp?: string
   email?: string
   nombre?: string // Nombre de google del profe o nombre arbitrario del estudiante
+  agente?: string
   rol: RolEncuesta
 }
 
@@ -61,18 +62,19 @@ export const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-export const createSession = (rol: RolEncuesta, email?: string, nombre?: string, userIp?: string): PollsServerSession => ({
+export const createSession = (rol: RolEncuesta, email?: string, nombre?: string, userIp?: string, agente?: string): PollsServerSession => ({
   sessionId: randomUUID().split('-')[0],
   userIp,
   rol,
   email,
   nombre,
+  agente,
 })
 
 export const openSession = (socket: SocketConSesion, rol: RolEncuesta, email?: string, nombre?: string) => {
 
   // Creamos el objeto - Ojo que le estoy agregando info arbitraria que venga en el data
-  const session = createSession(rol, email, nombre ?? nombreDeFantasia(), socketIp(socket))
+  const session = createSession(rol, email, nombre ?? nombreDeFantasia(), socketIp(socket), socket.handshake.headers['user-agent'])
 
   // Guardamos la sesión
   setSession(session.sessionId, session)

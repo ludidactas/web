@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { useServerWebsockets } from './use-server-encuestas'
-import { IdEstudiante, useEncuestaStore } from './encuestas-store'
+import { Estudiante, useEncuestaStore } from './encuestas-store'
 import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
 
 
@@ -16,7 +16,7 @@ const useEncuestaProfeState = (nombre?: string) => {
   
   // El profe se conecta con su email como idSala
   const { socket, conectado, conectando, error } = useServerWebsockets({ nombre, rol: RolEncuesta.Profe })
-  const { encuestas, historico_estudiantes, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta, addEstudiante, removeEstudiante} = useEncuestaStore()
+  const { encuestas, historico_estudiantes, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta, addEstudiante, removeEstudiante, setEstudiantes} = useEncuestaStore()
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
@@ -55,32 +55,34 @@ const useEncuestaProfeState = (nombre?: string) => {
         toast.error(message)
       })
 
-      socket.on('disconnect', () => { 
+      socket.on('disconnect', () => {
         setTimeout(() => setLinkSala(null), 1000)
       })
 
-      // Pedimos la sala al server
-      socket.emit('sala:abrir')
-
       // Suscribimos a su respuesta
-      socket.on('sala:abierta', ({ salaId, polls }: { salaId: { id: string } , polls: Encuesta[] }) => {
+      socket.on('sala:abierta', ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[], estudiantes: Estudiante[] }) => {
         toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
-        console.log('Sala abierta', salaId)
-        setLinkSala(`https://ludidactas.com/sala/${salaId.id}/`)
+        setLinkSala(`https://ludidactas.com/sala/${sala.id}/`)
 
-        // Al abrir la sala, le pedimos al server la lista de encuestas, por si la sala ya estaba activa
+        // Al abrir la sala, le pedimos al server la lista de encuestas y de estudiantes, por si la sala ya estaba activa
         setEncuestas(polls)
+        setEstudiantes(estudiantes)
       })
 
-      socket.on('sala:estudiante_conectado', (estudiante: IdEstudiante) => { 
+      socket.on('sala:estudiantes', setEstudiantes)
+
+      socket.on('sala:estudiante_conectado', (estudiante: Estudiante) => {
         console.log('Estudiante conectado', estudiante)
         toast.success(`Estudiante conectado: ${estudiante.nombre}`)
         addEstudiante(estudiante)
       })
 
-      socket.on('sala:estudiante_desconectado', (estudiante: { id: string }) => { 
+      socket.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
         removeEstudiante(estudiante.id)
       })
+
+      // Pedimos la sala y la lista de estudiantes al server
+      socket.emit('sala:abrir')
 
       return () => {
         socket.removeAllListeners('polls:list')
@@ -90,6 +92,9 @@ const useEncuestaProfeState = (nombre?: string) => {
         socket.removeAllListeners('poll:error')
         socket.removeAllListeners('disconnect')
         socket.removeAllListeners('sala:abierta')
+        socket.removeAllListeners('sala:estudiantes')
+        socket.removeAllListeners('sala:estudiante_conectado')
+        socket.removeAllListeners('sala:estudiante_desconectado')
       }
     }
 

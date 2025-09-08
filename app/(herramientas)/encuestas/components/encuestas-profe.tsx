@@ -10,9 +10,11 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaAdmin } from './encuestas-profe-context'
+import { estudianteSala } from '@/wss/polls/app'
+import { cn } from '@/lib/utils'
 
 export default function EncuestasAdmin() {
-  const { conectado, linkSala } = useEncuestaAdmin()
+  const { conectado, linkSala, estudiantes } = useEncuestaAdmin()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -27,7 +29,7 @@ export default function EncuestasAdmin() {
           setJustCopied(false)
         }, 3000)
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Failed to copy!', error)
       })
   }
@@ -38,15 +40,14 @@ export default function EncuestasAdmin() {
       <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
         <Status />
         {linkSala && (
-          <div className='flex items-center justify-center gap-4 my-10'>
-            <p className='leading-normal text-center text-xs md:text-lg'>
+          <div className="flex items-center justify-center gap-4 my-10">
+            <p className="leading-normal text-center text-xs md:text-lg">
               Tu sala:{' '}
               <Link href={linkSala} className="text-blue-700 hover:underline">
                 {linkSala}
               </Link>
             </p>
-            <button title='Copiar' onClick={handleCopy(linkSala)}
-            >
+            <button title="Copiar" onClick={handleCopy(linkSala)}>
               {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
             </button>
           </div>
@@ -67,11 +68,20 @@ export default function EncuestasAdmin() {
           <div className="text-center">
             <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
             <p>
-              Checkeá tu conexión, actualizá la página, o envianos un mensaje <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+              Checkeá tu conexión, actualizá la página, o envianos un mensaje{' '}
+              <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
             </p>
           </div>
         )}
       </div>
+      {estudiantes.length === 0 && <p className="mt-10 text-slate-400 italic">Ningún estudiante conectado aún...</p>}
+      {estudiantes.length > 0 && (
+        <ul className="py-4">
+          {estudiantes.map((e) => (
+            <li key={e.id} className={cn({'text-black': e.presente, 'text-slate-400': !e.presente})}>{e.nombre}</li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -79,11 +89,11 @@ export default function EncuestasAdmin() {
 function Status() {
   const { conectado } = useEncuestaAdmin()
   return (
-    <div className='relative flex items-center justify-between pr-4 mb-4'>
-      <div className='absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24' />
+    <div className="relative flex items-center justify-between pr-4 mb-4">
+      <div className="absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24" />
 
       <div className="flex relative items-center justify-between">
-        <LdSvg className='w-40' SvgComponent={EncuestasIcon} />
+        <LdSvg className="w-40" SvgComponent={EncuestasIcon} />
         <h1 className="text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
       </div>
 
@@ -99,11 +109,10 @@ function Status() {
 
 function ListaEncuestas() {
   const { encuestas } = useEncuestaAdmin()
-  if (encuestas.length == 0)
-    return <></>
+  if (encuestas.length == 0) return <></>
 
   return (
-    <div className='p-4'>
+    <div className="p-4">
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -115,13 +124,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
-      
-      
       {/* Titulo y status */}
       <div className="flex items-center px-4 justify-between">
-        <div className='flex gap-4 items-center'>
-
-          <LdSvg className='w-10' SvgComponent={PollsIcon} />
+        <div className="flex gap-4 items-center">
+          <LdSvg className="w-10" SvgComponent={PollsIcon} />
           <h3 className="text-sm md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col items-end">
@@ -139,10 +145,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       <ol className="list-[lower-latin] px-8 m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            <div className='flex gap-2'>
-              {opcion.texto} - <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
+            <div className="flex gap-2">
+              {opcion.texto} - <p className="text-emerald-500 font-bold"> {opcion.votos} votos </p>
             </div>
-
           </li>
         ))}
       </ol>
@@ -170,7 +175,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
         {/* Abrir/Cerrar */}
         {!encuesta.isOpen && (
-          <button className="w-20 text-xs md:text-xl md:w-32 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded" onClick={() => abrirPregunta(encuesta.id)}>
+          <button
+            className="w-20 text-xs md:text-xl md:w-32 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+            onClick={() => abrirPregunta(encuesta.id)}
+          >
             Abrir
           </button>
         )}
@@ -184,7 +192,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         )}
 
         {/* Eliminar */}
-        <button className="w-20 text-xs md:text-xl md:w-32 bg-rose-800/90 text-white px-4 py-2 rounded" onClick={() => borrarPregunta(encuesta.id)}>
+        <button
+          className="w-20 text-xs md:text-xl md:w-32 bg-rose-800/90 text-white px-4 py-2 rounded"
+          onClick={() => borrarPregunta(encuesta.id)}
+        >
           Eliminar
         </button>
       </div>
@@ -225,13 +236,12 @@ function AgregarPregunta() {
 
   return (
     <div className="flex flex-col rounded-xl bg-indigo-50 p-4 gap-2">
-      <p className='text-xl'>Pregunta:</p>
+      <p className="text-xl">Pregunta:</p>
       <textarea
         className="border-b w-full p-2 resize-none"
         value={pregunta}
         onChange={(e) => setPregunta(e.target.value)}
         tabIndex={1}
-
       />
 
       {respuestas.map((respuesta, index) => (
@@ -256,15 +266,18 @@ function AgregarPregunta() {
         </div>
       ))}
 
-      <button className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+      <button
+        className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
         onClick={agregarRespuesta}
         tabIndex={respuestas.length + 2}
       >
         + Agregar opción
       </button>
-      <button className="bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
+      <button
+        className="bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
         onClick={postearPregunta}
-        tabIndex={respuestas.length + 2} >
+        tabIndex={respuestas.length + 2}
+      >
         &gt; Enviar pregunta
       </button>
     </div>

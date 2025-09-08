@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { useServerWebsockets } from './use-server-encuestas'
-import { useEncuestaStore } from './encuestas-store'
+import { IdEstudiante, useEncuestaStore } from './encuestas-store'
 import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
 
 
@@ -16,7 +16,7 @@ const useEncuestaProfeState = (nombre?: string) => {
   
   // El profe se conecta con su email como idSala
   const { socket, conectado, conectando, error } = useServerWebsockets({ nombre, rol: RolEncuesta.Profe })
-  const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta} = useEncuestaStore()
+  const { encuestas, historico_estudiantes, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta, addEstudiante, removeEstudiante} = useEncuestaStore()
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
@@ -72,6 +72,16 @@ const useEncuestaProfeState = (nombre?: string) => {
         setEncuestas(polls)
       })
 
+      socket.on('sala:estudiante_conectado', (estudiante: IdEstudiante) => { 
+        console.log('Estudiante conectado', estudiante)
+        toast.success(`Estudiante conectado: ${estudiante.nombre}`)
+        addEstudiante(estudiante)
+      })
+
+      socket.on('sala:estudiante_desconectado', (estudiante: { id: string }) => { 
+        removeEstudiante(estudiante.id)
+      })
+
       return () => {
         socket.removeAllListeners('polls:list')
         socket.removeAllListeners('poll:updated')
@@ -92,6 +102,7 @@ const useEncuestaProfeState = (nombre?: string) => {
     error,
     encuestas,
     linkSala,
+    estudiantes: historico_estudiantes,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,

@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto"
+import { capitalize, first, shuffle } from "remeda"
 import { Socket } from "socket.io"
 import { Encuesta } from "../tipos"
 
@@ -84,4 +85,35 @@ export const getSocketProfeDeSala = (salaId: string) => {
 export const getSocketProfe = (email: string) => {
   if (!sockets_profes.has(email)) throw new Error(`El profe ${email} no tiene socket registrado!`)
   return sockets_profes.get(email)!
+}
+
+// Generador de nombres de fantasía
+
+const nombres = [
+  'Burbujito', 'Pompón', 'Chispitas', 'Bolitas', 'Pelotín', 'Globito', 'Saltarín',
+  'Zigzag', 'Tintín', 'Pimpón', 'Bambú', 'Coco', 'Kiwi', 'Mango', 'Pera',
+  'Tofú', 'Sushi', 'Wasabi', 'Matcha', 'Oreo', 'Dorito', 'Nacho', 'Taco',
+  'Pixel', 'Emoji', 'WiFi', 'Oveja', 'Androide', 'Avatar', 'Bit', 'Byte',
+  'Neo', 'Zeta', 'Alfa', 'Beta', 'Gamma', 'Delta', 'Omega', 'Sigma',
+  'Turbo', 'Nitro', 'Flash', 'Sonic', 'Dash', 'Rush', 'Voltio', 'Chispa',
+  'Cosmo', 'Astro', 'Estelar', 'Nova', 'Quasar', 'Cohete', 'Cometa'
+];
+
+const apellidos = [
+  'Saltamontes', 'Mariposa', 'Libélula', 'Colibrí', 'Caracol', 'Lombriz', 'Oruga',
+  'Pompaburbuja', 'Remolino', 'Torbellino', 'Huracán', 'Tornado', 'Ciclón', 'Vendaval',
+  'Arcoíris', 'Destello', 'Centelleo', 'Parpadeo', 'Guiño', 'Pestañeo', 'Titileo',
+  'Rebote', 'Zigzagueo', 'Espiral', 'Voltereta', 'Pirueta', 'Mareo', 'Vértigo',
+  'Cosquillas', 'Carcajada', 'Risita', 'Sonrisa', 'Mueca', 'Guiño', 'Abrazo',
+  'Saltatrampas', 'Rompenubes', 'Cazaestrellas', 'Persueño', 'Atrapaluna', 'Robasonrisa',
+  'Comecocos', 'Bebesoda', 'Masticanubes', 'Tragaluces', 'Absorbebrisa', 'Soplafuego',
+  'Electrochoque', 'Megavoltio', 'Gigarayo', 'Teravatio', 'Nanómetro',
+  'Supersónico', 'Hiperbólico', 'Parabólico', 'Geométrico', 'Algebraico', 'Trigonométrico',
+  'Galáctico', 'Intergaláctico', 'Multiversal', 'Dimensional', 'Cuántico', 'Holográfico'
+];
+
+export function nombreDeFantasia() {
+  const nombre = capitalize(first(shuffle(nombres))!)
+  const apellido = capitalize(first(shuffle(apellidos))!)
+  return `${nombre} ${apellido}`;
 }

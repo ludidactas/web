@@ -113,6 +113,26 @@ function ListaEncuestas() {
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
+  const [_copiedText, copy] = useCopyToClipboard()
+  const [justCopied, setJustCopied] = useState(false)
+
+  const opcionesInfo = encuesta.opciones.map(opcion => '\n'+opcion.texto + ' -' +' '+opcion.votos+' votos')
+
+  const handleCopy = (text: string) => () => {
+    copy(text)
+      .then(() => {
+        setJustCopied(true)
+
+        console.log(_copiedText)
+
+        setTimeout(() => {
+          setJustCopied(false)
+        }, 3000)
+      })
+      .catch(error => {
+        console.error('Failed to copy!', error)
+      })
+  }
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
       
@@ -133,6 +153,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
+          <button title='Copiar pregunta' onClick={handleCopy(encuesta.pregunta+'\n'+ opcionesInfo)}
+            >
+              {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+            </button>
+
         </div>
       </div>
 

@@ -124,13 +124,34 @@ function ListaEncuestas() {
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
+  const [_copiedText, copy] = useCopyToClipboard()
+  const [justCopied, setJustCopied] = useState(false)
+
+  const opcionesInfo = encuesta.opciones.map(opcion => '\n'+opcion.texto + ' -' +' '+opcion.votos+' votos')
+
+  const handleCopy = (text: string) => () => {
+    copy(text)
+      .then(() => {
+        setJustCopied(true)
+
+        console.log(_copiedText)
+
+        setTimeout(() => {
+          setJustCopied(false)
+        }, 3000)
+      })
+      .catch(error => {
+        console.error('Failed to copy!', error)
+      })
+  }
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
       {/* Titulo y status */}
-      <div className="flex items-center px-4 justify-between">
-        <div className="flex gap-4 items-center">
-          <LdSvg className="w-10" SvgComponent={PollsIcon} />
-          <h3 className="text-sm md:text-xl">{encuesta.pregunta}</h3>
+      <div className="flex items-start px-4 justify-between">
+        <div className='flex gap-4'>
+
+          <LdSvg className='w-[10%]' SvgComponent={PollsIcon} />
+          <h3 className="w-[90%] text-sm md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col items-end">
           <span
@@ -141,14 +162,19 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
+          <button title='Copiar pregunta' onClick={handleCopy(encuesta.pregunta+'\n'+ opcionesInfo)}
+            >
+              {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+            </button>
+
         </div>
       </div>
 
-      <ol className="list-[lower-latin] px-8 m-6">
+      <ol className="list-[lower-latin] p-8 m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            <div className="flex gap-2">
-              {opcion.texto} - <p className="text-emerald-500 font-bold"> {opcion.votos} votos </p>
+            <div className='flex items-center pb-2 gap-4'>
+              {opcion.texto} <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
             </div>
           </li>
         ))}

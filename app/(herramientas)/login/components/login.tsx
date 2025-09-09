@@ -6,10 +6,10 @@ export default function Login() {
     
 
     return (
-        <div className="flex drop-shadow-xl md:flex-row flex-col md:gap-16 bg-white md:m-20 p-8 md:p-10 md:rounded-xl items-center">
+        <div className="flex drop-shadow-xl flex-col md:flex-row md:gap-16 bg-white md:m-20 p-8 md:p-10 md:rounded-xl items-center justify-center">
             
             <Ilustracion/>
-            <div className="flex flex-col md:h-fit mr-8 items-center">
+            <div className="flex flex-col md:h-fit md:mr-8 items-center">
                 <div className="flex md:w-[30em] items-center gap-4">
                                   <Image className="w-8 md:w-16" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
                                   <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">

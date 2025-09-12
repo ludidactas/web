@@ -10,8 +10,14 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaAdmin } from './encuestas-profe-context'
-import { estudianteSala } from '@/wss/polls/app'
+// import { estudianteSala } from '@/wss/polls/app'
 import { cn } from '@/lib/utils'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { ScrollBar } from '@/components/ui/scroll-area'
+// import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
+import getInitials, { getRandomColor } from '@/lib/avatarname'
+
+
 
 export default function EncuestasAdmin() {
   const { conectado, linkSala, estudiantes } = useEncuestaAdmin()
@@ -34,10 +40,10 @@ export default function EncuestasAdmin() {
       })
   }
 
-  return (
-    <div className="rounded-xl md:px-20 flex flex-col items-center w-full">
+  return (<div className='flex gap-2'>
+    <div className="rounded-xl flex flex-col items-center w-full">
       {/* Link de sala */}
-      <div className="md:w-[40em] bg-white p-6 md:p-10 rounded-xl">
+      <div className="md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
         <Status />
         {linkSala && (
           <div className="flex items-center justify-center gap-4 my-10">
@@ -59,10 +65,12 @@ export default function EncuestasAdmin() {
 
         <hr className="invisible py-2" />
         {conectado && (
-          <>
+          <div className='flex flex-col gap-10'>
             <AgregarPregunta />
+
             <ListaEncuestas />
-          </>
+
+          </div>
         )}
         {!conectado && (
           <div className="text-center">
@@ -74,19 +82,42 @@ export default function EncuestasAdmin() {
           </div>
         )}
       </div>
+    </div>
+
+    {/* Lista de estudiantes */}
+    <div className='sticky top-0 flex flex-col gap-4 bg-white rounded-xl p-10 h-max'>
+
+      <h1 className='text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500'>Participantes</h1>
       {estudiantes.length === 0 && <p className="mt-10 text-slate-400 italic">Ningún estudiante conectado aún...</p>}
+
       {estudiantes.length > 0 && (
-        <ul className="py-4">
+        <ul className="flex flex-col gap-2 p-2 rounded-xl">
           {estudiantes.map((e) => (
-            <li key={e.sessionId} className={cn({ 'text-black': e.conectado, 'text-slate-400': !e.conectado })}>
-              {e.nombre} - {e.email ?? `Anónimo`}
+            <li key={e.sessionId} className={cn({ 'text-black flex gap-2 ': e.conectado, 'text-slate-400 flex gap-2 grayscale': !e.conectado })}>
+
+              {/* Avatar */}
+              <div className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
+                style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}>
+                {getInitials(e.nombre || 'Anonimo')}
+              </div>
+              {/* Nombre e email */}
+              <div className='flex flex-col'>
+                <span>{e.nombre}</span>  <span className='text-teal-500'>{e.email ?? `Anónimo`}</span>
+              </div>
+
             </li>
           ))}
         </ul>
       )}
+
     </div>
+  </div>
+
   )
 }
+
+
+
 
 function Status() {
   const { conectado } = useEncuestaAdmin()
@@ -114,11 +145,15 @@ function ListaEncuestas() {
   if (encuestas.length == 0) return <></>
 
   return (
-    <div className="p-4">
+    <ScrollArea className='max-h-screen overflow-auto'>
+
+      {/* <div className="p-4 "> */}
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
-    </div>
+      {/* </div> */}
+      <ScrollBar className="" orientation='vertical' />
+    </ScrollArea>
   )
 }
 
@@ -127,7 +162,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
-  const opcionesInfo = encuesta.opciones.map(opcion => '\n'+opcion.texto + ' -' +' '+opcion.votos+' votos')
+  const opcionesInfo = encuesta.opciones.map(opcion => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -162,10 +197,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
-          <button title='Copiar pregunta' onClick={handleCopy(encuesta.pregunta+'\n'+ opcionesInfo)}
-            >
-              {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-            </button>
+          <button title='Copiar pregunta' onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}
+          >
+            {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+          </button>
 
         </div>
       </div>

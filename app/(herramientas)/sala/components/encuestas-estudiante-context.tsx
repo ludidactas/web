@@ -50,11 +50,12 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string) => {
     error,
     encuestas,
     votar,
+    nombre
   }
 }
 
 // Context
-const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
+export const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
 
 // Provider
 export const EncuestaEstudianteProvider: React.FC<{ idSala: string; nombre?: string; children: React.ReactNode }> = ({

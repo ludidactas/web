@@ -1,17 +1,33 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { useSession } from 'next-auth/react'
 
 export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) {
-  const [nombre, setNombre] = useState<string | undefined>(localStorage.getItem(`encuestas-nombre-${idSala}`) ?? undefined)
+  // const [nombre, setNombre] = useState<string | undefined>(localStorage.getItem(`encuestas-nombre-${idSala}`) ?? undefined)
+  const [nombre, setNombre] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [isClient, setIsClient] = useState(false)  
+  const { data: nextSession, status } = useSession()
 
+  const nombreFinal = status === 'authenticated' 
+    ? nextSession?.user?.name || 'Usuario'
+    : nombre
+
+  useEffect(() => {
+    setIsClient(true)
+    const storedName = localStorage.getItem(`encuestas-nombre-${idSala}`)
+    if (storedName) {
+      setNombre(storedName)
+    }
+  }, [idSala])
+  
   const handleConectarse = () => {
     const value = inputRef.current?.value?.trim()
     if (value) {
@@ -20,7 +36,11 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
     }
   }
 
-  if (!nombre) {
+  if (status==='loading' || !isClient){
+    return <p>Cargando...</p>
+  }
+
+  if (status==='unauthenticated' && !nombre) {
     return (
       <Dialog open>
         <DialogContent className="sm:max-w-md">
@@ -40,8 +60,9 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
     )
   }
 
+  
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombre}>
+    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="flex gap-2" />
         <div className="p-2 w-[inherit] md:p-8 md:w-4/5">
@@ -51,3 +72,4 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
     </EncuestaEstudianteProvider>
   )
 }
+

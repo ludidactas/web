@@ -19,6 +19,7 @@ export default function useSesionGuardada() {
   useEffect(() => {
     // Esperamos a que la sesión esté lista
     if (status === "loading") return
+    
 
     // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
     // (en caso de anónimo, ni limpiarla)

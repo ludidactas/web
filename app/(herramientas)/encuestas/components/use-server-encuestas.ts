@@ -1,15 +1,28 @@
 'use client'
 import { PollsServerSession } from '@/wss/session'
+import { RolEncuesta } from '@/wss/tipos'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isNonNullish } from 'remeda'
 import { ExtendedError } from 'socket.io'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
-import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } from './server-encuestas'
+import { conectarSocket, limpiarListeners, solicitarAuth } from './server-encuestas'
 import useSesionGuardada from './use-sesion-localstorage'
-import { RolEncuesta } from '@/wss/tipos'
 
-export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }: SocketServerAuth & {url?: string}) {
+type Props = {
+  rol: RolEncuesta.Estudiante,
+  idSala: string,
+  nombre?: string,
+  icono?: string
+} | {
+  rol: RolEncuesta.Profe,
+} | {
+  rol: RolEncuesta.Tester,
+  url: string,
+  nombre?: string
+}
+
+export function useServerWebsockets(auth: Props) {
 
   const socket = useRef<Socket | null>(null)
 
@@ -100,31 +113,31 @@ export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }:
       console.log('🚀 Iniciando conexión desde el useEffect del useServerWebsockets...')
 
       // Caso test va directo, sin sesión, sin idSala, nada
-      if (rol === RolEncuesta.Tester) {
-        await conectarSocket({ auth: { test: true, rol, url, nombre }, listeners })
+      if (auth.rol === RolEncuesta.Tester) {
+        await conectarSocket({ auth, listeners })
         return
        }
 
       // Si ya hay una sesión de ws guardada, la reutilizamos
       if (session.current) {
 
-        if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala, nombre, avatar, icono }, listeners })
+        if (auth.rol === RolEncuesta.Estudiante) {
+          await conectarSocket({ auth: { ...auth, sessionId: session.current.sessionId }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token, nombre, avatar, icono }, listeners })
+          await conectarSocket({ auth: { ...auth, token, sessionId: session.current.sessionId }, listeners })
         }
 
       } else {
 
         // Sino pedimos que nos cree una sesión nueva
-        if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, idSala, nombre, avatar, icono }, listeners })
+        if (auth.rol === RolEncuesta.Estudiante) {
+          await conectarSocket({ auth, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, token, nombre, avatar, icono }, listeners })
+          await conectarSocket({ auth: { ...auth, token }, listeners })
         }
       }
 
@@ -138,7 +151,7 @@ export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }:
       toast.error(`Error de autenticación con el servidor de next: ${err.message}`)
       setError(`Error de autenticación con el servidor de next: ${err.message}`)
     }
-  }, [saveSession, clearSession, rol, url, nombre, idSala])
+  }, [saveSession, clearSession, auth])
 
   /**
    * Conexión inicial on mount. Pide auth del server de ws al server de next. 
@@ -155,9 +168,10 @@ export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }:
     if (!puedeConectar) return
 
     // Si es para estudiante y no hay idSala, bochamos
-    if (!rol || (rol === RolEncuesta.Estudiante && !idSala))
+    if (!auth.rol || (auth.rol === RolEncuesta.Estudiante && !auth.idSala))
       throw new Error(`Se requiere un idSala y o rol de profe para conectarse al servidor de encuestas`)
 
+    // Flag de conectando
     setConectando(true)
 
     // Efectuamos la conexión
@@ -171,7 +185,7 @@ export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }:
         setConectando(false)
       }
     }
-  }, [sessionReady, conectando, puedeConectar, idSala, rol, conectar])
+  }, [sessionReady, conectando, puedeConectar, auth, conectar])
 
   return {
     socket: socket.current,

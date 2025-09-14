@@ -1,58 +1,44 @@
 import { PollsServerSession } from "@/wss/session"
 import { RolEncuesta } from "@/wss/tipos"
-// import { setupSocketLogging } from "@/polls/test/test-funcs"
 import { io, Socket } from "socket.io-client"
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
 }
 
-/** Auth que espera el server de sockets */
-export interface SocketServerAuth {
-  // Rol con el que se conecta
-  rol: RolEncuesta
-  // Token JWT que devuelve el server de next
-  token?: string
-  // Nombre que den en la ui
+interface SocketServerTestAuth { 
+  rol: RolEncuesta.Tester,
+  url: string,
   nombre?: string
-  // El email para profes y admins, el idSala de la url para estudiantes
-  idSala?: string
-  // Session ID para reutilizar una sesión existente
-  sessionId?: string
-  // Avatar para usuarios autenticados con Google
-  avatar?: string
-  // Ícono para usuarios anónimos
+}
+
+interface SocketServerProfeAuth { 
+  rol: RolEncuesta.Profe,
+  token: string,
+}
+
+interface SocketServerAnonAuth { 
+  rol: RolEncuesta.Estudiante,
+  idSala: string,
+  nombre?: string,
   icono?: string
 }
 
+type SocketServerAdminAuth = SocketServerProfeAuth
+
+/** Auth que espera el server de sockets */
+export type SocketServerAuth = {sessionId?: string} & (SocketServerTestAuth | SocketServerProfeAuth | SocketServerAnonAuth)
+
 /** Contiene los endpoints para cada rol */
 export const conectar = {
-  [RolEncuesta.Tester]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/test`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Admin]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Profe]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Estudiante]: (auth: SocketServerAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: SocketServerAdminAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Profe]: (auth: SocketServerProfeAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Estudiante]: (auth: SocketServerAnonAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function conectarSocket({ auth, listeners }: {
-  auth: {
-    test?: boolean,
-    url?: string,
-    /** Sesión del localStorage emitida por el server de ws */
-    sessionId?: string,
-    /** Token de autenticación de sesión de google en next */
-    token?: string,
-    /** Id de sala para conectarse como usuario no-logueado */
-    idSala?: string
-    /** Rol al que conectar... dependiendo de esto se requiere token o idSala */
-    rol: RolEncuesta
-    /** Opcionalmente puede attachear un nombre custom */
-    nombre?: string
-    /** Avatar para usuarios autenticados con Google */
-    avatar?: string
-    /** Ícono para usuarios anónimos */
-    icono?: string
-  },
+  auth: SocketServerAuth
   listeners: {
     onConnect: (socket: Socket) => void,
     onError: (socket: Socket, error: Error) => void,
@@ -62,28 +48,18 @@ export async function conectarSocket({ auth, listeners }: {
   }
 }) {
 
-  const { sessionId, token, rol, idSala, nombre, test, url, icono } = auth
   const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
 
-  let sock
-  if (test) {
-    console.log(`Creando socket: Conectando en modo test...`)
-    sock = io(url, { auth: { rol: RolEncuesta.Tester, nombre }, autoConnect: false, transports: ['websocket'] })
-
-  } else if (sessionId) {
-    // Si hay una sesión guardada, la reutilizamos
-    console.log(`Creando socket: Reestableciendo sesión ${sessionId} con el servidor de encuestas como ${rol}...`)
-    if (rol === RolEncuesta.Estudiante && !idSala)
-      throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
-    // Conectamos el socket con sessionId
-    sock = conectar[rol]({ token, sessionId, rol, idSala, nombre, icono })
-
+  let sock: Socket
+  if (auth.rol === RolEncuesta.Tester) {
+    sock = io(auth.url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
+  } else if (auth.rol === RolEncuesta.Profe) {
+    sock = conectar[RolEncuesta.Profe](auth)
+  } else if (auth.rol === RolEncuesta.Estudiante) {
+    sock = conectar[RolEncuesta.Estudiante](auth)
   } else {
-    // Sino, creamos una nueva sesión usando el token que nos dió next
-    console.log(`Creando socket: Iniciando nueva sesión el server de encuestas como ${rol}...`)
-    // if (!token) throw new Error(`Se require una sesión de Google para conectarse al servidor de encuestas`)
-    sock = conectar[rol]({ token, nombre, rol, idSala, icono })
-  }
+    sock = conectar[RolEncuesta.Admin](auth)
+   }
 
   // En cualquier caso, le suscribimos unos handlers básicos
   sock.on('connect_error', error => {

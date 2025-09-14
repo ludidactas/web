@@ -13,6 +13,8 @@
     "polls:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js"
   },
   "dependencies": {
+    "@iconify-json/streamline-pixel": "^1.2.0",
+    "@iconify/react": "^6.0.1",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^15.0.3",

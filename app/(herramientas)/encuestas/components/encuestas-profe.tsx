@@ -18,7 +18,6 @@ import { ScrollBar } from '@/components/ui/scroll-area'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 
 
-
 export default function EncuestasAdmin() {
   const { conectado, linkSala, estudiantes } = useEncuestaAdmin()
   const [_copiedText, copy] = useCopyToClipboard()

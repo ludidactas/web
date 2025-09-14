@@ -9,7 +9,7 @@ import { conectarSocket, limpiarListeners, SocketServerAuth, solicitarAuth } fro
 import useSesionGuardada from './use-sesion-localstorage'
 import { RolEncuesta } from '@/wss/tipos'
 
-export function useServerWebsockets({ nombre, idSala, rol, url }: SocketServerAuth & {url?: string}) {
+export function useServerWebsockets({ nombre, idSala, rol, url, avatar, icono }: SocketServerAuth & {url?: string}) {
 
   const socket = useRef<Socket | null>(null)
 
@@ -109,22 +109,22 @@ export function useServerWebsockets({ nombre, idSala, rol, url }: SocketServerAu
       if (session.current) {
 
         if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala, nombre }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, idSala, nombre, avatar, icono }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token, nombre }, listeners })
+          await conectarSocket({ auth: { rol, sessionId: session.current.sessionId, token, nombre, avatar, icono }, listeners })
         }
 
       } else {
 
         // Sino pedimos que nos cree una sesión nueva
         if (rol === RolEncuesta.Estudiante) {
-          await conectarSocket({ auth: { rol, idSala, nombre }, listeners })
+          await conectarSocket({ auth: { rol, idSala, nombre, avatar, icono }, listeners })
 
         } else {
           const token = await solicitarAuth()
-          await conectarSocket({ auth: { rol, token, nombre }, listeners })
+          await conectarSocket({ auth: { rol, token, nombre, avatar, icono }, listeners })
         }
       }
 

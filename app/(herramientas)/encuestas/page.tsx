@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { nombre } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
-import { EncuestaAdminProvider } from './components/encuestas-profe-context'
+import { EncuestaProfeProvider } from './components/encuestas-profe-context'
 import HeaderSala from '../sala/components/header-sala'
 import { SessionProvider } from 'next-auth/react'
 
@@ -15,7 +15,7 @@ export default async function Page() {
 
   return (
     <SessionProvider>
-      <EncuestaAdminProvider email={session.user.email}>
+      <EncuestaProfeProvider auth={session.user as { email: string }}>
         <Toaster />
         <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center bg-gradient-to-r from-cyan-200/70 to-indigo-200/70 ">
           <HeaderSala className="grid grid-cols-3">
@@ -30,7 +30,7 @@ export default async function Page() {
           </div>
           <div className="w-full h-24" />
         </div>
-      </EncuestaAdminProvider>
+      </EncuestaProfeProvider>
     </SessionProvider>
   )
 }

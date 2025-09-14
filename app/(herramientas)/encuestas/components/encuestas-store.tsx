@@ -10,7 +10,6 @@ interface EncuestaStore {
   encuestas: Encuesta[]
   socket: Socket | null
   estudiantes: Estudiante[]
-  historico_estudiantes: Estudiante[]
   addEstudiante: (estudiante: Estudiante) => void
   removeEstudiante: (estudianteId: string) => void
   setEstudiantes: (estudiantes: Estudiante[]) => void
@@ -25,22 +24,18 @@ export const useEncuestaStore = create<EncuestaStore>()(
   subscribeWithSelector((set) => ({
     encuestas: [],
     estudiantes: [],
-    historico_estudiantes: [],
     socket: null,
     addEstudiante: (estudiante) =>
       set((state) => ({
-        estudiantes: state.estudiantes.find(e => e.sessionId === estudiante.sessionId) ? state.estudiantes : [...state.estudiantes, estudiante],
-        historico_estudiantes: state.historico_estudiantes.find(e => e.sessionId === estudiante.sessionId) ?
-          state.historico_estudiantes.map(e => e.sessionId === estudiante.sessionId ? { ...e, conectado: true } : e) :
-          [...state.historico_estudiantes, { ...estudiante, conectado: true }]
+        estudiantes: state.estudiantes.find(e => e.sessionId === estudiante.sessionId) ?
+          state.estudiantes.map(e => e.sessionId === estudiante.sessionId ? { ...e, conectado: true } : e) :
+          [...state.estudiantes, { ...estudiante, conectado: true }]
       })),
     removeEstudiante: (estudianteId) => set((state) => ({
-      estudiantes: state.estudiantes.filter(e => e.sessionId !== estudianteId),
-      historico_estudiantes: state.historico_estudiantes.map(e => e.sessionId === estudianteId ? { ...e, conectado: false } : e)
+      estudiantes: state.estudiantes.map(e => e.sessionId === estudianteId ? { ...e, conectado: false } : e)
     })),
     setEstudiantes: (estudiantes) => set({
-      estudiantes: [...estudiantes],
-      historico_estudiantes: [...estudiantes]
+      estudiantes: [...estudiantes]
     }),
     setSocket: (socket) => set({ socket }),
     addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),

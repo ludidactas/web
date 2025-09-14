@@ -9,7 +9,7 @@ import { Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
-import { useEncuestaAdmin } from './encuestas-profe-context'
+import { useEncuestaProfe } from './encuestas-profe-context'
 // import { estudianteSala } from '@/wss/polls/app'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
@@ -19,7 +19,7 @@ import getInitials, { getRandomColor } from '@/lib/avatarname'
 
 
 export default function EncuestasAdmin() {
-  const { conectado, linkSala, estudiantes } = useEncuestaAdmin()
+  const { conectado, linkSala, estudiantes } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -93,7 +93,6 @@ export default function EncuestasAdmin() {
         <ul className="flex flex-col gap-2 p-2 rounded-xl">
           {estudiantes.map((e) => (
             <li key={e.sessionId} className={cn({ 'text-black flex gap-2 ': e.conectado, 'text-slate-400 flex gap-2 grayscale': !e.conectado })}>
-
               {/* Avatar */}
               <div className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
                 style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}>
@@ -119,7 +118,7 @@ export default function EncuestasAdmin() {
 
 
 function Status() {
-  const { conectado } = useEncuestaAdmin()
+  const { conectado } = useEncuestaProfe()
   return (
     <div className="relative flex items-center justify-between pr-4 mb-4">
       <div className="absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24" />
@@ -140,7 +139,7 @@ function Status() {
 }
 
 function ListaEncuestas() {
-  const { encuestas } = useEncuestaAdmin()
+  const { encuestas } = useEncuestaProfe()
   if (encuestas.length == 0) return <></>
 
   return (
@@ -157,7 +156,7 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaAdmin()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -266,7 +265,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 }
 
 function AgregarPregunta() {
-  const { enviarPregunta } = useEncuestaAdmin()
+  const { enviarPregunta } = useEncuestaProfe()
 
   const [pregunta, setPregunta] = useState('')
   const [respuestas, setRespuestas] = useState<string[]>(['', ''])

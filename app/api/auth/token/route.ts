@@ -15,6 +15,7 @@ export async function GET() {
     {
       email: session.user.email,
       name: session.user.name,
+      image: session.user.image,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 horas
     },
     process.env.JWT_SECRET!,

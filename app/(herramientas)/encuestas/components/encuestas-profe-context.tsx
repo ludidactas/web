@@ -3,20 +3,28 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { useServerWebsockets } from './use-server-encuestas'
-import { Estudiante, useEncuestaStore } from './encuestas-store'
 import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
-
+import { Estudiante, useEncuestaStore } from './encuestas-store'
+import { useServerWebsockets } from './use-server-encuestas'
 
 /** Cose el socket con el state para profe */
-const useEncuestaProfeState = (nombre?: string) => {
-
+const useEncuestaProfeState = (auth: NextAuthParaWsServer) => {
   // El profe recibe el id de la sala del server de ws
   const [linkSala, setLinkSala] = useState<string | null>(null)
-  
+
   // El profe se conecta con su email como idSala
-  const { socket, conectado, conectando, error } = useServerWebsockets({ nombre, rol: RolEncuesta.Profe })
-  const { encuestas, historico_estudiantes, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta, addEstudiante, removeEstudiante, setEstudiantes} = useEncuestaStore()
+  const { socket, conectado, conectando, error } = useServerWebsockets({ nombre: auth.email, avatar: auth.image, rol: RolEncuesta.Profe })
+  const {
+    encuestas,
+    estudiantes,
+    addEncuesta,
+    setEncuestas,
+    updateEncuesta,
+    deleteEncuesta,
+    addEstudiante,
+    removeEstudiante,
+    setEstudiantes,
+  } = useEncuestaStore()
 
   /** Postea al server la acción de crear */
   const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
@@ -29,19 +37,29 @@ const useEncuestaProfeState = (nombre?: string) => {
   }
 
   /** Postea al server la acción de borrar */
-  const borrarPregunta = (encuestaId: string) => { socket!.emit('poll:delete', { pollId: encuestaId }) }
+  const borrarPregunta = (encuestaId: string) => {
+    socket!.emit('poll:delete', { pollId: encuestaId })
+  }
 
   /** Postea al server la acción de cerrar */
-  const cerrarPregunta = (encuestaId: string) => { socket!.emit('poll:close', { pollId: encuestaId }) }
+  const cerrarPregunta = (encuestaId: string) => {
+    socket!.emit('poll:close', { pollId: encuestaId })
+  }
 
   /** Postea al server la acción de abrir */
-  const abrirPregunta = (encuestaId: string) => { socket!.emit('poll:open', { pollId: encuestaId }) }
+  const abrirPregunta = (encuestaId: string) => {
+    socket!.emit('poll:open', { pollId: encuestaId })
+  }
 
   /** Postea al sever la acción de publicar */
-  const publicarPregunta = (encuestaId: string) => { socket!.emit('poll:publish', { pollId: encuestaId }) }
+  const publicarPregunta = (encuestaId: string) => {
+    socket!.emit('poll:publish', { pollId: encuestaId })
+  }
 
   /** Postea al sever la acción de publicar */
-  const esconderPregunta = (encuestaId: string) => { socket!.emit('poll:hide', { pollId: encuestaId }) }
+  const esconderPregunta = (encuestaId: string) => {
+    socket!.emit('poll:hide', { pollId: encuestaId })
+  }
 
   // Conectamos el socket a sus handlers
   useEffect(() => {
@@ -60,14 +78,17 @@ const useEncuestaProfeState = (nombre?: string) => {
       })
 
       // Suscribimos a su respuesta
-      socket.on('sala:abierta', ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[], estudiantes: Estudiante[] }) => {
-        toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
-        setLinkSala(`https://ludidactas.com/sala/${sala.id}/`)
+      socket.on(
+        'sala:abierta',
+        ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
+          toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
+          setLinkSala(`https://ludidactas.com/sala/${sala.id}/`)
 
-        // Al abrir la sala, le pedimos al server la lista de encuestas y de estudiantes, por si la sala ya estaba activa
-        setEncuestas(polls)
-        setEstudiantes(estudiantes)
-      })
+          // Al abrir la sala, le pedimos al server la lista de encuestas y de estudiantes, por si la sala ya estaba activa
+          setEncuestas(polls)
+          setEstudiantes(estudiantes)
+        }
+      )
 
       socket.on('sala:estudiantes', setEstudiantes)
 
@@ -97,7 +118,6 @@ const useEncuestaProfeState = (nombre?: string) => {
         socket.removeAllListeners('sala:estudiante_desconectado')
       }
     }
-
   }, [socket])
 
   return {
@@ -107,7 +127,7 @@ const useEncuestaProfeState = (nombre?: string) => {
     error,
     encuestas,
     linkSala,
-    estudiantes: historico_estudiantes,
+    estudiantes,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,
@@ -118,16 +138,25 @@ const useEncuestaProfeState = (nombre?: string) => {
 }
 
 // Context
-const EncuestaAdminContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
+const EncuestaProfeContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
+
+interface NextAuthParaWsServer { 
+  email: string
+  name?: string
+  image?: string
+}
 
 // Provider - El email viene del server 
-export const EncuestaAdminProvider: React.FC<{ email: string; children: React.ReactNode }> = ({ email, children }) => {
-  return <EncuestaAdminContext.Provider value={useEncuestaProfeState(email)}>{children}</EncuestaAdminContext.Provider>
+export const EncuestaProfeProvider: React.FC<{ auth: NextAuthParaWsServer; children: React.ReactNode }> = ({
+  auth,
+  children,
+}) => {
+  return <EncuestaProfeContext.Provider value={useEncuestaProfeState(auth)}>{children}</EncuestaProfeContext.Provider>
 }
 
 // Hook para usar el contexto de Encuesta
-export const useEncuestaAdmin = () => {
-  const context = useContext(EncuestaAdminContext)
+export const useEncuestaProfe = () => {
+  const context = useContext(EncuestaProfeContext)
   if (!context) {
     throw new Error('Intentando usar useEncuestaAdmin fuera del EncuestaAdminProvider')
   }

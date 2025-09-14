@@ -12,6 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user?.email) {
         token.email = user.email
         token.name = user.name
+        token.picture = user.image
       }
       return token
     },
@@ -20,6 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token.email) { 
         session.user.email = token.email
         session.user.name = token.name 
+        session.user.image = token.picture
       }
       return session
     }

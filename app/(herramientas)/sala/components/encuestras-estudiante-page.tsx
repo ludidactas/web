@@ -62,7 +62,7 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
 
   
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal}>
+    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono="streamline-pixel:pet-animals-cat">
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="flex gap-2" />
         <div className="p-2 w-[inherit] md:p-8 md:w-4/5">

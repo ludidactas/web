@@ -19,6 +19,10 @@ export interface SocketServerAuth {
   idSala?: string
   // Session ID para reutilizar una sesión existente
   sessionId?: string
+  // Avatar para usuarios autenticados con Google
+  avatar?: string
+  // Ícono para usuarios anónimos
+  icono?: string
 }
 
 /** Contiene los endpoints para cada rol */
@@ -44,6 +48,10 @@ export async function conectarSocket({ auth, listeners }: {
     rol: RolEncuesta
     /** Opcionalmente puede attachear un nombre custom */
     nombre?: string
+    /** Avatar para usuarios autenticados con Google */
+    avatar?: string
+    /** Ícono para usuarios anónimos */
+    icono?: string
   },
   listeners: {
     onConnect: (socket: Socket) => void,
@@ -54,7 +62,7 @@ export async function conectarSocket({ auth, listeners }: {
   }
 }) {
 
-  const { sessionId, token, rol, idSala, nombre, test, url } = auth
+  const { sessionId, token, rol, idSala, nombre, test, url, icono } = auth
   const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
 
   let sock
@@ -68,13 +76,13 @@ export async function conectarSocket({ auth, listeners }: {
     if (rol === RolEncuesta.Estudiante && !idSala)
       throw new Error(`Se requiere un idSala para conectarse como estudiante al servidor de encuestas`)
     // Conectamos el socket con sessionId
-    sock = conectar[rol]({ token, sessionId, rol, idSala, nombre })
+    sock = conectar[rol]({ token, sessionId, rol, idSala, nombre, icono })
 
   } else {
     // Sino, creamos una nueva sesión usando el token que nos dió next
     console.log(`Creando socket: Iniciando nueva sesión el server de encuestas como ${rol}...`)
     // if (!token) throw new Error(`Se require una sesión de Google para conectarse al servidor de encuestas`)
-    sock = conectar[rol]({ token, nombre, rol, idSala })
+    sock = conectar[rol]({ token, nombre, rol, idSala, icono })
   }
 
   // En cualquier caso, le suscribimos unos handlers básicos

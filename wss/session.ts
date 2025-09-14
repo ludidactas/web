@@ -7,12 +7,14 @@ import { nombreDeFantasia, salas } from "./salas/app"
 
 // Sesión del server
 export interface PollsServerSession {
+  rol: RolEncuesta
   sessionId: string
   userIp?: string
   email?: string
   nombre?: string // Nombre de google del profe o nombre arbitrario del estudiante
   agente?: string
-  rol: RolEncuesta
+  avatar?: string // Avatar de google del profe
+  icono?: string // Icono arbitrario del estudiante
 }
 
 
@@ -38,7 +40,7 @@ if (!secret || !ADMINS) {
  */
 const decodearTokenNextAuth = (token: string) => {
   // Verificar que el token no haya expirado
-  const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string }
+  const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string, image?: string }
 
   if (!payload) throw new Error('Token de autenticación inválido')
   if (!payload.email) throw new Error('Token de autenticación inválido. Falta email!')
@@ -62,19 +64,22 @@ export const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-export const createSession = (rol: RolEncuesta, email?: string, nombre?: string, userIp?: string, agente?: string): PollsServerSession => ({
+export const createSession = <T extends object>(data: T): T & { sessionId: string } => ({
   sessionId: randomUUID().split('-')[0],
-  userIp,
-  rol,
-  email,
-  nombre,
-  agente,
+  ...data
 })
 
-export const openSession = (socket: SocketConSesion, rol: RolEncuesta, email?: string, nombre?: string) => {
+export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: SocketConSesion, payload: T) => {
+
+  const nombre = payload.nombre ?? nombreDeFantasia()
 
   // Creamos el objeto - Ojo que le estoy agregando info arbitraria que venga en el data
-  const session = createSession(rol, email, nombre ?? nombreDeFantasia(), socketIp(socket), socket.handshake.headers['user-agent'])
+  const session = createSession({
+    ...payload,
+    nombre,
+    userIp: socketIp(socket),
+    agente: socket.handshake.headers['user-agent']
+  })
 
   // Guardamos la sesión
   setSession(session.sessionId, session)
@@ -109,8 +114,9 @@ const login = (socket: SocketConSesion) => {
     // Verificamos que la sala exista - Dependencia de salas!
     if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
 
+    // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión data que esperamos (nombre y icono)
     socket.data.sala = socket.handshake.auth.idSala
-    openSession(socket, RolEncuesta.Estudiante, undefined, socket.handshake.auth.nombre) // Acá podría crearle un nombre aleatorio
+    openSession(socket, { rol: RolEncuesta.Estudiante, nombre: socket.handshake.auth.nombre, icono: socket.handshake.auth.icono })
 
   } else {
 
@@ -126,9 +132,9 @@ const login = (socket: SocketConSesion) => {
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
     if (ADMINS.includes(payload.email)) {
-      openSession(socket, RolEncuesta.Admin, payload.email, payload.name)
+      openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
     } else {
-      openSession(socket, RolEncuesta.Profe, payload.email, payload.name)
+      openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
     }
 
   }

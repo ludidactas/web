@@ -10,7 +10,7 @@ import { RolEncuesta } from '@/wss/tipos'
 const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string) => {
 
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket, session, conectado, error } = useServerWebsockets({ nombre, idSala, icono, rol: RolEncuesta.Estudiante })
+  const { socket, session, estado, error } = useServerWebsockets({ nombre, idSala, icono, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -46,7 +46,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 
   return {
     session,
-    conectado,
+    estado,
     error,
     encuestas,
     votar,

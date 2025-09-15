@@ -11,9 +11,10 @@ import Cabeza from '/svg/cabezasvgo.svg'
 import Polls from '/svg/pollsvgo.svg'
 import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
+import { StatusDeConexion } from '../../encuestas/components/use-conexion-wss'
 
 export default function EncuestasEstudiante() {
-  const { conectado, encuestas, error } = useEncuestaEstudiante()
+  const { estado, encuestas, error } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
@@ -34,7 +35,7 @@ export default function EncuestasEstudiante() {
 
           <h1 className="block md:hidden text-3xl font-bold text-indigo-500">Encuestas</h1>
 
-          {conectado ? (
+          {estado === StatusDeConexion.Conectado ? (
             <span className="text-emerald-700 animate-pulse">Conectado</span>
           ) : (
             <span className="text-red-700">Desconectado</span>

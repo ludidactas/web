@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
+import { StatusDeConexion } from '@/app/(herramientas)/encuestas/components/use-conexion-wss'
 
 // Tipos para nuestros datos
 interface Opcion {
@@ -19,12 +20,12 @@ interface EstadisticaSvgProps {
 }
 
 export default function EstadisticaLiveSvg() { 
-  const { conectado, encuestas, error } = useEncuestaEstudiante()
+  const { estado, encuestas, error } = useEncuestaEstudiante()
   return (
     <div className="min-w-[100vw]">
-      { !conectado && <p>Conectando...</p>}
+      { estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
       { error && <p className="text-red-500">Error: {error}</p> }
-      {conectado && <EstadisticaSvg data={encuestas ?? []} />}
+      {estado === StatusDeConexion.Conectado && <EstadisticaSvg data={encuestas ?? []} />}
     </div>
   )
 }

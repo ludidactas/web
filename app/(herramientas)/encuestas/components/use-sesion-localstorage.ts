@@ -1,40 +1,53 @@
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import { PollsServerSession } from "@/wss/session"
 import { useSession } from "next-auth/react"
-import { useState, useEffect } from "react"
-import { useLocalStorage } from "usehooks-ts"
+import { useEffect } from "react"
+
+type EstadoSesion = {
+  storedSession: PollsServerSession | null
+  ready: boolean
+  setReady: (ready: boolean) => void
+  saveSession: (s: PollsServerSession) => void
+  clearSession: () => void
+}
+
+export const useSesionStore = create<EstadoSesion>()(
+  persist(
+    (set) => ({
+      storedSession: null,
+      ready: false,
+      setReady: (ready) => set({ ready }),
+      saveSession: (s) => set({ storedSession: s }),
+      clearSession: () => set({ storedSession: null }),
+    }),
+    {
+      name: "sesion-guardada", // clave en localStorage
+    }
+  )
+)
 
 /** 
  * Levanta la sesión guardada en localStorage, valida que coincida con el usuario actual de google, y la reinicia en caso contrario. 
- * Depende de useSession de next-auth para saber el usuario actual.
+ * Depende de useSession de next-auth para saber el usuario actual. Es por eso que es async, con un flag ready.
  */
 export default function useSesionGuardada() {
-  const [ready, setReady] = useState(false)
-
-  // Obtiene la sesión del server de websockets almacenada en localStorage
-  const [storedSession, saveSession, clearSession] = useLocalStorage<PollsServerSession | null>('sesion-guardada', null)
-
-  // Obtiene la sesión de next-auth
   const { data: nextSession, status } = useSession()
+  const { storedSession, clearSession, setReady, ready } = useSesionStore()
 
   useEffect(() => {
-    // Esperamos a que la sesión esté lista
-    if (status === "loading") return
-    
-
-    // Si hay una sesión guardada, pero no coincide con el usuario actual, la limpiamos
-    // (en caso de anónimo, ni limpiarla)
-    if (storedSession && nextSession?.user?.email && storedSession.email !== nextSession?.user?.email) {
+    if (
+      storedSession &&
+      nextSession?.user?.email &&
+      storedSession.email !== nextSession.user.email
+    ) {
       clearSession()
       return
     }
 
     setReady(true)
-  }, [nextSession?.user?.email, clearSession, storedSession, status])
+  }, [status, storedSession, nextSession, clearSession, setReady, ready])
 
-  return {
-    storedSession,
-    saveSession: saveSession,
-    clearSession,
-    ready
-  }
+  return useSesionStore()
 }
+

@@ -11,15 +11,16 @@ import { useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaProfe } from './encuestas-profe-context'
 // import { estudianteSala } from '@/wss/polls/app'
+import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
-import { ScrollBar } from '@/components/ui/scroll-area'
 // import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
+import { StatusDeConexion } from './use-conexion-wss'
 
 
 export default function EncuestasAdmin() {
-  const { conectado, linkSala, estudiantes } = useEncuestaProfe()
+  const { linkSala, estudiantes, estado } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -39,78 +40,90 @@ export default function EncuestasAdmin() {
       })
   }
 
-  return (<div className='flex gap-2'>
-    <div className="rounded-xl flex flex-col items-center w-full">
-      {/* Link de sala */}
-      <div className="md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
-        <Status />
-        {linkSala && (
-          <div className="flex items-center justify-center gap-4 my-10">
-            <p className="leading-normal text-center text-xs md:text-lg">
-              Tu sala:{' '}
-              <Link href={linkSala} className="text-blue-700 hover:underline">
-                {linkSala}
-              </Link>
-            </p>
-            <button title="Copiar" onClick={handleCopy(linkSala)}>
-              {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-            </button>
+  return (
+    <>
+      {/* DEBUG */}
+      {/* <pre>{JSON.stringify({ ready, storedSession }, null, 2)}</pre>
+      <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
+
+      <div className="flex gap-2">
+        <div className="rounded-xl flex flex-col items-center w-full">
+          {/* Link de sala */}
+          <div className="md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
+            <Status />
+            {linkSala && (
+              <div className="flex items-center justify-center gap-4 my-10">
+                <p className="leading-normal text-center text-xs md:text-lg">
+                  Tu sala:{' '}
+                  <Link href={linkSala} className="text-blue-700 hover:underline">
+                    {linkSala}
+                  </Link>
+                </p>
+                <button title="Copiar" onClick={handleCopy(linkSala)}>
+                  {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+                </button>
+              </div>
+            )}
+
+            {!linkSala && <span>Link de sala no recibido</span>}
+
+            {/* Barra de status */}
+
+            <hr className="invisible py-2" />
+            {estado === StatusDeConexion.Conectado && (
+              <div className="flex flex-col gap-10">
+                <AgregarPregunta />
+
+                <ListaEncuestas />
+              </div>
+            )}
+            {estado !== StatusDeConexion.Conectado && (
+              <div className="text-center">
+                <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
+                <p>
+                  Checkeá tu conexión, actualizá la página, o envianos un mensaje{' '}
+                  <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+                </p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {!linkSala && <span>Link de sala no recibido</span>}
+        {/* Lista de estudiantes */}
+        <div className="sticky top-0 flex flex-col gap-4 bg-white rounded-xl p-10 h-max">
+          <h1 className="text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">Participantes</h1>
+          {estudiantes.length === 0 && (
+            <p className="mt-10 text-slate-400 italic">Ningún estudiante conectado aún...</p>
+          )}
 
-        {/* Barra de status */}
-
-        <hr className="invisible py-2" />
-        {conectado && (
-          <div className='flex flex-col gap-10'>
-            <AgregarPregunta />
-
-            <ListaEncuestas />
-
-          </div>
-        )}
-        {!conectado && (
-          <div className="text-center">
-            <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
-            <p>
-              Checkeá tu conexión, actualizá la página, o envianos un mensaje{' '}
-              <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-            </p>
-          </div>
-        )}
+          {estudiantes.length > 0 && (
+            <ul className="flex flex-col gap-2 p-2 rounded-xl">
+              {estudiantes.map((e) => (
+                <li
+                  key={e.sessionId}
+                  className={cn({
+                    'text-black flex gap-2 ': e.conectado,
+                    'text-slate-400 flex gap-2 grayscale': !e.conectado,
+                  })}
+                >
+                  {/* Avatar */}
+                  <div
+                    className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
+                    style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}
+                  >
+                    {getInitials(e.nombre || 'Anonimo')}
+                  </div>
+                  {/* Nombre e email */}
+                  <div className="flex flex-col">
+                    <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
-
-    {/* Lista de estudiantes */}
-    <div className='sticky top-0 flex flex-col gap-4 bg-white rounded-xl p-10 h-max'>
-
-      <h1 className='text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500'>Participantes</h1>
-      {estudiantes.length === 0 && <p className="mt-10 text-slate-400 italic">Ningún estudiante conectado aún...</p>}
-
-      {estudiantes.length > 0 && (
-        <ul className="flex flex-col gap-2 p-2 rounded-xl">
-          {estudiantes.map((e) => (
-            <li key={e.sessionId} className={cn({ 'text-black flex gap-2 ': e.conectado, 'text-slate-400 flex gap-2 grayscale': !e.conectado })}>
-              {/* Avatar */}
-              <div className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
-                style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}>
-                {getInitials(e.nombre || 'Anonimo')}
-              </div>
-              {/* Nombre e email */}
-              <div className='flex flex-col'>
-                <span>{e.nombre}</span>  <span className='text-teal-500'>{e.email ?? `Anónimo`}</span>
-              </div>
-
-            </li>
-          ))}
-        </ul>
-      )}
-
-    </div>
-  </div>
-
+    </>
   )
 }
 
@@ -118,7 +131,7 @@ export default function EncuestasAdmin() {
 
 
 function Status() {
-  const { conectado } = useEncuestaProfe()
+  const { estado } = useEncuestaProfe()
   return (
     <div className="relative flex items-center justify-between pr-4 mb-4">
       <div className="absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24" />
@@ -129,7 +142,7 @@ function Status() {
       </div>
 
       {/* <h1 className="text-3xl">Encuestas</h1> */}
-      {conectado ? (
+      {estado === StatusDeConexion.Conectado ? (
         <span className="text-emerald-700 animate-pulse">Conectado</span>
       ) : (
         <span className="text-red-700">Desconectado</span>

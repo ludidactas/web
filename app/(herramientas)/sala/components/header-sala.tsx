@@ -18,8 +18,9 @@ export default function HeaderSala({ className, children }: HeaderProps) {
     // usa directamente useContext y maneja el caso en el cual pueda no existir
     const context = useContext(EncuestaEstudianteContext)
     nombre = context?.nombre
-  } catch (error) {
+  } catch (error: any) {
     // Si el contexto no existe o el componente esta por fuera del provider, no pasa na
+    console.warn(error)
     nombre = undefined
   }
   

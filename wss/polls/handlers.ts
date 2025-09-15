@@ -32,7 +32,7 @@ export const handlersEstudiante = (io: Server, socket: SocketConSesion, idSala: 
 
   const user = socket.data.session.nombre
 
-  console.log(`✅ Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)})`)
+  console.log(`✅ Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, true)

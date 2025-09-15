@@ -29,16 +29,39 @@ type SocketServerAdminAuth = SocketServerProfeAuth
 /** Auth que espera el server de sockets */
 export type SocketServerAuth = {sessionId?: string} & (SocketServerTestAuth | SocketServerProfeAuth | SocketServerAnonAuth)
 
-/** Contiene los endpoints para cada rol */
-export const conectar = {
+/** Endpoints para cada rol */
+export const conectores = {
+  [RolEncuesta.Tester]: (auth: SocketServerAdminAuth, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Admin]: (auth: SocketServerAdminAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Profe]: (auth: SocketServerProfeAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Estudiante]: (auth: SocketServerAnonAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
-export async function conectarSocket({ auth, listeners }: {
-  auth: SocketServerAuth
+export async function handshake(auth: SocketServerAuth) {
+  let sock: Socket
+  switch (auth.rol) {
+    case RolEncuesta.Tester:
+      sock = io(auth.url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
+      break
+    case RolEncuesta.Profe:
+      sock = conectores[RolEncuesta.Profe](auth)
+      break
+    case RolEncuesta.Estudiante:
+      sock = conectores[RolEncuesta.Estudiante](auth)
+      break
+    // case RolEncuesta.Admin:
+    //   throw new Error("No implementado")
+  }
+
+  return sock
+}
+
+/**
+ * Attachea event listeners. Imperativo.
+ */
+export async function configurarListeners({ sock, listeners }: {
+  sock: Socket
   listeners: {
     onConnect: (socket: Socket) => void,
     onError: (socket: Socket, error: Error) => void,
@@ -49,17 +72,6 @@ export async function conectarSocket({ auth, listeners }: {
 }) {
 
   const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
-
-  let sock: Socket
-  if (auth.rol === RolEncuesta.Tester) {
-    sock = io(auth.url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
-  } else if (auth.rol === RolEncuesta.Profe) {
-    sock = conectar[RolEncuesta.Profe](auth)
-  } else if (auth.rol === RolEncuesta.Estudiante) {
-    sock = conectar[RolEncuesta.Estudiante](auth)
-  } else {
-    sock = conectar[RolEncuesta.Admin](auth)
-   }
 
   // En cualquier caso, le suscribimos unos handlers básicos
   sock.on('connect_error', error => {
@@ -75,10 +87,6 @@ export async function conectarSocket({ auth, listeners }: {
   // Suscribimos a la sesión abierta y la persistimos
   sock.on('session:opened', session => onSession(sock, session))
   sock.on('session:expired', () => onExpired(sock))
-
-  console.log(`Intentando conectar con auth`, auth)
-  // Una vez que le suscribimos listeners, le mandamos mecha
-  sock.connect()
 
   return sock
 }

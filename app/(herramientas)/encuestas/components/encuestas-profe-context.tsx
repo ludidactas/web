@@ -3,17 +3,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { CrearEncuesta, Encuesta, RolEncuesta } from '@/wss/tipos'
+import { CrearEncuesta, Encuesta } from '@/wss/tipos'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
+import { PasaporteProfe } from './use-conexion-wss'
 import { useServerWebsockets } from './use-server-encuestas'
 
 /** Cose el socket con el state para profe */
-const useEncuestaProfeState = (auth: NextAuthParaWsServer) => {
+const useEncuestaProfeState = (auth: PasaporteProfe) => {
   // El profe recibe el id de la sala del server de ws
   const [linkSala, setLinkSala] = useState<string | null>(null)
 
   // El profe se conecta con su email como idSala
-  const { socket, conectado, conectando, error } = useServerWebsockets({ nombre: auth.email, avatar: auth.image, rol: RolEncuesta.Profe })
+  const { socket, estado, error } = useServerWebsockets(auth)
   const {
     encuestas,
     estudiantes,
@@ -122,8 +123,7 @@ const useEncuestaProfeState = (auth: NextAuthParaWsServer) => {
 
   return {
     socket,
-    conectado,
-    conectando,
+    estado,
     error,
     encuestas,
     linkSala,
@@ -140,17 +140,8 @@ const useEncuestaProfeState = (auth: NextAuthParaWsServer) => {
 // Context
 const EncuestaProfeContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
 
-interface NextAuthParaWsServer { 
-  email: string
-  name?: string
-  image?: string
-}
-
-// Provider - El email viene del server 
-export const EncuestaProfeProvider: React.FC<{ auth: NextAuthParaWsServer; children: React.ReactNode }> = ({
-  auth,
-  children,
-}) => {
+// Provider - El auth viene del server 
+export const EncuestaProfeProvider: React.FC<{ auth: PasaporteProfe; children: React.ReactNode }> = ({ auth, children }) => {
   return <EncuestaProfeContext.Provider value={useEncuestaProfeState(auth)}>{children}</EncuestaProfeContext.Provider>
 }
 

@@ -23,8 +23,7 @@ export default function PingClient({ url }: {url : string}) {
     <div className="p-8">
       <Toaster />
       <pre>Error: {resto.error}</pre>
-      <pre>Conectado: {JSON.stringify(resto.conectado)}</pre>
-      <pre>Conectando: {JSON.stringify(resto.conectando)}</pre>
+      <pre>Estado: {JSON.stringify(resto.estado)}</pre>
       {socket && (
         <>
           <pre>{JSON.stringify(resto, null, 2)}</pre>

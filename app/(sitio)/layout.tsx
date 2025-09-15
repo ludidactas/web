@@ -7,7 +7,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <Textura>
       {/* Barra top */}
-      <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4">
+      <div className="flex dark:bg-[#1e1e1e] justify-between items-center p-2 px-4 mb-12">
         <LogoLema />
         <Menu />
       </div>

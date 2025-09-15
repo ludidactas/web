@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
-import { useServerWebsockets } from '../../encuestas/components/use-server-encuestas'
+import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { RolEncuesta } from '@/wss/tipos'
 
 /** Cose el socket con el state para estudiante */

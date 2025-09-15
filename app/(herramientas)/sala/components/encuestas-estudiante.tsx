@@ -11,7 +11,7 @@ import Cabeza from '/svg/cabezasvgo.svg'
 import Polls from '/svg/pollsvgo.svg'
 import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
-import { StatusDeConexion } from '../../encuestas/components/use-conexion-wss'
+import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 
 export default function EncuestasEstudiante() {
   const { estado, encuestas, error } = useEncuestaEstudiante()

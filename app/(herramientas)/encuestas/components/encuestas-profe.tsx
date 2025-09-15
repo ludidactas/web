@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 // import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
-import { StatusDeConexion } from './use-conexion-wss'
+import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 
 
 export default function EncuestasAdmin() {

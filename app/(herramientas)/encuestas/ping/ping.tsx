@@ -1,5 +1,5 @@
 'use client'
-import { useServerWebsockets } from '../components/use-server-encuestas'
+import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { toast, Toaster } from 'sonner'
 import { useEffect } from 'react'

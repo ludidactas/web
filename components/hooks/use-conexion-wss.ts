@@ -144,7 +144,7 @@ export function useConexionWss(auth: Pasaporte) {
       console.log(`Sesión actualizada, persistiendo...`)
       saveSession(session)
     }
-  }, [session, saveSession])
+  }, [session, saveSession, sessionReady])
 
   // cuando la sesión expira, limpiamos localStorage
   useEffect(() => {
@@ -154,7 +154,7 @@ export function useConexionWss(auth: Pasaporte) {
       console.log(`Sesión expirada, limpiando...`)
       clearSession()
     }
-  }, [status, clearSession])
+  }, [status, clearSession, sessionReady])
 
   useEffect(() => {
     if (!sessionReady) return
@@ -168,6 +168,7 @@ export function useConexionWss(auth: Pasaporte) {
         socket.disconnect()
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionReady, status])
 
   return { estado: status, socket, conectar, session, error }

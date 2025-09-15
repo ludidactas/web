@@ -5,8 +5,8 @@ import { toast } from 'sonner'
 
 import { CrearEncuesta, Encuesta } from '@/wss/tipos'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
-import { PasaporteProfe } from './use-conexion-wss'
-import { useServerWebsockets } from './use-server-encuestas'
+import { PasaporteProfe } from '../../../../components/hooks/use-conexion-wss'
+import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {

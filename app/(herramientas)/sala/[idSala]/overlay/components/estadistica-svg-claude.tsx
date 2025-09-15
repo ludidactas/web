@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
-import { StatusDeConexion } from '@/app/(herramientas)/encuestas/components/use-conexion-wss'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
 // Tipos para nuestros datos
 interface Opcion {

@@ -98,7 +98,6 @@ export default function EncuestasAdmin() {
 
           {estudiantes.length > 0 && (
             <>
-              <Link href="#" onClick={limpiarEstudiantesSala}>Reiniciar lista...</Link>
               <ul className="flex flex-col gap-2 p-2 rounded-xl">
                 {estudiantes.map((e) => (
                   <li
@@ -122,6 +121,9 @@ export default function EncuestasAdmin() {
                   </li>
                 ))}
               </ul>
+              <Link href="#" onClick={limpiarEstudiantesSala}>
+                Limpiar desconectados...
+              </Link>
             </>
           )}
         </div>

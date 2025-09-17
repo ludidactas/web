@@ -18,11 +18,6 @@ export function profeSala(email: string){
     return Array.from(polls.values())
   }
 
-  /** Borra la lista de estudiantes de la sala */
-  function limpiarSala() { 
-    getSalaByEmailProfe(email).estudiantes.clear()
-  }
-
   function crearPoll(pollDataUnknown: unknown){
 
     // Parseamos con el validator
@@ -37,6 +32,7 @@ export function profeSala(email: string){
       createdAt: new Date().toISOString(),
       isOpen: true,
       isPublished: false,
+      isFocused: false,
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
@@ -102,7 +98,6 @@ export function profeSala(email: string){
   }
   
   return {
-    limpiarSala,
     listarEncuestas,
     consultarResultados,
     consultarVotantes,

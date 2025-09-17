@@ -2,8 +2,9 @@ import { Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
-import { conSession, SocketConSesion } from "../session"
+import { conSession, getSession, SocketConSesion } from "../session"
 import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas, sockets_profes } from "./app"
+import { Encuesta } from "../tipos"
 
 export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
@@ -24,13 +25,16 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
   }))
 
   socket.on('sala:limpar_estudiantes_sala', safe(() => {
-    profe.limpiarSala()
-    socket.emit('sala:estudiantes', [])
+    sala.limpiarEstudiantes()
+    console.log(`Estudiantes limpados, enviado `, sala.listarEstudiantes())
+    socket.emit('sala:estudiantes', sala.listarEstudiantes())
   }))
 
   // All the profe event handlers...
-  socket.on('poll:create', safe((poll: unknown) => {
-    bradcastPoll(io, sala.id, 'poll:created', profe.crearPoll(poll))
+  socket.on('poll:create', safe((poll: unknown, responder: (encuesta: Encuesta) => void) => {
+    const nueva = profe.crearPoll(poll)
+    bradcastPoll(io, sala.id, 'poll:created', nueva)
+    responder(nueva)
   }))
 
   socket.on('poll:votantes', safe(({ pollId }) => {
@@ -97,5 +101,23 @@ export const obtenerOCrearSala = (io: Server, email: string) => {
     registrarSala(io, sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }
-  return getSalaByEmailProfe(email)!
+  return {
+    ...getSalaByEmailProfe(email)!,
+    limpiarEstudiantes: () => { 
+      const sala = getSalaByEmailProfe(email)
+      sala.estudiantes.forEach((activo, id) => {
+        if (!activo) sala.estudiantes.delete(id)
+      })
+    },
+    listarEstudiantes: () => { 
+      const sala = getSalaByEmailProfe(email)
+      const sesionesIds = Array.from(sala.estudiantes.keys())
+      const invalidas = sesionesIds.filter(sid => !getSession(sid))
+      if (invalidas.length > 0) { 
+        console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${email}: `, invalidas)
+      }
+      const estudiantes = sesionesIds.map(getSession).map(s => s ? ({...s, conectado: sala.estudiantes.get(s.sessionId)}) : s)
+      return estudiantes
+    }
+  }
 }

@@ -48,7 +48,16 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
             <DialogTitle>Ingresá tu nombre ✨</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
-            <Input id="nombre" ref={inputRef} defaultValue={nombre}/>
+            <Input
+              id="nombre"
+              ref={inputRef}
+              defaultValue={nombre}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleConectarse()
+                }
+              }}
+            />
           </div>
           <DialogFooter>
             <Button type="button" onClick={handleConectarse}>

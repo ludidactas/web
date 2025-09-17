@@ -3,61 +3,66 @@ import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
 import { conSession, SocketConSesion } from "../session"
-import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmail, owners_salas, sockets_profes } from "./app"
+import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas, sockets_profes } from "./app"
 
-export const handlersProfe = (io: Server, socket: SocketConSesion) => { 
-  
-    const safe = conErrorHandling(socket)
-  
-    if (!socket.data.user.email) throw new Error('Profe sin email en sesión!')
+export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
-    // Se conectó un profe, le armamos una sala con su email como key:
-    const email = socket.data.user.email!
-    const sala = obtenerOCrearSala(io, email)
-  
-    console.log(`🔌 Se conectó profe ${email}, sala ${sala.id}`)
+  const safe = conErrorHandling(socket)
 
-    const profe = profeSala(email)
-    
-    socket.on('sala:listar_estudiantes', safe(() => { 
-      socket.emit('sala:estudiantes', getEstudiantesEnSala(sala.id))
-    }))
+  if (!socket.data.user.email) throw new Error('Profe sin email en sesión!')
 
-    // All the profe event handlers...
-    socket.on('poll:create', safe((poll: unknown) => {
-      bradcastPoll(io, sala.id, 'poll:created', profe.crearPoll(poll))
-    }))
+  // Se conectó un profe, le armamos una sala con su email como key:
+  const email = socket.data.user.email!
+  const sala = obtenerOCrearSala(io, email)
 
-    socket.on('poll:votantes', safe(({ pollId }) => {
-      socket.emit('poll:votantes', { votantes: profe.consultarVotantes({ pollId }) })
-    }))
+  console.log(`🔌 Se conectó profe ${email}, sala ${sala.id}`)
 
-    socket.on('poll:open', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isOpen: true }))))
-    socket.on('poll:close', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isOpen: false }))))
-    socket.on('poll:publish', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isPublished: true }))))
-    socket.on('poll:hide', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isPublished: false }))))
+  const profe = profeSala(email)
 
-    socket.on('poll:delete', safe(({ pollId }) => {
-      profe.deletePoll({ pollId })
-      broadcastASala(io, sala.id, 'poll:deleted', { pollId })
-    }))
+  socket.on('sala:listar_estudiantes', safe(() => {
+    socket.emit('sala:estudiantes', getEstudiantesEnSala(sala.id))
+  }))
 
-    // Guardamos el socket del profe para enviarle notificaciones de su sala
-    sockets_profes.set(email, socket)
+  socket.on('sala:limpar_estudiantes_sala', safe(() => {
+    profe.limpiarSala()
+    socket.emit('sala:estudiantes', [])
+  }))
 
-    socket.on('sala:abrir', safe(() => {
-      socket.emit('sala:abierta', { sala, polls: profe.listar(), estudiantes: getEstudiantesEnSala(sala.id) })
-    }))
+  // All the profe event handlers...
+  socket.on('poll:create', safe((poll: unknown) => {
+    bradcastPoll(io, sala.id, 'poll:created', profe.crearPoll(poll))
+  }))
 
-    socket.on('disconnect', (reason) => {
-      console.log(`❌ Profe ${email} desconectado: ${reason}`)
-      sockets_profes.delete(email)
-    })
-  
+  socket.on('poll:votantes', safe(({ pollId }) => {
+    socket.emit('poll:votantes', { votantes: profe.consultarVotantes({ pollId }) })
+  }))
+
+  socket.on('poll:open', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isOpen: true }))))
+  socket.on('poll:close', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isOpen: false }))))
+  socket.on('poll:publish', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isPublished: true }))))
+  socket.on('poll:hide', safe(({ pollId }) => bradcastPoll(io, sala.id, 'poll:updated', profe.updatePoll(pollId, { isPublished: false }))))
+
+  socket.on('poll:delete', safe(({ pollId }) => {
+    profe.deletePoll({ pollId })
+    broadcastASala(io, sala.id, 'poll:deleted', { pollId })
+  }))
+
+  // Guardamos el socket del profe para enviarle notificaciones de su sala
+  sockets_profes.set(email, socket)
+
+  socket.on('sala:abrir', safe(() => {
+    socket.emit('sala:abierta', { sala, polls: profe.listarEncuestas(), estudiantes: getEstudiantesEnSala(sala.id) })
+  }))
+
+  socket.on('disconnect', (reason) => {
+    console.log(`❌ Profe ${email} desconectado: ${reason}`)
+    sockets_profes.delete(email)
+  })
+
 }
 
 
-export const handlersAdmin =  (io: Server, socket: SocketConSesion) => {
+export const handlersAdmin = (io: Server, socket: SocketConSesion) => {
   console.log(`✅ Admin conectado: ${socket.id}`)
 
   socket.on('disconnect', (reason) => {
@@ -86,11 +91,11 @@ export const registrarSala = (io: Server, salaId: string) => {
 }
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-export const obtenerOCrearSala = (io: Server, email: string) => { 
+export const obtenerOCrearSala = (io: Server, email: string) => {
   if (!owners_salas.has(email)) {
     const sala = crearSala(email)
     registrarSala(io, sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }
-  return getSalaByEmail(email)!
+  return getSalaByEmailProfe(email)!
 }

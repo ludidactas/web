@@ -62,6 +62,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     socket!.emit('poll:hide', { pollId: encuestaId })
   }
 
+  /** Limpia la lista de estudiantes */
+  const limpiarEstudiantesSala = () => { 
+    socket!.emit('sala:limpar_estudiantes_sala')
+  }
+
   // Conectamos el socket a sus handlers
   useEffect(() => {
     if (socket) {
@@ -134,6 +139,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     abrirPregunta,
     publicarPregunta,
     esconderPregunta,
+    limpiarEstudiantesSala,
   }
 }
 

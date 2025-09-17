@@ -20,7 +20,7 @@ import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 
 
 export default function EncuestasAdmin() {
-  const { linkSala, estudiantes, estado } = useEncuestaProfe()
+  const { linkSala, estudiantes, estado, limpiarEstudiantesSala } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -81,7 +81,7 @@ export default function EncuestasAdmin() {
               <div className="text-center">
                 <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
                 <p>
-                  Checkeá tu conexión, actualizá la página, o envianos un mensaje{' '}
+                  Actualizá la página, o envianos un mensaje :){' '}
                   <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
                 </p>
               </div>
@@ -97,29 +97,32 @@ export default function EncuestasAdmin() {
           )}
 
           {estudiantes.length > 0 && (
-            <ul className="flex flex-col gap-2 p-2 rounded-xl">
-              {estudiantes.map((e) => (
-                <li
-                  key={e.sessionId}
-                  className={cn({
-                    'text-black flex gap-2 ': e.conectado,
-                    'text-slate-400 flex gap-2 grayscale': !e.conectado,
-                  })}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
-                    style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}
+            <>
+              <Link href="#" onClick={limpiarEstudiantesSala}>Reiniciar lista...</Link>
+              <ul className="flex flex-col gap-2 p-2 rounded-xl">
+                {estudiantes.map((e) => (
+                  <li
+                    key={e.sessionId}
+                    className={cn({
+                      'text-black flex gap-2 ': e.conectado,
+                      'text-slate-400 flex gap-2 grayscale': !e.conectado,
+                    })}
                   >
-                    {getInitials(e.nombre || 'Anonimo')}
-                  </div>
-                  {/* Nombre e email */}
-                  <div className="flex flex-col">
-                    <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    {/* Avatar */}
+                    <div
+                      className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
+                      style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}
+                    >
+                      {getInitials(e.nombre || 'Anonimo')}
+                    </div>
+                    {/* Nombre e email */}
+                    <div className="flex flex-col">
+                      <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { merge } from "remeda"
 import { z } from "zod"
-import { getSalaByEmail, getSalaById } from "../salas/app"
+import { getSalaByEmailProfe, getSalaById } from "../salas/app"
 import { Encuesta, EncuestaHidratada } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators"
@@ -10,12 +10,17 @@ import { pollBase, voteValidator } from "../validators"
 /** Crea un closure para operar los componentes de una sala */
 export function profeSala(email: string){ 
 
-  const { id: salaId, votos, votantes, polls } = getSalaByEmail(email)
+  const { id: salaId, votos, votantes, polls } = getSalaByEmailProfe(email)
   
   // Acciones de profe: 
 
-  function listar() { 
+  function listarEncuestas() { 
     return Array.from(polls.values())
+  }
+
+  /** Borra la lista de estudiantes de la sala */
+  function limpiarSala() { 
+    getSalaByEmailProfe(email).estudiantes.clear()
   }
 
   function crearPoll(pollDataUnknown: unknown){
@@ -97,7 +102,8 @@ export function profeSala(email: string){
   }
   
   return {
-    listar,
+    limpiarSala,
+    listarEncuestas,
     consultarResultados,
     consultarVotantes,
     crearPoll,

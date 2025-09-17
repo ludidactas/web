@@ -1,10 +1,9 @@
-import { Server } from "socket.io"
+import { ExtendedError, Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
 import { conSession, getSession, SocketConSesion } from "../session"
 import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas, sockets_profes } from "./app"
-import { Encuesta } from "../tipos"
 
 export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
@@ -31,10 +30,15 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
   }))
 
   // All the profe event handlers...
-  socket.on('poll:create', safe((poll: unknown, responder: (encuesta: Encuesta) => void) => {
-    const nueva = profe.crearPoll(poll)
-    bradcastPoll(io, sala.id, 'poll:created', nueva)
-    responder(nueva)
+  socket.on('poll:create', safe((poll: unknown, responder: (error?: ExtendedError) => void) => {
+    try {
+      const nueva = profe.crearPoll(poll)
+      bradcastPoll(io, sala.id, 'poll:created', nueva)
+      responder()
+    } catch (e: any) {
+      console.error('Error creando encuesta:', e)
+      responder(e.message)
+    }
   }))
 
   socket.on('poll:votantes', safe(({ pollId }) => {

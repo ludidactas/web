@@ -104,9 +104,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         {encuesta.opciones.map((opcion) => (
           <li
             key={opcion.id}
-            className={cn('cursor-pointer rounded-md hover:bg-cyan-500/30 hover:border p-2', {
-              'bg-slate-200 border-2 border-slate-900': seleccion === opcion.id && !yaVotado,
-              'text-slate-300': yaVotado && opcion.id !== seleccion,
+            className={cn('cursor-pointer rounded-md hover:bg-cyan-500/30 p-2', {
+              'bg-slate-200 border-white': seleccion === opcion.id && !yaVotado,
+              'text-slate-300 hover:bg-transparent hover:border-0': yaVotado,
             })}
             onClick={() => {
               if (encuesta.isOpen && !yaVotado) setSeleccion(opcion.id)

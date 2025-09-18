@@ -1,3 +1,4 @@
+
 export function getRandomColor (name:string) {
     const colors = [
         '#ef4444', // red-500
@@ -16,10 +17,12 @@ export function getRandomColor (name:string) {
 
     return colors[index];
   };
-  
  
+
  export default function getInitials (name:string) {
-    if (!name) return 'A';
+    if (!name) return ''
+    ;
+
     const words = name.split(' ');
     return words.length > 1 
       ? words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase()

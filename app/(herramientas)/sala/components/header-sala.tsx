@@ -5,6 +5,7 @@ import { titulo } from '@/components/fonts'
 // import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { nombre as nombresplit } from '@/lib/utils'
 import { EncuestaEstudianteContext } from './encuestas-estudiante-context'
+import { Iconito } from '@/components/custom/ld-icon'
 
 interface HeaderProps extends PropsWithChildren {
   className?: string,
@@ -40,7 +41,10 @@ export default function HeaderSala({ className, children }: HeaderProps) {
         </div>
 
       </div>
-        {nombre && <p className='text-center text-4xl'>¡Hola {nombresplit(nombre)}!</p>}
+        {nombre && <p className=' flex justify-center gap-2 text-4xl'>
+          Hola {nombresplit(nombre)}
+          <Iconito icon={'streamline-pixel:hand-cross-finger-heart'}/>
+          </p>}
       {children}
     </div>
   )

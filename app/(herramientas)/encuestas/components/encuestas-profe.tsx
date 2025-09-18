@@ -19,6 +19,7 @@ import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 
 
+
 export default function EncuestasAdmin() {
   const { linkSala, estudiantes, estado } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
@@ -108,10 +109,13 @@ export default function EncuestasAdmin() {
                 >
                   {/* Avatar */}
                   <div
-                    className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold`}
-                    style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo') }}
+                    className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+                    style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
+                      backgroundImage: `url(${e.avatar})`
+                     }}
                   >
-                    {getInitials(e.nombre || 'Anonimo')}
+                    {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
+                    {!e.avatar && getInitials(e.nombre || 'Anonimo')}
                   </div>
                   {/* Nombre e email */}
                   <div className="flex flex-col">

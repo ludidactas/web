@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
+import { IconoRandom } from '@/lib/iconos'
 
 export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) {
   // const [nombre, setNombre] = useState<string | undefined>(localStorage.getItem(`encuestas-nombre-${idSala}`) ?? undefined)
@@ -62,7 +63,7 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
 
   
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono="streamline-pixel:pet-animals-cat">
+    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="flex gap-2" />
         <div className="p-2 w-[inherit] md:p-8 md:w-4/5">

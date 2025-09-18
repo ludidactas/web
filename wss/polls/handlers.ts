@@ -35,8 +35,11 @@ export const handlersEstudiante = (io: Server, socket: SocketConSesion, idSala: 
   console.log(`✅ Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
-  getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, true)
-  getSocketProfeDeSala(idSala).emit('sala:estudiante_conectado', socket.data.session)
+  const notificar = safe(() => { 
+    getSalaById(idSala).estudiantes.set(socket.data.session.sessionId, true)
+    getSocketProfeDeSala(idSala).emit('sala:estudiante_conectado', socket.data.session)
+  })
+  notificar()
 
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', estudiante.listar())

@@ -67,7 +67,7 @@ export const getSalaById = (salaId: string) => {
 }
 
 /** Devuelve la data de polls, votantes y votos de la sala del profe, dado su email */
-export const getSalaByEmail = (email: string) => {
+export const getSalaByEmailProfe = (email: string) => {
   const salaId = getSalaId(email)
   return getSalaById(salaId)
 }

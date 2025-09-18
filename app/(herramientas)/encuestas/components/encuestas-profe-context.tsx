@@ -7,6 +7,7 @@ import { CrearEncuesta, Encuesta } from '@/wss/tipos'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
 import { PasaporteProfe } from '../../../../components/hooks/use-conexion-wss'
 import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
+import { ExtendedError } from 'socket.io'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {
@@ -28,14 +29,17 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   } = useEncuestaStore()
 
   /** Postea al server la acción de crear */
-  const enviarPregunta = async (pregunta: string, respuestas: string[]) => {
+  const enviarPregunta = (pregunta: string, respuestas: string[]) => new Promise<void>((res, rej) => {
     const nuevaEncuesta: CrearEncuesta = {
       pregunta,
       opciones: respuestas,
     }
 
-    socket!.emit('poll:create', nuevaEncuesta)
-  }
+    socket!.emit('poll:create', nuevaEncuesta, (error?: string) => { 
+      if (error) rej(error)
+      res()
+    })
+  })
 
   /** Postea al server la acción de borrar */
   const borrarPregunta = (encuestaId: string) => {
@@ -60,6 +64,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   /** Postea al sever la acción de publicar */
   const esconderPregunta = (encuestaId: string) => {
     socket!.emit('poll:hide', { pollId: encuestaId })
+  }
+
+  /** Limpia la lista de estudiantes */
+  const limpiarEstudiantesSala = () => { 
+    socket!.emit('sala:limpar_estudiantes_sala')
   }
 
   // Conectamos el socket a sus handlers
@@ -134,6 +143,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     abrirPregunta,
     publicarPregunta,
     esconderPregunta,
+    limpiarEstudiantesSala,
   }
 }
 

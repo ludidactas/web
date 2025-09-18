@@ -17,11 +17,11 @@ import { ScrollArea } from '@radix-ui/react-scroll-area'
 // import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
-
+import { toast } from 'sonner'
 
 
 export default function EncuestasAdmin() {
-  const { linkSala, estudiantes, estado } = useEncuestaProfe()
+  const { linkSala, estudiantes, estado, limpiarEstudiantesSala } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -82,7 +82,7 @@ export default function EncuestasAdmin() {
               <div className="text-center">
                 <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
                 <p>
-                  Checkeá tu conexión, actualizá la página, o envianos un mensaje{' '}
+                  Actualizá la página, o envianos un mensaje :{' '}
                   <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
                 </p>
               </div>
@@ -127,12 +127,12 @@ export default function EncuestasAdmin() {
           )}
         </div>
       </div>
+      <Link href="#" onClick={limpiarEstudiantesSala}>
+                Limpiar desconectados...
+              </Link>
     </>
   )
 }
-
-
-
 
 function Status() {
   const { estado } = useEncuestaProfe()
@@ -160,14 +160,13 @@ function ListaEncuestas() {
   if (encuestas.length == 0) return <></>
 
   return (
-    <ScrollArea className='max-h-screen overflow-auto'>
-
+    <ScrollArea className="max-h-screen overflow-auto">
       {/* <div className="p-4 "> */}
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
       {/* </div> */}
-      <ScrollBar className="" orientation='vertical' />
+      <ScrollBar className="" orientation="vertical" />
     </ScrollArea>
   )
 }
@@ -177,7 +176,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
-  const opcionesInfo = encuesta.opciones.map(opcion => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
+  const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -190,7 +189,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           setJustCopied(false)
         }, 3000)
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Failed to copy!', error)
       })
   }
@@ -198,9 +197,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
       {/* Titulo y status */}
       <div className="flex items-start px-4 justify-between">
-        <div className='flex gap-4'>
-
-          <LdSvg className='w-[10%]' SvgComponent={PollsIcon} />
+        <div className="flex gap-4">
+          <LdSvg className="w-[10%]" SvgComponent={PollsIcon} />
           <h3 className="w-[90%] text-sm md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col items-end">
@@ -212,19 +210,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <span className="text-xs text-slate-400 whitespace-nowrap">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
-          <button title='Copiar pregunta' onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}
-          >
+          <button title="Copiar pregunta" onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}>
             {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
           </button>
-
         </div>
       </div>
 
       <ol className="list-[lower-latin] p-8 m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            <div className='flex items-center pb-2 gap-4'>
-              {opcion.texto} <p className='text-emerald-500 font-bold'> {opcion.votos} votos </p>
+            <div className="flex items-center pb-2 gap-4">
+              {opcion.texto} <p className="text-emerald-500 font-bold"> {opcion.votos} votos </p>
             </div>
           </li>
         ))}
@@ -307,9 +303,10 @@ function AgregarPregunta() {
 
   const postearPregunta = () => {
     enviarPregunta(pregunta, respuestas).then(() => {
+      toast.success(`Encuesta creada!`)
       setPregunta('')
       setRespuestas(['', ''])
-    })
+    }).catch(msg => toast.error(msg))
   }
 
   return (

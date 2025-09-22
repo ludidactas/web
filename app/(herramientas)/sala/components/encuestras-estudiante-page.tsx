@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
 import { IconoRandom } from '@/lib/iconos'
+import { nombreSplit } from '@/lib/utils'
 
-export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) {
+export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }: { idSala: string, btnLogin: ReactNode, btnLogout: ReactNode }) {
   // const [nombre, setNombre] = useState<string | undefined>(localStorage.getItem(`encuestas-nombre-${idSala}`) ?? undefined)
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -38,7 +39,9 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
   }
 
   if (status==='loading' || !isClient){
-    return <p>Cargando...</p>
+    return <div className='w-screen h-screen place-content-center'>
+      <p className='text-6xl text-indigo-500 text-center'>Cargando...</p>
+      </div>
   }
 
   if (status==='unauthenticated' && !nombre) {
@@ -64,6 +67,9 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
             <Button type="button" onClick={handleConectarse}>
               Conectarse
             </Button>
+
+            {btnLogin}
+            
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -74,7 +80,9 @@ export default function EncuestasEstudiantePage({ idSala }: { idSala: string }) 
   return (
     <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className="flex gap-2" />
+        <HeaderSala className="flex gap-2" btnLogout={btnLogout}>
+          <p className='text-center text-4xl'>¡Hola {nombreSplit(nombreFinal)}!</p>
+        </HeaderSala>
         <div className="p-2 w-[inherit] md:p-8 md:w-4/5">
           <EncuestasEstudiante />
         </div>

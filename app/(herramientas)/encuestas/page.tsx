@@ -1,7 +1,7 @@
 import EncuestasAdmin from '@/app/(herramientas)/encuestas/components/encuestas-profe'
 import { auth } from '@/app/auth'
 import { Toaster } from '@/components/ui/sonner'
-import { nombre } from '@/lib/utils'
+import { nombreSplit } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
 import { EncuestaProfeProvider } from './components/encuestas-profe-context'
@@ -18,17 +18,14 @@ export default async function Page() {
 
   return (
     <SessionProvider>
-      <EncuestaProfeProvider auth={{rol: RolEncuesta.Profe, token }}>
+      <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
         <Toaster />
         <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center bg-gradient-to-r from-cyan-200/70 to-indigo-200/70 ">
-          <HeaderSala className="grid grid-cols-3">
-            <p className="text-md md:text-3xl text-center rounded-xl">¡Hola {nombre(session.user.name)}!</p>
-            <div className="text-right items-center justify-center">
-              <SignOut />
-            </div>
+          <HeaderSala className="grid grid-cols-3" btnLogout={<SignOut />}>
+            <p className="text-md md:text-3xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
 
-          <div className="md:px-20 md:w-4/5">
+          <div className="md:w-4/5">
             <EncuestasAdmin />
           </div>
           <div className="w-full h-24" />

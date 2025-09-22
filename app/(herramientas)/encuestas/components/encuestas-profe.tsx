@@ -5,25 +5,28 @@ import PollsIcon from '@/svg/pollsvgo.svg'
 import { Encuesta } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, SquareCheckBig } from 'lucide-react'
+import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaProfe } from './encuestas-profe-context'
 // import { estudianteSala } from '@/wss/polls/app'
 import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
-// import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
-import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
+import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
+
 
 
 export default function EncuestasAdmin() {
-  const { linkSala, estudiantes, estado, limpiarEstudiantesSala } = useEncuestaProfe()
+  const { linkSala, estado } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
+
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -41,17 +44,27 @@ export default function EncuestasAdmin() {
       })
   }
 
+
   return (
     <>
       {/* DEBUG */}
       {/* <pre>{JSON.stringify({ ready, storedSession }, null, 2)}</pre>
       <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
 
-      <div className="flex gap-2">
-        <div className="rounded-xl flex flex-col items-center w-full">
+      <div className="flex gap-2 justify-center">
+        <div className="rounded-xl flex w-auto">
           {/* Link de sala */}
           <div className="md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
+
+            {/* Lista de Participantes Mobile */}
+            <div className="block lg:hidden justify-self-end">
+              <ListaMobile>
+                <ListaEstudiantes />
+              </ListaMobile>
+            </div>
+
             <Status />
+
             {linkSala && (
               <div className="flex items-center justify-center gap-4 my-10">
                 <p className="leading-normal text-center text-xs md:text-lg">
@@ -90,49 +103,139 @@ export default function EncuestasAdmin() {
           </div>
         </div>
 
-        {/* Lista de estudiantes */}
-        <div className="sticky top-0 flex flex-col gap-4 bg-white rounded-xl p-10 h-max">
-          <h1 className="text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">Participantes</h1>
-          {estudiantes.length === 0 && (
-            <p className="mt-10 text-slate-400 italic">Ningún estudiante conectado aún...</p>
-          )}
 
-          {estudiantes.length > 0 && (
-            <ul className="flex flex-col gap-2 p-2 rounded-xl">
-              {estudiantes.map((e) => (
-                <li
-                  key={e.sessionId}
-                  className={cn({
-                    'text-black flex gap-2 ': e.conectado,
-                    'text-slate-400 flex gap-2 grayscale': !e.conectado,
-                  })}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
-                    style={{ backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
-                      backgroundImage: `url(${e.avatar})`
-                     }}
-                  >
-                    {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
-                    {!e.avatar && getInitials(e.nombre || 'Anonimo')}
-                  </div>
-                  {/* Nombre e email */}
-                  <div className="flex flex-col">
-                    <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="hidden lg:block">
+          <div className="sticky top-0 flex flex-col gap-4 bg-white rounded-xl h-max p-8">
+            <ListaEstudiantes />
+          </div>
         </div>
+
       </div>
-      <Link href="#" onClick={limpiarEstudiantesSala}>
-                Limpiar desconectados...
-              </Link>
+
     </>
   )
 }
+
+
+const ListaEstudiantes = () => {
+  const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
+  const [_copiedText, copy] = useCopyToClipboard()
+  const [justCopied, setJustCopied] = useState(false)
+
+
+  const handleCopy = (text: string) => () => {
+    copy(text)
+      .then(() => {
+        setJustCopied(true)
+
+        console.log(_copiedText)
+
+        setTimeout(() => {
+          setJustCopied(false)
+        }, 3000)
+      })
+      .catch((error) => {
+        console.error('Failed to copy!', error)
+      })
+  }
+
+  const emailsEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} ${e.email}` : e.nombre).join('\n')
+
+  return <>
+    <div className='flex justify-between  bg-indigo-50 p-4 mb-2 rounded-xl'>
+
+      <h1 className="flex gap-1 text-2xl font-bold text-indigo-500">
+        <Users size={30} />
+        Participantes
+      </h1>
+
+      {/* Botones para limpiar y copiar  */}
+      <div className='flex gap-1'>
+        <HoverCard>
+          <HoverCardTrigger>
+            <Link className='flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110' href="#" onClick={limpiarEstudiantesSala}>
+              <Eraser size={20} />
+            </Link>
+          </HoverCardTrigger>
+          <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Limpiar lista</p></HoverCardContent>
+        </HoverCard>
+        <HoverCard>
+          <HoverCardTrigger>
+            <button className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110' onClick={handleCopy(emailsEstudiantes)}>
+              {justCopied ? <SquareCheckBig size={20}  /> : <Copy size={20}  />}
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Copiar lista</p></HoverCardContent>
+        </HoverCard>
+      </div>
+
+    </div>
+    {estudiantes.length === 0 && (
+      <p className="text-slate-400 italic">Ningún estudiante conectado aún...</p>
+    )}
+
+    {estudiantes.length > 0 && (
+      <ul className="flex flex-col gap-2 p-2 rounded-xl">
+        {estudiantes.map((e) => (
+          <li
+            key={e.sessionId}
+            className={cn({
+              'text-black flex gap-2 ': e.conectado,
+              'text-slate-400 flex gap-2 grayscale': !e.conectado,
+            })}
+          >
+            {/* Avatar */}
+            <div
+              className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+              style={{
+                backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
+                backgroundImage: `url(${e.avatar})`
+              }}
+            >
+              {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
+              {!e.avatar && getInitials(e.nombre || 'Anonimo')}
+            </div>
+            {/* Nombre e email */}
+            <div className="flex flex-col">
+              <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+
+
+  </>
+
+}
+
+const ListaMobile = ({ children }: PropsWithChildren) => {
+  const [open, setOpen] = useState(false)
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+  }
+
+  return <Dialog open={open} onOpenChange={handleOpenChange}>
+    <DialogTrigger>
+      <h1 className="flex gap-2 text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
+        <Users size={30} />
+        Participantes
+      </h1>
+    </DialogTrigger>
+    <DialogContent>
+      <DialogTitle />
+      {children}
+      <DialogClose>
+        <X className='' />
+      </DialogClose>
+    </DialogContent>
+
+  </Dialog>
+
+
+}
+
 
 function Status() {
   const { estado } = useEncuestaProfe()
@@ -145,12 +248,16 @@ function Status() {
         <h1 className="text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
       </div>
 
-      {/* <h1 className="text-3xl">Encuestas</h1> */}
-      {estado === StatusDeConexion.Conectado ? (
-        <span className="text-emerald-700 animate-pulse">Conectado</span>
-      ) : (
-        <span className="text-red-700">Desconectado</span>
-      )}
+      <div className='flex flex-col'>
+        <h1 className="lg:hidden text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
+
+        {estado === StatusDeConexion.Conectado ? (
+          <span className="text-emerald-700 animate-pulse">Conectado</span>
+        ) : (
+          <span className="text-red-700">Desconectado</span>
+        )}
+
+      </div>
     </div>
   )
 }
@@ -342,18 +449,18 @@ function AgregarPregunta() {
       ))}
 
       <button
-        className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+        className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
         onClick={agregarRespuesta}
         tabIndex={respuestas.length + 2}
       >
-        + Agregar opción
+        <CirclePlus size={20} />Agregar opción
       </button>
       <button
-        className="bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
+        className="flex place-content-center items-center font-semibold gap-2 bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
         onClick={postearPregunta}
         tabIndex={respuestas.length + 2}
       >
-        &gt; Enviar pregunta
+       <Send size={20}/>  Enviar pregunta
       </button>
     </div>
   )

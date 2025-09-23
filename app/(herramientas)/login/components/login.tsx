@@ -6,8 +6,7 @@ export default function Login() {
 
 
     return (
-        <div className="flex drop-shadow-xl flex-col md:flex-row md:gap-16 bg-white md:m-20 p-8 md:p-10 md:rounded-xl items-center justify-center">
-
+        <div className="h-screen self-normal flex drop-shadow-xl flex-col md:flex-row md:gap-16 bg-white md:m-40 p-8 md:p-10 md:rounded-xl items-center justify-center">
             <Ilustracion />
             <div className="flex flex-col md:h-fit md:mr-8 items-center">
                 <div className="flex md:w-[30em] items-center gap-4">
@@ -17,12 +16,12 @@ export default function Login() {
                     </div>
                 </div>
                 <div className="flex flex-col text-center">
-                    <p className="font-bold mt-4 md:text-lg">¡Conectate con tu cuenta de Google!</p>
-                    <p className="md:w-[400px] p-8"> Conectate y accede a los recursos que
+                    <p className="font-bold mt-4 text-xs md:text-xl">¡Conectate con tu cuenta de Google!</p>
+                    <p className="w-[300px] md:w-[400px] p-8 text-xs md:text-xl"> Conectate y accede a los recursos que
                         tenemos disponibles para vos.
                     </p>
                 </div>
-                <SignIn redirectTo='/encuestas'/>
+                <SignIn redirectTo='/encuestas' />
             </div>
 
 

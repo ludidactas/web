@@ -1,11 +1,11 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
 import EncuestasIcon from '@/svg/encuestas.svg'
-import PollsIcon from '@/svg/pollsvgo.svg'
+// import PollsIcon from '@/svg/pollsvgo.svg'
 import { Encuesta } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus } from 'lucide-react'
+import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus, MessageCircleQuestionIcon } from 'lucide-react'
 import Link from 'next/link'
 import { PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
@@ -54,7 +54,7 @@ export default function EncuestasAdmin() {
       <div className="flex gap-2 justify-center">
         <div className="rounded-xl flex w-auto">
           {/* Link de sala */}
-          <div className="md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
+          <div className="w-[25em] md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
 
             {/* Lista de Participantes Mobile */}
             <div className="block lg:hidden justify-self-end">
@@ -84,13 +84,14 @@ export default function EncuestasAdmin() {
             {/* Barra de status */}
 
             <hr className="invisible py-2" />
+
             {estado === StatusDeConexion.Conectado && (
               <div className="flex flex-col gap-10">
                 <AgregarPregunta />
-
                 <ListaEncuestas />
               </div>
             )}
+
             {estado !== StatusDeConexion.Conectado && (
               <div className="text-center">
                 <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
@@ -100,6 +101,7 @@ export default function EncuestasAdmin() {
                 </p>
               </div>
             )}
+
           </div>
         </div>
 
@@ -142,9 +144,9 @@ const ListaEstudiantes = () => {
   const emailsEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} ${e.email}` : e.nombre).join('\n')
 
   return <>
-    <div className='flex justify-between  bg-indigo-50 p-4 mb-2 rounded-xl'>
+    <div className='flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl'>
 
-      <h1 className="flex gap-1 text-2xl font-bold text-indigo-500">
+      <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
         <Users size={30} />
         Participantes
       </h1>
@@ -162,7 +164,7 @@ const ListaEstudiantes = () => {
         <HoverCard>
           <HoverCardTrigger>
             <button className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110' onClick={handleCopy(emailsEstudiantes)}>
-              {justCopied ? <SquareCheckBig size={20}  /> : <Copy size={20}  />}
+              {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
             </button>
           </HoverCardTrigger>
           <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Copiar lista</p></HoverCardContent>
@@ -188,8 +190,8 @@ const ListaEstudiantes = () => {
             <div
               className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
               style={{
+                backgroundImage: `url(${e.avatar})`,
                 backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
-                backgroundImage: `url(${e.avatar})`
               }}
             >
               {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
@@ -218,16 +220,16 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
 
   return <Dialog open={open} onOpenChange={handleOpenChange}>
     <DialogTrigger>
-      <h1 className="flex gap-2 text-2xl font-bold  bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
-        <Users size={30} />
+      <h1 className="flex gap-2 text-xl md:text-2xl font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
+        <Users className='w-30 self-center' />
         Participantes
       </h1>
     </DialogTrigger>
-    <DialogContent>
+    <DialogContent className='rounded-xl'>
       <DialogTitle />
       {children}
-      <DialogClose>
-        <X className='' />
+      <DialogClose className='justify-items-center'>
+        <X size={40} className='bg-indigo-500 text-white  rounded-full p-2' />
       </DialogClose>
     </DialogContent>
 
@@ -241,23 +243,20 @@ function Status() {
   const { estado } = useEncuestaProfe()
   return (
     <div className="relative flex items-center justify-between pr-4 mb-4">
-      <div className="absolute inset-y-4 rounded-xl bg-indigo-50 w-full h-24" />
+      <div className="absolute md:inset-y-4 rounded-xl bg-indigo-50 w-full h-14 md:h-24" />
 
       <div className="flex relative items-center justify-between">
-        <LdSvg className="w-40" SvgComponent={EncuestasIcon} />
-        <h1 className="text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
+        <LdSvg className="w-20 md:w-40" SvgComponent={EncuestasIcon} />
+        <h1 className="text-xl md:text-5xl font-bold text-indigo-500">Encuestas</h1>
       </div>
 
-      <div className='flex flex-col'>
-        <h1 className="lg:hidden text-xl md:text-3xl font-bold text-indigo-500">Encuestas</h1>
+      {estado === StatusDeConexion.Conectado ? (
+        <span className="text-emerald-700 animate-pulse">Conectado</span>
+      ) : (
+        <span className="text-red-700">Desconectado</span>
+      )}
 
-        {estado === StatusDeConexion.Conectado ? (
-          <span className="text-emerald-700 animate-pulse">Conectado</span>
-        ) : (
-          <span className="text-red-700">Desconectado</span>
-        )}
 
-      </div>
     </div>
   )
 }
@@ -267,13 +266,13 @@ function ListaEncuestas() {
   if (encuestas.length == 0) return <></>
 
   return (
-    <ScrollArea className="max-h-screen overflow-auto">
-      {/* <div className="p-4 "> */}
+    <ScrollArea className="max-h-screen overflow-x-auto">
+
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
-      {/* </div> */}
-      <ScrollBar className="" orientation="vertical" />
+
+      <ScrollBar orientation="vertical" />
     </ScrollArea>
   )
 }
@@ -303,31 +302,33 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
       {/* Titulo y status */}
-      <div className="flex items-start px-4 justify-between">
-        <div className="flex gap-4">
-          <LdSvg className="w-[10%]" SvgComponent={PollsIcon} />
-          <h3 className="w-[90%] text-sm md:text-xl">{encuesta.pregunta}</h3>
+      <div className="flex gap-4 bg-white rounded-xl p-4 items-start justify-between">
+        <div className="flex gap-4 md:p-4 items-center">
+          <MessageCircleQuestionIcon size={40} className='self-start text-indigo-500' />
+          {/* <LdSvg className='w-[10%]' SvgComponent={PollsIcon} /> */}
+          <h3 className="w-[90%] text-sm break-all md:text-xl">{encuesta.pregunta}</h3>
         </div>
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col w-20 md:gap-2 items-end">
           <span
             className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-rose-800'}`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
-          <span className="text-xs text-slate-400 whitespace-nowrap">
+          <span className="text-[0.6rem] break-all text-slate-400 text-right">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
-          <button title="Copiar pregunta" onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}>
+          <button className='mt-2' title="Copiar pregunta" onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}>
             {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
           </button>
         </div>
       </div>
 
-      <ol className="list-[lower-latin] p-8 m-6">
+      <ol className="list-[lower-latin] text-xs md:text-xl text-slate-400 py-8 pl-8 md:px-12 content-center m-2 md:m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
-            <div className="flex items-center pb-2 gap-4">
-              {opcion.texto} <p className="text-emerald-500 font-bold"> {opcion.votos} votos </p>
+            <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
+              <p className='break-all'>{opcion.texto}</p>
+              <p className="text-emerald-500 font-bold w-40 text-right content-center"> {opcion.votos} votos </p>
             </div>
           </li>
         ))}
@@ -460,7 +461,7 @@ function AgregarPregunta() {
         onClick={postearPregunta}
         tabIndex={respuestas.length + 2}
       >
-       <Send size={20}/>  Enviar pregunta
+        <Send size={20} />  Enviar pregunta
       </button>
     </div>
   )

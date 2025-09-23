@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
 import { IconoRandom } from '@/lib/iconos'
 import { nombreSplit } from '@/lib/utils'
+import { Sparkles } from 'lucide-react'
 
 export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }: { idSala: string, btnLogin: ReactNode, btnLogout: ReactNode }) {
-  // const [nombre, setNombre] = useState<string | undefined>(localStorage.getItem(`encuestas-nombre-${idSala}`) ?? undefined)
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLInputElement>(null)
   const [isClient, setIsClient] = useState(false)  
@@ -47,12 +47,12 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
   if (status==='unauthenticated' && !nombre) {
     return (
       <Dialog open>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md border-8 p-10 border-indigo-500/50">
           <DialogHeader>
-            <DialogTitle>Ingresá tu nombre ✨</DialogTitle>
+            <DialogTitle className='flex items-center gap-2 text-indigo-500'>Ingresá tu nombre <Sparkles /></DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4">
-            <Input
+            <Input className=' bg-indigo-100/50'
               id="nombre"
               ref={inputRef}
               defaultValue={nombre}
@@ -63,13 +63,12 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
               }}
             />
           </div>
-          <DialogFooter>
-            <Button type="button" onClick={handleConectarse}>
-              Conectarse
+          <DialogFooter className='flex gap-2 flex-col items-center justify-center'>
+            <Button className='bg-indigo-500/90 font-semibold' type="button" onClick={handleConectarse}>
+              Conectarse con nombre
             </Button>
-
+            <span>o</span>
             {btnLogin}
-            
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -80,10 +79,10 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
   return (
     <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className="flex gap-2" btnLogout={btnLogout}>
-          <p className='text-center text-4xl'>¡Hola {nombreSplit(nombreFinal)}!</p>
+        <HeaderSala className="flex gap-2" btnLogout={status==='authenticated' ?  btnLogout: undefined}>
+          <p className='flex gap-2 justify-center items-center text-sm text-center sm:text-4xl'><Sparkles className=' w-4 md:w-10' />¡Hola {nombreSplit(nombreFinal)}!<Sparkles className='w-4 md:w-10'/></p>
         </HeaderSala>
-        <div className="p-2 w-[inherit] md:p-8 md:w-4/5">
+        <div className="p-2 w-[inherit] md:p-8">
           <EncuestasEstudiante />
         </div>
       </div>

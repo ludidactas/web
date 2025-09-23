@@ -8,10 +8,11 @@ import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { LdSvg } from '@/components/custom/ld-svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
 import Cabeza from '/svg/cabezasvgo.svg'
-import Polls from '/svg/pollsvgo.svg'
+// import Polls from '/svg/pollsvgo.svg'
 import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
 import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
+import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 
 export default function EncuestasEstudiante() {
   const { estado, encuestas, error } = useEncuestaEstudiante()
@@ -19,11 +20,11 @@ export default function EncuestasEstudiante() {
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
-    <div className="bg-white p-4 md:px-14 md:max-w-[54em] mx-auto rounded-xl">
+    <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
 
       {/* Header */}
       <div className="relative">
-        <div className='absolute inset-y-8 md:inset-y-16 z-10 w-full h-24 bg-indigo-200/30 rounded-xl' />
+        <div className='absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl' />
         <div className="relative z-20 flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
             <LdSvg className="w-[100px] md:w-[150px]" SvgComponent={Cabeza}
@@ -33,8 +34,8 @@ export default function EncuestasEstudiante() {
           </div>
           <div className='flex flex-col items-center justify-center'>
 
-          <h1 className="block md:hidden text-3xl font-bold text-indigo-500">Encuestas</h1>
 
+            <h1 className="block md:hidden text-2xl font-bold text-indigo-500">Encuestas</h1>
           {estado === StatusDeConexion.Conectado ? (
             <span className="text-emerald-700 animate-pulse">Conectado</span>
           ) : (
@@ -43,10 +44,7 @@ export default function EncuestasEstudiante() {
           </div>
         </div>
       </div>
-      {/* {session.current?.nombre && <p>Participando como { session.current.nombre }</p>} */}
-      {/* {nombre && <p>Participando como {nombre}</p>} */}
-
-
+    
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (
@@ -80,11 +78,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
     <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 border-dashed border-8 border-indigo-50 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
       <div className="flex md:gap-6 items-center p-4 justify-between rounded-xl">
-        <div className={`flex items-start md:items-center gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}>
-          <LdSvg className='w-[10%]' SvgComponent={Polls}
-          />
+        <div className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}>
+         <MessageCircleQuestionIcon size={40} className='self-start' />
+          {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
           {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
-          <h3 className="w-[90%] text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
+          <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
         </div>
 
         <div className="flex flex-col items-end">
@@ -100,7 +98,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
       </div>
 
       {/* Una vez votado */}
-      <ol className="list-[lower-latin] text-xs ml-10 mr-4 md:text-lg md:ml-16">
+      <ol className="list-[lower-latin] break-all text-xs ml-10 mr-4 md:text-lg md:ml-16">
         {encuesta.opciones.map((opcion) => (
           <li
             key={opcion.id}
@@ -119,15 +117,16 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
       {/* Acciones */}
       <div className="flex items-center justify-center gap-4 my-2">
-        {yaVotado && <p className='text-md text-red-800'>Ya votaste</p>}
+        {yaVotado && <p className='text-md text-rose-800'>Ya votaste</p>}
         {encuesta.isOpen && seleccion && !yaVotado && (
           <button
-            className="bg-blue-900 text-white px-4 py-2 rounded"
+            className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded"
             onClick={() => {
               votar(encuesta.id, seleccion)
               setYaVotado(true)
             }}
           >
+            <Send size={16}/>
             Enviar
           </button>
         )}

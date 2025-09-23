@@ -21,15 +21,16 @@ export default async function Page() {
       <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
         <Toaster />
         <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center bg-gradient-to-r from-cyan-200/70 to-indigo-200/70 ">
-          <HeaderSala className="grid grid-cols-3" btnLogout={<SignOut />}>
-            <p className="text-md md:text-3xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
+           
+          <HeaderSala btnLogout={<SignOut />}>
+            <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
 
           <div className="md:w-4/5">
             <EncuestasAdmin />
           </div>
           <div className="w-full h-24" />
-        </div>
+         </div>
       </EncuestaProfeProvider>
     </SessionProvider>
   )

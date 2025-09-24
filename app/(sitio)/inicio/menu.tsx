@@ -17,6 +17,8 @@ const MenuDesktop = () => (
     <p className="text-2xl">|</p>
     <MenuLink href="/propuestas"> Propuestas </MenuLink>
     <p className="text-2xl">|</p>
+    <MenuLink href="/encuestas"> Sala </MenuLink>
+    <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/">
       Contacto

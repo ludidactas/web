@@ -155,9 +155,9 @@ const ListaEstudiantes = () => {
       <div className='flex gap-1'>
         <HoverCard>
           <HoverCardTrigger>
-            <Link className='flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110' href="#" onClick={limpiarEstudiantesSala}>
+            <span className='flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110' onClick={limpiarEstudiantesSala}>
               <Eraser size={20} />
-            </Link>
+            </span>
           </HoverCardTrigger>
           <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Limpiar lista</p></HoverCardContent>
         </HoverCard>

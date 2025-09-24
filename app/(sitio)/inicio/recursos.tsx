@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import Pantalla from './pantalla'
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
+import Link from 'next/link'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 
 export default function Recursos() {
   return (
@@ -13,13 +15,17 @@ export default function Recursos() {
           <div className='flex flex-col max-w-[720px] items-center md:mt-20 p-8 gap-4 text-sm md:text-xl'>
             <p>
               Estamos trabajando en hacer disponibles en el sitio los contenidos producidos en los talleres, cursos y
-              seminarios de modo que este funcione como biblioteca de recursos como material de referencia, abierto y
+              seminarios de modo que este funcione como biblioteca de recursos y material de referencia, abierto y
               gratuito, para docentes y talleristas.
             </p>
+            <p>El primer recurso que hemos desarrollado es una sala de herramientas de para la gestión de interactividad en las clases online.
+              Está disponible para que la utilices conectándote con tu cuenta de google. </p>
           </div>
         }
         two={<Imagenes />}
-        btn={<p className="text-neutral-500 self-center">¡Proximamente!</p>}
+        btn={<BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/encuestas">
+          Explorar sala
+        </BtnSketchyGif>}
         scroll={<ArrowDownLd to="contactoini" />}
       />
     </div>

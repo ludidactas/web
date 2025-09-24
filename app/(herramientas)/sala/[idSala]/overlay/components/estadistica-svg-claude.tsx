@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, ReactNode } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
@@ -19,12 +19,12 @@ interface EstadisticaSvgProps {
   data: Encuesta[]
 }
 
-export default function EstadisticaLiveSvg() { 
+export default function EstadisticaLiveSvg() {
   const { estado, encuestas, error } = useEncuestaEstudiante()
   return (
     <div className="min-w-[100vw]">
-      { estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
-      { error && <p className="text-red-500">Error: {error}</p> }
+      {estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
       {estado === StatusDeConexion.Conectado && <EstadisticaSvg data={encuestas ?? []} />}
     </div>
   )
@@ -55,14 +55,16 @@ function EncuestaSVG({ encuesta }: { encuesta: Encuesta }) {
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
 
   return (
-    <div className="bg-transparent p-6 ">
+    <div className="bg-black/40 m-20 w-auto rounded-xl p-6">
+      
       <svg className="w-full" viewBox={`0 0 800 ${svgHeight}`} style={{ height: 'auto' }}>
+        
         {/* Título de la encuesta */}
         <text
           x="400"
           y="25"
           textAnchor="middle"
-          className="text-lg font-semibold fill-gray-800"
+          className="text-lg font-semibold fill-white"
           style={{ fontSize: '18px', fontWeight: 'bold' }}
         >
           {encuesta.pregunta}
@@ -79,7 +81,9 @@ function EncuestaSVG({ encuesta }: { encuesta: Encuesta }) {
               maxVotos={maxVotos}
               totalVotos={totalVotos}
               barHeight={barHeight}
-            />
+            >
+
+            </BarraEstadistica>
           ))}
         </g>
       </svg>
@@ -102,6 +106,8 @@ function BarraEstadistica({
   maxVotos: number
   totalVotos: number
   barHeight: number
+  className?:string
+  children?:ReactNode
 }) {
   const [animatedWidth, setAnimatedWidth] = useState(0)
 
@@ -189,7 +195,7 @@ function BarraEstadistica({
         y={barHeight / 2}
         textAnchor="end"
         dominantBaseline="middle"
-        className="fill-gray-700"
+        className="fill-white"
         style={{
           fontSize: '14px',
           fontWeight: '500',
@@ -204,7 +210,7 @@ function BarraEstadistica({
         x={150 + maxBarWidth + 15}
         y={barHeight / 2 - 6}
         dominantBaseline="middle"
-        className="fill-gray-600"
+        className="fill-emerald-500"
         style={{ fontSize: '12px', fontWeight: '600' }}
       >
         {opcion.votos} votos
@@ -214,7 +220,7 @@ function BarraEstadistica({
         x={150 + maxBarWidth + 15}
         y={barHeight / 2 + 8}
         dominantBaseline="middle"
-        className="fill-gray-500"
+        className="fill-white"
         style={{ fontSize: '11px' }}
       >
         {percentage.toFixed(1)}%
@@ -226,6 +232,7 @@ function BarraEstadistica({
           <stop offset="0%" stopColor="rgba(255,255,255,0)" />
           <stop offset="50%" stopColor="rgba(255,255,255,0.6)" />
           <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          
         </linearGradient>
       </defs>
     </g>

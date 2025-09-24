@@ -11,14 +11,17 @@ import { useSession } from 'next-auth/react'
 import { IconoRandom } from '@/lib/iconos'
 import { nombreSplit } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
+import { LdSvg } from '@/components/custom/ld-svg'
+import loginEst from '@/svg/loginEstsvgo.svg'
+import Image from 'next/image'
 
-export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }: { idSala: string, btnLogin: ReactNode, btnLogout: ReactNode }) {
+export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }: { idSala: string, btnLogin: ReactNode, btnLogout: ReactNode, className?: string }) {
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [isClient, setIsClient] = useState(false)  
+  const [isClient, setIsClient] = useState(false)
   const { data: nextSession, status } = useSession()
 
-  const nombreFinal = status === 'authenticated' 
+  const nombreFinal = status === 'authenticated'
     ? nextSession?.user?.name || 'Usuario'
     : nombre
 
@@ -29,7 +32,7 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
       setNombre(storedName)
     }
   }, [idSala])
-  
+
   const handleConectarse = () => {
     const value = inputRef.current?.value?.trim()
     if (value) {
@@ -38,21 +41,31 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
     }
   }
 
-  if (status==='loading' || !isClient){
+  if (status === 'loading' || !isClient) {
     return <div className='w-screen h-screen place-content-center'>
-      <p className='text-6xl text-indigo-500 text-center'>Cargando...</p>
-      </div>
+      <p className='text-xl md:text-6xl text-indigo-500 text-center'>Cargando...</p>
+    </div>
   }
 
-  if (status==='unauthenticated' && !nombre) {
+  if (status === 'unauthenticated' && !nombre) {
     return (
-      <Dialog open>
-        <DialogContent className="sm:max-w-md border-8 p-10 border-indigo-500/50">
-          <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-indigo-500'>Ingresá tu nombre <Sparkles /></DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
+
+      <div className='flex flex-col md:flex-row shadow-2xl gap-4 bg-white items-center rounded-xl text-center justify-self-center w-fit p-10 m-10'>
+        <LdSvg className='w-[200px] md:w-[300px] mr-8 drop-shadow-xl' SvgComponent={loginEst} />
+
+        <div className=' flex flex-col gap-2 text-center  justify-self-center w-fit md:p-10'>
+          <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
+            <Image className="w-8 md:w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
+            <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
+              <Image className="w-[200px] md:w-[800px]" src="/img/lema_sketchy.gif" alt={''} width={200} height={200} />
+            </div>
+          </div>
+          <p className='w-80'> Estás a punto de ingresar a la sala <span className='text-teal-500'>{idSala}</span>. Te puedes conectar con tu nombre o con tu cuenta de google</p>
+          {/* <p className='flex items-center gap-2 text-indigo-500'>Ingresá tu nombre <Sparkles /></p> */}
+          <div className="flex flex-col gap-2">
+            <div className='pt-8'>
             <Input className=' bg-indigo-100/50'
+              placeholder="Ingresá tu nombre"
               id="nombre"
               ref={inputRef}
               defaultValue={nombre}
@@ -63,24 +76,24 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
               }}
             />
           </div>
-          <DialogFooter className='flex gap-2 flex-col items-center justify-center'>
-            <Button className='bg-indigo-500/90 font-semibold' type="button" onClick={handleConectarse}>
-              Conectarse con nombre
-            </Button>
-            <span>o</span>
-            {btnLogin}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Button className=' bg-indigo-500/90 font-semibold' type="button" onClick={handleConectarse}>
+            Conectarse con nombre 
+          </Button>
+          <span>o</span>
+          {btnLogin}
+          </div>
+        </div>
+      </div>
+
     )
   }
 
-  
+
   return (
     <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className="flex gap-2" btnLogout={status==='authenticated' ?  btnLogout: undefined}>
-          <p className='flex gap-2 justify-center items-center text-sm text-center sm:text-4xl'><Sparkles className=' w-4 md:w-10' />¡Hola {nombreSplit(nombreFinal)}!<Sparkles className='w-4 md:w-10'/></p>
+        <HeaderSala className="flex gap-2" btnLogout={status === 'authenticated' ? btnLogout : undefined}>
+          <p className='flex gap-2 justify-center items-center text-sm text-center sm:text-4xl'><Sparkles className=' w-4 md:w-10' />¡Hola {nombreSplit(nombreFinal)}!<Sparkles className='w-4 md:w-10' /></p>
         </HeaderSala>
         <div className="p-2 w-[inherit] md:p-8">
           <EncuestasEstudiante />

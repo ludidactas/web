@@ -60,7 +60,6 @@ export const useConexionStore = create<Estado>((set, get) => ({
   async conectar(auth, sessionId) {
     set({ status: StatusDeConexion.Conectando, error: null })
 
-    console.log(`CONECTANDO!!!`)
     const sock = await handshake({ ...auth, sessionId })
 
     const listeners = {

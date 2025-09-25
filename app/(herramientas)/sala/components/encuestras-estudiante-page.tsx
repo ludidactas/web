@@ -1,19 +1,18 @@
 'use client'
 
+import { LdSvg } from '@/components/custom/ld-svg'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { IconoRandom } from '@/lib/iconos'
+import { nombreSplit } from '@/lib/utils'
+import loginEst from '@/svg/loginEstsvgo.svg'
+import { Sparkles } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { useSession } from 'next-auth/react'
-import { IconoRandom } from '@/lib/iconos'
-import { nombreSplit } from '@/lib/utils'
-import { Sparkles } from 'lucide-react'
-import { LdSvg } from '@/components/custom/ld-svg'
-import loginEst from '@/svg/loginEstsvgo.svg'
-import Image from 'next/image'
 
 export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }: { idSala: string, btnLogin: ReactNode, btnLogout: ReactNode, className?: string }) {
   const [nombre, setNombre] = useState<string | undefined>(undefined)

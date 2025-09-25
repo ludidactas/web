@@ -32,7 +32,6 @@ export function profeSala(email: string){
       createdAt: new Date().toISOString(),
       isOpen: true,
       isPublished: false,
-      isFocused: false,
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué

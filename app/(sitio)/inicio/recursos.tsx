@@ -1,10 +1,9 @@
 'use client'
 
+import ArrowDownLd from '@/components/custom/ld-arrow-down'
+import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
-import ArrowDownLd from '@/components/custom/ld-arrow-down'
-import Link from 'next/link'
-import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 
 export default function Recursos() {
   return (

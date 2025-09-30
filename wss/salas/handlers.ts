@@ -101,7 +101,7 @@ export const registrarSala = (io: Server, salaId: string) => {
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
 export const obtenerOCrearSala = (io: Server, email: string) => {
   if (!owners_salas.has(email)) {
-    const sala = crearSala(email)
+    const sala = crearSala(email, {})
     registrarSala(io, sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }

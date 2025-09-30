@@ -1,8 +1,14 @@
 import { randomUUID } from "crypto"
-import { capitalize, first, shuffle } from "remeda"
+import { capitalize, first, mergeDeep, shuffle } from "remeda"
 import { Socket } from "socket.io"
 import { Encuesta } from "../tipos"
 import { getSession } from "../session"
+
+interface ConfigSala { 
+  pedir_dni: boolean
+  permitir_anonimo: boolean
+  invitados: string[] // emails permitidos a entrar
+}
 
 interface Sala { 
   id: string
@@ -10,6 +16,7 @@ interface Sala {
   votantes: Map<string, Set<string>> // pollId -> set de userIds que han votado
   votos: Map<string, Map<string, string>> // pollId -> (userId -> optionId)
   estudiantes: Map<string, boolean> // sessionId -> presente?
+  config: ConfigSala
 }
 
 /** Data de polls por sala */
@@ -21,8 +28,16 @@ export const salas_owners = new Map<string, string>()
 export const sockets_profes = new Map<string, Socket>()
 
 /** Crea una sala nueva en memoria y la asigna a un profe */
-export const crearSala = (email: string) => { 
+export const crearSala = (email: string, config: Partial<ConfigSala>) => { 
   const id = randomUUID().split('-')[0]
+
+  const config_default: ConfigSala = {
+    pedir_dni: false,
+    permitir_anonimo: true,
+    invitados: [],
+  }
+
+  const config_sala = mergeDeep(config_default, config) as ConfigSala
 
   // Le creamos los buffers
   salas.set(id, {
@@ -31,6 +46,7 @@ export const crearSala = (email: string) => {
     votantes: new Map<string, Set<string>>(),
     votos: new Map<string, Map<string, string>>(),
     estudiantes: new Map<string, boolean>(),
+    config: config_sala
   })
 
   // Registramos owners
@@ -40,6 +56,17 @@ export const crearSala = (email: string) => {
   console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
 
   return salas.get(id)!
+}
+
+/**
+ * Devuelve la data de polls, votantes y votos de la sala
+ * @throws Error si la sala no existe
+ */
+export const getSalaById = (salaId: string) => {
+  if (!salas.has(salaId)) {
+    throw new Error(`La sala ${salaId} no existe`)
+  }
+  return salas.get(salaId)!
 }
 
 /** Obtiene el ID de la sala del profe, _creandola si no existe_ */
@@ -54,17 +81,6 @@ export const getEmailProfeDeSala = (salaId: string) => {
   return salas_owners.get(salaId)!
 }
 
-
-/**
- * Devuelve la data de polls, votantes y votos de la sala
- * @throws Error si la sala no existe
- */
-export const getSalaById = (salaId: string) => {
-  if (!salas.has(salaId)) {
-    throw new Error(`La sala ${salaId} no existe`)
-  }
-  return salas.get(salaId)!
-}
 
 /** Devuelve la data de polls, votantes y votos de la sala del profe, dado su email */
 export const getSalaByEmailProfe = (email: string) => {

@@ -4,14 +4,19 @@ import { Socket } from "socket.io"
 import { Encuesta } from "../tipos"
 import { getSession } from "../session"
 
-interface ConfigSala { 
+export interface ConfigSala { 
   pedir_dni: boolean
   permitir_anonimo: boolean
   invitados: string[] // emails permitidos a entrar
+  nombre_profe: string
 }
 
 interface Sala { 
   id: string
+  profe: {
+    email: string
+    nombre?: string
+  }
   polls: Map<string, Encuesta>
   votantes: Map<string, Set<string>> // pollId -> set de userIds que han votado
   votos: Map<string, Map<string, string>> // pollId -> (userId -> optionId)
@@ -27,6 +32,25 @@ export const owners_salas = new Map<string, string>()
 export const salas_owners = new Map<string, string>()
 export const sockets_profes = new Map<string, Socket>()
 
+
+export const conHandlers = (sala: Sala) => ({
+  ...sala,
+  limpiarEstudiantes: () => {
+    sala.estudiantes.forEach((activo, id) => {
+      if (!activo) sala.estudiantes.delete(id)
+    })
+  },
+  listarEstudiantes: () => {
+    const sesionesIds = Array.from(sala.estudiantes.keys())
+    const invalidas = sesionesIds.filter(sid => !getSession(sid))
+    if (invalidas.length > 0) {
+      console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${sala.profe.email}: `, invalidas)
+    }
+    const estudiantes = sesionesIds.map(getSession).map(s => s ? ({ ...s, conectado: sala.estudiantes.get(s.sessionId) }) : s)
+    return estudiantes
+  }
+})
+
 /** Crea una sala nueva en memoria y la asigna a un profe */
 export const crearSala = (email: string, config: Partial<ConfigSala>) => { 
   const id = randomUUID().split('-')[0]
@@ -35,6 +59,7 @@ export const crearSala = (email: string, config: Partial<ConfigSala>) => {
     pedir_dni: false,
     permitir_anonimo: true,
     invitados: [],
+    nombre_profe: email
   }
 
   const config_sala = mergeDeep(config_default, config) as ConfigSala
@@ -42,6 +67,7 @@ export const crearSala = (email: string, config: Partial<ConfigSala>) => {
   // Le creamos los buffers
   salas.set(id, {
     id,
+    profe: { email, nombre: config_sala.nombre_profe },
     polls: new Map<string, Encuesta>(),
     votantes: new Map<string, Set<string>>(),
     votos: new Map<string, Map<string, string>>(),
@@ -55,7 +81,7 @@ export const crearSala = (email: string, config: Partial<ConfigSala>) => {
 
   console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
 
-  return salas.get(id)!
+  return conHandlers(salas.get(id)!)
 }
 
 /**
@@ -66,8 +92,11 @@ export const getSalaById = (salaId: string) => {
   if (!salas.has(salaId)) {
     throw new Error(`La sala ${salaId} no existe`)
   }
-  return salas.get(salaId)!
+  return conHandlers(salas.get(salaId)!)
 }
+
+
+/** Funciones de relaciones: */
 
 /** Obtiene el ID de la sala del profe, _creandola si no existe_ */
 export const getSalaId = (email: string) => {
@@ -81,13 +110,11 @@ export const getEmailProfeDeSala = (salaId: string) => {
   return salas_owners.get(salaId)!
 }
 
-
 /** Devuelve la data de polls, votantes y votos de la sala del profe, dado su email */
 export const getSalaByEmailProfe = (email: string) => {
   const salaId = getSalaId(email)
   return getSalaById(salaId)
 }
-
 
 /** Devuelve los _sockets_ de todos los profes across de todas las salas (para broadcastear por ej.) */
 export const getSocketsProfes = () => {

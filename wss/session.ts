@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
 import { pick } from "remeda"
 import { RolEncuesta } from "./tipos"
-import { nombreDeFantasia, salas } from "./salas/app"
+import { ConfigSala, nombreDeFantasia, salas } from "./salas/app"
 
 // Sesión del server
 export interface PollsServerSession {
@@ -17,11 +17,13 @@ export interface PollsServerSession {
   icono?: string // Icono arbitrario del estudiante
 }
 
-
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
   session: PollsServerSession
   user: { email?: string, nombre?: string }
-  sala: string // ID de la sala a la que se conecta el socket
+  /** ID de la sala a la que se conecta el estudiante */
+  sala: string
+  /** _Puede_ venir la config de la sala al momento de crearla */
+  config_sala?: Partial<ConfigSala> 
 }>
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno. 

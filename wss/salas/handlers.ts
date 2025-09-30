@@ -2,8 +2,8 @@ import { ExtendedError, Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { bradcastPoll, handlersEstudiante } from "../polls/handlers"
-import { conSession, getSession, SocketConSesion } from "../session"
-import { crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas, sockets_profes } from "./app"
+import { conSession, SocketConSesion } from "../session"
+import { ConfigSala, crearSala, getEmailProfeDeSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas, sockets_profes } from "./app"
 
 export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
@@ -13,7 +13,10 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
   // Se conectó un profe, le armamos una sala con su email como key:
   const email = socket.data.user.email!
-  const sala = obtenerOCrearSala(io, email)
+  const sala = obtenerOCrearSala(io, email, {
+    nombre_profe: socket.data.user.nombre || email,
+    ...socket.data.config_sala ?? {}
+  })
 
   console.log(`🔌 Se conectó profe ${email}, sala ${sala.id}`)
 
@@ -99,29 +102,11 @@ export const registrarSala = (io: Server, salaId: string) => {
 }
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-export const obtenerOCrearSala = (io: Server, email: string) => {
+export const obtenerOCrearSala = (io: Server, email: string, config: Partial<ConfigSala>) => {
   if (!owners_salas.has(email)) {
-    const sala = crearSala(email, {})
+    const sala = crearSala(email, config)
     registrarSala(io, sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }
-  return {
-    ...getSalaByEmailProfe(email)!,
-    limpiarEstudiantes: () => { 
-      const sala = getSalaByEmailProfe(email)
-      sala.estudiantes.forEach((activo, id) => {
-        if (!activo) sala.estudiantes.delete(id)
-      })
-    },
-    listarEstudiantes: () => { 
-      const sala = getSalaByEmailProfe(email)
-      const sesionesIds = Array.from(sala.estudiantes.keys())
-      const invalidas = sesionesIds.filter(sid => !getSession(sid))
-      if (invalidas.length > 0) { 
-        console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${email}: `, invalidas)
-      }
-      const estudiantes = sesionesIds.map(getSession).map(s => s ? ({...s, conectado: sala.estudiantes.get(s.sessionId)}) : s)
-      return estudiantes
-    }
-  }
+  return getSalaByEmailProfe(email)!
 }

@@ -28,11 +28,9 @@ export const handlersProfe = (io: Server, socket: SocketConSesion) => {
 
   socket.on('sala:limpar_estudiantes_sala', safe(() => {
     sala.limpiarEstudiantes()
-    console.log(`Estudiantes limpados, enviado `, sala.listarEstudiantes())
     socket.emit('sala:estudiantes', sala.listarEstudiantes())
   }))
 
-  // All the profe event handlers...
   socket.on('poll:create', safe((poll: unknown, responder: (error?: ExtendedError) => void) => {
     try {
       const nueva = profe.crearPoll(poll)

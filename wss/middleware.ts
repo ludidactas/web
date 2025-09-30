@@ -20,7 +20,7 @@ export const conErrorHandling = (socket: Socket) =>
         }
 
         socket.emit('poll:error', { message: err.message })
-        // throw err
+        if (process.env.NODE_ENV === "development") throw err
       }
     }
   }

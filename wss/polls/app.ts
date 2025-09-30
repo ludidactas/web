@@ -1,7 +1,7 @@
 import { merge } from "remeda"
 import { z } from "zod"
-import { getSalaByEmailProfe, getSalaById } from "../salas/app"
-import { Encuesta, EncuestaHidratada } from "../tipos"
+import { conHandlers, getSalaByEmailProfe, getSalaById } from "../salas/app"
+import { Encuesta, EncuestaHidratada, RolEncuesta } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators"
 
@@ -157,11 +157,21 @@ export function estudianteSala(idSala: string, sessionId: string) {
   }
 }
 
+/** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
+export function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) { 
+  sala.broadcast('poll:update', { poll: poll }, (poll, socket) => { 
+    if (socket.data.session.rol === RolEncuesta.Estudiante) {
+      return hidratar(sala, poll as Encuesta, socket.data.session.sessionId)
+    }
+    return poll
+  })
+}
+
 
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
-export function hidratar(salaId: string, poll: Encuesta, sessionId: string): EncuestaHidratada {
+export function hidratar(sala: ReturnType<typeof conHandlers>, poll: Encuesta, sessionId: string): EncuestaHidratada {
 
-  const { votos } = getSalaById(salaId)
+  const { votos } = sala
 
   const votosPoll = votos.get(poll.id)
 
@@ -177,8 +187,8 @@ export function hidratar(salaId: string, poll: Encuesta, sessionId: string): Enc
 
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export function hidratadas(salaId: string, sessionId: string) {
-  const { polls } = getSalaById(salaId)
-  return Array.from(polls.values()).filter(e => e.isPublished).map(poll => hidratar(salaId, poll, sessionId))
+  const sala = getSalaById(salaId)
+  return Array.from(sala.polls.values()).filter(e => e.isPublished).map(poll => hidratar(sala, poll, sessionId))
 } 
 
 

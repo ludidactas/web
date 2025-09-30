@@ -1,10 +1,9 @@
 import { randomUUID } from "crypto"
 import { capitalize, first, mergeDeep, shuffle } from "remeda"
-import { hidratar } from "../polls/app"
-import { io } from "../server"
-import { getSession, SocketEstudiante, SocketProfe } from "../session"
+
+import { io, registrarSalaEnServer } from "../server"
+import { getSession, SocketConSesion, SocketProfe } from "../session"
 import { Encuesta } from "../tipos"
-import { registrarSala } from "./handlers"
 
 export interface ConfigSala { 
   pedir_dni: boolean
@@ -13,7 +12,7 @@ export interface ConfigSala {
   nombre_profe: string
 }
 
-interface Sala { 
+export interface Sala { 
   id: string
   profe: {
     email: string
@@ -51,27 +50,13 @@ export const conHandlers = (sala: Sala) => ({
     return estudiantes
   },
   /** Envía a admin, profe y estudiantes de la sala */
-  broadcast: (event: string, data: unknown) => {
-    io.of('/polls/admin').emit(event, data)
-    sala.profe.socket.emit(event, data)
-    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, data) })
+  broadcast: (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => any = data => data) => {
+    io.of('/polls/admin').sockets.forEach(s => { s.emit(event, mapper(data, s)) })
+    sala.profe.socket.emit(event, mapper(data, sala.profe.socket))
+    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
   },
-  /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
-  bradcastPoll: (poll: Encuesta) => {
-    console.log(`📡 Broadcasteando encuesta ${poll.id} a sala ${sala.id} (sala de ${sala.profe.nombre})`)
-
-    // La emitimos al profe de la sala
-    sala.profe.socket.emit('poll:updated', poll)
-
-    // Al admin
-    io.of('/polls/admin').emit('poll:updated', poll)
-
-    // La emitimos a los estudiantes de la sala también, pero hidratada para cada uno
-    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante: SocketEstudiante) => {
-      const pollHidratada = hidratar(sala.id, poll, socketEstudiante.data.session.sessionId)
-      socketEstudiante.emit('poll:updated', pollHidratada)
-    })
-  }
+  /** Devuelve solo la data serializable (sin funciones) */
+  raw: () => sala 
 })
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
@@ -79,7 +64,7 @@ export const obtenerOCrearSala = (socket: SocketProfe) => {
   const email = socket.data.user.email
   if (!owners_salas.has(email)) {
     const sala = crearSala(socket)
-    registrarSala(io, sala.id)
+    registrarSalaEnServer(sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }
   return getSalaByEmailProfe(email)

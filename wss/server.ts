@@ -1,9 +1,10 @@
 import { Socket } from "socket.io"
 import { mount } from "./mount"
-import { handlersAdmin, handlersProfe } from "./salas/handlers"
-import { conSession, esAdmin, esProfe, SocketConSesion, SocketProfe } from "./session"
+import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe } from "./salas/handlers"
+import { conSession, esAdmin, esProfe, SocketConSesion, SocketEstudiante, SocketProfe } from "./session"
 import { handlersTest } from "./test/handlers"
 import { salas_owners } from "./salas/app"
+import { handlersEncuestasEstudiante, handlersEncuestasProfe } from "./polls/handlers"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 
@@ -13,7 +14,10 @@ export const io = mount(PORT)
 
 io.of('/polls/profe').use(conSession).use(esProfe)
   .on('connect_error', (error) => { console.error(`❌ Error en /polls/profe:`, error.message) })
-  .on('connection', (socket: SocketProfe) => handlersProfe(socket))
+  .on('connection', (socket: SocketProfe) => {
+    handlersSalaProfe(socket)
+    handlersEncuestasProfe(socket)
+  })
 
 
 io.of('/polls/admin').use(conSession).use(esAdmin)
@@ -40,3 +44,16 @@ io.of(/polls\/.+?\/estudiante/).use((socket, next) => {
     next(new Error(`Sala inválida`))
   }
 })
+
+/** Crea y hace el setup del canal para estudiantes de la sala */
+export const registrarSalaEnServer = (salaId: string) => {
+  console.log(`🏫 Creando namespace para sala: /polls/${salaId}/estudiante`)
+
+  // Registramos la sala en el servidor (endpoint de estudiantes)
+  io.of(`/polls/${salaId}/estudiante`).use(conSession)
+    .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/estudiante:`, error.message) })
+    .on('connection', (socket: SocketEstudiante) => {
+      handlersSalaEstudiante(socket, salaId)
+      handlersEncuestasEstudiante(socket, salaId)
+    })
+}

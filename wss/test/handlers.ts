@@ -1,7 +1,7 @@
-import { Server, Socket } from "socket.io"
+import { Socket } from "socket.io"
 
 
-export const handlersTest = (io: Server, socket: Socket) => {
+export const handlersTest = (socket: Socket) => {
   console.log('Tester conectado')
   socket.on('ping', () => {
     console.log('ping')

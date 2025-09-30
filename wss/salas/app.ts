@@ -1,8 +1,9 @@
 import { randomUUID } from "crypto"
 import { capitalize, first, mergeDeep, shuffle } from "remeda"
-import { Socket } from "socket.io"
+import { hidratar } from "../polls/app"
+import { io } from "../server"
+import { getSession, SocketConSesion } from "../session"
 import { Encuesta } from "../tipos"
-import { getSession } from "../session"
 
 export interface ConfigSala { 
   pedir_dni: boolean
@@ -15,6 +16,7 @@ interface Sala {
   id: string
   profe: {
     email: string
+    socket: SocketConSesion
     nombre?: string
   }
   polls: Map<string, Encuesta>
@@ -30,8 +32,6 @@ export const salas = new Map<string, Sala>()
 // Maps para relaciones
 export const owners_salas = new Map<string, string>()
 export const salas_owners = new Map<string, string>()
-export const sockets_profes = new Map<string, Socket>()
-
 
 export const conHandlers = (sala: Sala) => ({
   ...sala,
@@ -48,12 +48,40 @@ export const conHandlers = (sala: Sala) => ({
     }
     const estudiantes = sesionesIds.map(getSession).map(s => s ? ({ ...s, conectado: sala.estudiantes.get(s.sessionId) }) : s)
     return estudiantes
+  },
+  /** Envía a admin, profe y estudiantes de la sala */
+  broadcast: (event: string, data: unknown) => {
+    io.of('/polls/admin').emit(event, data)
+    sala.profe.socket.emit(event, data)
+    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, data) })
+  },
+  bradcastPoll: (poll: Encuesta) => {
+    console.log(`📡 Broadcasteando encuesta ${poll.id} a sala ${sala.id} (sala de ${sala.profe.nombre})`)
+
+    // La emitimos al profe de la sala
+    sala.profe.socket.emit('poll:updated', poll)
+
+    // Al admin
+    io.of('/polls/admin').emit('poll:updated', poll)
+
+    // La emitimos a los estudiantes de la sala también, pero hidratada para cada uno
+    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante: SocketConSesion) => {
+      const pollHidratada = hidratar(sala.id, poll, socketEstudiante.data.session.sessionId)
+      socketEstudiante.emit('poll:updated', pollHidratada)
+    })
   }
 })
 
 /** Crea una sala nueva en memoria y la asigna a un profe */
-export const crearSala = (email: string, config: Partial<ConfigSala>) => { 
+export const crearSala = (socket: SocketConSesion) => { 
   const id = randomUUID().split('-')[0]
+
+  const email = socket.data.user.email!
+
+  const config = {
+    nombre_profe: socket.data.user.nombre || email,
+    ...socket.data.config_sala ?? {}
+  } as Partial<ConfigSala>
 
   const config_default: ConfigSala = {
     pedir_dni: false,
@@ -67,7 +95,7 @@ export const crearSala = (email: string, config: Partial<ConfigSala>) => {
   // Le creamos los buffers
   salas.set(id, {
     id,
-    profe: { email, nombre: config_sala.nombre_profe },
+    profe: { socket, email, nombre: config_sala.nombre_profe },
     polls: new Map<string, Encuesta>(),
     votantes: new Map<string, Set<string>>(),
     votos: new Map<string, Map<string, string>>(),
@@ -116,21 +144,9 @@ export const getSalaByEmailProfe = (email: string) => {
   return getSalaById(salaId)
 }
 
-/** Devuelve los _sockets_ de todos los profes across de todas las salas (para broadcastear por ej.) */
-export const getSocketsProfes = () => {
-  return Array.from(sockets_profes.values())
-}
-
 /** Devuelve el socket de un profe por id de sala (el owner) */
 export const getSocketProfeDeSala = (salaId: string) => {
-  const email = getEmailProfeDeSala(salaId)
-  return getSocketProfe(email)
-}
-
-/** Devuelve el socket de un profe por email */
-export const getSocketProfe = (email: string) => {
-  if (!sockets_profes.has(email)) throw new Error(`El profe ${email} no tiene socket registrado!`)
-  return sockets_profes.get(email)!
+  return getSalaById(salaId).profe.socket
 }
 
 export const getEstudiantesEnSala = (salaId: string) => {

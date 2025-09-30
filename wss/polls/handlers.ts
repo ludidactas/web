@@ -1,12 +1,9 @@
 import { conErrorHandling } from "../middleware"
 import { getEmailProfeDeSala, getSalaById } from "../salas/app"
-import { SocketConSesion } from "../session"
+import { SocketEstudiante } from "../session"
 import { estudianteSala } from "./app"
 
-/** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
-
-
-export const handlersEstudiante = (socket: SocketConSesion, idSala: string) => {
+export const handlersEstudiante = (socket: SocketEstudiante, idSala: string) => {
 
   const safe = conErrorHandling(socket)
 

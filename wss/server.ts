@@ -1,7 +1,7 @@
 import { Socket } from "socket.io"
 import { mount } from "./mount"
 import { handlersAdmin, handlersProfe } from "./salas/handlers"
-import { conSession, esAdmin, esProfe, SocketConSesion } from "./session"
+import { conSession, esAdmin, esProfe, SocketConSesion, SocketProfe } from "./session"
 import { handlersTest } from "./test/handlers"
 import { salas_owners } from "./salas/app"
 
@@ -13,7 +13,7 @@ export const io = mount(PORT)
 
 io.of('/polls/profe').use(conSession).use(esProfe)
   .on('connect_error', (error) => { console.error(`❌ Error en /polls/profe:`, error.message) })
-  .on('connection', (socket: SocketConSesion) => handlersProfe(socket))
+  .on('connection', (socket: SocketProfe) => handlersProfe(socket))
 
 
 io.of('/polls/admin').use(conSession).use(esAdmin)

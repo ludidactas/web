@@ -19,12 +19,22 @@ export interface PollsServerSession {
 
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
   session: PollsServerSession
-  user: { email?: string, nombre?: string }
-  /** ID de la sala a la que se conecta el estudiante */
-  sala: string
+  [etc: string]: any
+}>
+
+export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
+  session: PollsServerSession
+  user: { email: string, nombre?: string }
   /** _Puede_ venir la config de la sala al momento de crearla */
   config_sala?: Partial<ConfigSala> 
 }>
+
+export type SocketEstudiante = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
+  session: PollsServerSession
+  /** ID de la sala a la que se conecta el estudiante */
+  sala: string
+}>
+
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno. 
 // Si no está seteada, tiramos un error para que no arranque el server.
@@ -71,7 +81,7 @@ export const createSession = <T extends object>(data: T): T & { sessionId: strin
   ...data
 })
 
-export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: SocketConSesion, payload: T) => {
+export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: Socket, payload: T) => {
 
   const nombre = payload.nombre ?? nombreDeFantasia()
 

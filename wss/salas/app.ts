@@ -2,8 +2,9 @@ import { randomUUID } from "crypto"
 import { capitalize, first, mergeDeep, shuffle } from "remeda"
 import { hidratar } from "../polls/app"
 import { io } from "../server"
-import { getSession, SocketConSesion } from "../session"
+import { getSession, SocketEstudiante, SocketProfe } from "../session"
 import { Encuesta } from "../tipos"
+import { registrarSala } from "./handlers"
 
 export interface ConfigSala { 
   pedir_dni: boolean
@@ -16,7 +17,7 @@ interface Sala {
   id: string
   profe: {
     email: string
-    socket: SocketConSesion
+    socket: SocketProfe
     nombre?: string
   }
   polls: Map<string, Encuesta>
@@ -55,6 +56,7 @@ export const conHandlers = (sala: Sala) => ({
     sala.profe.socket.emit(event, data)
     io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, data) })
   },
+  /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
   bradcastPoll: (poll: Encuesta) => {
     console.log(`📡 Broadcasteando encuesta ${poll.id} a sala ${sala.id} (sala de ${sala.profe.nombre})`)
 
@@ -65,18 +67,29 @@ export const conHandlers = (sala: Sala) => ({
     io.of('/polls/admin').emit('poll:updated', poll)
 
     // La emitimos a los estudiantes de la sala también, pero hidratada para cada uno
-    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante: SocketConSesion) => {
+    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante: SocketEstudiante) => {
       const pollHidratada = hidratar(sala.id, poll, socketEstudiante.data.session.sessionId)
       socketEstudiante.emit('poll:updated', pollHidratada)
     })
   }
 })
 
+/** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
+export const obtenerOCrearSala = (socket: SocketProfe) => {
+  const email = socket.data.user.email
+  if (!owners_salas.has(email)) {
+    const sala = crearSala(socket)
+    registrarSala(io, sala.id)
+    console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
+  }
+  return getSalaByEmailProfe(email)
+}
+
 /** Crea una sala nueva en memoria y la asigna a un profe */
-export const crearSala = (socket: SocketConSesion) => { 
+export const crearSala = (socket: SocketProfe) => { 
   const id = randomUUID().split('-')[0]
 
-  const email = socket.data.user.email!
+  const email = socket.data.user.email
 
   const config = {
     nombre_profe: socket.data.user.nombre || email,

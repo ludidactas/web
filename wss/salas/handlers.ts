@@ -2,11 +2,10 @@ import { ExtendedError, Server } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { handlersEstudiante } from "../polls/handlers"
-import { io } from "../server"
-import { conSession, SocketConSesion } from "../session"
-import { crearSala, getEstudiantesEnSala, getSalaByEmailProfe, owners_salas } from "./app"
+import { conSession, SocketConSesion, SocketEstudiante, SocketProfe } from "../session"
+import { getEstudiantesEnSala, obtenerOCrearSala } from "./app"
 
-export const handlersProfe = (socket: SocketConSesion) => {
+export const handlersProfe = (socket: SocketProfe) => {
 
   const safe = conErrorHandling(socket)
 
@@ -76,16 +75,5 @@ export const registrarSala = (io: Server, salaId: string) => {
   // Registramos la sala en el servidor (endpoint de estudiantes)
   io.of(`/polls/${salaId}/estudiante`).use(conSession)
     .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/estudiante:`, error.message) })
-    .on('connection', (socket: SocketConSesion) => handlersEstudiante(socket, salaId))
-}
-
-/** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-export const obtenerOCrearSala = (socket: SocketConSesion) => {
-  const email = socket.data.user.email!
-  if (!owners_salas.has(email)) {
-    const sala = crearSala(socket)
-    registrarSala(io, sala.id)
-    console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
-  }
-  return getSalaByEmailProfe(email)!
+    .on('connection', (socket: SocketEstudiante) => handlersEstudiante(socket, salaId))
 }

@@ -15,6 +15,7 @@ export interface PollsServerSession {
   agente?: string
   avatar?: string // Avatar de google del profe
   icono?: string // Icono arbitrario del estudiante
+  dni?: string
 }
 
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
@@ -24,7 +25,7 @@ export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, Default
 
 export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
   session: PollsServerSession
-  user: { email: string, nombre?: string }
+  user: { email: string, nombre?: string, dni?:string }
   /** _Puede_ venir la config de la sala al momento de crearla */
   config_sala?: Partial<ConfigSala> 
 }>

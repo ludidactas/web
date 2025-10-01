@@ -1,7 +1,7 @@
 'use client'
+
 import { LdSvg } from '@/components/custom/ld-svg'
 import EncuestasIcon from '@/svg/encuestas.svg'
-// import PollsIcon from '@/svg/pollsvgo.svg'
 import { Encuesta } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -10,7 +10,6 @@ import Link from 'next/link'
 import { PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaProfe } from './encuestas-profe-context'
-// import { estudianteSala } from '@/wss/polls/app'
 import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
@@ -141,7 +140,7 @@ const ListaEstudiantes = () => {
       })
   }
 
-  const emailsEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} ${e.email}` : e.nombre).join('\n')
+  const emailsEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : e.nombre).join('\n')
 
   return <>
     <div className='flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl'>
@@ -197,9 +196,11 @@ const ListaEstudiantes = () => {
               {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
               {!e.avatar && getInitials(e.nombre || 'Anonimo')}
             </div>
-            {/* Nombre e email */}
+            {/* Nombre, email y DNI */}
             <div className="flex flex-col">
-              <span>{e.nombre}</span> <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+              <span>{e.nombre}</span>
+              <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+              <span>{e.dni ?? 'Sin DNI'}</span>
             </div>
           </li>
         ))}

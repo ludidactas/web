@@ -140,7 +140,7 @@ const ListaEstudiantes = () => {
       })
   }
 
-  const emailsEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : e.nombre).join('\n')
+  const datosEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`).join('\n')
 
   return <>
     <div className='flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl'>
@@ -162,7 +162,7 @@ const ListaEstudiantes = () => {
         </HoverCard>
         <HoverCard>
           <HoverCardTrigger>
-            <button className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110' onClick={handleCopy(emailsEstudiantes)}>
+            <button className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110' onClick={handleCopy(datosEstudiantes)}>
               {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
             </button>
           </HoverCardTrigger>

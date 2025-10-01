@@ -5,7 +5,7 @@ import EncuestasIcon from '@/svg/encuestas.svg'
 import { Encuesta } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus, MessageCircleQuestionIcon } from 'lucide-react'
+import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus, MessageCircleQuestionIcon, Download } from 'lucide-react'
 import Link from 'next/link'
 import { PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
@@ -18,6 +18,7 @@ import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
 import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
+import * as XLSX from 'xlsx'
 
 
 
@@ -42,6 +43,8 @@ export default function EncuestasAdmin() {
         console.error('Failed to copy!', error)
       })
   }
+
+
 
 
   return (
@@ -140,6 +143,43 @@ const ListaEstudiantes = () => {
       })
   }
 
+  const handleExportToExcel = () => {
+
+    // Prepara los datos para Excel
+    const datosParaExcel = estudiantes.map((e) => ({
+      Nombre: e.nombre || 'Sin nombre',
+      Email: e.email || 'Sin email',
+      DNI: e.dni || 'Sin DNI',
+      Estado: e.conectado ? 'Conectado' : 'Desconectado'
+    }))
+
+    // Crea un nuevo libro de trabajo
+    const wb = XLSX.utils.book_new()
+
+    // Convierte los datos a una hoja de cálculo
+    const ws = XLSX.utils.json_to_sheet(datosParaExcel)
+
+    // Ajusta el ancho de las columnas automáticamente
+    const maxWidth = 50
+    const colWidths = [
+      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.Nombre.length), 10), maxWidth) },
+      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.Email.length), 10), maxWidth) },
+      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.DNI.length), 10), maxWidth) },
+      { wch: 15 }
+    ]
+    ws['!cols'] = colWidths
+
+    // Añade la hoja al libro
+    XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes')
+
+    // Genera nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0]
+    const nombreArchivo = `estudiantes_${fecha}.xlsx`
+
+    // Descarga el archivo
+    XLSX.writeFile(wb, nombreArchivo)
+  }
+
   const datosEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`).join('\n')
 
   return <>
@@ -167,6 +207,20 @@ const ListaEstudiantes = () => {
             </button>
           </HoverCardTrigger>
           <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Copiar lista</p></HoverCardContent>
+        </HoverCard>
+        <HoverCard>
+          <HoverCardTrigger>
+            <button
+              className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed'
+              onClick={handleExportToExcel}
+              disabled={estudiantes.length === 0}
+            >
+              <Download size={20} />
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent>
+            <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Exportar a Excel</p>
+          </HoverCardContent>
         </HoverCard>
       </div>
 

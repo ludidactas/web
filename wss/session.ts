@@ -128,7 +128,7 @@ const login = (socket: SocketConSesion) => {
 
     // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión data que esperamos (nombre y icono)
     socket.data.sala = socket.handshake.auth.idSala
-    openSession(socket, { rol: RolEncuesta.Estudiante, nombre: socket.handshake.auth.nombre, icono: socket.handshake.auth.icono })
+    openSession(socket, { rol: RolEncuesta.Estudiante, ...pick(socket.handshake.auth, ['nombre', 'icono', 'dni']) })
 
   } else {
 

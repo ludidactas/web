@@ -33,6 +33,7 @@ export interface PasaporteEstudiante {
   idSala: string
   nombre?: string
   icono?: string
+  dni?: string
 }
 
 export interface PasaporteProfe {

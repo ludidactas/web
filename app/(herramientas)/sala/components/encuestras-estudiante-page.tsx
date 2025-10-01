@@ -89,7 +89,7 @@ export default function EncuestasEstudiantePage({ idSala, btnLogin, btnLogout }:
 
 
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()}>
+    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()} dni='95959595'>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="flex gap-2" btnLogout={status === 'authenticated' ? btnLogout : undefined}>
           <p className='flex gap-2 justify-center items-center text-sm text-center sm:text-4xl'><Sparkles className=' w-4 md:w-10' />¡Hola {nombreSplit(nombreFinal)}!<Sparkles className='w-4 md:w-10' /></p>

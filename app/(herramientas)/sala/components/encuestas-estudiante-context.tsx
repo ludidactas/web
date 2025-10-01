@@ -7,10 +7,10 @@ import { useServerWebsockets } from '../../../../components/hooks/use-server-enc
 import { RolEncuesta } from '@/wss/tipos'
 
 /** Cose el socket con el state para estudiante */
-const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string) => {
+const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string, dni?: string) => {
 
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket, session, estado, error } = useServerWebsockets({ nombre, idSala, icono, rol: RolEncuesta.Estudiante })
+  const { socket, session, estado, error } = useServerWebsockets({ nombre, idSala, icono, dni, rol: RolEncuesta.Estudiante })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -58,14 +58,15 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 export const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
 
 // Provider
-export const EncuestaEstudianteProvider: React.FC<{ idSala: string; nombre?: string; icono?: string, children: React.ReactNode }> = ({
+export const EncuestaEstudianteProvider: React.FC<{ idSala: string; nombre?: string; icono?: string, dni?: string, children: React.ReactNode }> = ({
   idSala,
   nombre,
   icono,
+  dni,
   children,
 }) => {
   return (
-    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala, nombre, icono)}>
+    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala, nombre, icono, dni)}>
       {children}
     </EncuestaEstudianteContext.Provider>
   )

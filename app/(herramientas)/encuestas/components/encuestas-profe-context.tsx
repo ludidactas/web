@@ -91,7 +91,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
         'sala:abierta',
         ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
-          setLinkSala(`https://ludidactas.com/sala/${sala.id}/`)
+          setLinkSala(`${process.env.NEXT_PUBLIC_HOST}/sala/${sala.id}/`)
 
           // Al abrir la sala, le pedimos al server la lista de encuestas y de estudiantes, por si la sala ya estaba activa
           setEncuestas(polls)

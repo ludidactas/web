@@ -11,14 +11,13 @@ import { PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaProfe } from './encuestas-profe-context'
 import { ScrollBar } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { cn, exportarPlanilla } from '@/lib/utils'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
 import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
-import * as XLSX from 'xlsx'
 
 
 
@@ -150,35 +149,12 @@ const ListaEstudiantes = () => {
       Nombre: e.nombre || 'Sin nombre',
       Email: e.email || 'Sin email',
       DNI: e.dni || 'Sin DNI',
-      Estado: e.conectado ? 'Conectado' : 'Desconectado'
     }))
-
-    // Crea un nuevo libro de trabajo
-    const wb = XLSX.utils.book_new()
-
-    // Convierte los datos a una hoja de cálculo
-    const ws = XLSX.utils.json_to_sheet(datosParaExcel)
-
-    // Ajusta el ancho de las columnas automáticamente
-    const maxWidth = 50
-    const colWidths = [
-      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.Nombre.length), 10), maxWidth) },
-      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.Email.length), 10), maxWidth) },
-      { wch: Math.min(Math.max(...datosParaExcel.map(d => d.DNI.length), 10), maxWidth) },
-      { wch: 15 }
-    ]
-    ws['!cols'] = colWidths
-
-    // Añade la hoja al libro
-    XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes')
-
-    // Genera nombre de archivo con fecha
-    const fecha = new Date().toISOString().split('T')[0]
-    const nombreArchivo = `estudiantes_${fecha}.xlsx`
-
-    // Descarga el archivo
-    XLSX.writeFile(wb, nombreArchivo)
+  
+    exportarPlanilla(datosParaExcel)
   }
+
+   
 
   const datosEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`).join('\n')
 

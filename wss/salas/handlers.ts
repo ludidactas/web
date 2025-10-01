@@ -13,6 +13,9 @@ export const handlersSalaProfe = (socket: SocketProfe) => {
   // Se conectó un profe, le armamos una sala:
   const sala = obtenerOCrearSala(socket)
   const profe = profeSala(sala.profe.email)
+
+  // socket.emit('sala:abierta', { sala: sala.raw(), polls: profe.listarEncuestas(), estudiantes: getEstudiantesEnSala(sala.id) })
+
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
 
   socket.on('sala:listar_estudiantes', safe(() => {

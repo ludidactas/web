@@ -19,7 +19,6 @@ io.of('/polls/profe').use(conSession).use(esProfe)
     handlersEncuestasProfe(socket)
   })
 
-
 io.of('/polls/admin').use(conSession).use(esAdmin)
   .on('connect_error', (error) => { console.log(`❌ Error en /polls/admin:`, error.message) })
   .on('connection', (socket: SocketConSesion) => { handlersAdmin(socket) })

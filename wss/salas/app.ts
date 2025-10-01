@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto"
-import { capitalize, first, mergeDeep, shuffle } from "remeda"
+import { capitalize, first, mergeDeep, omit, shuffle } from "remeda"
 
 import { io, registrarSalaEnServer } from "../server"
 import { getSession, SocketConSesion, SocketProfe } from "../session"
@@ -56,7 +56,7 @@ export const conHandlers = (sala: Sala) => ({
     io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
   },
   /** Devuelve solo la data serializable (sin funciones) */
-  raw: () => sala 
+  raw: () => ({...sala, profe: omit(sala.profe, ['socket'])})
 })
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */

@@ -159,7 +159,7 @@ export function estudianteSala(idSala: string, sessionId: string) {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) { 
-  sala.broadcast('poll:update', { poll: poll }, (poll, socket) => { 
+  sala.broadcast('poll:updated', poll, (poll, socket) => { 
     if (socket.data.session.rol === RolEncuesta.Estudiante) {
       return hidratar(sala, poll as Encuesta, socket.data.session.sessionId)
     }

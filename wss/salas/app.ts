@@ -52,8 +52,11 @@ export const conHandlers = (sala: Sala) => ({
   /** Envía a admin, profe y estudiantes de la sala */
   broadcast: (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => any = data => data) => {
     io.of('/polls/admin').sockets.forEach(s => { s.emit(event, mapper(data, s)) })
+
     sala.profe.socket.emit(event, mapper(data, sala.profe.socket))
-    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach((socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
+
+    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach(
+      (socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
   },
   /** Devuelve solo la data serializable (sin funciones) */
   raw: () => ({...sala, profe: omit(sala.profe, ['socket'])})

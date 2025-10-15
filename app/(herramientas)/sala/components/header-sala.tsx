@@ -27,7 +27,7 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
         </div>
       </div>
       {children}
-      <div className="justify-items-end">
+      <div className="flex justify-end">
       {btnLogout}
       </div>
     </div>

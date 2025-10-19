@@ -102,7 +102,6 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
       socket.on('sala:estudiantes', setEstudiantes)
 
       socket.on('sala:estudiante_conectado', (estudiante: Estudiante) => {
-        console.log('Estudiante conectado', estudiante)
         toast.success(`Estudiante conectado: ${estudiante.nombre}`)
         addEstudiante(estudiante)
       })

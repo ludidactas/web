@@ -22,7 +22,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-h
 
 
 export default function EncuestasAdmin() {
-  const { linkSala, estado } = useEncuestaProfe()
+  const { linkSala, estado, socket } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -54,7 +54,6 @@ export default function EncuestasAdmin() {
 
       <div className="flex gap-2 justify-center">
         <div className="rounded-xl flex w-auto">
-          {/* Link de sala */}
           <div className="w-[25em] md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
 
             {/* Lista de Participantes Mobile */}

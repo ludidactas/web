@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto"
-import { capitalize, first, mergeDeep, omit, shuffle } from "remeda"
+import { capitalize, first, mergeDeep, shuffle } from "remeda"
 
 import { io, registrarSalaEnServer } from "../server"
 import { getSession, SocketConSesion, SocketProfe } from "../session"
@@ -16,7 +16,6 @@ export interface Sala {
   id: string
   profe: {
     email: string
-    socket: SocketProfe
     nombre?: string
   }
   polls: Map<string, Encuesta>
@@ -32,6 +31,9 @@ export const salas = new Map<string, Sala>()
 // Maps para relaciones
 export const owners_salas = new Map<string, string>()
 export const salas_owners = new Map<string, string>()
+
+// Map email_profe: socket
+export const sockets_profes = new Map<string, SocketProfe>()
 
 export const conHandlers = (sala: Sala) => ({
   ...sala,
@@ -53,18 +55,30 @@ export const conHandlers = (sala: Sala) => ({
   broadcast: (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => any = data => data) => {
     io.of('/polls/admin').sockets.forEach(s => { s.emit(event, mapper(data, s)) })
 
-    sala.profe.socket.emit(event, mapper(data, sala.profe.socket))
+    // Informamos al profe
+    const sock_profe = sockets_profes.get(sala.profe.email)
+    if(!sock_profe) throw new Error(`Profe ${sala.profe.email} no tiene socket!`) 
+    sock_profe.emit(event, mapper(data, sock_profe))
 
     io.of(`/polls/${sala.id}/estudiante`).sockets.forEach(
       (socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
   },
+  socketProfe: () => {
+    const sock = sockets_profes.get(sala.profe.email)
+    if (!sock) throw new Error(`Socket de profe ${sala.profe.email} no encontrado! D:`)
+    return sock
+  },
   /** Devuelve solo la data serializable (sin funciones) */
-  raw: () => ({...sala, profe: omit(sala.profe, ['socket'])})
+  raw: () => sala
 })
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-export const obtenerOCrearSala = (socket: SocketProfe) => {
+export const obtenerOCrearSala = (socket: SocketProfe): ReturnType<typeof conHandlers> => {
   const email = socket.data.user.email
+
+  // Registramos que el profe nos está hablando desde este socket:
+  sockets_profes.set(email, socket)
+
   if (!owners_salas.has(email)) {
     const sala = crearSala(socket)
     registrarSalaEnServer(sala.id)
@@ -96,12 +110,12 @@ export const crearSala = (socket: SocketProfe) => {
   // Le creamos los buffers
   salas.set(id, {
     id,
-    profe: { socket, email, nombre: config_sala.nombre_profe },
+    profe: { email, nombre: config_sala.nombre_profe },
     polls: new Map<string, Encuesta>(),
     votantes: new Map<string, Set<string>>(),
     votos: new Map<string, Map<string, string>>(),
     estudiantes: new Map<string, boolean>(),
-    config: config_sala
+    config: config_sala,
   })
 
   // Registramos owners
@@ -147,7 +161,7 @@ export const getSalaByEmailProfe = (email: string) => {
 
 /** Devuelve el socket de un profe por id de sala (el owner) */
 export const getSocketProfeDeSala = (salaId: string) => {
-  return getSalaById(salaId).profe.socket
+  return getSalaById(salaId).socketProfe
 }
 
 export const getEstudiantesEnSala = (salaId: string) => {

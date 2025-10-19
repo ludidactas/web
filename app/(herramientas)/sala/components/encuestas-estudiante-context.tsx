@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
-import { useEncuestaStore } from '../../encuestas/components/encuestas-store'
+import { useEncuestaStore } from './encuestas-store'
 import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { RolEncuesta } from '@/wss/tipos'
 

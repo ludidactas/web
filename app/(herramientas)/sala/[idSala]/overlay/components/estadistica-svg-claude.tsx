@@ -2,18 +2,8 @@
 import React, { useState, useEffect, ReactNode } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { Encuesta, Opcion } from '@/wss/tipos'
 
-// Tipos para nuestros datos
-interface Opcion {
-  id: string
-  texto: string
-  votos: number
-}
-
-interface Encuesta {
-  pregunta: string
-  opciones: Opcion[]
-}
 
 interface EstadisticaSvgProps {
   data: Encuesta[]
@@ -32,10 +22,15 @@ export default function EstadisticaLiveSvg() {
 
 // Componente principal con SVG artesanal
 export function EstadisticaSvg({ data }: EstadisticaSvgProps) {
+  const encuesta = data.find((e) => e.isFocused) || data[0]
   return (
     <>
-      {data.length > 0 && <EncuestaSVG encuesta={data[0]} />}
-
+      {data.length > 0 && <EncuestaSVG encuesta={encuesta} />}
+      {data.length == 0 && (
+        <div className="flex flex-col items-center justify-center h-64">
+          <p className="text-gray-500">No hay datos de encuestas disponibles.</p>
+        </div>
+      )}
       {/* {data.map((encuesta, encuestaIdx) => (
         <EncuestaSVG key={encuestaIdx} encuesta={encuesta} />
       ))} */}
@@ -242,7 +237,7 @@ function BarraEstadistica({
 
 // Componente de ejemplo con datos de prueba
 export function TestApp() {
-  const [data, setData] = useState<Encuesta[]>([
+  const [data, setData] = useState<Partial<Encuesta>[]>([
     {
       pregunta: '¿Cuál es tu lenguaje de programación favorito?',
       opciones: [
@@ -269,7 +264,7 @@ export function TestApp() {
     setData((prev) =>
       prev.map((encuesta) => ({
         ...encuesta,
-        opciones: encuesta.opciones.map((opcion) => ({
+        opciones: encuesta.opciones!.map((opcion) => ({
           ...opcion,
           votos: Math.floor(Math.random() * 60) + 5,
         })),
@@ -321,7 +316,7 @@ export function TestApp() {
           </div>
         </div>
 
-        <EstadisticaSvg data={data} />
+        <EstadisticaSvg data={data as Encuesta[]} />
 
       </div>
     </div>

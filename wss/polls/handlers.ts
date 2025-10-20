@@ -4,7 +4,7 @@ import { getEmailProfeDeSala, getSalaByEmailProfe, getSalaById } from "../salas/
 import { SocketEstudiante, SocketProfe } from "../session"
 import { estudianteSala, broadcastPoll, profeSala } from "./app"
 
-export const handlersEncuestasProfe = (socket: SocketProfe) => { 
+export const handlersEncuestasProfe = (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
   const sala = getSalaByEmailProfe(socket.data.user.email)
@@ -29,6 +29,13 @@ export const handlersEncuestasProfe = (socket: SocketProfe) => {
   socket.on('poll:close', safe(({ pollId }) => broadcastPoll(sala, profe.updatePoll(pollId, { isOpen: false }))))
   socket.on('poll:publish', safe(({ pollId }) => broadcastPoll(sala, profe.updatePoll(pollId, { isPublished: true }))))
   socket.on('poll:hide', safe(({ pollId }) => broadcastPoll(sala, profe.updatePoll(pollId, { isPublished: false }))))
+  socket.on('poll:focus', safe(({ pollId }) => {
+    // Si ya hay una focuseada, la desfocuseamos
+    const encuestaFocuseada = sala.polls.values().find(e => e.isFocused)
+    if (encuestaFocuseada) broadcastPoll(sala, profe.updatePoll(encuestaFocuseada.id, { isFocused: false }))
+    // Focuseamos
+    broadcastPoll(sala, profe.updatePoll(pollId, { isFocused: true }))
+  }))
 
   socket.on('poll:delete', safe(({ pollId }) => {
     profe.deletePoll({ pollId })

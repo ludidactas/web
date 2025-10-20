@@ -5,9 +5,19 @@ import EncuestasIcon from '@/svg/encuestas.svg'
 import { Encuesta } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, SquareCheckBig, Users, X, Eraser, Send, CirclePlus, MessageCircleQuestionIcon, Download } from 'lucide-react'
+import {
+  Copy,
+  SquareCheckBig,
+  Users,
+  X,
+  Eraser,
+  Send,
+  CirclePlus,
+  MessageCircleQuestionIcon,
+  Download,
+} from 'lucide-react'
 import Link from 'next/link'
-import { PropsWithChildren, useState } from 'react'
+import { ComponentProps, PropsWithChildren, useState } from 'react'
 import { useCopyToClipboard } from 'usehooks-ts'
 import { useEncuestaProfe } from './encuestas-profe-context'
 import { ScrollBar } from '@/components/ui/scroll-area'
@@ -18,8 +28,6 @@ import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
 import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
-
-
 
 export default function EncuestasAdmin() {
   const { linkSala, estado } = useEncuestaProfe()
@@ -49,7 +57,6 @@ export default function EncuestasAdmin() {
       <div className="flex gap-2 justify-center">
         <div className="rounded-xl flex w-auto">
           <div className="w-[25em] md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
-
             {/* Lista de Participantes Mobile */}
             <div className="block lg:hidden justify-self-end">
               <ListaMobile>
@@ -95,29 +102,23 @@ export default function EncuestasAdmin() {
                 </p>
               </div>
             )}
-
           </div>
         </div>
-
 
         <div className="hidden lg:block">
           <div className="sticky top-0 flex flex-col gap-4 bg-white rounded-xl h-max p-8">
             <ListaEstudiantes />
           </div>
         </div>
-
       </div>
-
     </>
   )
 }
-
 
 const ListaEstudiantes = () => {
   const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
-
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -136,103 +137,109 @@ const ListaEstudiantes = () => {
   }
 
   const handleExportToExcel = () => {
-
     // Prepara los datos para Excel
     const datosParaExcel = estudiantes.map((e) => ({
       Nombre: e.nombre || 'Sin nombre',
       Email: e.email || 'Sin email',
       DNI: e.dni || 'Sin DNI',
     }))
-  
+
     exportarPlanilla(datosParaExcel)
   }
 
-   
+  const datosEstudiantes = estudiantes
+    .map((e) => (e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`))
+    .join('\n')
 
-  const datosEstudiantes = estudiantes.map((e) => e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`).join('\n')
+  return (
+    <>
+      <div className="flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl">
+        <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
+          <Users size={30} />
+          Participantes
+        </h1>
 
-  return <>
-    <div className='flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl'>
-
-      <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
-        <Users size={30} />
-        Participantes
-      </h1>
-
-      {/* Botones para limpiar y copiar  */}
-      <div className='flex gap-1'>
-        <HoverCard>
-          <HoverCardTrigger>
-            <span className='flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110' onClick={limpiarEstudiantesSala}>
-              <Eraser size={20} />
-            </span>
-          </HoverCardTrigger>
-          <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Limpiar lista</p></HoverCardContent>
-        </HoverCard>
-        <HoverCard>
-          <HoverCardTrigger>
-            <button className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110' onClick={handleCopy(datosEstudiantes)}>
-              {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent> <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Copiar lista</p></HoverCardContent>
-        </HoverCard>
-        <HoverCard>
-          <HoverCardTrigger>
-            <button
-              className='items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed'
-              onClick={handleExportToExcel}
-              disabled={estudiantes.length === 0}
-            >
-              <Download size={20} />
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent>
-            <p className='text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50'>Exportar a Excel</p>
-          </HoverCardContent>
-        </HoverCard>
+        {/* Botones para limpiar y copiar  */}
+        <div className="flex gap-1">
+          <HoverCard>
+            <HoverCardTrigger>
+              <span
+                className="flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110"
+                onClick={limpiarEstudiantesSala}
+              >
+                <Eraser size={20} />
+              </span>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              {' '}
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Limpiar lista</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger>
+              <button
+                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110"
+                onClick={handleCopy(datosEstudiantes)}
+              >
+                {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              {' '}
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Copiar lista</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger>
+              <button
+                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleExportToExcel}
+                disabled={estudiantes.length === 0}
+              >
+                <Download size={20} />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Exportar a Excel</p>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
       </div>
+      {estudiantes.length === 0 && <p className="text-slate-400 italic">Ningún estudiante conectado aún...</p>}
 
-    </div>
-    {estudiantes.length === 0 && (
-      <p className="text-slate-400 italic">Ningún estudiante conectado aún...</p>
-    )}
-
-    {estudiantes.length > 0 && (
-      <ul className="flex flex-col gap-2 p-2 rounded-xl">
-        {estudiantes.map((e) => (
-          <li
-            key={e.sessionId}
-            className={cn({
-              'text-black flex gap-2 ': e.conectado,
-              'text-slate-400 flex gap-2 grayscale': !e.conectado,
-            })}
-          >
-            {/* Avatar */}
-            <div
-              className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
-              style={{
-                backgroundImage: `url(${e.avatar})`,
-                backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
-              }}
+      {estudiantes.length > 0 && (
+        <ul className="flex flex-col gap-2 p-2 rounded-xl">
+          {estudiantes.map((e) => (
+            <li
+              key={e.sessionId}
+              className={cn({
+                'text-black flex gap-2 ': e.conectado,
+                'text-slate-400 flex gap-2 grayscale': !e.conectado,
+              })}
             >
-              {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
-              {!e.avatar && getInitials(e.nombre || 'Anonimo')}
-            </div>
-            {/* Nombre, email y DNI */}
-            <div className="flex flex-col">
-              <span>{e.nombre}</span>
-              <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
-              <span>{e.dni ?? 'Sin DNI'}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    )}
-
-
-  </>
-
+              {/* Avatar */}
+              <div
+                className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+                style={{
+                  backgroundImage: `url(${e.avatar})`,
+                  backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
+                }}
+              >
+                {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
+                {!e.avatar && getInitials(e.nombre || 'Anonimo')}
+              </div>
+              {/* Nombre, email y DNI */}
+              <div className="flex flex-col">
+                <span>{e.nombre}</span>
+                <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
+                <span>{e.dni ?? 'Sin DNI'}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
 }
 
 const ListaMobile = ({ children }: PropsWithChildren) => {
@@ -242,26 +249,24 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
     setOpen(isOpen)
   }
 
-  return <Dialog open={open} onOpenChange={handleOpenChange}>
-    <DialogTrigger>
-      <h1 className="flex gap-2 text-xl md:text-2xl font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
-        <Users className='w-30 self-center' />
-        Participantes
-      </h1>
-    </DialogTrigger>
-    <DialogContent className='rounded-xl'>
-      <DialogTitle />
-      {children}
-      <DialogClose className='justify-items-center'>
-        <X size={40} className='bg-indigo-500 text-white  rounded-full p-2' />
-      </DialogClose>
-    </DialogContent>
-
-  </Dialog>
-
-
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger>
+        <h1 className="flex gap-2 text-xl md:text-2xl font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
+          <Users className="w-30 self-center" />
+          Participantes
+        </h1>
+      </DialogTrigger>
+      <DialogContent className="rounded-xl">
+        <DialogTitle />
+        {children}
+        <DialogClose className="justify-items-center">
+          <X size={40} className="bg-indigo-500 text-white  rounded-full p-2" />
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  )
 }
-
 
 function Status() {
   const { estado } = useEncuestaProfe()
@@ -279,8 +284,6 @@ function Status() {
       ) : (
         <span className="text-red-700">Desconectado</span>
       )}
-
-
     </div>
   )
 }
@@ -291,7 +294,6 @@ function ListaEncuestas() {
 
   return (
     <ScrollArea className="max-h-screen overflow-x-auto">
-
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -302,7 +304,8 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta } = useEncuestaProfe()
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta, enfocarPregunta } =
+    useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -321,25 +324,38 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         console.error('Failed to copy!', error)
       })
   }
+
+  const estado = encuesta.isFocused ? 'Enfocada' : (
+    encuesta.isOpen ? 'Abierta' : 'Cerrada'
+  )
+
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
       {/* Titulo y status */}
       <div className="flex gap-4 bg-white rounded-xl p-4 items-start justify-between">
         <div className="flex gap-4 md:p-4 items-center">
-          <MessageCircleQuestionIcon size={40} className='self-start text-indigo-500' />
+          <MessageCircleQuestionIcon size={40} className="self-start text-indigo-500" />
           {/* <LdSvg className='w-[10%]' SvgComponent={PollsIcon} /> */}
           <h3 className="w-[90%] text-sm break-all md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col w-20 md:gap-2 items-end">
           <span
-            className={`text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-rose-800'}`}
+            className={cn('text-sm', {
+              'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
+              'text-rose-800': estado === 'Cerrada',
+              'text-violet-700 font-bold animate-pulse duration-500': estado === 'Enfocada',
+            })}
           >
-            {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
+            {estado}
           </span>
           <span className="text-[0.6rem] break-all text-slate-400 text-right">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
-          <button className='mt-2' title="Copiar pregunta" onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}>
+          <button
+            className="mt-2"
+            title="Copiar pregunta"
+            onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}
+          >
             {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
           </button>
         </div>
@@ -349,7 +365,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
             <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
-              <p className='break-all'>{opcion.texto}</p>
+              <p className="break-all">{opcion.texto}</p>
               <p className="text-emerald-500 font-bold w-40 text-right content-center"> {opcion.votos} votos </p>
             </div>
           </li>
@@ -357,55 +373,71 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       </ol>
 
       {/* Acciones */}
-
-      {/* Publicar/esconder */}
       <div className="flex items-center justify-center gap-4 my-2">
+        {/* Enfocar */}
+        {!encuesta.isFocused && (
+          <BotonEncuesta
+            className="bg-violet-600 text-white px-4 py-2 rounded disabled:bg-violet-300"
+            onClick={() => enfocarPregunta(encuesta.id)}
+            disabled={!encuesta.isPublished}
+          >
+            Enfocar
+          </BotonEncuesta>
+        )}
+
+        {/* Publicar/esconder */}
         {!encuesta.isPublished && (
-          <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-emerald-500 text-white px-4 py-2 rounded"
+          <BotonEncuesta
+            className="bg-emerald-500 text-white px-4 py-2 rounded"
             onClick={() => publicarPregunta(encuesta.id)}
           >
             Publicar
-          </button>
+          </BotonEncuesta>
         )}
         {encuesta.isPublished && (
-          <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
+          <BotonEncuesta
+            className="bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
             onClick={() => esconderPregunta(encuesta.id)}
           >
             Esconder
-          </button>
+          </BotonEncuesta>
         )}
 
         {/* Abrir/Cerrar */}
         {!encuesta.isOpen && (
-          <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+          <BotonEncuesta
+            className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
             onClick={() => abrirPregunta(encuesta.id)}
           >
             Abrir
-          </button>
+          </BotonEncuesta>
         )}
         {encuesta.isOpen && (
-          <button
-            className="w-20 text-xs md:text-xl md:w-32 bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
+          <BotonEncuesta
+            className="bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
             onClick={() => cerrarPregunta(encuesta.id)}
           >
             Cerrar
-          </button>
+          </BotonEncuesta>
         )}
 
         {/* Eliminar */}
-        <button
-          className="w-20 text-xs md:text-xl md:w-32 bg-rose-800/90 text-white px-4 py-2 rounded"
+        <BotonEncuesta
+          className="bg-rose-800/90 text-white px-4 py-2 rounded"
           onClick={() => borrarPregunta(encuesta.id)}
         >
           Eliminar
-        </button>
+        </BotonEncuesta>
       </div>
     </div>
   )
 }
+
+const BotonEncuesta = ({ children, className, ...props }: ComponentProps<'button'>) => (
+  <button className={cn('w-20 text-xs md:text-xl md:w-32 px-2 md:px-4 py-2 rounded border', className)} {...props}>
+    {children}
+  </button>
+)
 
 function AgregarPregunta() {
   const { enviarPregunta } = useEncuestaProfe()
@@ -432,11 +464,13 @@ function AgregarPregunta() {
   }
 
   const postearPregunta = () => {
-    enviarPregunta(pregunta, respuestas).then(() => {
-      toast.success(`Encuesta creada!`)
-      setPregunta('')
-      setRespuestas(['', ''])
-    }).catch(msg => toast.error(msg))
+    enviarPregunta(pregunta, respuestas)
+      .then(() => {
+        toast.success(`Encuesta creada!`)
+        setPregunta('')
+        setRespuestas(['', ''])
+      })
+      .catch((msg) => toast.error(msg))
   }
 
   return (
@@ -476,14 +510,15 @@ function AgregarPregunta() {
         onClick={agregarRespuesta}
         tabIndex={respuestas.length + 2}
       >
-        <CirclePlus size={20} />Agregar opción
+        <CirclePlus size={20} />
+        Agregar opción
       </button>
       <button
         className="flex place-content-center items-center font-semibold gap-2 bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
         onClick={postearPregunta}
         tabIndex={respuestas.length + 2}
       >
-        <Send size={20} />  Enviar pregunta
+        <Send size={20} /> Enviar pregunta
       </button>
     </div>
   )

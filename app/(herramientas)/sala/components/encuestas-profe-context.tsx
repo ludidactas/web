@@ -65,6 +65,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     socket!.emit('poll:hide', { pollId: encuestaId })
   }
 
+  /** Postea al sever la acción de enfocar */
+  const enfocarPregunta = (encuestaId: string) => {
+    socket!.emit('poll:focus', { pollId: encuestaId })
+  }
+
   /** Limpia la lista de estudiantes */
   const limpiarEstudiantesSala = () => { 
     socket!.emit('sala:limpar_estudiantes_sala')
@@ -141,6 +146,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     abrirPregunta,
     publicarPregunta,
     esconderPregunta,
+    enfocarPregunta,
     limpiarEstudiantesSala,
   }
 }

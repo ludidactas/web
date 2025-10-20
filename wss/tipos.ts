@@ -3,10 +3,17 @@
 export interface Encuesta {
   id: string
   pregunta: string
-  opciones: { id: string; texto: string; votos: number }[]
+  opciones: Opcion[]
   createdAt: string
   isOpen: boolean
   isPublished: boolean
+  isFocused: boolean
+}
+
+export interface Opcion {
+  id: string
+  texto: string
+  votos: number
 }
 
 export interface EncuestaHidratada extends Encuesta {

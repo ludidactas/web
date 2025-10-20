@@ -32,6 +32,7 @@ export function profeSala(email: string){
       createdAt: new Date().toISOString(),
       isOpen: true,
       isPublished: false,
+      isFocused: false
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
@@ -70,10 +71,11 @@ export function profeSala(email: string){
     if (update.isOpen === false) assertPollIsOpen(poll)
     if (update.isPublished === true) assertPollIsHidden(poll)
     if (update.isPublished === false) assertPollIsPublished(poll)
+    if (update.isFocused === true) assertPollIsUnfocused(poll)
 
     const nueva = merge(poll, update) as Encuesta
     polls.set(pollId, nueva)
-    console.log(`🔔 Encuesta updateada: ${poll.id}`)
+    console.log(`🔔 Encuesta ${poll.id} updateada:`, JSON.stringify(update))
 
     return nueva
   }
@@ -219,4 +221,8 @@ function assertPollIsPublished(poll: Encuesta) {
 
 function assertPollIsHidden(poll: Encuesta) {
   if (poll.isPublished) throw new Error('La encuesta ya está oculta!')
+}
+
+function assertPollIsUnfocused(poll: Encuesta) {
+  if (poll.isFocused) throw new Error('La encuesta ya está focuseada!')
 }

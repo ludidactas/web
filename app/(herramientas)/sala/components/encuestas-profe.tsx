@@ -22,17 +22,14 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-h
 
 
 export default function EncuestasAdmin() {
-  const { linkSala, estado, socket } = useEncuestaProfe()
+  const { linkSala, estado } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
-
 
   const handleCopy = (text: string) => () => {
     copy(text)
       .then(() => {
         setJustCopied(true)
-
-        console.log(_copiedText)
 
         setTimeout(() => {
           setJustCopied(false)
@@ -42,9 +39,6 @@ export default function EncuestasAdmin() {
         console.error('Failed to copy!', error)
       })
   }
-
-
-
 
   return (
     <>
@@ -318,8 +312,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
     copy(text)
       .then(() => {
         setJustCopied(true)
-
-        console.log(_copiedText)
 
         setTimeout(() => {
           setJustCopied(false)

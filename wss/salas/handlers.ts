@@ -1,4 +1,5 @@
 
+import { Socket } from "socket.io"
 import { conErrorHandling } from "../middleware"
 import { profeSala } from "../polls/app"
 import { SocketConSesion, SocketEstudiante, SocketProfe } from "../session"
@@ -37,7 +38,7 @@ export const handlersSalaProfe = (socket: SocketProfe) => {
 
 }
 
-export const handlersSalaEstudiante = (socket: SocketEstudiante, idSala: string) => { 
+export const handlersSalaEstudiante = (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
   const user = socket.data.session.nombre
@@ -58,6 +59,18 @@ export const handlersSalaEstudiante = (socket: SocketEstudiante, idSala: string)
     sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.sessionId })
   }))
 
+}
+
+/** Handlers para exponer info pública de la sala */
+export const handlersSalaPublico = (socket: Socket, idSala: string) => {
+  const safe = conErrorHandling(socket)
+  const emitir = safe(() => {
+    const sala = getSalaById(idSala)
+    const nombre = `de ${sala.profe.nombre ?? sala.profe.email}`
+    socket.emit('sala:nombre', nombre)
+  })
+
+  emitir()
 }
 
 export const handlersAdmin = (socket: SocketConSesion) => {

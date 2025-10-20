@@ -47,10 +47,15 @@ export interface PasaporteTester {
   nombre?: string
 }
 
+export interface PasaportePublico { 
+  rol: RolEncuesta.Publico
+  idSala: string
+}
+
 /**
  * Credenciales para establecer una sesión con el server
  */
-export type Pasaporte = PasaporteEstudiante | PasaporteProfe | PasaporteTester
+export type Pasaporte = PasaporteEstudiante | PasaporteProfe | PasaporteTester | PasaportePublico
 
 export const useConexionStore = create<Estado>((set, get) => ({
   socket: null,

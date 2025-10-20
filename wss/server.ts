@@ -1,6 +1,6 @@
 import { Socket } from "socket.io"
 import { mount } from "./mount"
-import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe } from "./salas/handlers"
+import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from "./salas/handlers"
 import { conSession, esAdmin, esProfe, SocketConSesion, SocketEstudiante, SocketProfe } from "./session"
 import { handlersTest } from "./test/handlers"
 import { salas_owners } from "./salas/app"
@@ -54,5 +54,11 @@ export const registrarSalaEnServer = (salaId: string) => {
     .on('connection', (socket: SocketEstudiante) => {
       handlersSalaEstudiante(socket, salaId)
       handlersEncuestasEstudiante(socket, salaId)
+    })
+
+  io.of(`/polls/${salaId}/publico`)
+    .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/publico:`, error.message) })
+    .on('connection', (socket: SocketEstudiante) => {
+      handlersSalaPublico(socket, salaId)
     })
 }

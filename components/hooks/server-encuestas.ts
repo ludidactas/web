@@ -1,40 +1,23 @@
 import { PollsServerSession } from "@/wss/session"
 import { RolEncuesta } from "@/wss/tipos"
 import { io, Socket } from "socket.io-client"
+import { Pasaporte, PasaporteEstudiante, PasaporteProfe, PasaportePublico, PasaporteTester } from "./use-conexion-wss"
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
 }
 
-interface SocketServerTestAuth { 
-  rol: RolEncuesta.Tester,
-  url: string,
-  nombre?: string
-}
-
-interface SocketServerProfeAuth { 
-  rol: RolEncuesta.Profe,
-  token: string,
-}
-
-interface SocketServerAnonAuth { 
-  rol: RolEncuesta.Estudiante,
-  idSala: string,
-  nombre?: string,
-  icono?: string
-}
-
-type SocketServerAdminAuth = SocketServerProfeAuth
 
 /** Auth que espera el server de sockets */
-export type SocketServerAuth = {sessionId?: string} & (SocketServerTestAuth | SocketServerProfeAuth | SocketServerAnonAuth)
+export type SocketServerAuth = {sessionId?: string} & Pasaporte
 
 /** Endpoints para cada rol */
 export const conectores = {
-  [RolEncuesta.Tester]: (auth: SocketServerAdminAuth, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Admin]: (auth: SocketServerAdminAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Profe]: (auth: SocketServerProfeAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Estudiante]: (auth: SocketServerAnonAuth) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Profe]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Publico]: (auth: PasaportePublico) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/publico`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
@@ -50,8 +33,9 @@ export async function handshake(auth: SocketServerAuth) {
     case RolEncuesta.Estudiante:
       sock = conectores[RolEncuesta.Estudiante](auth)
       break
-    // case RolEncuesta.Admin:
-    //   throw new Error("No implementado")
+    case RolEncuesta.Publico:
+      sock = conectores[RolEncuesta.Publico](auth)
+      break
   }
 
   return sock

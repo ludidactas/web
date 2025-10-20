@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
+import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
+import { RolEncuesta } from '@/wss/tipos'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -23,7 +25,6 @@ export default function EncuestasEstudiantePage({
   idSala: string
   btnLoginGoogle: ReactNode
   btnLogoutGoogle: ReactNode
-  className?: string
 }) {
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const [dni, setDNI] = useState<string | undefined>(undefined)
@@ -36,6 +37,15 @@ export default function EncuestasEstudiantePage({
   const { data: nextSession, status } = useSession()
 
   const nombreFinal = status === 'authenticated' ? nextSession?.user?.name || 'Usuario' : nombre
+
+  const { socket } = useServerWebsockets({ rol: RolEncuesta.Publico, idSala })
+  const [nombreSala, setNombreSala] = useState<string>()
+
+  // Al obtener un socket suscribimos a sus señales
+  useEffect(() => { 
+    if(socket) socket.on('sala:nombre', setNombreSala)
+  }, [socket])
+
 
   useEffect(() => {
     setIsClient(true)
@@ -93,8 +103,8 @@ export default function EncuestasEstudiantePage({
           </div>
           <p className="w-80">
             {' '}
-            Estás a punto de ingresar a la sala <span className="text-teal-500">{idSala}</span>. Te podés conectar con
-            tu nombre o con tu cuenta de google
+            Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala ?? idSala}</span>. Te podés
+            conectar con tu nombre o con tu cuenta de google
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 pt-8">
@@ -125,11 +135,7 @@ export default function EncuestasEstudiantePage({
                 }}
               />
             </div>
-            <Button
-              className=" bg-indigo-500/90 font-semibold"
-              type="button"
-              onClick={handleConectarse}
-            >
+            <Button className=" bg-indigo-500/90 font-semibold" type="button" onClick={handleConectarse}>
               Conectarse con nombre y DNI
             </Button>
             <span>o</span>

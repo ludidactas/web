@@ -23,5 +23,6 @@ export enum RolEncuesta {
   Admin = 'admin',
   Profe = 'profe',
   Estudiante = 'estudiante',
-  Tester = 'tester'
+  Tester = 'tester',
+  Publico = 'publico',
 }

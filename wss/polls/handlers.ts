@@ -54,7 +54,6 @@ export const handlersEncuestasEstudiante = (socket: SocketEstudiante, idSala: st
 
   console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
 
-
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', estudiante.listar())
 

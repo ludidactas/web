@@ -137,8 +137,10 @@ export default function EncuestasEstudiantePage({
             <Button className=" bg-indigo-500/90 font-semibold" type="button" onClick={handleConectarse}>
               Conectarse con nombre y DNI
             </Button>
-            <span>o</span>
-            {btnLoginGoogle}
+
+            {/* Descomentar para volver a habilitar login de google */}
+            {/* <span>o</span>
+            {btnLoginGoogle} */}
           </div>
         </div>
       </div>

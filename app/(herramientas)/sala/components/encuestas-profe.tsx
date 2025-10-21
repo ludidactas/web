@@ -28,6 +28,7 @@ import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
 import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
+import { Icon } from '@iconify/react'
 
 export default function EncuestasAdmin() {
   const { linkSala, estado } = useEncuestaProfe()
@@ -231,8 +232,10 @@ const ListaEstudiantes = () => {
               {/* Nombre, email y DNI */}
               <div className="flex flex-col">
                 <span>{e.nombre}</span>
-                <span className="text-teal-500">{e.email ?? `Anónimo`}</span>
-                <span>{e.dni ?? 'Sin DNI'}</span>
+                {/* <span className="text-teal-500">{e.email ?? `Anónimo`}</span> */}
+                {e.dni && <span className="text-teal-500">{e.dni}</span>}
+                {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
+                {!e.dni && !e.email && <span className="text-slate-400 italic">Anónimo</span>}
               </div>
             </li>
           ))}
@@ -338,7 +341,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           {/* <LdSvg className='w-[10%]' SvgComponent={PollsIcon} /> */}
           <h3 className="w-[90%] text-sm break-all md:text-xl">{encuesta.pregunta}</h3>
         </div>
-        <div className="flex flex-col w-20 md:gap-2 items-end">
+        <div className="flex flex-col w-20 md:gap-1 items-end">
           <span
             className={cn('text-sm', {
               'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
@@ -348,7 +351,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           >
             {estado}
           </span>
-          <span className="text-[0.6rem] break-all text-slate-400 text-right">
+          <span className="text-[0.6rem] whitespace-nowrap text-slate-400 text-right">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
           <button
@@ -380,9 +383,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
             className="bg-violet-600 text-white px-4 py-2 rounded disabled:bg-violet-300"
             onClick={() => enfocarPregunta(encuesta.id)}
             disabled={!encuesta.isPublished}
-          >
-            Enfocar
-          </BotonEncuesta>
+            texto='Enfocar'
+          icon='material-symbols:center-focus-weak-rounded'
+          />
         )}
 
         {/* Publicar/esconder */}
@@ -390,17 +393,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <BotonEncuesta
             className="bg-emerald-500 text-white px-4 py-2 rounded"
             onClick={() => publicarPregunta(encuesta.id)}
-          >
-            Publicar
-          </BotonEncuesta>
+            texto='Publicar'
+            icon='mdi:show'
+          />
         )}
         {encuesta.isPublished && (
           <BotonEncuesta
             className="bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
             onClick={() => esconderPregunta(encuesta.id)}
-          >
-            Esconder
-          </BotonEncuesta>
+            texto='Esconder'
+            icon='mdi:hide'
+          />
         )}
 
         {/* Abrir/Cerrar */}
@@ -408,33 +411,43 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <BotonEncuesta
             className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
             onClick={() => abrirPregunta(encuesta.id)}
-          >
-            Abrir
-          </BotonEncuesta>
+            texto='Abrir'
+            icon='mdi:hand-open'
+          />
         )}
         {encuesta.isOpen && (
           <BotonEncuesta
             className="bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
             onClick={() => cerrarPregunta(encuesta.id)}
-          >
-            Cerrar
-          </BotonEncuesta>
+            texto='Cerrar'
+            icon='mdi:hand-back-left'
+          />
         )}
 
         {/* Eliminar */}
         <BotonEncuesta
           className="bg-rose-800/90 text-white px-4 py-2 rounded"
           onClick={() => borrarPregunta(encuesta.id)}
-        >
-          Eliminar
-        </BotonEncuesta>
+          texto='Eliminar'
+          icon="mdi:trash-can"
+        />
       </div>
     </div>
   )
 }
 
-const BotonEncuesta = ({ children, className, ...props }: ComponentProps<'button'>) => (
+const BotonEncuesta = ({
+  children,
+  className,
+  texto,
+  icon,
+  ...props
+}: ComponentProps<'button'> & { texto: string; icon: string }) => (
   <button className={cn('w-20 text-xs md:text-xl md:w-32 px-2 md:px-4 py-2 rounded border', className)} {...props}>
+    <span className="hidden md:block">{ texto }</span>
+    <span className="md:hidden w-full flex justify-center">
+      <Icon icon={ icon } />
+    </span>
     {children}
   </button>
 )

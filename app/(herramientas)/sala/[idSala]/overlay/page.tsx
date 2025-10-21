@@ -1,5 +1,5 @@
 import { EncuestaEstudianteProvider } from '../../components/encuestas-estudiante-context'
-import TestEstadisticaApp from './components/estadistica-svg-claude'
+import TestEstadisticaApp from './components/estadistica-svg'
 import { z } from 'zod'
 
 // Validación de query params

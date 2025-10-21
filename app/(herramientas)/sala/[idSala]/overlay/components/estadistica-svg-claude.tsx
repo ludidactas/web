@@ -4,6 +4,7 @@ import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { Encuesta, Opcion } from '@/wss/tipos'
 import { EstadisticaSvgConfig } from '../page'
+import { motion } from 'framer-motion'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
@@ -33,9 +34,23 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
   const maxVotos = Math.max(...encuesta.opciones.map((op) => op.votos))
   const totalVotos = encuesta.opciones.reduce((sum, op) => sum + op.votos, 0)
 
-  encuesta.opciones.sort((a, b) => b.votos - a.votos)
+  // Colores
+  const colores = [
+    'rgb(59, 130, 246)', // blue-500
+    'rgb(16, 185, 129)', // emerald-500
+    'rgb(168, 85, 247)', // purple-500
+    'rgb(245, 101, 101)', // red-400
+    'rgb(251, 191, 36)', // amber-400
+    'rgb(14, 165, 233)', // sky-500
+    'rgb(236, 72, 153)', // pink-500
+    'rgb(34, 197, 94)', // green-500
+  ]
 
-  const { bg , barHeight , barSpacing , titleHeight } = config
+  const ids = encuesta.opciones.map((op) => op.id)
+
+  const ops = encuesta.opciones.toSorted((a, b) => b.votos - a.votos)
+
+  const { bg, barHeight, barSpacing, titleHeight } = config
 
   // Calcular dimensiones
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
@@ -55,19 +70,25 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
         </text>
 
         {/* Barras */}
-        <g transform={`translate(0, ${titleHeight})`}>
-          {encuesta.opciones.map((opcion, idx) => (
+        {ops.map((op) => (
+          <motion.g
+            key={op.id}
+            initial={false}
+            animate={{
+              transform: `translate(0, ${titleHeight + ops.indexOf(op) * barSpacing}px)`,
+            }}
+            transition={{ type: 'spring', stiffness: 120, damping: 20 }} // or use ease: "easeInOut"
+            // transform={`translate(0, ${titleHeight + ops.indexOf(op) * barSpacing})`}
+          >
             <BarraEstadistica
-              key={opcion.id}
-              opcion={opcion}
-              idx={idx}
-              yPosition={idx * barSpacing}
-              maxVotos={maxVotos}
-              totalVotos={totalVotos}
+              percentage={totalVotos > 0 ? op.votos / totalVotos : 0}
+              maxPercentage={maxVotos > 0 ? maxVotos / totalVotos : 0}
+              barColor={colores[ids.indexOf(op.id) % colores.length]}
+              opcion={op}
               barHeight={barHeight}
             />
-          ))}
-        </g>
+          </motion.g>
+        ))}
       </svg>
     </div>
   )
@@ -76,73 +97,42 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
 // Componente individual de barra
 function BarraEstadistica({
   opcion,
-  idx,
-  yPosition,
-  maxVotos,
-  totalVotos,
   barHeight,
+  percentage,
+  maxPercentage,
+  barColor,
 }: {
   opcion: Opcion
-  idx: number
-  yPosition: number
-  maxVotos: number
-  totalVotos: number
+  percentage: number
+  maxPercentage?: number
   barHeight: number
+  barColor: string
   className?: string
   children?: ReactNode
 }) {
   const [animatedWidth, setAnimatedWidth] = useState(0)
 
+  const p = maxPercentage ? (percentage / maxPercentage) : percentage
+
   // Calcular dimensiones
   const maxBarWidth = 400
-  const targetWidth = maxVotos > 0 ? (opcion.votos / maxVotos) * maxBarWidth : 0
-  const percentage = totalVotos > 0 ? (opcion.votos / totalVotos) * 100 : 0
-
-  // Colores
-  const colors = [
-    'rgb(59, 130, 246)', // blue-500
-    'rgb(16, 185, 129)', // emerald-500
-    'rgb(168, 85, 247)', // purple-500
-    'rgb(245, 101, 101)', // red-400
-    'rgb(251, 191, 36)', // amber-400
-    'rgb(14, 165, 233)', // sky-500
-    'rgb(236, 72, 153)', // pink-500
-    'rgb(34, 197, 94)', // green-500
-  ]
-
-  const barColor = colors[idx % colors.length]
+  const targetWidth = p > 0 ? (p) * maxBarWidth : 0
+  const percentage100s = percentage * 100
 
   // Animación de la barra
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimatedWidth(targetWidth)
-    }, idx * 100) // Delay escalonado
+    }, 100) // Delay escalonado
 
     return () => clearTimeout(timer)
-  }, [targetWidth, idx])
+  }, [targetWidth])
 
   // Estado de hover
   const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <g
-      transform={`translate(0, ${yPosition})`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{ cursor: 'pointer' }}
-    >
-      {/* Fondo de la barra */}
-      {/* <rect
-        x="150"
-        y="0"
-        width={maxBarWidth}
-        height={barHeight}
-        fill="#f3f4f6"
-        stroke="#e5e7eb"
-        strokeWidth="1"
-        rx="8"
-      /> */}
-
+    <g onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} style={{ cursor: 'pointer' }}>
       {/* Barra de progreso animada */}
       <rect
         x="150"
@@ -205,7 +195,7 @@ function BarraEstadistica({
         className="fill-white"
         style={{ fontSize: '11px' }}
       >
-        {percentage.toFixed(1)}%
+        {percentage100s.toFixed(1)}%
       </text>
 
       {/* Gradientes para efectos */}

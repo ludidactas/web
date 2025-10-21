@@ -28,17 +28,18 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   } = useEncuestaStore()
 
   /** Postea al server la acción de crear */
-  const enviarPregunta = (pregunta: string, respuestas: string[]) => new Promise<void>((res, rej) => {
-    const nuevaEncuesta: CrearEncuesta = {
-      pregunta,
-      opciones: respuestas,
-    }
+  const enviarPregunta = (pregunta: string, respuestas: string[]) =>
+    new Promise<void>((res, rej) => {
+      const nuevaEncuesta: CrearEncuesta = {
+        pregunta,
+        opciones: respuestas,
+      }
 
-    socket!.emit('poll:create', nuevaEncuesta, (error?: string) => { 
-      if (error) rej(error)
-      res()
+      socket!.emit('poll:create', nuevaEncuesta, (error?: string) => {
+        if (error) rej(error)
+        res()
+      })
     })
-  })
 
   /** Postea al server la acción de borrar */
   const borrarPregunta = (encuestaId: string) => {
@@ -70,8 +71,18 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     socket!.emit('poll:focus', { pollId: encuestaId })
   }
 
+  /** Postea al sever la acción de revelar opciones */
+  const revelarOpciones = (encuestaId: string) => {
+    socket!.emit('poll:reveal', { pollId: encuestaId })
+  }
+
+  /** Postea al sever la acción de desrevelar opciones */
+  const desrevelarOpciones = (encuestaId: string) => {
+    socket!.emit('poll:unreveal', { pollId: encuestaId })
+  }
+
   /** Limpia la lista de estudiantes */
-  const limpiarEstudiantesSala = () => { 
+  const limpiarEstudiantesSala = () => {
     socket!.emit('sala:limpar_estudiantes_sala')
   }
 
@@ -148,14 +159,19 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     esconderPregunta,
     enfocarPregunta,
     limpiarEstudiantesSala,
+    revelarOpciones,
+    desrevelarOpciones,
   }
 }
 
 // Context
 const EncuestaProfeContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
 
-// Provider - El auth viene del server 
-export const EncuestaProfeProvider: React.FC<{ auth: PasaporteProfe; children: React.ReactNode }> = ({ auth, children }) => {
+// Provider - El auth viene del server
+export const EncuestaProfeProvider: React.FC<{ auth: PasaporteProfe; children: React.ReactNode }> = ({
+  auth,
+  children,
+}) => {
   return <EncuestaProfeContext.Provider value={useEncuestaProfeState(auth)}>{children}</EncuestaProfeContext.Provider>
 }
 

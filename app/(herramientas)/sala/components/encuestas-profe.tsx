@@ -307,7 +307,7 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta, enfocarPregunta } =
+  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta, enfocarPregunta, revelarOpciones, desrevelarOpciones } =
     useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
@@ -385,6 +385,24 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
             disabled={!encuesta.isPublished}
             texto='Enfocar'
           icon='material-symbols:center-focus-weak-rounded'
+          />
+        )}
+
+        {/* Revelar/desrevelar */}
+        {!encuesta.isRevealed && (
+          <BotonEncuesta
+            className="bg-yellow-500 text-white px-4 py-2 rounded"
+            onClick={() => revelarOpciones(encuesta.id)}
+            texto='Revelar'
+            icon='mdi:eye'
+          />
+        )}
+        {encuesta.isRevealed && (
+          <BotonEncuesta
+            className="bg-yellow-100 text-black px-2 md:px-4 py-2 rounded border border-yellow-900"
+            onClick={() => desrevelarOpciones(encuesta.id)}
+            texto='Desrevelar'
+            icon='mdi:eye-off'
           />
         )}
 

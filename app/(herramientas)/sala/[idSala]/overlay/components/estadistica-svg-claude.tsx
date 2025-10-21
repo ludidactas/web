@@ -3,57 +3,46 @@ import React, { useState, useEffect, ReactNode } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { Encuesta, Opcion } from '@/wss/tipos'
+import { EstadisticaSvgConfig } from '../page'
 
-
-interface EstadisticaSvgProps {
-  data: Encuesta[]
-}
-
-export default function EstadisticaLiveSvg() {
+export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
+  // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
   const { estado, encuestas, error } = useEncuestaEstudiante()
+  const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
+
   return (
     <div className="min-w-[100vw]">
       {estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-      {estado === StatusDeConexion.Conectado && <EstadisticaSvg data={encuestas ?? []} />}
+      {estado === StatusDeConexion.Conectado && (
+        <>
+          {encuesta && <EncuestaSVG encuesta={encuesta} config={config} />}
+          {!encuesta && (
+            <div className="flex flex-col items-center justify-center h-64">
+              <p className="text-gray-500">No hay datos de encuestas disponibles.</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
 
-// Componente principal con SVG artesanal
-export function EstadisticaSvg({ data }: EstadisticaSvgProps) {
-  const encuesta = data.find((e) => e.isFocused) || data[0]
-  return (
-    <>
-      {data.length > 0 && <EncuestaSVG encuesta={encuesta} />}
-      {data.length == 0 && (
-        <div className="flex flex-col items-center justify-center h-64">
-          <p className="text-gray-500">No hay datos de encuestas disponibles.</p>
-        </div>
-      )}
-      {/* {data.map((encuesta, encuestaIdx) => (
-        <EncuestaSVG key={encuestaIdx} encuesta={encuesta} />
-      ))} */}
-    </>
-  )
-}
-
 // Componente para una encuesta individual
-function EncuestaSVG({ encuesta }: { encuesta: Encuesta }) {
+function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
   const maxVotos = Math.max(...encuesta.opciones.map((op) => op.votos))
   const totalVotos = encuesta.opciones.reduce((sum, op) => sum + op.votos, 0)
 
+  encuesta.opciones.sort((a, b) => b.votos - a.votos)
+
+  const { bg , barHeight , barSpacing , titleHeight } = config
+
   // Calcular dimensiones
-  const barHeight = 40
-  const barSpacing = 60
-  const titleHeight = 40
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
 
   return (
-    <div className="bg-black/40 m-20 w-auto rounded-xl p-6">
-      
+    <div className="m-20 w-auto rounded-xl p-6" style={{ backgroundColor: bg }}>
       <svg className="w-full" viewBox={`0 0 800 ${svgHeight}`} style={{ height: 'auto' }}>
-        
         {/* Título de la encuesta */}
         <text
           x="400"
@@ -76,9 +65,7 @@ function EncuestaSVG({ encuesta }: { encuesta: Encuesta }) {
               maxVotos={maxVotos}
               totalVotos={totalVotos}
               barHeight={barHeight}
-            >
-
-            </BarraEstadistica>
+            />
           ))}
         </g>
       </svg>
@@ -101,8 +88,8 @@ function BarraEstadistica({
   maxVotos: number
   totalVotos: number
   barHeight: number
-  className?:string
-  children?:ReactNode
+  className?: string
+  children?: ReactNode
 }) {
   const [animatedWidth, setAnimatedWidth] = useState(0)
 
@@ -227,13 +214,11 @@ function BarraEstadistica({
           <stop offset="0%" stopColor="rgba(255,255,255,0)" />
           <stop offset="50%" stopColor="rgba(255,255,255,0.6)" />
           <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          
         </linearGradient>
       </defs>
     </g>
   )
 }
-
 
 // Componente de ejemplo con datos de prueba
 export function TestApp() {
@@ -316,8 +301,7 @@ export function TestApp() {
           </div>
         </div>
 
-        <EstadisticaSvg data={data as Encuesta[]} />
-
+        {/* <EstadisticaSvg data={data as Encuesta[]} /> */}
       </div>
     </div>
   )

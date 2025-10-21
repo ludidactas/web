@@ -1,14 +1,15 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"],
-    // Add these rules to disable TypeScript strict checking
+  // Add these rules to disable TypeScript strict checking
   "rules": {
     // Existing rules...
-    
+
     // Disable rules that prevent using 'any' type
     "@typescript-eslint/no-explicit-any": "off",
-    
-    // Disable rules about using ts-ignore comments
-    "@typescript-eslint/ban-ts-comment": "off"
 
+    // Disable rules about using ts-ignore comments
+    "@typescript-eslint/ban-ts-comment": "off",
+
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
   }
 }

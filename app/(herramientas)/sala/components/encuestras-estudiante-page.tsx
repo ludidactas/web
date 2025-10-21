@@ -18,7 +18,6 @@ import HeaderSala from './header-sala'
 
 export default function EncuestasEstudiantePage({
   idSala,
-  btnLoginGoogle,
   btnLogoutGoogle,
 }: {
   idSala: string

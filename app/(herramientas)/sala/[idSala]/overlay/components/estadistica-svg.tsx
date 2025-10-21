@@ -1,10 +1,21 @@
 'use client'
-import React, { useState, useEffect, ReactNode } from 'react'
-import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { Encuesta, Opcion } from '@/wss/tipos'
-import { EstadisticaSvgConfig } from '../page'
 import { motion } from 'framer-motion'
+import { ReactNode, useEffect, useState } from 'react'
+
+import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
+import { z } from 'zod'
+
+// Validación de query params
+export const EstadisticaSvgConfigValidator = z.object({
+  bg: z.string().optional().default('rgba(0, 0, 0, 0.4)'),
+  barHeight: z.number().optional().default(40),
+  barSpacing: z.number().optional().default(60),
+  titleHeight: z.number().optional().default(40),
+})
+
+export type EstadisticaSvgConfig = z.infer<typeof EstadisticaSvgConfigValidator>
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
@@ -209,92 +220,5 @@ function BarraEstadistica({
         </linearGradient>
       </defs>
     </g>
-  )
-}
-
-// Componente de ejemplo con datos de prueba
-export function TestApp() {
-  const [data, setData] = useState<Partial<Encuesta>[]>([
-    {
-      pregunta: '¿Cuál es tu lenguaje de programación favorito?',
-      opciones: [
-        { id: '1', texto: 'JavaScript', votos: 45 },
-        { id: '2', texto: 'Python', votos: 32 },
-        { id: '3', texto: 'TypeScript', votos: 28 },
-        { id: '4', texto: 'Go', votos: 15 },
-        { id: '5', texto: 'Rust', votos: 8 },
-      ],
-    },
-    {
-      pregunta: '¿Qué framework prefieres para frontend?',
-      opciones: [
-        { id: '6', texto: 'React', votos: 50 },
-        { id: '7', texto: 'Vue.js', votos: 25 },
-        { id: '8', texto: 'Angular', votos: 18 },
-        { id: '9', texto: 'Svelte', votos: 12 },
-      ],
-    },
-  ])
-
-  // Función para simular cambios en los datos
-  const updateData = () => {
-    setData((prev) =>
-      prev.map((encuesta) => ({
-        ...encuesta,
-        opciones: encuesta.opciones!.map((opcion) => ({
-          ...opcion,
-          votos: Math.floor(Math.random() * 60) + 5,
-        })),
-      }))
-    )
-  }
-
-  const resetData = () => {
-    setData([
-      {
-        pregunta: '¿Cuál es tu lenguaje de programación favorito?',
-        opciones: [
-          { id: '1', texto: 'JavaScript', votos: 45 },
-          { id: '2', texto: 'Python', votos: 32 },
-          { id: '3', texto: 'TypeScript', votos: 28 },
-          { id: '4', texto: 'Go', votos: 15 },
-          { id: '5', texto: 'Rust', votos: 8 },
-        ],
-      },
-      {
-        pregunta: '¿Qué framework prefieres para frontend?',
-        opciones: [
-          { id: '6', texto: 'React', votos: 50 },
-          { id: '7', texto: 'Vue.js', votos: 25 },
-          { id: '8', texto: 'Angular', votos: 18 },
-          { id: '9', texto: 'Svelte', votos: 12 },
-        ],
-      },
-    ])
-  }
-
-  return (
-    <div className="min-h-screen min-w-[100vw] py-8">
-      <div className="px-6">
-        <div className="text-center mb-8">
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={updateData}
-              className="px-6 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors duration-200 shadow-md hover:shadow-lg"
-            >
-              🔄 Actualizar Datos
-            </button>
-            <button
-              onClick={resetData}
-              className="px-6 py-3 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors duration-200 shadow-md hover:shadow-lg"
-            >
-              ↩️ Resetear
-            </button>
-          </div>
-        </div>
-
-        {/* <EstadisticaSvg data={data as Encuesta[]} /> */}
-      </div>
-    </div>
   )
 }

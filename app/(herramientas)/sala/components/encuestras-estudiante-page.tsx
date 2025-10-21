@@ -1,11 +1,12 @@
 'use client'
 
 import { LdSvg } from '@/components/custom/ld-svg'
+import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { IconoRandom } from '@/lib/iconos'
 import { nombreSplit } from '@/lib/utils'
 import loginEst from '@/svg/loginEstsvgo.svg'
+import { RolEncuesta } from '@/wss/tipos'
 import { Sparkles } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
@@ -14,8 +15,6 @@ import { toast } from 'sonner'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
-import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
-import { RolEncuesta } from '@/wss/tipos'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -91,10 +90,10 @@ export default function EncuestasEstudiantePage({
   // Formulario de acceso
   if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {
     return (
-      <div className="flex flex-col md:flex-row shadow-2xl gap-4 bg-white items-center rounded-xl text-center justify-self-center w-fit p-10 m-10">
+      <div className="flex flex-col md:flex-row shadow-2xl gap-4 bg-white items-center rounded-xl text-center w-fit p-10 m-10">
         <LdSvg className="w-[200px] md:w-[300px] mr-8 drop-shadow-xl" SvgComponent={loginEst} />
 
-        <div className=" flex flex-col gap-2 text-center  justify-self-center w-fit md:p-10">
+        <div className=" flex flex-col gap-2 text-center w-fit md:p-10">
           <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
             <Image className="w-8 md:w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
             <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
@@ -148,7 +147,7 @@ export default function EncuestasEstudiantePage({
 
   // Devolvemos la página
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} icono={IconoRandom()} dni={dni}>
+    <EncuestaEstudianteProvider idSala={idSala} nombre={nombreFinal} dni={dni}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="flex gap-2" btnLogout={status === 'authenticated' ? btnLogoutGoogle : undefined}>
           <p className="flex gap-2 justify-center items-center text-sm text-center sm:text-4xl">

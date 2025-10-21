@@ -8,6 +8,7 @@ export interface Encuesta {
   isOpen: boolean
   isPublished: boolean
   isFocused: boolean
+  isRevealed: boolean
 }
 
 export interface Opcion {

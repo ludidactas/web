@@ -32,7 +32,8 @@ export function profeSala(email: string){
       createdAt: new Date().toISOString(),
       isOpen: true,
       isPublished: false,
-      isFocused: false
+      isFocused: false,
+      isRevealed: false
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
@@ -72,6 +73,8 @@ export function profeSala(email: string){
     if (update.isPublished === true) assertPollIsHidden(poll)
     if (update.isPublished === false) assertPollIsPublished(poll)
     if (update.isFocused === true) assertPollIsUnfocused(poll)
+    if (update.isRevealed === true) assertPollIsNotRevealed(poll)
+    if (update.isRevealed === false) assertPollIsRevealed(poll)
 
     const nueva = merge(poll, update) as Encuesta
     polls.set(pollId, nueva)
@@ -201,7 +204,6 @@ export function assertValidPoll(pollData: unknown) {
   if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
 }
 
-
 function assertPollExists(idSala: string, idPoll: string) {
   const { polls } = getSalaById(idSala)
   if (!polls.has(idPoll)) throw new Error('La encuesta no existe!')
@@ -225,4 +227,12 @@ function assertPollIsHidden(poll: Encuesta) {
 
 function assertPollIsUnfocused(poll: Encuesta) {
   if (poll.isFocused) throw new Error('La encuesta ya está focuseada!')
+}
+
+function assertPollIsNotRevealed(poll: Encuesta) {
+  if (poll.isRevealed) throw new Error('La encuesta ya está revelada!')
+}
+
+function assertPollIsRevealed(poll: Encuesta) {
+  if (!poll.isRevealed) throw new Error('La encuesta no está revelada!')
 }

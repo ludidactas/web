@@ -36,6 +36,8 @@ export const handlersEncuestasProfe = (socket: SocketProfe) => {
     // Focuseamos
     broadcastPoll(sala, profe.updatePoll(pollId, { isFocused: true }))
   }))
+  socket.on('poll:reveal', safe(({ pollId }) => broadcastPoll(sala, profe.updatePoll(pollId, { isRevealed: true }))))
+  socket.on('poll:unreveal', safe(({ pollId }) => broadcastPoll(sala, profe.updatePoll(pollId, { isRevealed: false }))))
 
   socket.on('poll:delete', safe(({ pollId }) => {
     profe.deletePoll({ pollId })

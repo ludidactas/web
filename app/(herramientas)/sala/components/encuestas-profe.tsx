@@ -383,8 +383,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
             className="bg-violet-600 text-white px-4 py-2 rounded disabled:bg-violet-300"
             onClick={() => enfocarPregunta(encuesta.id)}
             disabled={!encuesta.isPublished}
-            texto='Enfocar'
-          icon='material-symbols:center-focus-weak-rounded'
+            texto="Enfocar"
+            icon="material-symbols:center-focus-weak-rounded"
           />
         )}
 
@@ -393,16 +393,16 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <BotonEncuesta
             className="bg-yellow-500 text-white px-4 py-2 rounded"
             onClick={() => revelarOpciones(encuesta.id)}
-            texto='Revelar'
-            icon='mdi:eye'
+            texto="Revelar"
+            icon="mdi:text-box-outline"
           />
         )}
         {encuesta.isRevealed && (
           <BotonEncuesta
             className="bg-yellow-100 text-black px-2 md:px-4 py-2 rounded border border-yellow-900"
             onClick={() => desrevelarOpciones(encuesta.id)}
-            texto='Desrevelar'
-            icon='mdi:eye-off'
+            texto="Desrevelar"
+            icon="mdi:question-mark"
           />
         )}
 
@@ -411,16 +411,16 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <BotonEncuesta
             className="bg-emerald-500 text-white px-4 py-2 rounded"
             onClick={() => publicarPregunta(encuesta.id)}
-            texto='Publicar'
-            icon='mdi:show'
+            texto="Publicar"
+            icon="mdi:show"
           />
         )}
         {encuesta.isPublished && (
           <BotonEncuesta
             className="bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
             onClick={() => esconderPregunta(encuesta.id)}
-            texto='Esconder'
-            icon='mdi:hide'
+            texto="Esconder"
+            icon="mdi:hide"
           />
         )}
 
@@ -429,16 +429,16 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <BotonEncuesta
             className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
             onClick={() => abrirPregunta(encuesta.id)}
-            texto='Abrir'
-            icon='mdi:hand-open'
+            texto="Abrir"
+            icon="mdi:hand-open"
           />
         )}
         {encuesta.isOpen && (
           <BotonEncuesta
             className="bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
             onClick={() => cerrarPregunta(encuesta.id)}
-            texto='Cerrar'
-            icon='mdi:hand-back-left'
+            texto="Cerrar"
+            icon="mdi:hand-back-left"
           />
         )}
 
@@ -446,7 +446,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         <BotonEncuesta
           className="bg-rose-800/90 text-white px-4 py-2 rounded"
           onClick={() => borrarPregunta(encuesta.id)}
-          texto='Eliminar'
+          texto="Eliminar"
           icon="mdi:trash-can"
         />
       </div>

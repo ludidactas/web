@@ -48,7 +48,9 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
 
   const ids = encuesta.opciones.map((op) => op.id)
 
-  const ops = encuesta.opciones.toSorted((a, b) => b.votos - a.votos)
+  const ops = encuesta.opciones
+    .toSorted((a, b) => b.votos - a.votos)
+    .map(opc => ({ ...opc, texto: encuesta.isRevealed ? opc.texto : '?????' }))
 
   const { bg, barHeight, barSpacing, titleHeight } = config
 

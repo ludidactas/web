@@ -5,17 +5,8 @@ import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
 
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
-import { z } from 'zod'
+import { EstadisticaSvgConfig } from './estadistica-svg-config'
 
-// Validación de query params
-export const EstadisticaSvgConfigValidator = z.object({
-  bg: z.string().optional().default('rgba(0, 0, 0, 0.4)'),
-  barHeight: z.number().optional().default(40),
-  barSpacing: z.number().optional().default(60),
-  titleHeight: z.number().optional().default(40),
-})
-
-export type EstadisticaSvgConfig = z.infer<typeof EstadisticaSvgConfigValidator>
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante

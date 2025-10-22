@@ -4,6 +4,7 @@ import { conHandlers, getSalaByEmailProfe, getSalaById } from "../salas/app"
 import { Encuesta, EncuestaHidratada, RolEncuesta } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators"
+import { assert } from "console"
 
 
 
@@ -33,7 +34,8 @@ export function profeSala(email: string){
       isOpen: true,
       isPublished: false,
       isFocused: false,
-      isRevealed: false
+      isRevealed: false,
+      admiteAportes: pollData.admiteAportes,
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
@@ -124,7 +126,7 @@ export function estudianteSala(idSala: string, sessionId: string) {
   }
 
   function votar(voteData: z.infer<typeof voteValidator>) {
-    const { pollId, optionId } = voteData
+    const { pollId, optionId, aporte } = voteData
 
     assertPollExists(idSala, pollId)
 
@@ -135,17 +137,22 @@ export function estudianteSala(idSala: string, sessionId: string) {
     // Validamos
     assertPollIsOpen(poll)
     assertElEstudianteNoVotoTodavia(poll, sessionId)
+    if (aporte) assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
 
     // Guardamos el voto
-    const opc = poll.opciones.find(opcion => opcion.id === optionId)
+    if (aporte) {
+      poll.opciones.push({ id: Date.now().toString(), texto: aporte, votos: 1 })
+    } else {
+      const opc = poll.opciones.find(opcion => opcion.id === optionId)
+      if (!opc) throw new Error('Opción inválida')
+      poll.opciones[poll.opciones.indexOf(opc)].votos++
+    }
 
-    // Validaciones 
-    if (!opc) throw new Error('Opción inválida')
+    // Validaciones de typechecking - nunca van a fallar mepa
     if (!personasQueYaVotaron) throw new Error('Buffer de votantes no encontrado')
     if (!votosEmitidos) throw new Error('Buffer de votos no encontrado')
 
     // Registramos el voto
-    poll.opciones[poll.opciones.indexOf(opc)].votos++
     personasQueYaVotaron.add(sessionId)
     votosEmitidos.set(sessionId, optionId)
 

@@ -6,6 +6,8 @@ export const pollBase = z.object({
   admiteAportes: z.boolean().optional().default(false),
 })
 
+export type CrearEncuesta = z.infer<typeof pollBase>
+
 export const voteValidator = z.object({
   pollId: z.string().min(1, "El ID de la encuesta es obligatorio"),
   optionId: z.string().min(1, "El ID de la opción es obligatorio"),

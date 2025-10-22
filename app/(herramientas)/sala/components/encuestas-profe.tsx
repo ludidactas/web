@@ -29,6 +29,7 @@ import { toast } from 'sonner'
 import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 import { Icon } from '@iconify/react'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function EncuestasAdmin() {
   const { linkSala, estado } = useEncuestaProfe()
@@ -307,8 +308,16 @@ function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const { cerrarPregunta, borrarPregunta, abrirPregunta, publicarPregunta, esconderPregunta, enfocarPregunta, revelarOpciones, desrevelarOpciones } =
-    useEncuestaProfe()
+  const {
+    cerrarPregunta,
+    borrarPregunta,
+    abrirPregunta,
+    publicarPregunta,
+    esconderPregunta,
+    enfocarPregunta,
+    revelarOpciones,
+    desrevelarOpciones,
+  } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
@@ -328,9 +337,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       })
   }
 
-  const estado = encuesta.isFocused ? 'Enfocada' : (
-    encuesta.isOpen ? 'Abierta' : 'Cerrada'
-  )
+  const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
 
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
@@ -373,6 +380,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
             </div>
           </li>
         ))}
+        {encuesta.admiteAportes && <li className="text-xs list-none pt-4">Los estudiantes pueden agregar opciones</li>}
       </ol>
 
       {/* Acciones */}
@@ -462,9 +470,9 @@ const BotonEncuesta = ({
   ...props
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
   <button className={cn('w-20 text-xs md:text-xl md:w-32 px-2 md:px-4 py-2 rounded border', className)} {...props}>
-    <span className="hidden md:block">{ texto }</span>
+    <span className="hidden md:block">{texto}</span>
     <span className="md:hidden w-full flex justify-center">
-      <Icon icon={ icon } />
+      <Icon icon={icon} />
     </span>
     {children}
   </button>
@@ -475,6 +483,7 @@ function AgregarPregunta() {
 
   const [pregunta, setPregunta] = useState('')
   const [respuestas, setRespuestas] = useState<string[]>(['', ''])
+  const [recibeAportes, setRecibeAportes] = useState<boolean | 'indeterminate'>(false)
 
   const agregarRespuesta = () => {
     setRespuestas((rs) => [...rs, ''])
@@ -495,7 +504,7 @@ function AgregarPregunta() {
   }
 
   const postearPregunta = () => {
-    enviarPregunta(pregunta, respuestas)
+    enviarPregunta(pregunta, respuestas, recibeAportes === 'indeterminate' ? false : recibeAportes)
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
@@ -535,6 +544,11 @@ function AgregarPregunta() {
           )}
         </div>
       ))}
+
+      <div className="flex items-center gap-2 py-4">
+        <Checkbox checked={recibeAportes} onCheckedChange={setRecibeAportes} title="" />
+        <p className="text-indigo-500">Los estudiantes pueden agregar sus propias opciones</p>
+      </div>
 
       <button
         className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"

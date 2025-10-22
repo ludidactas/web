@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { CrearEncuesta, Encuesta } from '@/wss/tipos'
+import { Encuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '../../../../components/hooks/use-conexion-wss'
 import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
+import { CrearEncuesta } from '@/wss/validators'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {
@@ -28,11 +29,12 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   } = useEncuestaStore()
 
   /** Postea al server la acción de crear */
-  const enviarPregunta = (pregunta: string, respuestas: string[]) =>
+  const enviarPregunta = (pregunta: string, respuestas: string[], admiteAportes = false) =>
     new Promise<void>((res, rej) => {
       const nuevaEncuesta: CrearEncuesta = {
         pregunta,
         opciones: respuestas,
+        admiteAportes,
       }
 
       socket!.emit('poll:create', nuevaEncuesta, (error?: string) => {

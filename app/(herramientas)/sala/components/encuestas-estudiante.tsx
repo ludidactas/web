@@ -13,6 +13,7 @@ import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
 import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 export default function EncuestasEstudiante() {
   const { estado, encuestas, error } = useEncuestaEstudiante()
@@ -74,12 +75,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(encuesta.votoEmitido)
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
+  const [aportando, setAportando] = useState(false)
+  const [aporte, setAporte] = useState('')
+
   return (
     <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 border-dashed border-8 border-indigo-50 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
       <div className="flex md:gap-6 items-center p-4 justify-between rounded-xl">
-        <div className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}>
-         <MessageCircleQuestionIcon size={40} className='self-start' />
+        <div
+          className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
+        >
+          <MessageCircleQuestionIcon size={40} className="self-start" />
           {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
           {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
@@ -87,7 +93,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
         <div className="flex flex-col items-end">
           <span
-            className={`text-xs md:text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'}`}
+            className={`text-xs md:text-sm ${
+              encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
+            }`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
@@ -108,26 +116,50 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
               'text-slate-300 hover:border-0': yaVotado,
             })}
             onClick={() => {
+              setAportando(false)
               if (encuesta.isOpen && !yaVotado) setSeleccion(opcion.id)
             }}
           >
             {opcion.texto} {((yaVotado && encuesta.isRevealed) || !encuesta.isOpen) && <>- {opcion.votos} votos</>}
           </li>
         ))}
+        {encuesta.admiteAportes && (
+          <Input
+            className={cn('mt-2', { 'bg-cyan-500/30': aportando })}
+            placeholder="Otra opción"
+            value={aporte}
+            onClick={() => {
+              setAportando(true)
+              setSeleccion(undefined)
+            }}
+            onChange={(e) => {
+              setAporte(e.target.value)
+            }}
+            disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen}
+          />
+        )}
+        {encuesta.admiteAportes && (
+          <p className="text-black/20 text-xs">Acá habría que agregar un input para que agreguen opciones</p>
+        )}
       </ol>
 
       {/* Acciones */}
       <div className="flex items-center justify-center gap-4 my-2">
-        {yaVotado && <p className='text-md text-rose-800'>Ya votaste</p>}
-        {encuesta.isOpen && seleccion && !yaVotado && (
+        {yaVotado && <p className="text-md text-rose-800">Ya votaste</p>}
+        {encuesta.isOpen && (seleccion || aporte.length) && !yaVotado && (
           <button
             className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded"
             onClick={() => {
-              votar(encuesta.id, seleccion)
+              if (aportando) {
+                votar(encuesta.id, undefined, aporte)
+              } else { 
+
+                votar(encuesta.id, seleccion)
+              }
               setYaVotado(true)
             }}
           >
-            <Send size={16}/>
+            <Send size={16} />
             Enviar
           </button>
         )}

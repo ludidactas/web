@@ -67,7 +67,7 @@ export const handlersEncuestasEstudiante = (socket: SocketEstudiante, idSala: st
   // Estudiantes votan. Broadcasteamos la poll updateada.
   socket.on('poll:vote', safe(({ pollId, optionId, aporte }) => {
     const votando_que = aporte ? `con aporte "${aporte}"` : `opción ${optionId}`
-    console.log(`🗳️  Estudiante ${user} votando en poll ${pollId} ${votando_que}...`)
+    console.log(`🗳️  Estudiante ${user} votando en poll ${pollId}...`, votando_que)
     broadcastPoll(sala, estudiante.votar({ pollId, optionId, aporte }))
   }))
 

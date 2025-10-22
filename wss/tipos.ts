@@ -29,11 +29,6 @@ export interface EncuestaHidratada extends Encuesta {
   votoEmitido?: string
 }
 
-export interface CrearEncuesta  {
-  pregunta: string
-  opciones: string[]
-}
-
 export enum RolEncuesta {
   Admin = 'admin',
   Profe = 'profe',

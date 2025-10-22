@@ -18,7 +18,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 
   /** Postea un voto */
   const votar = (encuestaId: string, opcionId: string) => {
-    socket!.emit('poll:vote', { pollId: encuestaId, optionId: opcionId })
+    socket!.emit('poll:vote', { pollId: encuestaId, optionId: opcionId }) // Agregar opcionalmente `aporte` acá
   }
 
   // Cuando el socket conecta...

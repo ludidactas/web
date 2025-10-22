@@ -146,7 +146,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
       {/* Acciones */}
       <div className="flex items-center justify-center gap-4 my-2">
         {yaVotado && <p className="text-md text-rose-800">Ya votaste</p>}
-        {encuesta.isOpen && (seleccion || aporte.length) && !yaVotado && (
+        {encuesta.isOpen && (seleccion || !!aporte.length) && !yaVotado && (
           <button
             className="flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded"
             onClick={() => {

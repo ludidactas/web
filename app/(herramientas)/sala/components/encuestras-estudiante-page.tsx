@@ -15,6 +15,10 @@ import { toast } from 'sonner'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
+import DibuEstudiante from '/svg/upssvgo.svg'
+import { oscilar } from '@/lib/animaciones'
+import Link from 'next/link'
+
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -85,14 +89,28 @@ export default function EncuestasEstudiantePage({
       </div>
     )
   }
+ if (status ==='unauthenticated'&& !nombreSala){
+  return<div>
+    <div className="flex flex-col  items-center mb-10 justify-center">
+          <LdSvg
+            className="w-[300px] md:w-[500px]"
+            SvgComponent={DibuEstudiante}
+            ids={['signo1', 'signo2'] as const}
+            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
+
+          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">Esta sala no existe. Por favor, verifica el id de la sala</p>
+        </div>
+        
+  </div>
+ }
 
   // Formulario de acceso
   if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {
     return (
-      <div className="flex flex-col md:flex-row shadow-2xl gap-4 bg-white items-center rounded-xl text-center w-fit p-10 m-10">
-        <LdSvg className="w-[200px] md:w-[300px] mr-8 drop-shadow-xl" SvgComponent={loginEst} />
+      <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-4 items-center text-center w-fit p-10 m-10">
+        <LdSvg className="w-[200px] md:w-[330px] mr-8 drop-shadow-xl" SvgComponent={loginEst} />
 
-        <div className=" flex flex-col gap-2 text-center w-fit md:p-10">
+        <div className="flex flex-col gap-2 text-center w-fit md:p-10">
           <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
             <Image className="w-8 md:w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
             <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
@@ -101,8 +119,8 @@ export default function EncuestasEstudiantePage({
           </div>
           <p className="w-80">
             {' '}
-            Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala ?? idSala}</span>. Te podés
-            conectar con tu nombre o con tu cuenta de google
+            Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala ?? idSala}</span>. 
+            Ingresa tu nombre y DNI 
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 pt-8">

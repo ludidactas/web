@@ -5,7 +5,7 @@ import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { nombreSplit } from '@/lib/utils'
-import loginEst from '@/svg/loginEstsvgo.svg'
+import loginEst from '@/svg/loginEstSVGO2.svg'
 import { RolEncuesta } from '@/wss/tipos'
 import { Sparkles } from 'lucide-react'
 import { useSession } from 'next-auth/react'
@@ -16,8 +16,7 @@ import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { oscilar } from '@/lib/animaciones'
-import Link from 'next/link'
+import { escalar, oscilar } from '@/lib/animaciones'
 
 
 export default function EncuestasEstudiantePage({
@@ -89,6 +88,8 @@ export default function EncuestasEstudiantePage({
       </div>
     )
   }
+
+  //pantalla de sala invalida
  if (status ==='unauthenticated'&& !nombreSala){
   return<div>
     <div className="flex flex-col  items-center mb-10 justify-center">
@@ -107,8 +108,10 @@ export default function EncuestasEstudiantePage({
   // Formulario de acceso
   if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {
     return (
-      <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-4 items-center text-center w-fit p-10 m-10">
-        <LdSvg className="w-[200px] md:w-[330px] mr-8 drop-shadow-xl" SvgComponent={loginEst} />
+      <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">
+        <LdSvg className="w-[200px] md:w-[500px] mr-8 drop-shadow-xl" SvgComponent={loginEst}
+        ids={['item1', 'item2','item3','item4','item5', 'item6', 'Personaje'] as const}
+        animation={oscilar(['item1', 'item2','item3','item4','item5', 'item6'], 1, 0.4, 2)} />
 
         <div className="flex flex-col gap-2 text-center w-fit md:p-10">
           <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
@@ -119,8 +122,8 @@ export default function EncuestasEstudiantePage({
           </div>
           <p className="w-80">
             {' '}
-            Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala ?? idSala}</span>. 
-            Ingresa tu nombre y DNI 
+            Estás a punto de ingresar a la sala de <span className="text-teal-500">{nombreSala ?? idSala}</span>. 
+            Ingresa con tu nombre y DNI 
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 pt-8">
@@ -152,7 +155,7 @@ export default function EncuestasEstudiantePage({
               />
             </div>
             <Button className=" bg-indigo-500/90 font-semibold" type="button" onClick={handleConectarse}>
-              Conectarse con nombre y DNI
+              Conectarse
             </Button>
 
             {/* Descomentar para volver a habilitar login de google */}

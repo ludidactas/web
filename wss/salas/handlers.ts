@@ -66,7 +66,7 @@ export const handlersSalaPublico = (socket: Socket, idSala: string) => {
   const safe = conErrorHandling(socket)
   const emitir = safe(() => {
     const sala = getSalaById(idSala)
-    const nombre = `de ${sala.profe.nombre ?? sala.profe.email}`
+    const nombre = `${sala.profe.nombre ?? sala.profe.email}`
     socket.emit('sala:nombre', nombre)
   })
 

@@ -45,3 +45,22 @@ export function oscilar(ids: string[], fr: number, a = 5, fase = 1): ComponentPr
     })
   }
 }
+
+export function escalar(
+  ids: string[], 
+  fr: number, 
+  escalaMin = 0.8, 
+  escalaMax = 1.2, 
+  fase = 1
+): ComponentProps<typeof LdSvg>['animation'] {
+  return (nodos, t) => {
+    ids.forEach((id, i) => {
+      const ts = t / 1000 - fase * i // tiempo en segundos
+      // Calcula la escala usando seno para oscilar entre escalaMin y escalaMax
+      const onda = Math.sin(fr * ts)
+      const escala = escalaMin + (escalaMax - escalaMin) * (onda + 1) / 2
+      
+      nodos[id].scale(escala)
+    })
+  }
+}

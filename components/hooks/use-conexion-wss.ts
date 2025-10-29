@@ -122,6 +122,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
     }
 
     await configurarListeners({ sock, listeners })
+
     sock.connect()
   },
 
@@ -161,20 +162,22 @@ export function useConexionWss(auth: Pasaporte) {
     }
   }, [status, clearSession, sessionReady])
 
+  // Cuando tengamos sesión, si el status es quieto y no hay socket (es decir, si estamos arrancando), triggereamos
   useEffect(() => {
     if (!sessionReady) return
+
     if (status === StatusDeConexion.Quieto && !haySocket.current) {
       console.log(`Sesión lista, conectando...`, status, socket)
       haySocket.current = true
       conectar(auth, storedSession?.sessionId)
-    }
+    } 
+
     return () => {
       if (isNonNullish(socket)) {
         socket.disconnect()
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionReady, status])
+  }, [sessionReady, status, haySocket, storedSession])
 
   return { estado: status, socket, conectar, session, error }
 }

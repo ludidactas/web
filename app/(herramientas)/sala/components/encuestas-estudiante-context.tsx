@@ -34,6 +34,9 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+
+      // Soy de bug, borrame
+      socket.onAny(console.log)
       
       return () => {
         socket.removeAllListeners('polls:list')

@@ -46,6 +46,9 @@ export default function EncuestasEstudiante() {
         </div>
       </div>
     
+      {/* Soy de debug, borrame! */}
+      <p className='text-xs'>{encuestas.length} encuestas, {encuestasVisibles.length} publicadas</p>
+      
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (

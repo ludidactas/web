@@ -4,6 +4,10 @@ Revamp del sitio de Ludidactas con la visión de orientarlo a docentes.
 
 Viene empezando como biblioteca de recursos, de los cuales la columna vertebral son los roadmaps. Este repo es la prueba de concepto (Proof of concept)
 
+## Bugs
+
+- Cuando un estudiante está en la sala y el docente publica una pregunta, al estudiante le aparece como 'ya votaste'
+
 ## Setup
 
 - Instalarse la extensión 'MDX', para obtener syntax highlighting y todo eso en los archivos MDX

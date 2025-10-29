@@ -66,9 +66,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
   async conectar(auth, sessionId) {
     set({ status: StatusDeConexion.Conectando, error: null })
 
-    console.log(`Estableciendo handshake...`)
     const sock = await handshake({ ...auth, sessionId })
-    console.log(`Handshake establecido!`)
 
     const listeners = {
       onConnect(s: Socket) {
@@ -125,7 +123,6 @@ export const useConexionStore = create<Estado>((set, get) => ({
 
     await configurarListeners({ sock, listeners })
 
-    console.log(`Conectando socket...`)
     sock.connect()
   },
 
@@ -167,9 +164,7 @@ export function useConexionWss(auth: Pasaporte) {
 
   // Cuando tengamos sesión, si el status es quieto y no hay socket (es decir, si estamos arrancando), triggereamos
   useEffect(() => {
-    console.log(`@useEffect`, status, haySocket.current, auth, storedSession)
     if (!sessionReady) return
-    console.log(`sessionReady!`, status, haySocket.current, auth, storedSession)
 
     if (status === StatusDeConexion.Quieto && !haySocket.current) {
       console.log(`Sesión lista, conectando...`, status, socket)

@@ -1,5 +1,6 @@
 import { LdSvg } from "@/components/custom/ld-svg"
 import { ComponentProps } from "react"
+import { number } from "zod"
 
 /**
  * En el contexto de usar LdSvg, esta función se encarga de crear una animación que
@@ -46,21 +47,49 @@ export function oscilar(ids: string[], fr: number, a = 5, fase = 1): ComponentPr
   }
 }
 
-export function escalar(
+export function pulsarSecuencial(
   ids: string[], 
-  fr: number, 
-  escalaMin = 0.8, 
-  escalaMax = 1.2, 
-  fase = 1
+  duracion: number,
+  escalaMax = 1.3
 ): ComponentProps<typeof LdSvg>['animation'] {
+  const transformInicial = new Map<string, any>()
+  
   return (nodos, t) => {
+    const dt = duracion
+    const ta = t % dt
+    const mdt = dt / ids.length
+    
     ids.forEach((id, i) => {
-      const ts = t / 1000 - fase * i // tiempo en segundos
-      // Calcula la escala usando seno para oscilar entre escalaMin y escalaMax
-      const onda = Math.sin(fr * ts)
-      const escala = escalaMin + (escalaMax - escalaMin) * (onda + 1) / 2
+      if (!nodos[id]) {
+        console.warn(`Nodo "${id}" no encontrado`)
+        return
+      }
       
-      nodos[id].scale(escala)
+      // Guardar transform inicial solo una vez
+      if (!transformInicial.has(id)) {
+        transformInicial.set(id, nodos[id].transform())
+      }
+      
+      const inicio = i * mdt
+      const fin = (i + 1) * mdt
+      const activo = ta >= inicio && ta < fin
+      
+      const escala = activo ? escalaMax : 1
+      
+      try {
+        const bbox = nodos[id].bbox()
+        const cx = bbox.cx
+        const cy = bbox.cy
+        
+        // Resetear al transform inicial antes de escalar
+        const inicial = transformInicial.get(id)
+        nodos[id].transform(inicial)
+        
+        // Aplicar escala desde el centro
+        nodos[id].scale(escala, escala, cx, cy)
+      } catch (error) {
+        console.error(`Error animando "${id}":`, error)
+      }
     })
   }
 }

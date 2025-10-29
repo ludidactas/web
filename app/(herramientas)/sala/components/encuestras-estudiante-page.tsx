@@ -16,7 +16,7 @@ import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { escalar, oscilar } from '@/lib/animaciones'
+import {pulsarSecuencial, oscilar } from '@/lib/animaciones'
 
 
 export default function EncuestasEstudiantePage({
@@ -41,6 +41,8 @@ export default function EncuestasEstudiantePage({
 
   const { socket } = useServerWebsockets({ rol: RolEncuesta.Publico, idSala })
   const [nombreSala, setNombreSala] = useState<string>()
+
+  
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => { 
@@ -111,7 +113,9 @@ export default function EncuestasEstudiantePage({
       <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">
         <LdSvg className="w-[200px] md:w-[500px] mr-8 drop-shadow-xl" SvgComponent={loginEst}
         ids={['item1', 'item2','item3','item4','item5', 'item6', 'Personaje'] as const}
-        animation={oscilar(['item1', 'item2','item3','item4','item5', 'item6'], 1, 0.4, 2)} />
+        animation={pulsarSecuencial(['item1', 'item2', 'item3', 'item4','item5','item6'], 3000, 1.4)}
+         />
+
 
         <div className="flex flex-col gap-2 text-center w-fit md:p-10">
           <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">

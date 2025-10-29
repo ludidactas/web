@@ -345,7 +345,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       <div className="flex gap-4 bg-white rounded-xl p-4 items-start justify-between">
         <div className="flex gap-4 md:p-4 items-center">
           <MessageCircleQuestionIcon size={40} className="self-start text-indigo-500" />
-          {/* <LdSvg className='w-[10%]' SvgComponent={PollsIcon} /> */}
           <h3 className="w-[90%] text-sm break-all md:text-xl">{encuesta.pregunta}</h3>
         </div>
         <div className="flex flex-col w-20 md:gap-1 items-end">
@@ -370,7 +369,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           </button>
         </div>
       </div>
-
+<div>
       <ol className="list-[lower-latin] text-xs md:text-xl text-slate-400 py-8 pl-8 md:px-12 content-center m-2 md:m-6">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
@@ -383,9 +382,29 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.admiteAportes && <li className="text-xs list-none pt-4">Los estudiantes pueden agregar opciones</li>}
       </ol>
 
+ {/* Revelar/desrevelar */}
+        {!encuesta.isRevealed && (
+          <BotonEncuesta
+            className="bg-yellow-500 text-white px-4 py-2 rounded"
+            onClick={() => revelarOpciones(encuesta.id)}
+            texto="Revelar respuestas"
+            icon="mdi:text-box-outline"
+          />
+        )}
+        {encuesta.isRevealed && (
+          <BotonEncuesta
+            className="w-[40] bg-yellow-100 text-black px-2 md:px-4 py-2 rounded border border-yellow-900"
+            onClick={() => desrevelarOpciones(encuesta.id)}
+            texto="Desrevelar"
+            icon="mdi:question-mark"
+          />
+        )}
+       
+</div>
       {/* Acciones */}
       <div className="flex items-center justify-center gap-4 my-2">
-        {/* Enfocar */}
+       
+       {/* Enfocar */}
         {!encuesta.isFocused && (
           <BotonEncuesta
             className="bg-violet-600 text-white px-4 py-2 rounded disabled:bg-violet-300"
@@ -396,23 +415,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           />
         )}
 
-        {/* Revelar/desrevelar */}
-        {!encuesta.isRevealed && (
-          <BotonEncuesta
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-            onClick={() => revelarOpciones(encuesta.id)}
-            texto="Revelar"
-            icon="mdi:text-box-outline"
-          />
-        )}
-        {encuesta.isRevealed && (
-          <BotonEncuesta
-            className="bg-yellow-100 text-black px-2 md:px-4 py-2 rounded border border-yellow-900"
-            onClick={() => desrevelarOpciones(encuesta.id)}
-            texto="Desrevelar"
-            icon="mdi:question-mark"
-          />
-        )}
+       
 
         {/* Publicar/esconder */}
         {!encuesta.isPublished && (

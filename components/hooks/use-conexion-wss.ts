@@ -173,8 +173,7 @@ export function useConexionWss(auth: Pasaporte) {
         socket.disconnect()
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionReady, status])
+  }, [sessionReady, status, haySocket, storedSession])
 
   return { estado: status, socket, conectar, session, error }
 }

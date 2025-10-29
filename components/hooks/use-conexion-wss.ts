@@ -165,15 +165,18 @@ export function useConexionWss(auth: Pasaporte) {
     }
   }, [status, clearSession, sessionReady])
 
+  // Cuando tengamos sesión, si el status es quieto y no hay socket (es decir, si estamos arrancando), triggereamos
   useEffect(() => {
     console.log(`@useEffect`, status, haySocket.current, auth, storedSession)
     if (!sessionReady) return
     console.log(`sessionReady!`, status, haySocket.current, auth, storedSession)
+
     if (status === StatusDeConexion.Quieto && !haySocket.current) {
       console.log(`Sesión lista, conectando...`, status, socket)
       haySocket.current = true
       conectar(auth, storedSession?.sessionId)
-    }
+    } 
+
     return () => {
       if (isNonNullish(socket)) {
         socket.disconnect()

@@ -7,6 +7,7 @@ Viene empezando como biblioteca de recursos, de los cuales la columna vertebral 
 ## Bugs
 
 - Cuando un estudiante está en la sala y el docente publica una pregunta, al estudiante le aparece como 'ya votaste'
+- Parece que no se invalida la sesión al cambiar de usuario... conectarse con una cuenta, luego con otra, sigue diciendo "ya votaste"
 
 ## Setup
 

@@ -142,9 +142,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
             disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen}
           />
         )}
-        {encuesta.admiteAportes && (
-          <p className="text-black/20 text-xs">Acá habría que agregar un input para que agreguen opciones</p>
-        )}
       </ol>
 
       {/* Acciones */}

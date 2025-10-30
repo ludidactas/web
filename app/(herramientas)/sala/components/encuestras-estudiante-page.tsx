@@ -12,6 +12,7 @@ import DibuEstudiante from '/svg/upssvgo.svg'
 
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
+import { LdSvg } from '@/components/custom/ld-svg'
 
 export default function EncuestasEstudiantePage({
   idSala,

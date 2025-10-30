@@ -22,7 +22,7 @@ export default function Recursos() {
           </div>
         }
         two={<Imagenes />}
-        btn={<BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/encuestas">
+        btn={<BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
           Explorar sala
         </BtnSketchyGif>}
         scroll={<ArrowDownLd to="contactoini" />}

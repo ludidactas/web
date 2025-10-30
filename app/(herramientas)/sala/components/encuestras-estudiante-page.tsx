@@ -5,7 +5,7 @@ import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { nombreSplit } from '@/lib/utils'
-import loginEst from '@/svg/loginEstSVGO2.svg'
+import LoginEst from '@/svg/loginEstSVGO2.svg'
 import { RolEncuesta } from '@/wss/tipos'
 import { Sparkles } from 'lucide-react'
 import { useSession } from 'next-auth/react'
@@ -16,7 +16,8 @@ import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import {pulsarSecuencial, oscilar } from '@/lib/animaciones'
+import { oscilar } from '@/lib/animaciones'
+import { animate, spring, stagger } from 'animejs'
 
 
 export default function EncuestasEstudiantePage({
@@ -42,11 +43,11 @@ export default function EncuestasEstudiantePage({
   const { socket } = useServerWebsockets({ rol: RolEncuesta.Publico, idSala })
   const [nombreSala, setNombreSala] = useState<string>()
 
-  
+
 
   // Al obtener un socket suscribimos a sus señales
-  useEffect(() => { 
-    if(socket) socket.on('sala:nombre', setNombreSala)
+  useEffect(() => {
+    if (socket) socket.on('sala:nombre', setNombreSala)
   }, [socket])
 
 
@@ -92,29 +93,42 @@ export default function EncuestasEstudiantePage({
   }
 
   //pantalla de sala invalida
- if (status ==='unauthenticated'&& !nombreSala){
-  return<div>
-    <div className="flex flex-col  items-center mb-10 justify-center">
-          <LdSvg
-            className="w-[300px] md:w-[500px]"
-            SvgComponent={DibuEstudiante}
-            ids={['signo1', 'signo2'] as const}
-            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
+  if (status === 'unauthenticated' && !nombreSala) {
+    return <div>
+      <div className="flex flex-col  items-center mb-10 justify-center">
+        <LdSvg
+          className="w-[300px] md:w-[500px]"
+          SvgComponent={DibuEstudiante}
+          ids={['signo1', 'signo2'] as const}
+          animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
 
-          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">Esta sala no existe. Por favor, verifica el id de la sala</p>
-        </div>
-        
-  </div>
- }
+        <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">Esta sala no existe. Por favor, verifica el id de la sala</p>
+      </div>
+
+    </div>
+  }
 
   // Formulario de acceso
   if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {
     return (
       <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">
-        <LdSvg className="w-[200px] md:w-[500px] mr-8 drop-shadow-xl" SvgComponent={loginEst}
-        ids={['item1', 'item2','item3','item4','item5', 'item6', 'Personaje'] as const}
-        animation={pulsarSecuencial(['item1', 'item2', 'item3', 'item4','item5','item6'], 3000, 1.4)}
-         />
+        <LdSvg className="w-[200px] md:w-[500px] mr-8 drop-shadow-xl" SvgComponent={LoginEst}
+          ids={['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'Personaje'] as const}
+          animate={(nodos) => () => { 
+            // const elem = document.querySelector(`[id$="item6"]`)
+            //console.log('registrando animacion...', nodos)
+
+            animate([nodos.item6, nodos.item2, nodos.item3, nodos.item5, nodos.item1, nodos.item4, , ], {
+              scale: [
+                 { to: 1.02, ease: 'inOut(3)', duration: 200 },
+                { to: 1, ease: spring({ bounce: .8 }) }
+              ],
+              delay:stagger(100),
+              loop: true,
+              
+            });
+          }}
+        />
 
 
         <div className="flex flex-col gap-2 text-center w-fit md:p-10">
@@ -126,8 +140,8 @@ export default function EncuestasEstudiantePage({
           </div>
           <p className="w-80">
             {' '}
-            Estás a punto de ingresar a la sala de <span className="text-teal-500">{nombreSala ?? idSala}</span>. 
-            Ingresa con tu nombre y DNI 
+            Estás a punto de ingresar a la sala de <span className="text-teal-500">{nombreSala ?? idSala}</span>.
+            Ingresa con tu nombre y DNI
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2 pt-8">

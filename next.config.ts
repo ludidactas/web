@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
                     overrides: {
                       // disable a default plugin
                       cleanupIds: false,
+                      collapseGroups: false,
                     },
                   },
                 },

@@ -3,11 +3,14 @@ import { Box, SVG, Element as SvgElement } from '@svgdotjs/svg.js'
 import { useRef, useState, useEffect, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { entries } from 'remeda'
+import { createScope, Scope, ScopeMethod } from 'animejs';
+
 
 interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string = ''> {
   SvgComponent: any
   setup?: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>) => void
   animation?: (nodos: Record<SvgIds | SvgSlotIds, SvgElement>, dt: number) => void
+  animate?: (nodos: Record<SvgIds | SvgSlotIds, Element>) => ScopeMethod
   ids?: readonly (SvgIds | SvgSlotIds)[]
   slots?: Readonly<Partial<Record<SvgSlotIds, ReactNode>>>
   className?: string
@@ -30,6 +33,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
   SvgComponent,
   setup,
   animation,
+  animate,
   ids = [] as const as (SvgIds | SvgSlotIds)[],
   slots = {} as const as Record<SvgSlotIds, ReactNode>,
   className = '',
@@ -38,16 +42,44 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
   const svgRef = useRef<SVGElement>()
 
   // Ref a los nodos: <id, nodoSvg>
-  const nodosRef = useRef<Record<SvgIds | SvgSlotIds, SvgElement>>()
+  const nodosSVGDotJsRef = useRef<Record<SvgIds | SvgSlotIds, SvgElement>>()
 
   // Ref a los slots: <id, SVGForeignObjectElement>
-  const slotsRef = useRef<Record<SvgSlotIds, SVGForeignObjectElement>>()
+  const slotsSVGDotJsRef = useRef<Record<SvgSlotIds, SVGForeignObjectElement>>()
 
   // Ref al current animationFrame
   const animationFrameRef = useRef<number>()
 
   // Flag para invisibilizar el componente hasta que termine de correr el `setup` (sino flashea)
   const [show, setShow] = useState(false)
+
+  // Ref a los nodos: <id, nodoSvg>
+  const nodosSVGRef = useRef<Record<SvgIds | SvgSlotIds, Element>>()
+
+  // Ref a los slots: <id, SVGForeignObjectElement>
+  const slotsSVGRef = useRef<Record<SvgSlotIds, SVGForeignObjectElement>>()
+
+  //Scope para animejs
+  const scope = useRef<Scope | null>(null)
+  useEffect(() => {
+    if (animate && nodosSVGRef.current) {
+      scope.current = createScope({ root: svgRef }).add(animate(nodosSVGRef.current))
+      return () => scope.current?.revert()
+    }
+  }, [animate]);
+
+  // Gather y setup de nodos PARA ANIMEJS
+    useEffect(() => {
+    if (svgRef.current) {
+      // Seleccionamos todos los nodos listados en la lista de ids
+      // Tira error si no encuentra el id
+      const nodosSvg = ids.map((id) => [id, getElem(svgRef.current!, id)])
+
+      // Construimos el mapeo de id a nodos
+      nodosSVGRef.current = Object.fromEntries(nodosSvg)
+
+    }
+  }, [svgRef])
 
   // Gather y setup de nodos (cuando se monta el svg)
   useEffect(() => {
@@ -58,19 +90,19 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
       const nodosSvg = [...ids, ...Object.keys(slots)].map((id) => [id, crearElem(svgRef.current!, id)])
 
       // Construimos el mapeo de id a nodos
-      nodosRef.current = Object.fromEntries(nodosSvg)
+      nodosSVGDotJsRef.current = Object.fromEntries(nodosSvg)
 
       // Creamos los slots y los devolvemos
       const idsSlots = Object.keys(slots).map((id) => [id, crearSlot(svgRef.current!, id)])
 
       // Lo convertimos en map
-      slotsRef.current = Object.fromEntries(idsSlots)
+      slotsSVGDotJsRef.current = Object.fromEntries(idsSlots)
 
       // Gathereamos el resto de los nodos que tengan id, para colectar
       // los que no se hayan indicado en la lista de `ids`. (No tiran error).
       svgRef.current.querySelectorAll('[id]').forEach((nodo) => {
         if (!ids.includes(nodo.id as SvgIds)) {
-          nodosRef.current![nodo.id as SvgIds] = SVG(nodo)
+          nodosSVGDotJsRef.current![nodo.id as SvgIds] = SVG(nodo)
         }
       })
     }
@@ -81,8 +113,8 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
     // Función del main loop
     const updateAnimation = (dt: number) => {
       // Aplicar animación a los nodos
-      if (nodosRef.current && animation) {
-        animation(nodosRef.current, dt)
+      if (nodosSVGDotJsRef.current && animation) {
+        animation(nodosSVGDotJsRef.current, dt)
       }
 
       // Solicitar siguiente frame
@@ -90,7 +122,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
     }
 
     // Aplicar setup
-    if (setup && nodosRef.current) setup(nodosRef.current)
+    if (setup && nodosSVGDotJsRef.current) setup(nodosSVGDotJsRef.current)
 
     // Arrancar main loop
     animationFrameRef.current = requestAnimationFrame(updateAnimation)
@@ -108,8 +140,8 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
     <>
       <SvgComponent className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
       {/* Le chantamos el contenido en los slots */}
-      {slotsRef.current &&
-        entries(slotsRef.current).map(([slotId, container]) => createPortal(slots[slotId as SvgSlotIds], container, slotId))}
+      {slotsSVGDotJsRef.current &&
+        entries(slotsSVGDotJsRef.current).map(([slotId, container]) => createPortal(slots[slotId as SvgSlotIds], container, slotId))}
     </>
   )
 }
@@ -157,10 +189,14 @@ function crearSlot(svg: SVGElement, id: string) {
  * Busca el id dentro del svg y lo devuelve como nodo de svgdotjs, o tira un error si no lo encuentra
  */
 function crearElem(svg: SVGElement, id: string) {
+  return SVG(getElem(svg,id))
+}
+
+function getElem(svg: SVGElement, id: string) {
   const elem = svg.querySelector(`[id$="${id}"]`)
   if (elem == null) throw new LdSvgError(`No se encuentra elemento (nodo) con id ${id} dentro del SVG`)
 
-  return SVG(elem)
+  return elem
 }
 
-class LdSvgError extends Error {}
+class LdSvgError extends Error { }

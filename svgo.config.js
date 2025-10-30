@@ -14,6 +14,7 @@ export default {
       params: {
         overrides: {
           cleanupIds: false,
+          collapseGroups: false,
         },
       },
     },

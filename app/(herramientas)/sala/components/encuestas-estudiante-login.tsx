@@ -11,22 +11,28 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
+import DibuEstudiante from '/svg/upssvgo.svg'
+import { oscilar } from '@/lib/animaciones'
+
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   const { setDNI, setNombre, setIngresado, setNombreSala, nombreSala, nombre, dni } = useEncuestaEstudianteLogin()
 
   // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
-  // Ojo: esto captura el websocket! 
+  // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
   const { socket } = useServerWebsockets({ rol: RolEncuesta.Publico, idSala })
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {
-    if (socket) socket.on('sala:nombre', setNombreSala)
+    if (socket) {
+      console.log('Esperando nombre de sala...')
+      socket.on('sala:nombre', setNombreSala)
+    }
   }, [socket])
 
   const [isClient, setIsClient] = useState(false)
-  
+
   const inputNombreRef = useRef<HTMLInputElement>(null)
   const inputDNIRef = useRef<HTMLInputElement>(null)
 
@@ -61,6 +67,25 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     }
 
     setIngresado(true)
+  }
+
+  if (!nombreSala) {
+    return (
+      <div>
+        <div className="flex flex-col  items-center mb-10 justify-center">
+          <LdSvg
+            className="w-[300px] md:w-[500px]"
+            SvgComponent={DibuEstudiante}
+            ids={['signo1', 'signo2'] as const}
+            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
+          />
+
+          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
+            Esta sala no existe. Por favor, verifica el id de la sala
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -1,6 +1,5 @@
 'use client'
 
-import { oscilar } from '@/lib/animaciones'
 import { nombreSplit } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
 import { useSession as useGoogleSession } from 'next-auth/react'
@@ -8,11 +7,10 @@ import { ReactNode } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
-import DibuEstudiante from '/svg/upssvgo.svg'
+
 
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import { LdSvg } from '@/components/custom/ld-svg'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -33,20 +31,6 @@ export default function EncuestasEstudiantePage({
       </div>
     )
   }
- if (status ==='unauthenticated'&& !nombreSala){
-  return<div>
-    <div className="flex flex-col  items-center mb-10 justify-center">
-          <LdSvg
-            className="w-[300px] md:w-[500px]"
-            SvgComponent={DibuEstudiante}
-            ids={['signo1', 'signo2'] as const}
-            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
-
-          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">Esta sala no existe. Por favor, verifica el id de la sala</p>
-        </div>
-        
-  </div>
- }
 
   // Formulario de acceso
   if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {

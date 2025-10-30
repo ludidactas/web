@@ -133,6 +133,9 @@ export const useConexionStore = create<Estado>((set, get) => ({
       sock.disconnect()
     }
     set({ socket: null, status: StatusDeConexion.Quieto })
+
+    // Invalidar sesión?
+
   },
 }))
 

@@ -53,14 +53,14 @@ export const conHandlers = (sala: Sala) => ({
   },
   /** Envía a admin, profe y estudiantes de la sala */
   broadcast: (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => any = data => data) => {
-    io.of('/polls/admin').sockets.forEach(s => { s.emit(event, mapper(data, s)) })
+    io.of('/sala/admin').sockets.forEach(s => { s.emit(event, mapper(data, s)) })
 
     // Informamos al profe
     const sock_profe = sockets_profes.get(sala.profe.email)
     if(!sock_profe) throw new Error(`Profe ${sala.profe.email} no tiene socket!`) 
     sock_profe.emit(event, mapper(data, sock_profe))
 
-    io.of(`/polls/${sala.id}/estudiante`).sockets.forEach(
+    io.of(`/sala/${sala.id}/estudiante`).sockets.forEach(
       (socketEstudiante) => { socketEstudiante.emit(event, mapper(data, socketEstudiante)) })
   },
   socketProfe: () => {

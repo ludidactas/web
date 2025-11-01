@@ -19,7 +19,7 @@ export const mount = (port: number) => {
     console.log("❌ Error de engine: ", err.message);
   });
 
-  console.log(`🚀 Servidor de polls corriendo en el puerto ${port}`)
+  console.log(`🚀 Servidor de salas corriendo en el puerto ${port}`)
 
   // Graceful shutdown
   process.on('SIGINT', () => {

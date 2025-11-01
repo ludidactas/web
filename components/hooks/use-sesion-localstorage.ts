@@ -1,14 +1,14 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { PollsServerSession } from "@/wss/session"
+import { WssServerSession } from "@/wss/session"
 import { useSession } from "next-auth/react"
 import { useEffect } from "react"
 
 type EstadoSesion = {
-  storedSession: PollsServerSession | null
+  storedSession: WssServerSession | null
   ready: boolean
   setReady: (ready: boolean) => void
-  saveSession: (s: PollsServerSession) => void
+  saveSession: (s: WssServerSession) => void
   clearSession: () => void
 }
 

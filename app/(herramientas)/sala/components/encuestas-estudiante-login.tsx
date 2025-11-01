@@ -4,7 +4,7 @@ import { LdSvg } from '@/components/custom/ld-svg'
 import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import LoginEst from '@/svg/loginEstsvgo.svg'
+import LoginEst from '@/svg/loginEst.svg'
 import { animate, spring, stagger } from 'animejs'
 
 

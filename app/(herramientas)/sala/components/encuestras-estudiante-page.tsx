@@ -8,7 +8,6 @@ import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import HeaderSala from './header-sala'
 
-
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
@@ -22,7 +21,7 @@ export default function EncuestasEstudiantePage({
 }) {
   const { status } = useGoogleSession()
 
-  const { dni, nombre, ingresado, nombreSala } = useEncuestaEstudianteLogin()
+  const { dni, nombre, ingresado } = useEncuestaEstudianteLogin()
 
   if (status === 'loading') {
     return (

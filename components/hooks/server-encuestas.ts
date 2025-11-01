@@ -1,4 +1,4 @@
-import { PollsServerSession } from "@/wss/session"
+import { WssServerSession } from "@/wss/session"
 import { RolEncuesta } from "@/wss/tipos"
 import { io, Socket } from "socket.io-client"
 import { Pasaporte, PasaporteEstudiante, PasaporteProfe, PasaportePublico, PasaporteTester } from "./use-conexion-wss"
@@ -14,10 +14,10 @@ export type SocketServerAuth = {sessionId?: string} & Pasaporte
 /** Endpoints para cada rol */
 export const conectores = {
   [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Admin]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Profe]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Publico]: (auth: PasaportePublico) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/polls/${auth.idSala}/publico`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Profe]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Publico]: (auth: PasaportePublico) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/publico`, { auth, autoConnect: false, transports: ['websocket'] }),
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
@@ -50,7 +50,7 @@ export async function configurarListeners({ sock, listeners }: {
     onConnect: (socket: Socket) => void,
     onError: (socket: Socket, error: Error) => void,
     onDisconect: (socket: Socket, reason: string) => void
-    onSession: (socket: Socket, session: PollsServerSession) => void
+    onSession: (socket: Socket, session: WssServerSession) => void
     onExpired: (socket: Socket) => void
   }
 }) {

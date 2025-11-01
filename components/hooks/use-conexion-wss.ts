@@ -1,4 +1,4 @@
-import { PollsServerSession } from '@/wss/session'
+import { WssServerSession } from '@/wss/session'
 import { RolEncuesta } from '@/wss/tipos'
 import { useCallback, useEffect, useRef } from 'react'
 import { isNonNullish } from 'remeda'
@@ -23,7 +23,7 @@ type Estado = {
   socket: Socket | null
   status: StatusDeConexion
   error: string | null
-  session: PollsServerSession | null
+  session: WssServerSession | null
 
   conectar: (auth: Pasaporte, sessionId?: string) => Promise<void>
   desconectar: () => void
@@ -81,7 +81,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
         console.warn('Desconectado:', reason)
         set({ status: StatusDeConexion.Quieto, socket: null })
       },
-      onSession(s: Socket, sesion: PollsServerSession) {
+      onSession(s: Socket, sesion: WssServerSession) {
         set({ session: sesion })
         s.auth = { ...s.auth, sessionId: sesion.sessionId }
       },

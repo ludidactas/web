@@ -12,15 +12,15 @@ export const io = mount(PORT)
 
 /** Setup de app */
 
-io.of('/polls/profe').use(conSession).use(esProfe)
-  .on('connect_error', (error) => { console.error(`❌ Error en /polls/profe:`, error.message) })
+io.of('/sala/profe').use(conSession).use(esProfe)
+  .on('connect_error', (error) => { console.error(`❌ Error en /sala/profe:`, error.message) })
   .on('connection', (socket: SocketProfe) => {
     handlersSalaProfe(socket)
     handlersEncuestasProfe(socket)
   })
 
-io.of('/polls/admin').use(conSession).use(esAdmin)
-  .on('connect_error', (error) => { console.log(`❌ Error en /polls/admin:`, error.message) })
+io.of('/sala/admin').use(conSession).use(esAdmin)
+  .on('connect_error', (error) => { console.log(`❌ Error en /sala/admin:`, error.message) })
   .on('connection', (socket: SocketConSesion) => { handlersAdmin(socket) })
 
 io.of('/test')
@@ -34,8 +34,8 @@ io
   .on('connection', (socket) => { console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`) })
   .on('ping', (socket) => socket.emit('pong'))
 
-io.of(/polls\/.+?\/estudiante/).use((socket, next) => {
-  const matchSalaId = socket.nsp.name.match(/^\/polls\/([a-zA-Z0-9_-]{3,50})\/estudiante$/)
+io.of(/sala\/.+?\/estudiante/).use((socket, next) => {
+  const matchSalaId = socket.nsp.name.match(/^\/sala\/([a-zA-Z0-9_-]{3,50})\/estudiante$/)
   if (matchSalaId && salas_owners.has(matchSalaId[1])) {
     next()
   } else { 
@@ -46,18 +46,18 @@ io.of(/polls\/.+?\/estudiante/).use((socket, next) => {
 
 /** Crea y hace el setup del canal para estudiantes de la sala */
 export const registrarSalaEnServer = (salaId: string) => {
-  console.log(`🏫 Creando namespace para sala: /polls/${salaId}/estudiante`)
+  console.log(`🏫 Creando namespace para sala: /sala/${salaId}/estudiante`)
 
   // Registramos la sala en el servidor (endpoint de estudiantes)
-  io.of(`/polls/${salaId}/estudiante`).use(conSession)
-    .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/estudiante:`, error.message) })
+  io.of(`/sala/${salaId}/estudiante`).use(conSession)
+    .on('connect_error', (error) => { console.log(`❌ Error en /sala/${salaId}/estudiante:`, error.message) })
     .on('connection', (socket: SocketEstudiante) => {
       handlersSalaEstudiante(socket, salaId)
       handlersEncuestasEstudiante(socket, salaId)
     })
 
-  io.of(`/polls/${salaId}/publico`)
-    .on('connect_error', (error) => { console.log(`❌ Error en /polls/${salaId}/publico:`, error.message) })
+  io.of(`/sala/${salaId}/publico`)
+    .on('connect_error', (error) => { console.log(`❌ Error en /sala/${salaId}/publico:`, error.message) })
     .on('connection', (socket: SocketEstudiante) => {
       handlersSalaPublico(socket, salaId)
     })

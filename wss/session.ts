@@ -6,7 +6,7 @@ import { RolEncuesta } from "./tipos"
 import { ConfigSala, nombreDeFantasia, salas } from "./salas/app"
 
 // Sesión del server
-export interface PollsServerSession {
+export interface WssServerSession {
   rol: RolEncuesta
   sessionId: string
   userIp?: string
@@ -19,19 +19,19 @@ export interface PollsServerSession {
 }
 
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: PollsServerSession
+  session: WssServerSession
   [etc: string]: any
 }>
 
 export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: PollsServerSession
+  session: WssServerSession
   user: { email: string, nombre?: string, dni?:string }
   /** _Puede_ venir la config de la sala al momento de crearla */
   config_sala?: Partial<ConfigSala> 
 }>
 
 export type SocketEstudiante = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: PollsServerSession
+  session: WssServerSession
   /** ID de la sala a la que se conecta el estudiante */
   sala: string
 }>
@@ -63,13 +63,13 @@ const decodearTokenNextAuth = (token: string) => {
   return payload
 }
 
-const sessions = new Map<string, PollsServerSession>()
+const sessions = new Map<string, WssServerSession>()
 
 export const getSession = (sessionId: string) => {
   return sessions.get(sessionId)
 }
 
-export const setSession = (sessionId: string, data: PollsServerSession) => {
+export const setSession = (sessionId: string, data: WssServerSession) => {
   sessions.set(sessionId, data)
 }
 

@@ -1,10 +1,9 @@
-import { PollsServerSession } from '@/wss/session'
+import { WssServerSession } from '@/wss/session'
 import { Encuesta } from '@/wss/tipos'
-import { Socket } from 'socket.io-client'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-export interface Estudiante extends PollsServerSession { conectado: boolean }
+export interface Estudiante extends WssServerSession { conectado: boolean }
 
 interface EncuestaStore {
   encuestas: Encuesta[]

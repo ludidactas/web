@@ -46,13 +46,12 @@ export const handlersEncuestasProfe = (socket: SocketProfe) => {
 }
 
 export const handlersEncuestasEstudiante = (socket: SocketEstudiante, idSala: string) => {
-
   const safe = conErrorHandling(socket)
-
-  const estudiante = estudianteSala(idSala, socket.data.session.sessionId)
 
   const user = socket.data.session.nombre
   const sala = getSalaById(idSala)
+  
+  const estudiante = estudianteSala(idSala, socket.data.session.sessionId)
 
   console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
 

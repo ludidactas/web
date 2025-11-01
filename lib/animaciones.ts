@@ -1,7 +1,5 @@
 import { LdSvg } from "@/components/custom/ld-svg"
 import { ComponentProps } from "react"
-import { number } from "zod"
-import { animate, scale, spring } from "motion"
 
 /**
  * En el contexto de usar LdSvg, esta función se encarga de crear una animación que

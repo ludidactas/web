@@ -8,12 +8,10 @@ export interface Estudiante extends PollsServerSession { conectado: boolean }
 
 interface EncuestaStore {
   encuestas: Encuesta[]
-  socket: Socket | null
   estudiantes: Estudiante[]
   addEstudiante: (estudiante: Estudiante) => void
   removeEstudiante: (estudianteId: string) => void
   setEstudiantes: (estudiantes: Estudiante[]) => void
-  setSocket: (socket: Socket) => void
   addEncuesta: (encuesta: Encuesta) => void
   updateEncuesta: (encuesta: Encuesta) => void
   deleteEncuesta: (pollId: string) => void
@@ -24,7 +22,6 @@ export const useEncuestaStore = create<EncuestaStore>()(
   subscribeWithSelector((set) => ({
     encuestas: [],
     estudiantes: [],
-    socket: null,
     addEstudiante: (estudiante) =>
       set((state) => ({
         estudiantes: state.estudiantes.find(e => e.sessionId === estudiante.sessionId) ?
@@ -37,7 +34,6 @@ export const useEncuestaStore = create<EncuestaStore>()(
     setEstudiantes: (estudiantes) => set({
       estudiantes: [...estudiantes]
     }),
-    setSocket: (socket) => set({ socket }),
     addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),
     updateEncuesta: (encuesta) =>
       // Si la encuentra updatea, sino agrega

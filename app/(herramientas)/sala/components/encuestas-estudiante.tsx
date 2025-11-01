@@ -25,27 +25,28 @@ export default function EncuestasEstudiante() {
 
       {/* Header */}
       <div className="relative">
-        <div className='absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl' />
+        <div className="absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl" />
         <div className="relative z-20 flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <LdSvg className="w-[100px] md:w-[150px]" SvgComponent={Cabeza}
+            <LdSvg
+              className="w-[100px] md:w-[150px]"
+              SvgComponent={Cabeza}
               ids={['cabeza'] as const}
-              animation={oscilar(['cabeza'], 2, 1, 0.4)} />
+              animation={oscilar(['cabeza'], 2, 1, 0.4)}
+            />
             <h1 className="hidden md:block text-[3em] font-bold text-indigo-500">Encuestas</h1>
           </div>
-          <div className='flex flex-col items-center justify-center'>
-
-
+          <div className="flex flex-col items-center justify-center">
             <h1 className="block md:hidden text-2xl font-bold text-indigo-500">Encuestas</h1>
-          {estado === StatusDeConexion.Conectado ? (
-            <span className="text-emerald-700 animate-pulse">Conectado</span>
-          ) : (
-            <span className="text-red-700">Desconectado</span>
-          )}
+            {estado === StatusDeConexion.Conectado ? (
+              <span className="text-emerald-700 animate-pulse">Conectado</span>
+            ) : (
+              <span className="text-red-700">Desconectado</span>
+            )}
           </div>
         </div>
       </div>
-    
+
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (
@@ -60,10 +61,12 @@ export default function EncuestasEstudiante() {
             className="w-[300px] md:w-[500px] grayscale"
             SvgComponent={DibuEstudiante}
             ids={['signo1', 'signo2'] as const}
-            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)} />
+            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
+          />
 
-          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">{error ? error : 'Parece que no hay encuestas activas.'}</p>
-
+          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
+            {error ? error : 'Parece que no hay encuestas activas.'}
+          </p>
         </div>
       )}
     </div>
@@ -72,7 +75,9 @@ export default function EncuestasEstudiante() {
 
 function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const { votar } = useEncuestaEstudiante()
-  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(encuesta.votoEmitido)
+  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(
+    encuesta.votoEmitido
+  )
   const [yaVotado, setYaVotado] = useState(!encuesta.puedoVotar)
 
   const [aportando, setAportando] = useState(false)
@@ -138,9 +143,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
             disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen}
           />
         )}
-        {encuesta.admiteAportes && (
-          <p className="text-black/20 text-xs">Acá habría que agregar un input para que agreguen opciones</p>
-        )}
       </ol>
 
       {/* Acciones */}
@@ -152,8 +154,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
             onClick={() => {
               if (aportando) {
                 votar(encuesta.id, undefined, aporte)
-              } else { 
-
+              } else {
                 votar(encuesta.id, seleccion)
               }
               setYaVotado(true)

@@ -1,9 +1,10 @@
 import { PollsServerSession } from '@/wss/session'
 import { RolEncuesta } from '@/wss/tipos'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { isNonNullish } from 'remeda'
 import { Socket } from 'socket.io-client'
 import { create } from 'zustand'
+import DebugPanel from './conexion-wss-debug'
 import { configurarListeners, handshake, limpiarListeners } from './server-encuestas'
 import useSesionGuardada from './use-sesion-localstorage'
 
@@ -64,12 +65,16 @@ export const useConexionStore = create<Estado>((set, get) => ({
   session: null,
 
   async conectar(auth, sessionId) {
+    if (get().socket) console.warn('Ya hay un socket!', get().socket!.id)
+
     set({ status: StatusDeConexion.Conectando, error: null })
 
     const sock = await handshake({ ...auth, sessionId })
 
+    // En el listener de onConnect seteamos el socket en el store
     const listeners = {
       onConnect(s: Socket) {
+        console.log('Conectado al servidor de encuestas, socket id:', s.id)
         set({ socket: s, status: StatusDeConexion.Conectado })
       },
       onDisconect(_s: Socket, reason: string) {
@@ -122,6 +127,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
     }
 
     await configurarListeners({ sock, listeners })
+
     sock.connect()
   },
 
@@ -132,14 +138,20 @@ export const useConexionStore = create<Estado>((set, get) => ({
       sock.disconnect()
     }
     set({ socket: null, status: StatusDeConexion.Quieto })
+
+    // Invalidar sesión?
+
   },
 }))
 
 /** Cose la sesión storeada con el server de WSS */
 export function useConexionWss(auth: Pasaporte) {
   const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada()
-  const { status, conectar, socket, session, error } = useConexionStore()
+  const { status, conectar, desconectar, socket, session, error } = useConexionStore()
+
   const haySocket = useRef(false)
+
+  const WssDebugPanel = useCallback(() => DebugPanel({ data: { status, session, error } }), [status, session, error])
 
   // cuando el servidor nos da una nueva sesión → persistir
   useEffect(() => {
@@ -161,20 +173,24 @@ export function useConexionWss(auth: Pasaporte) {
     }
   }, [status, clearSession, sessionReady])
 
+  // Cuando tengamos sesión, si el status es quieto y no hay socket (es decir, si estamos arrancando), triggereamos
   useEffect(() => {
     if (!sessionReady) return
+
     if (status === StatusDeConexion.Quieto && !haySocket.current) {
       console.log(`Sesión lista, conectando...`, status, socket)
       haySocket.current = true
       conectar(auth, storedSession?.sessionId)
-    }
+    } 
+
     return () => {
-      if (isNonNullish(socket)) {
-        socket.disconnect()
+      if (isNonNullish(socket) && haySocket.current) {
+        haySocket.current = false
+        console.log(`Limpiando socket...`, socket.id)
+        desconectar()
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionReady, status])
+  }, [sessionReady, status, haySocket, storedSession])
 
-  return { estado: status, socket, conectar, session, error }
+  return { estado: status, socket, conectar, session, error, WssDebugPanel }
 }

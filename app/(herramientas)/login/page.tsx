@@ -14,8 +14,8 @@ export default async function LoginPage() {
   )
 
   return (
-    <div className="flex flex-col gap-2 items-center justify-center h-screen">
-      <div className='bg-white p-10 rounded-xl text-center '>
+    <div className="flex flex-col gap-2 items-center bg-cyan-50 justify-center h-screen">
+      <div className=' flex flex-col bg-white p-10 rounded-xl items-center justify-center '>
         <div className="flex md:w-[20em] items-center mb-4 gap-4">
           <Image className="w-8 md:w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
           <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
@@ -24,7 +24,7 @@ export default async function LoginPage() {
         </div>
         <p>Ya estás conectadx con </p>
         <span className='text-cyan-600'>{session.user.email}</span>
-        <Link href="/encuestas">
+        <Link href="/sala">
           <div className='flex flex-col items-center my-4 justify-center p-8 gap-4 hover:bg-cyan-600/10 border-2 rounded-xl hover:cursor-pointer'>
             <p className='font-bold'>{session.user.name}</p>
             {session.user.image && <img className='rounded-full w-20' src={session.user.image} alt="User Avatar" />}

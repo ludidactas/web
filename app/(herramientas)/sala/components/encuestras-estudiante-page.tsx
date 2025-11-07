@@ -22,7 +22,7 @@ export default function EncuestasEstudiantePage({
 }) {
   const { status } = useGoogleSession()
 
-  const { dni, nombre, ingresado, nombreSala } = useEncuestaEstudianteLogin()
+  const { dni, nombre, ingresado } = useEncuestaEstudianteLogin()
 
   if (status === 'loading') {
     return (

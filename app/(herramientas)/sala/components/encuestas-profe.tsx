@@ -1,40 +1,45 @@
 'use client'
 
 import { LdSvg } from '@/components/custom/ld-svg'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { ScrollBar } from '@/components/ui/scroll-area'
+import getInitials, { getRandomColor } from '@/lib/avatarname'
+import { cn, exportarPlanilla } from '@/lib/utils'
 import EncuestasIcon from '@/svg/encuestas.svg'
 import { Encuesta } from '@/wss/tipos'
+import { pollBase } from '@/wss/validators'
+import { Icon } from '@iconify/react'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import {
-  Copy,
-  SquareCheckBig,
-  Users,
-  X,
-  Eraser,
-  Send,
-  CirclePlus,
-  MessageCircleQuestionIcon,
-  Download,
-} from 'lucide-react'
+import { CircleDot, CirclePlus, Copy, Download, Eraser, Eye, EyeOff, Info, MessageCircleQuestionIcon, Send, SquareCheckBig, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import { ComponentProps, PropsWithChildren, useState } from 'react'
-import { useCopyToClipboard } from 'usehooks-ts'
-import { useEncuestaProfe } from './encuestas-profe-context'
-import { ScrollBar } from '@/components/ui/scroll-area'
-import { cn, exportarPlanilla } from '@/lib/utils'
-import { ScrollArea } from '@radix-ui/react-scroll-area'
-import getInitials, { getRandomColor } from '@/lib/avatarname'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { toast } from 'sonner'
-import { DialogTrigger, Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
-import { Icon } from '@iconify/react'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useCopyToClipboard } from 'usehooks-ts'
+import { EncuestaSVG } from '../[idSala]/overlay/components/estadistica-svg'
+import { EstadisticaSvgConfig } from '../[idSala]/overlay/components/estadistica-svg-config'
+import { useEncuestaProfe } from './encuestas-profe-context'
 
 export default function EncuestasAdmin() {
-  const { linkSala, estado } = useEncuestaProfe()
+  const { linkSala, estado, encuestas } = useEncuestaProfe()
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
+  const encuestaEnfocada = encuestas.find((e) => e.isFocused) || encuestas[0]
+
+  // Configuracion del overlay
+  const config: EstadisticaSvgConfig = {
+    bg: 'rgba(0, 0, 0, 0.6)', // Cambia el fondo
+    barHeight: 60, // Cambia la altura de barras
+    barSpacing: 80, // Cambia el espaciado
+    titleHeight: 70, // Cambia la altura del título
+    margin: 10, //Cambia el margin
+  }
+
+  const linkOverlay = linkSala + 'overlay'
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -50,15 +55,18 @@ export default function EncuestasAdmin() {
       })
   }
 
+
+
   return (
-    <>
+    <div className="flex gap-2 justify-center">
+    
       {/* DEBUG */}
       {/* <pre>{JSON.stringify({ ready, storedSession }, null, 2)}</pre>
       <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
 
-      <div className="flex gap-2 justify-center">
         <div className="rounded-xl flex w-auto">
-          <div className="w-[25em] md:w-[45em] bg-white p-6 md:p-10 rounded-xl">
+          <div className="w-screen lg:w-full bg-white p-2 md:p-10 rounded-xl">
+
             {/* Lista de Participantes Mobile */}
             <div className="block lg:hidden justify-self-end">
               <ListaMobile>
@@ -69,32 +77,52 @@ export default function EncuestasAdmin() {
             <Status />
 
             {linkSala && (
-              <div className="flex items-center justify-center gap-4 my-10">
-                <p className="leading-normal text-center text-xs md:text-lg">
-                  Tu sala:{' '}
-                  <Link href={linkSala} className="text-blue-700 hover:underline">
-                    {linkSala}
-                  </Link>
-                </p>
-                <button title="Copiar" onClick={handleCopy(linkSala)}>
-                  {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                </button>
+              <div className="flex flex-col items-center justify-center gap-1 my-10">
+                {/* Link sala */}
+                <div className='flex gap-2 text-xl'>
+                  <p className="leading-normal text-center text-sm md:text-lg">
+                    Tu sala:{' '}
+                    <Link target='_blank' href={linkSala} className="text-blue-700 hover:underline">
+                      {linkSala}
+                    </Link>
+                  </p>
+                  <button title="Copiar" onClick={handleCopy(linkSala)}>
+                    {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+                  </button>
+                </div>
+
+                {/* Link overlay */}
+                <div className='flex flex-col gap-2 border-2 p-2 rounded'>
+                  <div className='flex gap-2'>
+                    <p className="leading-normal text-center text-xs md:text-lg">
+                      Visualizador:{' '}
+                      <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
+                        {linkOverlay}
+                      </Link>
+                    </p>
+                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
+                    </button>
+                  </div>
+                  {/* Overlay Mobile */}
+                  <div className='w-full flex flex-col text-indigo-500 font-bold items-center lg:hidden bg-white'>
+                    <p>Vista previa </p>
+                    <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
+                  </div>
+                </div>
               </div>
             )}
 
             {!linkSala && <span>Link de sala no recibido</span>}
 
             {/* Barra de status */}
-
             <hr className="invisible py-2" />
-
             {estado === StatusDeConexion.Conectado && (
               <div className="flex flex-col gap-10">
                 <AgregarPregunta />
                 <ListaEncuestas />
               </div>
             )}
-
             {estado !== StatusDeConexion.Conectado && (
               <div className="text-center">
                 <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
@@ -104,16 +132,43 @@ export default function EncuestasAdmin() {
                 </p>
               </div>
             )}
+            {/* Info para el usuario acerca de acciones */}
+            <DialogAcciones />
           </div>
         </div>
 
-        <div className="hidden lg:block">
-          <div className="sticky top-0 flex flex-col gap-4 bg-white rounded-xl h-max p-8">
-            <ListaEstudiantes />
+        <div className='flex flex-col gap-4'>
+          {/* Lista estudiantes desktop */}
+          <div className="hidden lg:block">
+            <div className="sticky top-0 flex max-h-80 flex-col gap-4 bg-white rounded-xl h-max p-8">
+              <ListaEstudiantes />
+            </div>
+          </div>
+
+          {/* Overlay Desktop */}
+          <div className='hidden md:flex border-4 md:flex-col rounded-xl text-indigo-500 items-center bg-white w-full'>
+            {encuestaEnfocada&& (
+              <div className='flex p-2 gap-2'>
+                <p className='font-bold '>Visualizador vista previa </p>
+                <CircleDot absoluteStrokeWidth  className='animate-pulse text-purple-500' />
+                
+                </div>)}
+                <div className='flex gap-2'>
+                    <p className="leading-normal text-center text-md">
+                      Link:
+                      <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
+                        {linkOverlay}
+                      </Link>
+                    </p>
+                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
+                    </button>
+                  </div>
+            <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
           </div>
         </div>
       </div>
-    </>
+    
   )
 }
 
@@ -261,7 +316,7 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
           Participantes
         </h1>
       </DialogTrigger>
-      <DialogContent className="rounded-xl">
+      <DialogContent className="overflow-y-auto rounded-xl">
         <DialogTitle />
         {children}
         <DialogClose className="justify-items-center">
@@ -322,6 +377,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const [justCopied, setJustCopied] = useState(false)
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
+  const totalVotos = encuesta.opciones.reduce((total, opcion) => total + opcion.votos, 0)
 
   const handleCopy = (text: string) => () => {
     copy(text)
@@ -340,19 +396,20 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
 
   return (
-    <div className="p-4 m-4 rounded-xl border-4 border-indigo-50">
+    <div className="p-4 m-4 rounded-xl border-4 border-indigo-500/10">
+
       {/* Titulo y status */}
-      <div className="flex gap-4 bg-white rounded-xl p-4 items-start justify-between">
-        <div className="flex gap-4 md:p-4 items-center">
-          <MessageCircleQuestionIcon size={40} className="self-start text-indigo-500" />
-          <h3 className="w-[90%] text-sm break-all md:text-xl">{encuesta.pregunta}</h3>
+      <div className="flex flex-col sm:flex-row md:gap-4 bg-indigo-500/10 text-indigo-500 rounded-xl p-2 md:p-4 justify-between sm:items-center">
+        <div className="flex gap-2 items-center">
+          <MessageCircleQuestionIcon size={10} className="shrink-0 col-start-1 col-end-2 w-10 h-10" />
+          <h3 className="text-sm break-words font-bold  md:text-xl">{encuesta.pregunta}</h3>
         </div>
-        <div className="flex flex-col w-20 md:gap-1 items-end">
+        <div className="flex flex-col md:gap-1 items-end">
           <span
             className={cn('text-sm', {
               'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
               'text-rose-800': estado === 'Cerrada',
-              'text-violet-700 font-bold animate-pulse duration-500': estado === 'Enfocada',
+              'text-violet-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
             })}
           >
             {estado}
@@ -363,103 +420,141 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <button
             className="mt-2"
             title="Copiar pregunta"
-            onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo)}
+            onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo + '\n' + 'Total participantes: ' + totalVotos)}
           >
-            {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+            {justCopied ? <SquareCheckBig absoluteStrokeWidth className="text-emerald-700" /> : <Copy absoluteStrokeWidth />}
           </button>
         </div>
       </div>
-<div>
-      <ol className="list-[lower-latin] text-xs md:text-xl text-slate-400 py-8 pl-8 md:px-12 content-center m-2 md:m-6">
+
+      {encuesta.admiteAportes && <p className="text-xs list-none text-center text-emerald-500">Los estudiantes pueden agregar opciones</p>}
+
+      {/* Opciones */}
+      <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-indigo-500/10 text-slate-400 py-4 pl-8 md:px-10 items-center m-2 ">
+        {/* Lista de opciones y votos */}
+        <div className='flex justify-end'>{encuesta.isRevealed && <Eye absoluteStrokeWidth className='text-cyan-500 mr-6' />} {!encuesta.isRevealed && <EyeOff absoluteStrokeWidth className='mr-6' />}</div>
+
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
             <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
               <p className="break-all">{opcion.texto}</p>
-              <p className="text-emerald-500 font-bold w-40 text-right content-center"> {opcion.votos} votos </p>
+              <p className={` font-bold w-40 text-right content-center ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}> {opcion.votos} votos</p>
             </div>
           </li>
         ))}
-        {encuesta.admiteAportes && <li className="text-xs list-none pt-4">Los estudiantes pueden agregar opciones</li>}
+        <ol>
+          <li className='flex mt-2 text-md mx-16 text-indigo-500 rounded-xl bg-indigo-500/10 font-bold text-center justify-between p-2 gap-4'>
+            <p> Total Participantes </p> <p>{totalVotos}</p>  </li>
+        </ol>
       </ol>
 
- {/* Revelar/desrevelar */}
-        {!encuesta.isRevealed && (
-          <BotonEncuesta
-            className="bg-yellow-500 text-white px-4 py-2 rounded"
-            onClick={() => revelarOpciones(encuesta.id)}
-            texto="Revelar respuestas"
-            icon="mdi:text-box-outline"
-          />
-        )}
-        {encuesta.isRevealed && (
-          <BotonEncuesta
-            className="w-[40] bg-yellow-100 text-black px-2 md:px-4 py-2 rounded border border-yellow-900"
-            onClick={() => desrevelarOpciones(encuesta.id)}
-            texto="Desrevelar"
-            icon="mdi:question-mark"
-          />
-        )}
-       
-</div>
       {/* Acciones */}
-      <div className="flex items-center justify-center gap-4 my-2">
-       
-       {/* Enfocar */}
-        {!encuesta.isFocused && (
-          <BotonEncuesta
-            className="bg-violet-600 text-white px-4 py-2 rounded disabled:bg-violet-300"
-            onClick={() => enfocarPregunta(encuesta.id)}
-            disabled={!encuesta.isPublished}
-            texto="Enfocar"
-            icon="material-symbols:center-focus-weak-rounded"
-          />
-        )}
 
-       
+      <div className='flex flex-col my-4 gap-2'>
 
-        {/* Publicar/esconder */}
-        {!encuesta.isPublished && (
-          <BotonEncuesta
-            className="bg-emerald-500 text-white px-4 py-2 rounded"
-            onClick={() => publicarPregunta(encuesta.id)}
-            texto="Publicar"
-            icon="mdi:show"
-          />
-        )}
-        {encuesta.isPublished && (
-          <BotonEncuesta
-            className="bg-emerald-100 text-black px-2 md:px-4 py-2 rounded border border-green-900"
-            onClick={() => esconderPregunta(encuesta.id)}
-            texto="Esconder"
-            icon="mdi:hide"
-          />
-        )}
+        {/* Primera fila de botones */}
+        <div className='flex gap-4 items-center justify-center'>
 
-        {/* Abrir/Cerrar */}
-        {!encuesta.isOpen && (
-          <BotonEncuesta
-            className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
-            onClick={() => abrirPregunta(encuesta.id)}
-            texto="Abrir"
-            icon="mdi:hand-open"
-          />
-        )}
-        {encuesta.isOpen && (
-          <BotonEncuesta
-            className="bg-indigo-100 text-black px-2 md:px-4 py-2 rounded border border-blue-900"
-            onClick={() => cerrarPregunta(encuesta.id)}
-            texto="Cerrar"
-            icon="mdi:hand-back-left"
-          />
-        )}
+          {/* Revelar y desrevelar votos */}
+          {!encuesta.isRevealed && (
+            <BotonEncuesta
+              className="m-0 md:px-0 bg-cyan-100 text-cyan-600 border-2 border-cyan-500 py-2 rounded"
+              onClick={() => revelarOpciones(encuesta.id)}
+              texto="Revelar votos"
+              icon=""
+              title='Los estudiantes no pueden ver los votos. Haz click para revelarlos'
+            />
+          )}
 
-        {/* Eliminar */}
-        <BotonEncuesta
-          className="bg-rose-800/90 text-white px-4 py-2 rounded"
-          onClick={() => borrarPregunta(encuesta.id)}
-          texto="Eliminar"
-          icon="mdi:trash-can"
-        />
+          {encuesta.isRevealed && (
+            <BotonEncuesta
+              className="m-0 bg-cyan-500 text-white py-2 rounded"
+              onClick={() => desrevelarOpciones(encuesta.id)}
+              texto="Ocultar votos"
+              icon=""
+              title='Los estudiantes pueden ver los votos. Haz click para esconderlos'
+            />)}
+
+          {/* Enfocar */}
+          {!encuesta.isFocused && (
+            <BotonEncuesta
+              className="bg-purple-500 text-white px-4 py-2 rounded disabled:bg-purple-100 disabled:border-2 disabled:border-purple-500 disabled:text-purple-500"
+              onClick={() => enfocarPregunta(encuesta.id)}
+              disabled={!encuesta.isPublished}
+              texto="Enfocar"
+              icon="material-symbols:center-focus-weak-rounded"
+            />
+          )}
+
+          {/* Publicar/esconder */}
+          {!encuesta.isPublished && (
+            <BotonEncuesta
+              className="bg-emerald-500 text-white p-2 rounded"
+              onClick={() => publicarPregunta(encuesta.id)}
+              texto="Publicar"
+              icon="mdi:show"
+            />
+          )}
+          {encuesta.isPublished && (
+            <BotonEncuesta
+              className="bg-emerald-100 text-emerald-600 p-2 rounded border-2 border-emerald-500"
+              onClick={() => esconderPregunta(encuesta.id)}
+              texto="Esconder"
+              icon="mdi:hide"
+            />
+          )}
+        </div>
+
+        {/* Segunda fila de boones  */}
+        <div className='flex gap-4 items-center justify-center'>
+          {/* Abrir/Cerrar */}
+          {!encuesta.isOpen && (
+            <BotonEncuesta
+              className="bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+              onClick={() => abrirPregunta(encuesta.id)}
+              texto="Abrir"
+              icon="mdi:hand-open"
+            />
+          )}
+          {encuesta.isOpen && (
+            <BotonEncuesta
+              className="bg-indigo-100 px-2 md:px-4 py-2 rounded border-2 text-indigo-500 border-indigo-500"
+              onClick={() => cerrarPregunta(encuesta.id)}
+              texto="Cerrar"
+              icon="mdi:hand-back-left"
+            />
+          )}
+
+          {/* Eliminar */}
+          <Dialog>
+            <DialogTrigger>
+              <p className="bg-rose-700 text-white px-4 py-2 rounded flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'"
+              >Eliminar</p>
+            </DialogTrigger>
+            <DialogContent className='flex flex-col items-center'>
+              <DialogHeader>
+                <DialogTitle className='text-center leading-6'>
+                  ¿Estás seguro/a de que deseas eliminar la pregunta?
+                </DialogTitle>
+              </DialogHeader>
+              <div className='flex gap-2'>
+                <DialogClose>
+                  <BotonEncuesta
+                    className="bg-emerald-700/90 text-white px-4 py-2 rounded"
+                    texto="Cancelar"
+                    icon=""
+                  />
+                </DialogClose>
+                <BotonEncuesta
+                  className="bg-rose-700 text-white px-4 py-2 rounded"
+                  texto="Eliminar"
+                  icon="mdi:trash-can"
+                  onClick={() => borrarPregunta(encuesta.id)}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   )
@@ -472,7 +567,7 @@ const BotonEncuesta = ({
   icon,
   ...props
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
-  <button className={cn('w-20 text-xs md:text-xl md:w-32 px-2 md:px-4 py-2 rounded border', className)} {...props}>
+  <button className={cn('flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded border', className)} {...props}>
     <span className="hidden md:block">{texto}</span>
     <span className="md:hidden w-full flex justify-center">
       <Icon icon={icon} />
@@ -485,15 +580,15 @@ function AgregarPregunta() {
   const { enviarPregunta } = useEncuestaProfe()
 
   const [pregunta, setPregunta] = useState('')
-  const [respuestas, setRespuestas] = useState<string[]>(['', ''])
-  const [recibeAportes, setRecibeAportes] = useState<boolean | 'indeterminate'>(false)
+  const [opciones, setOpciones] = useState<string[]>(['', ''])
+  const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
 
   const agregarRespuesta = () => {
-    setRespuestas((rs) => [...rs, ''])
+    setOpciones((rs) => [...rs, ''])
   }
 
   const actualizarRespuesta = (index: number, valor: string) => {
-    setRespuestas((respuestas) => {
+    setOpciones((respuestas) => {
       const nuevas = [...respuestas]
       nuevas[index] = valor
       return nuevas
@@ -501,20 +596,23 @@ function AgregarPregunta() {
   }
 
   const eliminarRespuesta = (index: number) => {
-    if (respuestas.length > 1) {
-      setRespuestas((respuestas) => respuestas.filter((_, i) => i !== index))
+    if (opciones.length > 1) {
+      setOpciones((respuestas) => respuestas.filter((_, i) => i !== index))
     }
   }
 
+  const { success, error } = pollBase.safeParse({ pregunta, opciones, admiteAportes })
+
   const postearPregunta = () => {
-    enviarPregunta(pregunta, respuestas, recibeAportes === 'indeterminate' ? false : recibeAportes)
+    enviarPregunta(pregunta, opciones, admiteAportes === 'indeterminate' ? false : admiteAportes)
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
-        setRespuestas(['', ''])
+        setOpciones(['', ''])
       })
       .catch((msg) => toast.error(msg))
   }
+
 
   return (
     <div className="flex flex-col rounded-xl bg-indigo-50 p-4 gap-2">
@@ -526,7 +624,7 @@ function AgregarPregunta() {
         tabIndex={1}
       />
 
-      {respuestas.map((respuesta, index) => (
+      {opciones.map((respuesta, index) => (
         <div key={index} className="flex gap-4 items-center">
           <span className="whitespace-nowrap">Opc. {index + 1}</span>
           <input
@@ -536,38 +634,85 @@ function AgregarPregunta() {
             onChange={(e) => actualizarRespuesta(index, e.target.value)}
             tabIndex={index + 2}
           />
-          {respuestas.length > 1 && (
+          {opciones.length > 1 && (
             <button
-              className="text-rose-600 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-rose-700 px-2 py-1 rounded text-sm transition-all duration-100 w-8 h-8"
+              className="flex items-center text-rose-600 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-rose-700 p-1 rounded text-sm transition-all duration-100"
               onClick={() => eliminarRespuesta(index)}
               tabIndex={-1}
             >
-              X
+              <X size={15} absoluteStrokeWidth />
             </button>
           )}
         </div>
+
       ))}
 
-      <div className="flex items-center gap-2 py-4">
-        <Checkbox checked={recibeAportes} onCheckedChange={setRecibeAportes} title="" />
+      {/* Checkbox estudiantes pueden agregar respuestas */}
+      <div className="flex items-center justify-center gap-2 py-4">
+        <Checkbox className='bg-white' checked={admiteAportes} onCheckedChange={setAdmiteAportes} title="" />
         <p className="text-indigo-500">Los estudiantes pueden agregar sus propias opciones</p>
       </div>
 
+      {error && (
+        <p className="flex text-rose-500 w-96 self-center text-center text-xs">(La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)</p>
+      )}
+
+      {/* Boton agregar respuesta */}
       <button
         className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
         onClick={agregarRespuesta}
-        tabIndex={respuestas.length + 2}
+        tabIndex={opciones.length + 2}
       >
         <CirclePlus size={20} />
         Agregar opción
       </button>
+      {/* Boton postear pregunta */}
+
       <button
-        className="flex place-content-center items-center font-semibold gap-2 bg-emerald-500 text-white px-2 md:px-4 py-2 rounded"
+        disabled={!success}
+        className='flex place-content-center items-center font-semibold gap-2 bg-emerald-500 text-white px-2 md:px-4 py-2 rounded disabled:bg-slate-300 disabled:text-slate-500'
         onClick={postearPregunta}
-        tabIndex={respuestas.length + 2}
+        tabIndex={opciones.length + 2}
       >
         <Send size={20} /> Enviar pregunta
       </button>
     </div>
   )
+}
+
+function DialogAcciones() {
+  return <div className='flex mt-4 p-2 rounded text-indigo-500 items-center justify-center hover:font-bold hover:underline'>
+    <Dialog>
+      <DialogTrigger className='flex gap-1 '>
+        <Info /><p>Ver info sobre acciones</p>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className='text-center'>Acciones</DialogTitle>
+          <DialogDescription className='text-center'>
+            Te explicamos las acciones que puedes realizar en cada encuesta mediante los botones
+          </DialogDescription>
+        </DialogHeader>
+        <p className='font-bold'>Revelar/Desrevelar votos:</p>
+        <span>Por defecto, los participantes no pueden ver los votos en sus salas.
+          Para que puedan ver los votos, debes activar la opcion <span className='text-cyan-500'>revelar votos</span> </span>
+        <p className='font-bold'>Enfocar:</p>
+        <ol className='list-disc px-4'>
+          <li>Se activa para visualizar la pregunta y las respuestas en vivo en el overlay.</li>
+          <li>Solo cuando una pregunta está publicada, puede ser enfocada</li>
+          <li>El link para visualizar el overlay se encuentra junto con el link de la sala en la parte superior</li>
+        </ol>
+        <p className='font-bold'>Publicar/Esconder:</p><p>Cuando se crea una pregunta, esta no se publica en la sala de estudiantes inmediatamente.
+          Para hacerla visible se debe hacer click en <span className='text-cyan-500'>publicar</span>
+        </p>
+        <p className='font-bold'>Abrir/Cerrar:</p>
+        <ol className='list-disc px-4'>
+          <li>Todas las preguntas creadas, tienen el estado <span className='text-emerald-500'>abierto</span> y admite votos</li>
+          <li>Al cerrar la pregunta, los participantes seguirán viendo la pregunta publicada, pero no podrán emitir votos</li>
+        </ol>
+        <p className='font-bold'>Eliminar</p>
+        <p>Elimina definitivamente la pregunta <span className='text-rose-500'>!</span></p>
+      </DialogContent>
+    </Dialog>
+  </div>
 }

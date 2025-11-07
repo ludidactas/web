@@ -26,10 +26,10 @@ export default async function Page() {
             <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
 
-          <div className="md:w-4/5">
+          <div className=''>
             <EncuestasAdmin />
           </div>
-          <div className="w-full h-24" />
+          <div className="w-full" />
          </div>
       </EncuestaProfeProvider>
     </SessionProvider>

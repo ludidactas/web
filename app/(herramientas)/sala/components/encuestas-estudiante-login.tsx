@@ -154,7 +154,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
               }}
             />
           </div>
-          <Button className=" bg-indigo-500/90 font-semibold" type="button" onClick={handleConectarse}>
+          <Button className=" bg-[#6F41CB] font-semibold" type="button" onClick={handleConectarse}>
             Conectarse con nombre y DNI
           </Button>
 

@@ -12,6 +12,11 @@ export const io = mount(PORT)
 
 /** Setup de app */
 
+// Registramos las salas preexistentes en db
+const salas_preexistentes = await db.hkeys('salas')
+salas_preexistentes.forEach(registrarSalaEnServer)
+
+// Canal para profes
 io.of('/sala/profe').use(conSession).use(esProfe)
   .on('connect_error', (error) => { console.error(`❌ Error en /sala/profe:`, error.message) })
   .on('connection', async (socket: SocketProfe) => {
@@ -19,10 +24,12 @@ io.of('/sala/profe').use(conSession).use(esProfe)
     await handlersEncuestasProfe(socket)
   })
 
+// Canal para admins
 io.of('/sala/admin').use(conSession).use(esAdmin)
   .on('connect_error', (error) => { console.log(`❌ Error en /sala/admin:`, error.message) })
   .on('connection', async (socket: SocketConSesion) => { await handlersAdmin(socket) })
 
+// Canal de test
 io.of('/test')
   .on('connect_error', (error) => { console.log(`❌ Error en /test:`, error.message) })
   .on('connection', (socket: Socket) => handlersTest(socket))
@@ -55,7 +62,7 @@ io.of(/sala\/.+?\/estudiante/).use(async (socket, next) => {
 })
 
 /** Crea y hace el setup del canal para estudiantes de la sala */
-export const registrarSalaEnServer = (salaId: string) => {
+export function registrarSalaEnServer(salaId: string){
   console.log(`🏫 Creando namespace para sala: /sala/${salaId}/estudiante`)
 
   // Registramos la sala en el servidor (endpoint de estudiantes)

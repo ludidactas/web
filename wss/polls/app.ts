@@ -41,7 +41,7 @@ export async function profeSala(email: string){
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
     await db.hset(`sala:${salaId}:polls`, poll.id, JSON.stringify(poll))
 
-    console.log(`➕ Encuesta creada: ${poll.pregunta}`)
+    console.log(`➕ Encuesta creada: ${poll.pregunta} (id ${poll.id})`)
 
     return poll
   }
@@ -93,8 +93,16 @@ export async function profeSala(email: string){
     // Validamos
     await assertPollExists(salaId, pollId)
 
+    // La borramos
     await db.hdel(`sala:${salaId}:polls`, pollId)
-    await db.hdel(`sala:${salaId}:poll:${pollId}:votantes`)
+
+    // Borramos sus votantes
+    await db.del(`sala:${salaId}:poll:${pollId}:votantes`)
+
+    // Si estaba enfocada, desenfocamos
+    const enfocada = await db.get(`sala:${salaId}:polls:focused`)
+    if (enfocada === pollId) db.del(`sala:${salaId}:polls:focused`)
+    
     console.log(`🗑️  Encuesta borrada: ${pollId}`)
   }
 
@@ -134,7 +142,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
   // Acciones de estudiante:
   
   async function assertElEstudianteNoVotoTodavia(poll: Encuesta, user: string) {
-    if (await db.smismember(`sala:${idSala}:poll:${poll.id}:votantes`, user)) throw new Error('Ya votaste en esta encuesta')
+    if (await db.sismember(`sala:${idSala}:poll:${poll.id}:votantes`, user)) throw new Error('Ya votaste en esta encuesta')
   }
 
   async function votar(voteData: z.infer<typeof voteValidator>) {
@@ -148,7 +156,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
 
     // Validamos
     assertPollIsOpen(poll)
-    assertElEstudianteNoVotoTodavia(poll, sessionId)
+    await assertElEstudianteNoVotoTodavia(poll, sessionId)
     if (aporte) assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
 
     // Guardamos el voto
@@ -190,6 +198,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) { 
   await sala.broadcast('poll:updated', poll, async (poll, socket) => { 
+    // console.log(`Broadcasteado poll ${(poll as any).id} a ${socket.id} (sesion ${JSON.stringify(socket.data.session)})`)
     if (socket.data.session.rol === RolEncuesta.Estudiante) {
       return await hidratar(sala.id, poll as Encuesta, socket.data.session.sessionId)
     }
@@ -230,7 +239,7 @@ export function assertValidPoll(pollData: unknown) {
 
 async function assertPollExists(idSala: string, idPoll: string) {
   const existe = await db.hexists(`sala:${idSala}:polls`, idPoll)
-  if (!existe) throw new Error('La encuesta no existe!')
+  if (!existe) throw new Error(`La encuesta ${idPoll} no existe!`)
 }
 
 function assertPollIsOpen(poll: Encuesta) {

@@ -116,6 +116,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
           // Revisar
           msg = `Esta sala no existe! Por favor, verificá el ID`
           set({ status: StatusDeConexion.Error, error: msg })
+          // console.error(err)
         }
 
         else { 

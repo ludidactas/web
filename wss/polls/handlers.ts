@@ -1,8 +1,8 @@
 import { ExtendedError } from "socket.io"
 import { conErrorHandling } from "../middleware"
-import { getEmailProfeDeSala, getSalaByEmailProfe, getSalaById } from "../salas/app"
+import { getSalaByEmailProfe, getSalaById } from "../salas/app"
 import { SocketEstudiante, SocketProfe } from "../session"
-import { estudianteSala, broadcastPoll, profeSala } from "./app"
+import { broadcastPoll, estudianteSala, profeSala } from "./app"
 
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
@@ -46,8 +46,6 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   const sala = await getSalaById(idSala)
   
   const estudiante = await estudianteSala(idSala, socket.data.session.sessionId)
-
-  console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
 
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', await estudiante.listar())

@@ -1,7 +1,7 @@
 import { Socket } from "socket.io"
 
 // Functiones de arquitectura, orquestan la ejecución de las otras:
-type Middleware<T extends unknown[]> = (...args: T) => void
+type Middleware<T extends unknown[]> = (...args: T) => Promise<void>
 
 /** 
  * Wrapper de handlers que agrega error handling al socket.
@@ -9,9 +9,9 @@ type Middleware<T extends unknown[]> = (...args: T) => void
  */
 export const conErrorHandling = (socket: Socket) =>
   <T extends unknown[]>(handler: Middleware<T>) => {
-    return (...args: T) => {
+    return async (...args: T) => {
       try {
-        handler(...args)
+        await handler(...args)
       } catch (err: unknown) {
 
         // Si no es un Error, lo rethroweamos tal cual

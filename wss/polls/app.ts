@@ -5,21 +5,21 @@ import { Encuesta, EncuestaHidratada, RolEncuesta } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators"
 import { assert } from "console"
-
-
+import db from "../db"
 
 /** Crea un closure para operar los componentes de una sala */
-export function profeSala(email: string){ 
+export async function profeSala(email: string){ 
 
-  const { id: salaId, votos, votantes, polls } = getSalaByEmailProfe(email)
+  const { id: salaId } = await getSalaByEmailProfe(email)
   
   // Acciones de profe: 
 
-  function listarEncuestas() { 
-    return Array.from(polls.values())
+  async function listarEncuestas() { 
+    const polls = await db.hgetall(`sala:${salaId}:polls`)
+    return Object.values(polls).map(pollStr => JSON.parse(pollStr) as Encuesta)
   }
 
-  function crearPoll(pollDataUnknown: unknown){
+  async function crearPoll(pollDataUnknown: unknown){
 
     // Parseamos con el validator
     assertValidPoll(pollDataUnknown)
@@ -39,35 +39,39 @@ export function profeSala(email: string){
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
-    polls.set(poll.id, poll)
-    votantes.set(poll.id, new Set())
-    votos.set(poll.id, new Map())
+    await db.hset(`sala:${salaId}:polls`, poll.id, JSON.stringify(poll))
 
     console.log(`➕ Encuesta creada: ${poll.pregunta}`)
 
     return poll
   }
 
-  function consultarVotantes({ pollId }: { pollId: string }) {
-    assertPollExists(salaId, pollId)
+  async function consultarVotantes({ pollId }: { pollId: string }) {
+    await assertPollExists(salaId, pollId)
 
-    const poll = polls.get(pollId)!
-    const votantesSet = votantes.get(pollId)!
-    const votosMap = votos.get(pollId)!
+    // Agarramos la encuesta
+    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
+    const poll: Encuesta = JSON.parse(pollStr!)
 
-    if (poll && votantesSet) {
-      const votantesList = Array.from(votantesSet).map(user => ({
+    // Agarramos los votantes y sus votos
+    const votosMap = await db.hgetall(`sala:${salaId}:poll:${pollId}:votos`)
+
+    if (poll) {
+      const votantesList = Object.keys(votosMap).map(user => ({
         userId: user,
-        voto: votosMap.get(user)
+        voto: votosMap[user]
       }))
       return votantesList
     }
   }
 
-  function updatePoll(pollId: string, update: Partial<Encuesta>){
+  async function updatePoll(pollId: string, update: Partial<Encuesta>){
 
-    assertPollExists(salaId, pollId)
-    const poll = polls.get(pollId)!
+    await assertPollExists(salaId, pollId)
+    
+    // Agarramos la encuesta
+    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
+    const poll: Encuesta = JSON.parse(pollStr!)
 
     // Dependiendo de qué se actualice, validamos:
     if (update.isOpen === true) assertPollIsClosed(poll)
@@ -79,27 +83,37 @@ export function profeSala(email: string){
     if (update.isRevealed === false) assertPollIsRevealed(poll)
 
     const nueva = merge(poll, update) as Encuesta
-    polls.set(pollId, nueva)
+    await db.hset(`sala:${salaId}:polls`, pollId, JSON.stringify(nueva))
     console.log(`🔔 Encuesta ${poll.id} updateada:`, JSON.stringify(update))
 
     return nueva
   }
 
-  function deletePoll({ pollId }: { pollId: string }){
-
+  async function deletePoll({ pollId }: { pollId: string }){
     // Validamos
-    assertPollExists(salaId, pollId)
+    await assertPollExists(salaId, pollId)
 
-    if (polls.has(pollId)) {
-      polls.delete(pollId)
-      votantes.delete(pollId)
-      console.log(`🗑️  Encuesta borrada: ${pollId}`)
-    }
+    await db.hdel(`sala:${salaId}:polls`, pollId)
+    await db.hdel(`sala:${salaId}:poll:${pollId}:votantes`)
+    console.log(`🗑️  Encuesta borrada: ${pollId}`)
   }
 
-  function consultarResultados(pollId: string) {
-    const poll = polls.get(pollId)
-    if (!poll) throw new Error('Encuesta no encontrada')
+  async function focusPoll(pollId: string) { 
+    // Nos fijamos si ya hay una encuesta focuseada y en tal caso la desenfocamos
+    const enfocada = await db.get(`sala:${salaId}:polls:focused`)
+    if (enfocada) await updatePoll(enfocada, { isFocused: false })
+    
+    // Enfocamos la nueva
+    await db.set(`sala:${salaId}:polls:focused`, pollId)
+    return await updatePoll(pollId, { isFocused: true })
+  }
+
+  async function consultarResultados(pollId: string) {
+
+    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
+    if (!pollStr) throw new Error('Encuesta no encontrada')
+
+    const poll: Encuesta = JSON.parse(pollStr!)
     return poll
   }
   
@@ -110,29 +124,27 @@ export function profeSala(email: string){
     crearPoll,
     updatePoll,
     deletePoll,
+    focusPoll,
   }
 }
 
 
-export function estudianteSala(idSala: string, sessionId: string) { 
-  const { votos, votantes, polls } = getSalaById(idSala)
+export async function estudianteSala(idSala: string, sessionId: string) { 
 
   // Acciones de estudiante:
-
-  function assertElEstudianteNoVotoTodavia(poll: Encuesta, user: string) {
-    const votantesRegistrados = votantes.get(poll.id)
-    if (!votantesRegistrados) throw new Error('Encuesta no encontrada o no tiene votantes registrados')
-    if (votantesRegistrados.has(user)) throw new Error('Ya votaste en esta encuesta')
+  
+  async function assertElEstudianteNoVotoTodavia(poll: Encuesta, user: string) {
+    if (await db.smismember(`sala:${idSala}:poll:${poll.id}:votantes`, user)) throw new Error('Ya votaste en esta encuesta')
   }
 
-  function votar(voteData: z.infer<typeof voteValidator>) {
+  async function votar(voteData: z.infer<typeof voteValidator>) {
     const { pollId, optionId, aporte } = voteData
 
-    assertPollExists(idSala, pollId)
+    await assertPollExists(idSala, pollId)
 
-    const poll = polls.get(pollId)!
-    const personasQueYaVotaron = votantes.get(pollId)
-    const votosEmitidos = votos.get(pollId)
+    // Agarramos la encuesta
+    const pollStr = await db.hget(`sala:${idSala}:polls`, pollId)
+    const poll: Encuesta = JSON.parse(pollStr!)
 
     // Validamos
     assertPollIsOpen(poll)
@@ -141,26 +153,32 @@ export function estudianteSala(idSala: string, sessionId: string) {
 
     // Guardamos el voto
     if (aporte) {
-      poll.opciones.push({ id: Date.now().toString(), texto: aporte, votos: 1 })
+
+      // Creamos y guardamos una opción nueva
+      const nuevoId = (poll.opciones.length).toString()
+      poll.opciones.push({ id: nuevoId, texto: aporte, votos: 1 })
+      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, sessionId, nuevoId)
+
     } else {
+
+      // Agarramos la opcion existente e incrementamos en 1 sus votos
       const opc = poll.opciones.find(opcion => opcion.id === optionId)
       if (!opc) throw new Error('Opción inválida')
       poll.opciones[poll.opciones.indexOf(opc)].votos++
+      
     }
 
-    // Validaciones de typechecking - nunca van a fallar mepa
-    if (!personasQueYaVotaron) throw new Error('Buffer de votantes no encontrado')
-    if (!votosEmitidos) throw new Error('Buffer de votos no encontrado')
+    // Updateamos la encuesta en la DB
+    await db.hset(`sala:${idSala}:polls`, poll.id, JSON.stringify(poll))
 
     // Registramos el voto
-    personasQueYaVotaron.add(sessionId)
-    votosEmitidos.set(sessionId, optionId)
+    await db.sadd(`sala:${idSala}:poll:${pollId}:votantes`, sessionId)
 
     return poll
   }
 
-  function listar() {
-    return hidratadas(idSala, sessionId)
+  async function listar() {
+    return await hidratadas(idSala, sessionId)
   }
 
   return {
@@ -170,10 +188,10 @@ export function estudianteSala(idSala: string, sessionId: string) {
 }
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
-export function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) { 
-  sala.broadcast('poll:updated', poll, (poll, socket) => { 
+export async function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) { 
+  await sala.broadcast('poll:updated', poll, async (poll, socket) => { 
     if (socket.data.session.rol === RolEncuesta.Estudiante) {
-      return hidratar(sala, poll as Encuesta, socket.data.session.sessionId)
+      return await hidratar(sala.id, poll as Encuesta, socket.data.session.sessionId)
     }
     return poll
   })
@@ -181,26 +199,25 @@ export function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encues
 
 
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
-export function hidratar(sala: ReturnType<typeof conHandlers>, poll: Encuesta, sessionId: string): EncuestaHidratada {
+export async function hidratar(idSala: string, poll: Encuesta, sessionId: string): Promise<EncuestaHidratada> {
 
-  const { votos } = sala
+  const votoEmitido = await db.hget(`sala:${idSala}:poll:${poll.id}:votos`, sessionId)
 
-  const votosPoll = votos.get(poll.id)
-
-  if (!votosPoll) throw new Error(`Encuesta no encontrada o no tiene votantes registrados (hidratando ${poll.id} para uid ${sessionId})`)
-  
   return {
     ...poll,
-    puedoVotar: !votosPoll.has(sessionId),
-    votoEmitido: votosPoll.has(sessionId) ? votosPoll.get(sessionId) : undefined
+    puedoVotar: !votoEmitido,
+    votoEmitido: votoEmitido ?? undefined
   }
 }
 
 
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
-export function hidratadas(salaId: string, sessionId: string) {
-  const sala = getSalaById(salaId)
-  return Array.from(sala.polls.values()).filter(e => e.isPublished).map(poll => hidratar(sala, poll, sessionId))
+export async function hidratadas(salaId: string, sessionId: string) {
+  const sala = await getSalaById(salaId)
+  const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)
+  const pollsSala = Object.values(pollsSalaStr).map(pollStr => JSON.parse(pollStr) as Encuesta)
+
+  return await Promise.all(pollsSala.filter(e => e.isPublished).map(poll => hidratar(sala.id, poll, sessionId)))
 } 
 
 
@@ -211,9 +228,9 @@ export function assertValidPoll(pollData: unknown) {
   if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
 }
 
-function assertPollExists(idSala: string, idPoll: string) {
-  const { polls } = getSalaById(idSala)
-  if (!polls.has(idPoll)) throw new Error('La encuesta no existe!')
+async function assertPollExists(idSala: string, idPoll: string) {
+  const existe = await db.hexists(`sala:${idSala}:polls`, idPoll)
+  if (!existe) throw new Error('La encuesta no existe!')
 }
 
 function assertPollIsOpen(poll: Encuesta) {

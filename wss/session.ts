@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken'
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
 import { pick } from "remeda"
 import { RolEncuesta } from "./tipos"
-import { ConfigSala, nombreDeFantasia, salas } from "./salas/app"
+import { ConfigSala, nombreDeFantasia } from "./salas/app"
+import db from "./db"
 
 // Sesión del server
 export interface WssServerSession {
@@ -114,7 +115,7 @@ export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(soc
  * 
  * Si no hay token, abre una sesión anónima de estudiante.
  */
-const login = (socket: SocketConSesion) => {
+const login = async (socket: SocketConSesion) => {
   const token = socket.handshake.auth.token
 
   if (!token) {
@@ -125,7 +126,8 @@ const login = (socket: SocketConSesion) => {
     if (!socket.handshake.auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
 
     // Verificamos que la sala exista - Dependencia de salas!
-    if (!salas.has(socket.handshake.auth.idSala)) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
+    const salaExiste = await db.hexists('salas', socket.handshake.auth.idSala)
+    if (!salaExiste) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
 
     // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión data que esperamos (nombre y icono)
     socket.data.sala = socket.handshake.auth.idSala
@@ -155,7 +157,7 @@ const login = (socket: SocketConSesion) => {
 
 }
 
-const validarSession = (socket: SocketConSesion) => {
+const validarSession = async (socket: SocketConSesion) => {
   // Si estamos acá, es porque socket.handshake.auth.sessionId está definido
   const { sessionId, token, rol: rolSolicitado } = socket.handshake.auth
 
@@ -218,14 +220,16 @@ const validarSession = (socket: SocketConSesion) => {
  * Las sesiones de estudiante son durables y anónimas.
  * Las sesiones de profe requieren token y caducan. 
  */
-export const conSession = (socket: Socket, next: (err?: ExtendedError) => void) => {
+export const conSession = async (socket: Socket, next: (err?: ExtendedError) => void) => {
 
   try {
 
     if (socket.handshake.auth.sessionId) {
-      validarSession(socket)
+      console.log('\n🔑 Validando sesión existente...')
+      await validarSession(socket)
     } else {
-      login(socket)
+      console.log('\n🔑 Efectuando login...')
+      await login(socket)
     }
 
     next()

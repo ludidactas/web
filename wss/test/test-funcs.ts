@@ -16,6 +16,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     });
   });
 
+  // Buffer para testear localmente las polls
   const localPolls = new Map<number, { id: string; pregunta: string, opciones: { id: number; text: string;  votos: number}[], createdAt: string; isOpen: boolean }>();
 
   socket.on('disconnect', () => {

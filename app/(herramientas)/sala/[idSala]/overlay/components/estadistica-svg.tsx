@@ -35,8 +35,8 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 // Componente para una encuesta individual
 export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
   if (isNullish(encuesta)) {
-    return<div className='bg-white w-full'>
-      <p>No hay encuestas enfocadas</p>
+    return<div className='bg-white w-full rounded-xl'>
+      <p className='text-center p-4'>No hay encuestas enfocadas</p>
     </div>
   }
   const maxVotos = Math.max(...encuesta.opciones.map((op) => op.votos))

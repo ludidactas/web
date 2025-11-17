@@ -23,6 +23,7 @@ import { useCopyToClipboard } from 'usehooks-ts'
 import { EncuestaSVG } from '../[idSala]/overlay/components/estadistica-svg'
 import { EstadisticaSvgConfig } from '../[idSala]/overlay/components/estadistica-svg-config'
 import { useEncuestaProfe } from './encuestas-profe-context'
+import profeUps from '@/svg/ProfeUpsSVGO.svg'
 
 export default function EncuestasAdmin() {
   const { linkSala, estado, encuestas } = useEncuestaProfe()
@@ -58,42 +59,47 @@ export default function EncuestasAdmin() {
 
 
   return (
-    <div className="flex gap-2 justify-center">
-    
+    <div className="flex flex-col">
       {/* DEBUG */}
       {/* <pre>{JSON.stringify({ ready, storedSession }, null, 2)}</pre>
       <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
 
-        <div className="rounded-xl flex w-auto">
-          <div className="w-screen lg:w-full bg-white p-2 md:p-10 rounded-xl">
+      <Status />
+      <div className='flex p-2 gap-2 justify-center w-screen shrink-0'>
 
-            {/* Lista de Participantes Mobile */}
-            <div className="block lg:hidden justify-self-end">
-              <ListaMobile>
-                <ListaEstudiantes />
-              </ListaMobile>
-            </div>
+        {/* Preguntas Formulario */}
+        <div className="flex flex-col bg-white rounded-xl">
 
-            <Status />
+            <div className='flex flex-col items-center justify-center p-4 h-24 bg-indigo-500/10'>
+            <h1 className='text-3xl text-center text-indigo-500'>¡Haz una pregunta!</h1>
+          </div>
 
-            {linkSala && (
-              <div className="flex flex-col items-center justify-center gap-1 my-10">
-                {/* Link sala */}
-                <div className='flex gap-2 text-xl'>
-                  <p className="leading-normal text-center text-sm md:text-lg">
-                    Tu sala:{' '}
-                    <Link target='_blank' href={linkSala} className="text-blue-700 hover:underline">
-                      {linkSala}
-                    </Link>
-                  </p>
-                  <button title="Copiar" onClick={handleCopy(linkSala)}>
-                    {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                  </button>
-                </div>
+          {/* Lista de Participantes Mobile */}
+          <div className="block lg:hidden justify-self-end">
+            <ListaMobile>
+              <ListaEstudiantes />
+            </ListaMobile>
+          </div>
 
-                {/* Link overlay */}
-                <div className='flex flex-col gap-2 border-2 p-2 rounded'>
-                  <div className='flex gap-2'>
+          {linkSala && (
+            <div className="flex flex-col items-center justify-center gap-1 mb-8">
+
+              {/* Link sala */}
+              <div className='flex gap-2 text-xl'>
+                <p className="leading-normal text-center text-sm md:text-lg">
+                  Tu sala:{' '}
+                  <Link target='_blank' href={linkSala} className="text-blue-700 hover:underline">
+                    {linkSala}
+                  </Link>
+                </p>
+                <button title="Copiar" onClick={handleCopy(linkSala)}>
+                  {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+                </button>
+              </div>
+
+              {/* Link overlay */}
+              {/* <div className='flex flex-col gap-2 border-2 p-2 rounded'> */}
+              {/* <div className='flex gap-2'>
                     <p className="leading-normal text-center text-xs md:text-lg">
                       Visualizador:{' '}
                       <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
@@ -103,72 +109,87 @@ export default function EncuestasAdmin() {
                     <button title="Copiar" onClick={handleCopy(linkOverlay)}>
                       {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
                     </button>
-                  </div>
-                  {/* Overlay Mobile */}
-                  <div className='w-full flex flex-col text-indigo-500 font-bold items-center lg:hidden bg-white'>
+                  </div> */}
+              {/* Overlay Mobile */}
+              {/* <div className='w-full flex flex-col text-indigo-500 font-bold items-center lg:hidden bg-white'>
                     <p>Vista previa </p>
                     <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
-                  </div>
-                </div>
-              </div>
-            )}
+                  </div> */}
+              {/* </div> */}
+            </div>
+          )}
 
-            {!linkSala && <span>Link de sala no recibido</span>}
+          {!linkSala && <p className='text-center'>Link de sala no recibido</p>}
 
-            {/* Barra de status */}
-            <hr className="invisible py-2" />
-            {estado === StatusDeConexion.Conectado && (
-              <div className="flex flex-col gap-10">
-                <AgregarPregunta />
+          {/* Pregunta formulario */}
+          {estado === StatusDeConexion.Conectado && (
+            <div className="flex flex-col gap-10 p-2">
+              <AgregarPregunta />
+              <div className='flex md:hidden'>
                 <ListaEncuestas />
               </div>
-            )}
-            {estado !== StatusDeConexion.Conectado && (
-              <div className="text-center">
-                <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
-                <p>
-                  Actualizá la página, o envianos un mensaje :{' '}
-                  <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-                </p>
-              </div>
-            )}
-            {/* Info para el usuario acerca de acciones */}
-            <DialogAcciones />
-          </div>
+            </div>
+          )}
+
+          {estado !== StatusDeConexion.Conectado && (
+            <div className="text-center">
+              <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
+              <p>
+                Actualizá la página, o envianos un mensaje :{' '}
+                <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Lista de Preguntas  */}
+        {estado === StatusDeConexion.Conectado && (
+          <div className="hidden md:flex flex-col bg-white gap-6 rounded-xl shrink-0">
+            {/* Header */}
+            <div className='flex flex-col items-center p-4 bg-indigo-500/10 h-24'>
+              <h1 className='text-3xl text-center text-indigo-500'>Preguntas</h1>
+              {/* Info para el usuario acerca de acciones */}
+              <DialogAcciones />
+            </div>
+            <ListaEncuestas />
+          </div>
+        )}
+
 
         <div className='flex flex-col gap-4'>
           {/* Lista estudiantes desktop */}
           <div className="hidden lg:block">
-            <div className="sticky top-0 flex max-h-80 flex-col gap-4 bg-white rounded-xl h-max p-8">
+            <div className="sticky top-0 flex max-h-60 flex-col gap-4 bg-white rounded-xl p-8">
               <ListaEstudiantes />
             </div>
           </div>
 
           {/* Overlay Desktop */}
-          <div className='hidden md:flex border-4 md:flex-col rounded-xl text-indigo-500 items-center bg-white w-full'>
-            {encuestaEnfocada&& (
-              <div className='flex p-2 gap-2'>
-                <p className='font-bold '>Visualizador vista previa </p>
-                <CircleDot absoluteStrokeWidth  className='animate-pulse text-purple-500' />
-                
-                </div>)}
+          <div className='hidden md:flex md:flex-col rounded-xl text-indigo-500 items-center bg-white'>
+            {encuestaEnfocada && (
+              <div className='flex flex-col p-2 gap-2 items-center'>
+                <p className='flex font-bold '>Visualizador vista previa 
+                <CircleDot absoluteStrokeWidth className='animate-pulse text-purple-500' /></p>
+
+
                 <div className='flex gap-2'>
-                    <p className="leading-normal text-center text-md">
-                      Link:
-                      <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
-                        {linkOverlay}
-                      </Link>
-                    </p>
-                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
-                    </button>
-                  </div>
+                  <p className="text-center text-md">
+                    Link:
+                    <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
+                      {linkOverlay}
+                    </Link>
+                  </p>
+                  <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                    {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
+                  </button>
+                </div>
+              </div>)}
             <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
           </div>
         </div>
       </div>
-    
+    </div>
+
   )
 }
 
@@ -209,8 +230,8 @@ const ListaEstudiantes = () => {
     .join('\n')
 
   return (
-    <>
-      <div className="flex justify-between bg-indigo-50 p-4 mb-2 rounded-xl">
+    <div>
+      <div className="flex justify-between rounded-xl">
         <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
           <Users size={30} />
           Participantes
@@ -262,6 +283,7 @@ const ListaEstudiantes = () => {
           </HoverCard>
         </div>
       </div>
+
       {estudiantes.length === 0 && <p className="text-slate-400 italic">Ningún estudiante conectado aún...</p>}
 
       {estudiantes.length > 0 && (
@@ -297,7 +319,7 @@ const ListaEstudiantes = () => {
           ))}
         </ul>
       )}
-    </>
+    </div>
   )
 }
 
@@ -330,29 +352,37 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
 function Status() {
   const { estado } = useEncuestaProfe()
   return (
-    <div className="relative flex items-center justify-between pr-4 mb-4">
-      <div className="absolute md:inset-y-4 rounded-xl bg-indigo-50 w-full h-14 md:h-24" />
+    <div className="bg-white my-2">
+      <div className='flex items-center justify-between m-4 px-4 bg-indigo-500/10 rounded-xl'>
 
-      <div className="flex relative items-center justify-between">
-        <LdSvg className="w-20 md:w-40" SvgComponent={EncuestasIcon} />
-        <h1 className="text-xl md:text-5xl font-bold text-indigo-500">Encuestas</h1>
+        <div className="flex items-center gap-2">
+          <LdSvg className="w-20 md:w-36" SvgComponent={EncuestasIcon} />
+          <div className='flex flex-col items-start'>
+          <h1 className="text-2xl md:text-5xl font-bold text-indigo-500">Encuestas</h1>
+          <p className='md:text-center text-xs w-80 md:w-full md:text-xl'>¡Haz preguntas en vivo y compártelas a través del link de la sala!</p>
+
+          </div>
+        </div>
+
+        {estado === StatusDeConexion.Conectado ? (
+          <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-md">Conectado</span>
+        ) : (
+          <span className="text-red-700">Desconectado</span>
+        )}
       </div>
-
-      {estado === StatusDeConexion.Conectado ? (
-        <span className="text-emerald-700 animate-pulse">Conectado</span>
-      ) : (
-        <span className="text-red-700">Desconectado</span>
-      )}
     </div>
   )
 }
 
 function ListaEncuestas() {
   const { encuestas } = useEncuestaProfe()
-  if (encuestas.length == 0) return <></>
+  if (encuestas.length == 0) return <div>
+    <p className='flex items-center w-full m-4 shrink-0'> ¡Aún no haz hecho ninguna pregunta!</p>
+    <LdSvg className='grayscale' SvgComponent={profeUps}/>
+    </div>
 
   return (
-    <ScrollArea className="max-h-screen overflow-x-auto">
+    <ScrollArea className="h-[500px] overflow-x-auto shrink-0">
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -539,11 +569,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               </DialogHeader>
               <div className='flex gap-2'>
                 <DialogClose>
-                  <BotonEncuesta
-                    className="bg-emerald-700/90 text-white px-4 py-2 rounded"
-                    texto="Cancelar"
-                    icon=""
-                  />
+                  <p
+                    className="bg-emerald-700/90 text-white px-4 py-2 flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded border"
+                  >Cancelar</p>
                 </DialogClose>
                 <BotonEncuesta
                   className="bg-rose-700 text-white px-4 py-2 rounded"
@@ -681,7 +709,7 @@ function AgregarPregunta() {
 }
 
 function DialogAcciones() {
-  return <div className='flex mt-4 p-2 rounded text-indigo-500 items-center justify-center hover:font-bold hover:underline'>
+  return <div className='flex rounded text-indigo-500 items-center justify-center hover:font-bold hover:underline'>
     <Dialog>
       <DialogTrigger className='flex gap-1 '>
         <Info /><p>Ver info sobre acciones</p>

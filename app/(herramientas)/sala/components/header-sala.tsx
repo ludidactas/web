@@ -12,8 +12,8 @@ interface HeaderProps extends PropsWithChildren {
 export default function HeaderSala({ className, children, btnLogout }: HeaderProps) {
   
   return (
-    <div className={`${className} bg-white md:m-4 w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3`}>
-      <div className="flex  md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
+    <div className={`${className} bg-white md:mb-4 w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3`}>
+      <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
         <Image className="w-8 sm:ml-4 md:ml-0 md:w-16" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
         <div className="hidden md:flex sm:flex-col font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
           <Image

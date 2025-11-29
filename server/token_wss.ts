@@ -20,7 +20,12 @@ export async function tokenWss() {
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 horas
     },
     process.env.JWT_SECRET!,
-    { algorithm: 'HS256' }
+    {
+      algorithm: 'HS256',
+      expiresIn: '24h',
+      audience: 'wss-client',
+      subject: session.user.email
+    }
   )
   return token
 }

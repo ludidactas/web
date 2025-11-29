@@ -173,6 +173,9 @@ export async function estudianteSala(idSala: string, sessionId: string) {
       const opc = poll.opciones.find(opcion => opcion.id === optionId)
       if (!opc) throw new Error('Opción inválida')
       poll.opciones[poll.opciones.indexOf(opc)].votos++
+
+      // Guardamos
+      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, sessionId, optionId)
       
     }
 

@@ -1,6 +1,7 @@
 import { toast } from "sonner"
-import { Pasaporte, StatusDeConexion, useConexionWss } from "./use-conexion-wss"
+import { StatusDeConexion, useConexionWss } from "./use-conexion-wss"
 import { useEffect } from "react"
+import { Pasaporte } from "@/wss/validators/auth"
 
 /** Conecta la conexión al WebSocket Server con elementos de UI (toasts) */
 export function useServerWebsockets(auth: Pasaporte) {

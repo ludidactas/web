@@ -1,5 +1,5 @@
 import { WssServerSession } from '@/wss/middleware/session'
-import { RolEncuesta } from '@/wss/tipos'
+import { Pasaporte } from '@/wss/validators/auth'
 import { useCallback, useEffect, useRef } from 'react'
 import { isNonNullish } from 'remeda'
 import { Socket } from 'socket.io-client'
@@ -28,35 +28,6 @@ type Estado = {
   conectar: (auth: Pasaporte, sessionId?: string) => Promise<void>
   desconectar: () => void
 }
-
-export interface PasaporteEstudiante {
-  rol: RolEncuesta.Estudiante
-  idSala: string
-  nombre?: string
-  icono?: string
-  dni?: string
-}
-
-export interface PasaporteProfe {
-  rol: RolEncuesta.Profe
-  token: string
-}
-
-export interface PasaporteTester {
-  rol: RolEncuesta.Tester
-  url: string
-  nombre?: string
-}
-
-export interface PasaportePublico { 
-  rol: RolEncuesta.Publico
-  idSala: string
-}
-
-/**
- * Credenciales para establecer una sesión con el server
- */
-export type Pasaporte = PasaporteEstudiante | PasaporteProfe | PasaporteTester | PasaportePublico
 
 export const useConexionStore = create<Estado>((set, get) => ({
   socket: null,

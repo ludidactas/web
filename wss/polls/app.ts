@@ -3,7 +3,7 @@ import { z } from "zod"
 import { conHandlers, getSalaByEmailProfe, getSalaById } from "../salas/app"
 import { Encuesta, EncuestaHidratada, RolEncuesta } from "../tipos"
 import { extractZodErrorMessages } from "../utils"
-import { pollBase, voteValidator } from "../validators"
+import { pollBase, voteValidator } from "../validators/polls"
 import { assert } from "console"
 import db from "../db"
 

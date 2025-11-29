@@ -1,12 +1,11 @@
 import { WssServerSession } from "@/wss/middleware/session"
 import { RolEncuesta } from "@/wss/tipos"
+import { Pasaporte, PasaporteTester, PasaporteProfe, PasaporteEstudiante, PasaportePublico, PasaporteAdmin } from "@/wss/validators/auth"
 import { io, Socket } from "socket.io-client"
-import { Pasaporte, PasaporteEstudiante, PasaporteProfe, PasaportePublico, PasaporteTester } from "./use-conexion-wss"
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
 }
-
 
 /** Auth que espera el server de sockets */
 export type SocketServerAuth = {sessionId?: string} & Pasaporte
@@ -14,7 +13,7 @@ export type SocketServerAuth = {sessionId?: string} & Pasaporte
 /** Endpoints para cada rol */
 export const conectores = {
   [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
-  [RolEncuesta.Admin]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Admin]: (auth: PasaporteAdmin) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Profe]: (auth: PasaporteProfe) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/estudiante`, { auth, autoConnect: false, transports: ['websocket'] }),
   [RolEncuesta.Publico]: (auth: PasaportePublico) => io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/publico`, { auth, autoConnect: false, transports: ['websocket'] }),
@@ -35,6 +34,9 @@ export async function handshake(auth: SocketServerAuth) {
       break
     case RolEncuesta.Publico:
       sock = conectores[RolEncuesta.Publico](auth)
+      break
+    case RolEncuesta.Admin:
+      sock = conectores[RolEncuesta.Admin](auth)
       break
   }
 

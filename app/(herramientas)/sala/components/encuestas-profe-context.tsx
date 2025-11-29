@@ -4,10 +4,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Encuesta } from '@/wss/tipos'
-import { PasaporteProfe } from '../../../../components/hooks/use-conexion-wss'
-import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
-import { CrearEncuesta } from '@/wss/validators'
+import { CrearEncuesta } from '@/wss/validators/polls'
+import { PasaporteProfe } from '@/wss/validators/auth'
+import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {

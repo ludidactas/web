@@ -5,6 +5,7 @@ import db from "../db"
 import { nombreDeFantasia } from "../salas/app"
 import { RolEncuesta } from "../tipos"
 import { socketIp } from "../utils"
+import { PasaporteSchema, SesionSchema } from "../validators/auth"
 import { decodearTokenNextAuth, registradoComoAdmin } from "./auth"
 
 // Sesión del server
@@ -89,36 +90,27 @@ export const getSession = (sessionId: string) => {
  */
 const login = async (socket: SocketConSesion) => {
 
-  // Extraemos el auth del socket
-  const auth = socket.handshake.auth
+  // Extraemos el auth del socket y lo validamos
+  const { data: auth, error, success } = PasaporteSchema.safeParse(socket.handshake.auth)
 
-  // Vemos si hay token
-  const token = auth.token
+  if (!success) 
+    throw new Error(`Auth inválido: ${error ? error.message : 'error desconocido'}`)
 
-  if (!token) {
-    // Si no hay token, abrimos una sesión anónima (de estudiante)
+  if (auth.rol === RolEncuesta.Estudiante) {
     console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
 
-    // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
-    if (!auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
-
     // Verificamos que la sala exista
-    const salaExiste = await db.hexists('salas', auth.idSala)
-
-    // Si no existe bochamos
-    if (!salaExiste) throw new Error(`La sala ${auth.idSala} no existe!`)
-
-    // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión la data que esperamos (nombre y icono)
+    if (!await db.hexists('salas', auth.idSala)) throw new Error(`La sala ${auth.idSala} no existe!`)
+    
     socket.data.sala = auth.idSala
 
-    // Reemplazar por un schema de zod!
-    openSession(socket, { rol: RolEncuesta.Estudiante, ...pick(auth, ['nombre', 'icono', 'dni']) })
-
-  } else {
-
-    // Si hay token, lo verificamos
+    openSession(socket, auth)
+  }
+  
+  if (auth.rol === RolEncuesta.Profe || auth.rol === RolEncuesta.Admin) {
+    // Si es profe o admin, necesitamos token
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
-    const payload = decodearTokenNextAuth(token)
+    const payload = decodearTokenNextAuth(auth.token)
 
     // Le seteamos al user el email y el nombre del token emitido por next
     socket.data.user = {
@@ -133,12 +125,18 @@ const login = async (socket: SocketConSesion) => {
       openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
     }
   }
+
+  // Publico y test no establecen sesión y por lo tanto tampoco hacen login
 }
 
 const validarSession = async (socket: SocketConSesion) => {
   // Si estamos acá, es porque socket.handshake.auth.sessionId está definido
-  const { sessionId, token, rol: rolSolicitado } = socket.handshake.auth
-
+  
+  const { data: sessionData, success, error } = SesionSchema.safeParse(socket.handshake.auth)
+  
+  if (!success) 
+    throw new Error(`Sesión inválida: ${error ? error.message : 'error desconocido'}`)
+  
   try {
 
     // Puede venir:
@@ -146,48 +144,41 @@ const validarSession = async (socket: SocketConSesion) => {
     // - solo token de autenticación, si es profe o admin
     // - ambos, si es profesor o admin con sesión existente
 
-    const session = getSession(sessionId)
+    const session = getSession(sessionData.sessionId)
 
     // Si el id que nos mandaron no coincide con el de la sesión, bochamos
-    if (!session) throw new Error(`Sesión ${sessionId} no encontrada!`)
-
+    if (!session) throw new Error(`Sesión ${sessionData.sessionId} no encontrada!`)
+    
+    console.log(`🔄 Reutilizando sesión ${JSON.stringify(sessionData)} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
+    
     // Sesión de estudiante (anónima)
     // Válida para profes o admins si están solicitando entrar como estudiantes
-    if (rolSolicitado === RolEncuesta.Estudiante) {
-
-      // Llegados a este punto tenemos un estudiante anónimo válido
-      console.log(`🔄 Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
-
+    if (sessionData.rol === RolEncuesta.Estudiante) {
       // Le attacheamos al socket la data de sesión
       socket.data = { ...socket.data || {}, session }
-
-      return
+      return 
     }
+
+    // Pasado este punto nos aseguramos que el rol que viene en la sesión coincida con el de la sesión guardada
+    if (sessionData.rol !== session.rol ) throw new Error(`Rol de sesión inválido: se esperaba ${session.rol} y se recibió ${sessionData.rol}`)
 
     // Sesión de profe o admin
     if (session.rol === RolEncuesta.Profe || session.rol === RolEncuesta.Admin) {
 
-      // Si es profe o admin y no hay token, bochamos
-      if (!token) throw new Error(`Se requiere un token de autenticación para conectarse como profe o admin`)
-
-      const payload = decodearTokenNextAuth(token)
+      // Extraemos la data del token
+      const payload = decodearTokenNextAuth(sessionData.token)
 
       // Si el username de sesión no coincide con el email del token, bochamos
-      if (session.email !== payload.email) throw new Error(`Sesión ${sessionId} no válida para el usuario ${payload.email}!`)
-
-      // Llegados a este punto tenemos un profe o admin válido
-      console.log(`🔄 Reutilizando sesión ${sessionId} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
+      if (session.email !== payload.email) throw new Error(`Sesión ${session.sessionId} no válida para el usuario ${payload.email}!`)
 
       // Le attacheamos al socket la data de sesión
       socket.data = { ...socket.data || {}, session, user: pick(session, ['email', 'nombre']) }
-
-      return
     }
 
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error
     console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
-    deleteSession(sessionId)
+    deleteSession(sessionData.sessionId)
     throw err
   }
 }

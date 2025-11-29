@@ -13,3 +13,4 @@ export const voteValidator = z.object({
   optionId: z.string().min(1, "El ID de la opción es obligatorio"),
   aporte: z.string().optional(),
 });
+

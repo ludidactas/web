@@ -1,8 +1,8 @@
 
 import { Socket } from "socket.io"
-import { conErrorHandling } from "../middleware"
+import { conErrorHandling } from "../middleware/error-handling"
 import { profeSala } from "../polls/app"
-import { SocketConSesion, SocketEstudiante, SocketProfe } from "../session"
+import { SocketConSesion, SocketEstudiante, SocketProfe } from "../middleware/session"
 import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from "./app"
 
 export const handlersSalaProfe = async (socket: SocketProfe) => {

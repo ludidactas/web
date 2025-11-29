@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { WssServerSession } from "@/wss/session"
+import { WssServerSession } from "@/wss/middleware/session"
 import { useSession } from "next-auth/react"
 import { useEffect } from "react"
 

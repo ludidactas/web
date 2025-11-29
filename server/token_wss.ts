@@ -3,8 +3,7 @@
 import { auth } from '@/app/auth'
 import jwt from 'jsonwebtoken'
 
-// Devuelve un token JWT firmado con la información del usuario autenticado 
-// (para autenticarlo en el servidor de websockets)
+/** Devuelve un token JWT firmado con la información del usuario autenticado (para autenticarlo en el servidor de websockets) */
 export async function tokenWss() {
   const session = await auth()
 
@@ -17,7 +16,6 @@ export async function tokenWss() {
       email: session.user.email,
       name: session.user.name,
       image: session.user.image,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 horas
     },
     process.env.JWT_SECRET!,
     {

@@ -1,4 +1,4 @@
-import { WssServerSession } from '@/wss/session'
+import { WssServerSession } from '@/wss/middleware/session'
 import { RolEncuesta } from '@/wss/tipos'
 import { useCallback, useEffect, useRef } from 'react'
 import { isNonNullish } from 'remeda'

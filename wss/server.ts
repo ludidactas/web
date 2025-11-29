@@ -1,10 +1,11 @@
 import { Socket } from "socket.io"
-import { mount } from "./mount"
-import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from "./salas/handlers"
-import { conSession, esAdmin, esProfe, SocketConSesion, SocketEstudiante, SocketProfe } from "./session"
-import { handlersTest } from "./test/handlers"
-import { handlersEncuestasEstudiante, handlersEncuestasProfe } from "./polls/handlers"
 import db from "./db"
+import { conSession, SocketConSesion } from "./middleware/session"
+import { mount } from "./mount"
+import { handlersEncuestasEstudiante, handlersEncuestasProfe } from "./polls/handlers"
+import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from "./salas/handlers"
+import { handlersTest } from "./test/handlers"
+import { esAdmin, esProfe, SocketEstudiante, SocketProfe } from "./middleware/roles"
 
 const PORT = process.env.PORT && parseInt(process.env.PORT) || 3005
 

@@ -1,4 +1,4 @@
-import { WssServerSession } from '@/wss/session'
+import { WssServerSession } from '@/wss/middleware/session'
 import { Encuesta } from '@/wss/tipos'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'

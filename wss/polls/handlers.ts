@@ -1,8 +1,8 @@
 import { ExtendedError } from "socket.io"
-import { conErrorHandling } from "../middleware"
+import { conErrorHandling } from "../middleware/error-handling"
 import { getSalaByEmailProfe, getSalaById } from "../salas/app"
-import { SocketEstudiante, SocketProfe } from "../session"
 import { broadcastPoll, estudianteSala, profeSala } from "./app"
+import { SocketEstudiante, SocketProfe } from "../middleware/roles"
 
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)

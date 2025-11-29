@@ -1,4 +1,4 @@
-import { WssServerSession } from "@/wss/session"
+import { WssServerSession } from "@/wss/middleware/session"
 import { RolEncuesta } from "@/wss/tipos"
 import { io, Socket } from "socket.io-client"
 import { Pasaporte, PasaporteEstudiante, PasaporteProfe, PasaportePublico, PasaporteTester } from "./use-conexion-wss"

@@ -165,13 +165,17 @@ export async function estudianteSala(idSala: string, sessionId: string) {
       // Creamos y guardamos una opción nueva
       const nuevoId = (poll.opciones.length).toString()
       poll.opciones.push({ id: nuevoId, texto: aporte, votos: 1 })
+
+      // Guardamos
       await db.hset(`sala:${idSala}:poll:${pollId}:votos`, sessionId, nuevoId)
-
+      
     } else {
-
+      
       // Agarramos la opcion existente e incrementamos en 1 sus votos
       const opc = poll.opciones.find(opcion => opcion.id === optionId)
       if (!opc) throw new Error('Opción inválida')
+      
+      // Incrementamos los votos
       poll.opciones[poll.opciones.indexOf(opc)].votos++
 
       // Guardamos
@@ -215,6 +219,8 @@ export async function hidratar(idSala: string, poll: Encuesta, sessionId: string
 
   const votoEmitido = await db.hget(`sala:${idSala}:poll:${poll.id}:votos`, sessionId)
 
+  console.log(`🔎 Hidratando encuesta ${poll.id} para estudiante ${sessionId}:`, votoEmitido ? `ya votó opción ${votoEmitido}` : 'no votó todavía')
+
   return {
     ...poll,
     puedoVotar: !votoEmitido,
@@ -226,6 +232,8 @@ export async function hidratar(idSala: string, poll: Encuesta, sessionId: string
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export async function hidratadas(salaId: string, sessionId: string) {
   const sala = await getSalaById(salaId)
+
+  // Agarramos todas las encuestas de la sala de la db
   const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)
   const pollsSala = Object.values(pollsSalaStr).map(pollStr => JSON.parse(pollStr) as Encuesta)
 

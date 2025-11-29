@@ -3,7 +3,8 @@ import { capitalize, first, mergeDeep, shuffle } from "remeda"
 
 import db from "../db"
 import { io, registrarSalaEnServer } from "../server"
-import { getSession, SocketConSesion, SocketProfe } from "../session"
+import { getSession, SocketConSesion } from "../middleware/session"
+import { SocketProfe } from "../middleware/roles"
 
 export interface ConfigSala {
   pedir_dni: boolean

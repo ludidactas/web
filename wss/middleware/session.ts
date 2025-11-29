@@ -1,10 +1,11 @@
 import { randomUUID } from "crypto"
-import jwt from 'jsonwebtoken'
-import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
 import { pick } from "remeda"
-import { RolEncuesta } from "./tipos"
-import { ConfigSala, nombreDeFantasia } from "./salas/app"
-import db from "./db"
+import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
+import db from "../db"
+import { nombreDeFantasia } from "../salas/app"
+import { RolEncuesta } from "../tipos"
+import { socketIp } from "../utils"
+import { decodearTokenNextAuth, registradoComoAdmin } from "./auth"
 
 // Sesión del server
 export interface WssServerSession {
@@ -19,71 +20,33 @@ export interface WssServerSession {
   dni?: string
 }
 
+// Acá tipamos el socket con la data de sesión, dependiendo del rol
+
+/** Socket que ya pasó por autenticación y tiene una sesión válida, tiene .session */
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
   session: WssServerSession
   [etc: string]: any
 }>
 
-export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: WssServerSession
-  user: { email: string, nombre?: string, dni?:string }
-  /** _Puede_ venir la config de la sala al momento de crearla */
-  config_sala?: Partial<ConfigSala> 
-}>
 
-export type SocketEstudiante = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: WssServerSession
-  /** ID de la sala a la que se conecta el estudiante */
-  sala: string
-}>
-
-
-// Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno. 
-// Si no está seteada, tiramos un error para que no arranque el server.
-const secret = process.env.NEXTAUTH_SECRET
-const ADMINS = process.env.POLLS_ADMINS?.split(',').map(email => email.trim())
-if (!secret || !ADMINS) {
-  console.error("Error: NEXTAUTH_SECRET o POLLS_ADMINS no están seteadas.")
-  process.exit(1)
-}
-
-/**
- * Decodea un token emitido por nuestro server de Next, que es el que autentica al usuario con google.
- * @param token 
- * @returns { exp: number, email: string, name?: string }
- */
-const decodearTokenNextAuth = (token: string) => {
-  // Verificar que el token no haya expirado
-  const payload = jwt.verify(token, secret) as { exp: number, email: string, name?: string, image?: string }
-
-  if (!payload) throw new Error('Token de autenticación inválido')
-  if (!payload.email) throw new Error('Token de autenticación inválido. Falta email!')
-  if (!payload.exp) throw new Error('Token de autenticación inválido. Falta expiración!')
-  if (payload.exp < Math.floor(Date.now() / 1000)) throw new Error('Sesión expirada')
-
-  return payload
-}
+// Funciones de manejo de sesiones en memoria - Pasar a redis?
 
 const sessions = new Map<string, WssServerSession>()
 
-export const getSession = (sessionId: string) => {
-  return sessions.get(sessionId)
-}
-
-export const setSession = (sessionId: string, data: WssServerSession) => {
+const setSession = (sessionId: string, data: WssServerSession) => {
   sessions.set(sessionId, data)
 }
 
-export const deleteSession = (sessionId: string) => {
+const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-export const createSession = <T extends object>(data: T): T & { sessionId: string } => ({
+const createSession = <T extends object>(data: T): T & { sessionId: string } => ({
   sessionId: randomUUID().split('-')[0],
   ...data
 })
 
-export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: Socket, payload: T) => {
+const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: Socket, payload: T) => {
 
   const nombre = payload.nombre ?? nombreDeFantasia()
 
@@ -107,6 +70,15 @@ export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(soc
   socket.emit("session:opened", session)
 }
 
+// getSession es el único público 
+
+/** Devuelve una sesión dado su sessionId, o undefined si no existe */
+export const getSession = (sessionId: string) => {
+  return sessions.get(sessionId)
+}
+
+
+
 
 /** 
  * Hace login al server de websockets.
@@ -116,22 +88,31 @@ export const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(soc
  * Si no hay token, abre una sesión anónima de estudiante.
  */
 const login = async (socket: SocketConSesion) => {
-  const token = socket.handshake.auth.token
+
+  // Extraemos el auth del socket
+  const auth = socket.handshake.auth
+
+  // Vemos si hay token
+  const token = auth.token
 
   if (!token) {
     // Si no hay token, abrimos una sesión anónima (de estudiante)
-    console.log(`👤 Iniciando sesión anónima en la sala ${socket.handshake.auth.idSala} desde IP ${socketIp(socket)}...`)
+    console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
 
     // Para iniciar sesión como anónimo, tiene que proveer la sala a la que quiere unirse
-    if (!socket.handshake.auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
+    if (!auth.idSala) throw new Error('Clientes anónimos tienen que proveer sala en auth')
 
-    // Verificamos que la sala exista - Dependencia de salas!
-    const salaExiste = await db.hexists('salas', socket.handshake.auth.idSala)
-    if (!salaExiste) throw new Error(`La sala ${socket.handshake.auth.idSala} no existe!`)
+    // Verificamos que la sala exista
+    const salaExiste = await db.hexists('salas', auth.idSala)
 
-    // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión data que esperamos (nombre y icono)
-    socket.data.sala = socket.handshake.auth.idSala
-    openSession(socket, { rol: RolEncuesta.Estudiante, ...pick(socket.handshake.auth, ['nombre', 'icono', 'dni']) })
+    // Si no existe bochamos
+    if (!salaExiste) throw new Error(`La sala ${auth.idSala} no existe!`)
+
+    // Por seguridad, el login anónimo es estricto, solo agregamos a la sesión la data que esperamos (nombre y icono)
+    socket.data.sala = auth.idSala
+
+    // Reemplazar por un schema de zod!
+    openSession(socket, { rol: RolEncuesta.Estudiante, ...pick(auth, ['nombre', 'icono', 'dni']) })
 
   } else {
 
@@ -146,15 +127,12 @@ const login = async (socket: SocketConSesion) => {
     }
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
-    if (ADMINS.includes(payload.email)) {
+    if (registradoComoAdmin(payload.email)) {
       openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
     } else {
       openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
     }
-
   }
-
-
 }
 
 const validarSession = async (socket: SocketConSesion) => {
@@ -236,6 +214,7 @@ export const conSession = async (socket: Socket, next: (err?: ExtendedError) => 
 
   } catch (err) {
 
+    // Cómo tipar los errores que van entre wss y fe?
     err.data = {
       type: 'SessionError',
       action: 'clear_session', // Le decimos al cliente que porfa limpie la sesión
@@ -246,28 +225,3 @@ export const conSession = async (socket: Socket, next: (err?: ExtendedError) => 
   }
 }
 
-export const esAdmin = (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
-  if (socket.data.session.rol !== RolEncuesta.Admin)
-    next(new Error('Acción solo permitida para administradores'))
-  next()
-}
-
-
-export const esProfe = (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
-  if (socket.data.session.rol !== RolEncuesta.Profe && socket.data.session.rol !== RolEncuesta.Admin)
-    next(new Error('Acción solo permitida para profes'))
-  next()
-}
-
-/** 
- * Función para extraer el IP del socket
- */
-export function socketIp(socket: Socket) {
-  // En prod usamos el IP forwardeado por nginx
-  const forwarded = socket.handshake.headers['x-forwarded-for']
-  const ip = typeof forwarded === 'string'
-    ? forwarded.split(',')[0].trim()
-    : socket.handshake.address
-
-  return ip
-}

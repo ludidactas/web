@@ -1,4 +1,3 @@
-import { WssServerSession } from '@/wss/middleware/session'
 import { Pasaporte } from '@/wss/validators/auth'
 import { useCallback, useEffect, useRef } from 'react'
 import { isNonNullish } from 'remeda'
@@ -7,6 +6,7 @@ import { create } from 'zustand'
 import DebugPanel from './conexion-wss-debug'
 import { configurarListeners, handshake, limpiarListeners } from './server-encuestas'
 import useSesionGuardada from './use-sesion-localstorage'
+import { WssServerSession } from '@/wss/validators/session'
 
 // Máquina de estados finitos
 

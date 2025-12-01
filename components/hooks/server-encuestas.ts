@@ -1,6 +1,6 @@
-import { WssServerSession } from "@/wss/middleware/session"
 import { RolEncuesta } from "@/wss/tipos"
 import { Pasaporte, PasaporteTester, PasaporteProfe, PasaporteEstudiante, PasaportePublico, PasaporteAdmin } from "@/wss/validators/auth"
+import { WssServerSession } from "@/wss/validators/session"
 import { io, Socket } from "socket.io-client"
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {

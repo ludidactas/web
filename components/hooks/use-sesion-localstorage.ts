@@ -1,8 +1,9 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { WssServerSession } from "@/wss/middleware/session"
-import { useSession } from "next-auth/react"
+import { useSession as useSessionNext } from "next-auth/react"
 import { useEffect } from "react"
+import { WssServerSession } from "@/wss/validators/session"
+import { RolEncuesta } from "@/wss/tipos"
 
 type EstadoSesion = {
   storedSession: WssServerSession | null
@@ -28,25 +29,28 @@ export const useSesionStore = create<EstadoSesion>()(
 )
 
 /** 
- * Levanta la sesión guardada en localStorage, valida que coincida con el usuario actual de google, y la reinicia en caso contrario. 
+ * Levanta la sesión guardada en localStorage, valida que coincida con el usuario actual de google, y la invalida en caso contrario. 
  * Depende de useSession de next-auth para saber el usuario actual. Es por eso que es async, con un flag ready.
  */
 export default function useSesionGuardada() {
-  const { data: nextSession, status } = useSession()
+  const { data: nextSession, status: statusSesionNext } = useSessionNext()
   const { storedSession, clearSession, setReady, ready } = useSesionStore()
 
   useEffect(() => {
+    const emailSesionNext = nextSession?.user?.email
+    const emailSesionWss = (storedSession?.rol === RolEncuesta.Admin || storedSession?.rol === RolEncuesta.Profe) ? storedSession?.email : null
+    
     if (
       storedSession &&
-      nextSession?.user?.email &&
-      storedSession.email !== nextSession.user.email
+      statusSesionNext !== 'loading' &&
+      emailSesionWss !== emailSesionNext
     ) {
       clearSession()
       return
     }
 
     setReady(true)
-  }, [status, storedSession, nextSession, clearSession, setReady, ready])
+  }, [statusSesionNext, storedSession, nextSession, clearSession, setReady, ready])
 
   return useSesionStore()
 }

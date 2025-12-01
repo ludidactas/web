@@ -7,19 +7,7 @@ import { RolEncuesta } from "../tipos"
 import { socketIp } from "../utils"
 import { PasaporteSchema, SesionSchema } from "../validators/auth"
 import { decodearTokenNextAuth, registradoComoAdmin } from "./auth"
-
-// Sesión del server
-export interface WssServerSession {
-  rol: RolEncuesta
-  sessionId: string
-  userIp?: string
-  email?: string
-  nombre?: string // Nombre de google del profe o nombre arbitrario del estudiante
-  agente?: string
-  avatar?: string // Avatar de google del profe
-  icono?: string // Icono arbitrario del estudiante
-  dni?: string
-}
+import { WssServerSession, WssServerSessionSchema } from "../validators/session"
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -42,33 +30,28 @@ const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-const createSession = <T extends object>(data: T): T & { sessionId: string } => ({
-  sessionId: randomUUID().split('-')[0],
-  ...data
-})
-
 const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: Socket, payload: T) => {
 
-  const nombre = payload.nombre ?? nombreDeFantasia()
-
-  // Creamos el objeto - Ojo que le estoy agregando info arbitraria que venga en el data
-  const session = createSession({
+  // Creamos el objeto (y lo validamos)
+  const sessionData = WssServerSessionSchema.parse({
     ...payload,
-    nombre,
+    sessionId: randomUUID().split('-')[0],
+    nombre: payload.nombre ?? nombreDeFantasia(),
     userIp: socketIp(socket),
-    agente: socket.handshake.headers['user-agent']
-  })
+    agente: socket.handshake.headers['user-agent'],
+  }) // Validamos la sesión
+
 
   // Guardamos la sesión
-  setSession(session.sessionId, session)
+  setSession(sessionData.sessionId, sessionData)
 
   // La adjuntamos al socket
-  socket.data.session = session
+  socket.data.session = sessionData
 
-  console.log(`🤝 Abriendo sesión ${session.sessionId} para ${nombre}`)
+  console.log(`🤝 Abriendo sesión ${sessionData.sessionId} para ${sessionData.nombre}`)
 
   // La emitimos al cliente
-  socket.emit("session:opened", session)
+  socket.emit("session:opened", sessionData)
 }
 
 // getSession es el único público 

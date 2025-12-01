@@ -1,9 +1,14 @@
-import { WssServerSession } from '@/wss/middleware/session'
 import { Encuesta } from '@/wss/tipos'
+import { WssEstudianteSession } from '@/wss/validators/session'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-export interface Estudiante extends WssServerSession { conectado: boolean }
+export interface Estudiante extends WssEstudianteSession {
+  conectado: boolean
+  // Optionales, para los que están logueados con google
+  email?: string
+  avatar?: string
+}
 
 interface EncuestaStore {
   encuestas: Encuesta[]

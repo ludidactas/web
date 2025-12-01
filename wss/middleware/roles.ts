@@ -1,7 +1,8 @@
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
-import { SocketConSesion, WssServerSession } from "./session"
+import { SocketConSesion } from "./session"
 import { RolEncuesta } from "../tipos"
 import { ConfigSala } from "../salas/app"
+import { WssServerSession } from "../validators/session"
 
 /** Scoket con sesión de profe. Además de .session tiene .user y .config_sala */
 export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {

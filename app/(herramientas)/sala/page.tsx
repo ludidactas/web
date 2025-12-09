@@ -25,11 +25,10 @@ export default async function Page() {
           <HeaderSala btnLogout={<SignOut />}>
             <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
-<div className='w-screen px-4'>
-
+          <div className='w-screen md:px-4'>
             <EncuestasAdmin />
-</div>
-        
+          </div>
+
           <div className="w-full" />
         </div>
       </EncuestaProfeProvider>

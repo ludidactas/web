@@ -65,27 +65,19 @@ export default function EncuestasAdmin() {
       <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
 
       <Status />
-      <div className='flex p-2 gap-2 justify-center w-screen shrink-0'>
-
-        {/* Preguntas Formulario */}
-        <div className="flex flex-col bg-white rounded-xl">
-
-            <div className='flex flex-col items-center justify-center p-4 h-24 bg-indigo-500/10'>
-            <h1 className='text-3xl text-center text-indigo-500'>¡Haz una pregunta!</h1>
+      <div className='flex flex-col md:flex-row p-2 md:py-2 md:gap-2 w-screen justify-center'>
+        {/* Preguntas Formulario*/}
+        <div className="flex flex-col bg-white rounded-xl pb-2">
+          <div className='flex flex-col items-center justify-center p-4 h-24 bg-indigo-500 rounded-t-xl'>
+            <h1 className='text-xl md:text-3xl text-center text-white'>¡Haz una pregunta!</h1>
           </div>
 
-          {/* Lista de Participantes Mobile */}
-          <div className="block lg:hidden justify-self-end">
-            <ListaMobile>
-              <ListaEstudiantes />
-            </ListaMobile>
-          </div>
 
           {linkSala && (
             <div className="flex flex-col items-center justify-center gap-1 mb-8">
 
               {/* Link sala */}
-              <div className='flex gap-2 text-xl'>
+              <div className='flex gap-2 text-xl pt-6'>
                 <p className="leading-normal text-center text-sm md:text-lg">
                   Tu sala:{' '}
                   <Link target='_blank' href={linkSala} className="text-blue-700 hover:underline">
@@ -97,19 +89,12 @@ export default function EncuestasAdmin() {
                 </button>
               </div>
 
-              {/* Link overlay */}
-              {/* <div className='flex flex-col gap-2 border-2 p-2 rounded'> */}
-              {/* <div className='flex gap-2'>
-                    <p className="leading-normal text-center text-xs md:text-lg">
-                      Visualizador:{' '}
-                      <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
-                        {linkOverlay}
-                      </Link>
-                    </p>
-                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
-                    </button>
-                  </div> */}
+
+              {/* Lista de Participantes Mobile */}
+              <ListaMobile>
+                <ListaEstudiantes />
+              </ListaMobile>
+
               {/* Overlay Mobile */}
               {/* <div className='w-full flex flex-col text-indigo-500 font-bold items-center lg:hidden bg-white'>
                     <p>Vista previa </p>
@@ -119,40 +104,49 @@ export default function EncuestasAdmin() {
             </div>
           )}
 
-          {!linkSala && <p className='text-center'>Link de sala no recibido</p>}
+          {!linkSala && <p className='text-center p-4 text-rose-500'>Link de sala no recibido</p>}
 
           {/* Pregunta formulario */}
           {estado === StatusDeConexion.Conectado && (
-            <div className="flex flex-col gap-10 p-2">
+            <div className="flex flex-col gap-10">
               <AgregarPregunta />
-              <div className='flex md:hidden'>
-                <ListaEncuestas />
-              </div>
+
             </div>
           )}
 
           {estado !== StatusDeConexion.Conectado && (
-            <div className="text-center">
-              <p className="text-xl m-4">¡Ups! No se puede conectar con el servidor</p>
-              <p>
-                Actualizá la página, o envianos un mensaje :{' '}
-                <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-              </p>
-            </div>
+            <p className="flex flex-col text-center text-xl gap-2 p-4 ">
+              <span className='text-3xl pb-2'>¡Ups!</span>
+              <span>No se puede conectar con el servidor</span>
+              <span>Actualizá la página, o envianos un mensaje a </span>
+
+              <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+            </p>
           )}
         </div>
 
-        {/* Lista de Preguntas  */}
-        {estado === StatusDeConexion.Conectado && (
-          <div className="hidden md:flex flex-col bg-white gap-6 rounded-xl shrink-0">
-            {/* Header */}
-            <div className='flex flex-col items-center p-4 bg-indigo-500/10 h-24'>
-              <h1 className='text-3xl text-center text-indigo-500'>Preguntas</h1>
+
+        {estado === StatusDeConexion.Conectado && (<>
+          {/* Lista de Preguntas Mobile */}
+          <div className='block mt-2 md:hidden flex-col bg-white gap-6 rounded-xl'>
+            <div className='flex flex-col justify-center bg-indigo-500 h-24 rounded-t-xl'>
+              <h1 className='text-3xl text-center text-white'>Preguntas</h1>
               {/* Info para el usuario acerca de acciones */}
               <DialogAcciones />
             </div>
             <ListaEncuestas />
           </div>
+
+          {/* Lista de Preguntas Desktop  */}
+          <div className="hidden md:flex flex-col bg-white gap-6 rounded-xl">
+            {/* Header */}
+            <div className='flex flex-col items-center p-4 bg-indigo-500 h-24 rounded-t-xl'>
+              <h1 className='text-3xl text-center text-white'>Preguntas</h1>
+              {/* Info para el usuario acerca de acciones */}
+              <DialogAcciones />
+            </div>
+            <ListaEncuestas />
+          </div></>
         )}
 
 
@@ -168,24 +162,26 @@ export default function EncuestasAdmin() {
           <div className='hidden md:flex md:flex-col rounded-xl text-indigo-500 items-center bg-white'>
             {encuestaEnfocada && (
               <div className='flex flex-col p-2 gap-2 items-center'>
-                <p className='flex font-bold '>Visualizador vista previa 
-                <CircleDot absoluteStrokeWidth className='animate-pulse text-purple-500' /></p>
-
-
-                <div className='flex gap-2'>
+                <p className='flex gap-2 font-bold '>Visualizador vista previa
+                  <CircleDot absoluteStrokeWidth className='animate-pulse text-emerald-500' />
+                </p>
+                <div className='flex flex-col'>
                   <p className="text-center text-md">
                     Link:
+                  </p>
+                  <div className='flex gap-2'>
                     <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
                       {linkOverlay}
                     </Link>
-                  </p>
-                  <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                    {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
-                  </button>
+                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
+                    </button>
+                  </div>
                 </div>
               </div>)}
             <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
           </div>
+
         </div>
       </div>
     </div>
@@ -284,7 +280,7 @@ const ListaEstudiantes = () => {
         </div>
       </div>
 
-      {estudiantes.length === 0 && <p className="text-slate-400 italic">Ningún estudiante conectado aún...</p>}
+      {estudiantes.length === 0 && <p className="text-slate-400 italic p-2">Ningún estudiante conectado aún...</p>}
 
       {estudiantes.length > 0 && (
         <ul className="flex flex-col gap-2 p-2 rounded-xl">
@@ -330,12 +326,12 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
     setOpen(isOpen)
   }
 
-  return (
+  return (<div className="block lg:hidden self-center">
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger>
-        <h1 className="flex gap-2 text-xl md:text-2xl font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
+        <h1 className="flex gap-2 text-md font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
           <Users className="w-30 self-center" />
-          Participantes
+          Lista de Participantes
         </h1>
       </DialogTrigger>
       <DialogContent className="overflow-y-auto rounded-xl">
@@ -346,43 +342,46 @@ const ListaMobile = ({ children }: PropsWithChildren) => {
         </DialogClose>
       </DialogContent>
     </Dialog>
+  </div>
   )
 }
 
 function Status() {
   const { estado } = useEncuestaProfe()
   return (
-    <div className="bg-white my-2">
-      <div className='flex items-center justify-between m-4 px-4 bg-indigo-500/10 rounded-xl'>
-
-        <div className="flex items-center gap-2">
-          <LdSvg className="w-20 md:w-36" SvgComponent={EncuestasIcon} />
-          <div className='flex flex-col items-start'>
-          <h1 className="text-2xl md:text-5xl font-bold text-indigo-500">Encuestas</h1>
-          <p className='md:text-center text-xs w-80 md:w-full md:text-xl'>¡Haz preguntas en vivo y compártelas a través del link de la sala!</p>
-
+    
+      <div className='flex flex-col mt-4 mx-1 p-4 bg-white rounded-xl'>
+        <div className='flex justify-between items-center mx-2'>
+          <div className="flex items-center gap-2">
+            <LdSvg className="w-16 md:w-36" SvgComponent={EncuestasIcon} />
+            <div className='flex flex-col items-start'>
+              <h1 className="text-3xl md:text-5xl font-bold text-indigo-500">Encuestas</h1>
+              <p className='hidden md:flex md:text-center md:w-full md:text-xl'>¡Haz preguntas en vivo y compártelas a través del link de la sala!</p>
+            </div>
           </div>
-        </div>
 
-        {estado === StatusDeConexion.Conectado ? (
-          <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-md">Conectado</span>
-        ) : (
-          <span className="text-red-700">Desconectado</span>
-        )}
+          {estado === StatusDeConexion.Conectado ? (
+            <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl">Conectado</span>
+          ) : (
+            <span className="text-red-700 text-xs md:text-xl">Desconectado</span>
+          )}
+        </div>
+        <p className='flex md:hidden text-center text-xs p-2'>¡Haz preguntas en vivo y compártelas a través del link de la sala!</p>
+
       </div>
-    </div>
+
   )
 }
 
 function ListaEncuestas() {
   const { encuestas } = useEncuestaProfe()
   if (encuestas.length == 0) return <div>
-    <p className='flex items-center w-full m-4 shrink-0'> ¡Aún no haz hecho ninguna pregunta!</p>
-    <LdSvg className='grayscale' SvgComponent={profeUps}/>
-    </div>
+    <p className='text-center m-4'> ¡Aún no haz hecho ninguna pregunta!</p>
+    <LdSvg className='grayscale' SvgComponent={profeUps} />
+  </div>
 
   return (
-    <ScrollArea className="h-[500px] overflow-x-auto shrink-0">
+    <ScrollArea className="h-[500px] overflow-y-auto" scrollHideDelay={1000}>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -643,7 +642,7 @@ function AgregarPregunta() {
 
 
   return (
-    <div className="flex flex-col rounded-xl bg-indigo-50 p-4 gap-2">
+    <div className="flex flex-col mx-2 rounded-xl bg-indigo-50 p-4 gap-2">
       <p className="text-xl">Pregunta:</p>
       <textarea
         className="border-b w-full p-2 resize-none"
@@ -682,7 +681,7 @@ function AgregarPregunta() {
       </div>
 
       {error && (
-        <p className="flex text-rose-500 w-96 self-center text-center text-xs">(La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)</p>
+        <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">(La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)</p>
       )}
 
       {/* Boton agregar respuesta */}
@@ -709,7 +708,7 @@ function AgregarPregunta() {
 }
 
 function DialogAcciones() {
-  return <div className='flex rounded text-indigo-500 items-center justify-center hover:font-bold hover:underline'>
+  return <div className='flex rounded text-white items-center justify-center hover:font-bold hover:underline'>
     <Dialog>
       <DialogTrigger className='flex gap-1 '>
         <Info /><p>Ver info sobre acciones</p>

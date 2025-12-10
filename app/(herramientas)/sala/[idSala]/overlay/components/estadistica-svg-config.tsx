@@ -6,6 +6,7 @@ export const estadisticaSvgConfigValidator = z.object({
   barHeight: z.number().optional().default(40),
   barSpacing: z.number().optional().default(60),
   titleHeight: z.number().optional().default(40),
+  margin:z.number().optional().default(80)
 })
 
 export type EstadisticaSvgConfig = z.infer<typeof estadisticaSvgConfigValidator>

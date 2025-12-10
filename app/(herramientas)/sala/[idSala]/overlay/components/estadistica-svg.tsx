@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useState } from 'react'
 
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
+import { isNullish } from 'remeda'
 
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
@@ -14,7 +15,7 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
   const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
 
   return (
-    <div className="min-w-[100vw]">
+    <div className="w-full">
       {estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
       {estado === StatusDeConexion.Conectado && (
@@ -32,7 +33,12 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 }
 
 // Componente para una encuesta individual
-function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
+export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
+  if (isNullish(encuesta)) {
+    return<div className='bg-white w-full rounded-xl'>
+      <p className='text-center p-4'>No hay encuestas enfocadas</p>
+    </div>
+  }
   const maxVotos = Math.max(...encuesta.opciones.map((op) => op.votos))
   const totalVotos = encuesta.opciones.reduce((sum, op) => sum + op.votos, 0)
 
@@ -54,13 +60,14 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
     .toSorted((a, b) => b.votos - a.votos)
     .map(opc => ({ ...opc, texto: encuesta.isRevealed ? opc.texto : '?????' }))
 
-  const { bg, barHeight, barSpacing, titleHeight } = config
+  const { bg, barHeight, barSpacing, titleHeight, margin } = config
 
   // Calcular dimensiones
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
 
+
   return (
-    <div className="m-20 w-auto rounded-xl p-6" style={{ backgroundColor: bg }}>
+    <div className="w-auto rounded-xl p-6" style={{ backgroundColor: bg, margin: `${margin}px` }}>
       <svg className="w-full" viewBox={`0 0 800 ${svgHeight}`} style={{ height: 'auto' }}>
         {/* Título de la encuesta */}
         <text
@@ -82,7 +89,7 @@ function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: Estadis
               transform: `translate(0, ${titleHeight + ops.indexOf(op) * barSpacing}px)`,
             }}
             transition={{ type: 'spring', stiffness: 120, damping: 20 }} // or use ease: "easeInOut"
-            // transform={`translate(0, ${titleHeight + ops.indexOf(op) * barSpacing})`}
+          // transform={`translate(0, ${titleHeight + ops.indexOf(op) * barSpacing})`}
           >
             <BarraEstadistica
               percentage={totalVotos > 0 ? op.votos / totalVotos : 0}

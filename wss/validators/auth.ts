@@ -38,7 +38,6 @@ export const PasaporteSchema = z.discriminatedUnion('rol', [
   PasaportePublicoSchema,
 ])
 
-// Inferir los tipos desde Zod (en vez de tus interfaces)
 export type Pasaporte = z.infer<typeof PasaporteSchema>
 export type PasaporteEstudiante = z.infer<typeof PasaporteEstudianteSchema>
 export type PasaporteProfe = z.infer<typeof PasaporteProfeSchema>
@@ -53,13 +52,20 @@ export const SesionEstudianteSchema = z.object({
   sessionId: z.string().min(1),
 })
 
-export const SesionProfeOAdminSchema = z.object({
-  rol: z.union([z.literal(RolEncuesta.Profe), z.literal(RolEncuesta.Admin)]),
+export const SesionProfeSchema = z.object({
+  rol: z.literal(RolEncuesta.Profe),
+  sessionId: z.string().min(1),
+  token: z.string(),
+})
+
+export const SesionAdminSchema = z.object({
+  rol: z.literal(RolEncuesta.Admin),
   sessionId: z.string().min(1),
   token: z.string(),
 })
   
 export const SesionSchema = z.discriminatedUnion('rol', [
   SesionEstudianteSchema,
-  SesionProfeOAdminSchema,
+  SesionProfeSchema,
+  SesionAdminSchema,
 ])

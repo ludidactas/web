@@ -57,7 +57,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
   const nodosSVGRef = useRef<Record<SvgIds | SvgSlotIds, Element>>()
 
   // Ref a los slots: <id, SVGForeignObjectElement>
-  const slotsSVGRef = useRef<Record<SvgSlotIds, SVGForeignObjectElement>>()
+  const _slotsSVGRef = useRef<Record<SvgSlotIds, SVGForeignObjectElement>>()
 
   //Scope para animejs
   const scope = useRef<Scope | null>(null)

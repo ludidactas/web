@@ -9,7 +9,6 @@ import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { cn, exportarPlanilla } from '@/lib/utils'
 import EncuestasIcon from '@/svg/encuestas.svg'
 import { Encuesta } from '@/wss/tipos'
-import { pollBase } from '@/wss/validators'
 import { Icon } from '@iconify/react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
@@ -24,6 +23,7 @@ import { EncuestaSVG } from '../[idSala]/overlay/components/estadistica-svg'
 import { EstadisticaSvgConfig } from '../[idSala]/overlay/components/estadistica-svg-config'
 import { useEncuestaProfe } from './encuestas-profe-context'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
+import { pollBase } from '@/wss/validators/polls'
 
 export default function EncuestasAdmin() {
   const { linkSala, estado, encuestas } = useEncuestaProfe()

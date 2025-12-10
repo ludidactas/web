@@ -102,7 +102,7 @@ const login = async (socket: SocketConSesion) => {
     }
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
-    if (registradoComoAdmin(payload.email)) {
+    if (registradoComoAdmin(payload.email) && auth.rol === RolEncuesta.Admin) {
       openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
     } else {
       openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })

@@ -60,6 +60,7 @@ export const useConexionStore = create<Estado>((set, get) => ({
         set({ status: StatusDeConexion.Expirado, session: null })
         s.auth = {}
         // Limpiar la sesión storeada
+        localStorage.removeItem('sesion-guardada')
         // auto-reconnect
         setTimeout(() => get().conectar(auth), 1000)
       },

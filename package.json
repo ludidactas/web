@@ -9,9 +9,9 @@
     "lint": "next lint",
     "svgo": "svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
     "expose": "npx next dev -H 0.0.0.0",
-    "polls:start": "bun run wss/server.ts",
-    "polls:dev": "nodemon --watch wss/server.ts --exec bun run wss/server.ts",
-    "polls:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js"
+    "wss:start": "bun run wss/server.ts",
+    "wss:dev": "nodemon --watch wss --exec bun run wss/server.ts",
+    "wss:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js"
   },
   "dependencies": {
     "@iconify-json/streamline-pixel": "^1.2.0",

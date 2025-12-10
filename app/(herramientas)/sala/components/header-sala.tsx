@@ -2,7 +2,6 @@
 import Image from 'next/image'
 import { PropsWithChildren, ReactNode } from 'react'
 import { titulo } from '@/components/fonts'
-import Link from 'next/link'
 
 interface HeaderProps extends PropsWithChildren {
   className?: string

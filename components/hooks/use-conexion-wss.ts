@@ -1,18 +1,16 @@
+import { RolEncuesta } from '@/wss/tipos'
 import { Pasaporte } from '@/wss/validators/auth'
-import { useCallback, useEffect, useRef } from 'react'
-import { isNonNullish } from 'remeda'
-import { Socket } from 'socket.io-client'
-import { create } from 'zustand'
-import DebugPanel from './conexion-wss-debug'
-import { configurarListeners, handshake, limpiarListeners } from './server-encuestas'
-import useSesionGuardada from './use-sesion-localstorage'
 import { WssServerSession } from '@/wss/validators/session'
+import { isNullish } from 'remeda'
+import { create } from 'zustand'
+import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
 
 // Máquina de estados finitos
 
 export enum StatusDeConexion {
   Quieto = 'idle',
   Autenticando = 'authenticating',
+  CargandoDependencias = 'loading_deps',
   Conectando = 'connecting',
   Conectado = 'connected',
   Error = 'error',
@@ -20,150 +18,153 @@ export enum StatusDeConexion {
 }
 
 type Estado = {
-  socket: Socket | null
+  socket: SocketWssCli | null
   status: StatusDeConexion
   error: string | null
   session: WssServerSession | null
-
-  conectar: (auth: Pasaporte, sessionId?: string) => Promise<void>
+  // Agregamos una función central para iniciar o re-intentar la conexión
+  iniciarConexion: (auth: Pasaporte, sessionId?: string) => Promise<void>
   desconectar: () => void
+  // Acciones internas para gestionar transiciones de estado
+  _manejarError: (err: any) => void
+  _manejarExpiracion: () => void
+  _limpiarSocket: (reason?: string) => void // Renombrado
 }
 
-export const useConexionStore = create<Estado>((set, get) => ({
+/** Lógica de conexión y máquina de estados finitos para conexión del cliente al WSS */
+export const useConexionWss = create<Estado>((set, get) => ({
   socket: null,
   status: StatusDeConexion.Quieto,
   error: null,
   session: null,
 
-  async conectar(auth, sessionId) {
-    if (get().socket) console.warn('Ya hay un socket!', get().socket!.id)
+  // Creación/cierre del socket
+  async iniciarConexion(auth, sessionId) {
+    const current = get()
 
+    // Si estamos intentando reconectar pero ya estamos conectados o en proceso, por lo menos chiflamos.
+    if ([StatusDeConexion.Conectado, StatusDeConexion.Conectando].includes(current.status))
+      console.warn('❗ Conexión ya en curso o activa. Ignorando solicitud de inicio.')
+
+    // Nos fijamos si hay un cambio de rol o sala en el socket para saber si es reconexión 
+    // (en cuyo caso, desconectar antes).
+    // Maneja la transición Publico -> Autenticado.
+    const sockAuth = current.socket && current.socket.auth
+
+    const huboCambioDeSala =
+      sockAuth?.rol === RolEncuesta.Estudiante &&
+      auth.rol === RolEncuesta.Estudiante &&
+      sockAuth?.idSala !== auth.idSala
+    const huboCambioDeRol = sockAuth?.rol !== auth.rol
+
+    const precisaAuthNueva = huboCambioDeRol || huboCambioDeSala
+
+    // Forzamos una desconexión limpia.
+    if (precisaAuthNueva) {
+      console.log('🔄 Detectado cambio de rol o sala. Forzando desconexión de socket anterior.')
+      current.desconectar()
+    }
+
+    console.log(`🔌 Iniciando conexión WSS... Rol: ${auth.rol}`)
     set({ status: StatusDeConexion.Conectando, error: null })
 
-    const sock = await handshake({ ...auth, sessionId })
+    try {
+      // Handshake (crea el socket y lo retorna)
+      const sock = await handshake({ ...auth, sessionId })
 
-    // En el listener de onConnect seteamos el socket en el store
-    const listeners = {
-      onConnect(s: Socket) {
-        console.log('Conectado al servidor de encuestas, socket id:', s.id)
-        set({ socket: s, status: StatusDeConexion.Conectado })
-      },
-      onDisconect(_s: Socket, reason: string) {
-        console.warn('Desconectado:', reason)
-        set({ status: StatusDeConexion.Quieto, socket: null })
-      },
-      onSession(s: Socket, sesion: WssServerSession) {
-        set({ session: sesion })
-        s.auth = { ...s.auth, sessionId: sesion.sessionId }
-      },
-      onExpired(s: Socket) {
-        set({ status: StatusDeConexion.Expirado, session: null })
-        s.auth = {}
-        // Limpiar la sesión storeada
-        localStorage.removeItem('sesion-guardada')
-        // auto-reconnect
-        setTimeout(() => get().conectar(auth), 1000)
-      },
-      onError(s: Socket, err: any) {
-        let msg = err.message
-          ? `Error de conexión con el servidor de encuestas: ${err.message}`
-          : 'Error desconocido'
+      // Asignamos los listeners del store *antes* de conectar
+      configurarListeners({
+        sock,
+        listeners: {
+          onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
+          onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
+          onSession: (_, sesion) => set({ session: sesion }),
+          onExpired: () => get()._manejarExpiracion(),
+          onError: (_, err) => get()._manejarError(err),
+        },
+      })
 
-        // Server down
-        if (err.message === 'xhr poll error' || (err.type && err.type === 'TransportError')) {
-          msg = 'El servidor de encuestas no responde. Intentando reconectar...'
-          set({ status: StatusDeConexion.Error, error: msg })
-        }
+      // Boom 🚀
+      sock.connect()
 
-        // Sesión expirada
-        else if (err.data && err.data.action === 'clear_session') {
-          msg = 'Sesión expirada. Reestableciendo...'
-          set({ status: StatusDeConexion.Expirado, error: msg })
-          listeners.onExpired(s)
-        }
-
-        // Sala inexistente
-        else if (err.message === 'Invalid namespace') {
-          // Este error lo tira el server cuando el _canal_ no existe, pero estamos diciendo que es que la sala no existe
-          // Revisar
-          msg = `Esta sala no existe! Por favor, verificá el ID`
-          set({ status: StatusDeConexion.Error, error: msg })
-          // console.error(err)
-        }
-
-        else { 
-          set({ status: StatusDeConexion.Error, error: err.message })
-        }
-
-        console.log('💥 [WSS] ', err.name, err.message, msg)
-      },
+    } catch (err) {
+      console.error('Error durante el handshake:', err)
+      set({ status: StatusDeConexion.Error, error: 'Error al iniciar el handshake.' })
     }
-
-    await configurarListeners({ sock, listeners })
-
-    sock.connect()
   },
 
-  desconectar() {
+  // Función pública para desconectar (cleanup forzada)
+  desconectar(razon = 'Desconexión manual') {
     const sock = get().socket
-    if (isNonNullish(sock)) {
-      limpiarListeners(sock)
-      sock.disconnect()
+
+    if (isNullish(sock)) {
+      console.warn('❗ No hay socket activo para desconectar.')
+      return
     }
-    set({ socket: null, status: StatusDeConexion.Quieto })
+    
+    // Desconexión efectiva
+    console.log(`🔌 Desconectando del WSS (Forzado)...`)
+    sock.disconnect() // Esto disparará el evento 'disconnect' y llamará a _limpiarSocket
 
-    // Invalidar sesión?
+    // Limpiamos 
+    console.log(`♻️ Limpiando el socket`)
+    get()._limpiarSocket(razon)
+  },
 
+  // Internas
+
+  _limpiarSocket(razon = 'cleanup') {
+    console.log(`🔄 Limpiando estado de conexión: ${razon}`)
+
+    // Quitamos listeners
+    const sock = get().socket
+    if (sock) limpiarListeners(sock) // Asegurarse de que el socket anterior esté limpio
+
+    // Si no está en error (clave), vuelve a Quieto.
+    const statusToSet = get().status === StatusDeConexion.Error ? StatusDeConexion.Error : StatusDeConexion.Quieto
+    set({ socket: null, status: statusToSet, session: null })
+  },
+
+  // Se llama desde onExpired y desde manejarError si el error indica expiración
+  _manejarExpiracion(autoreconectar = false) {
+    console.warn('⏳ Sesión expirada. Limpiando sesión local y reintentando...')
+
+    // El hook se encarga de limpiar el localStorage a través de 'sessionReady'
+    set({ status: StatusDeConexion.Expirado, session: null })
+
+    // Forzamos un reintento limpio
+    get().desconectar() // Dispara _limpiarSocket -> Quieto
+
+    if (autoreconectar) {
+      console.log('♻️ Auto-reconectando tras expiración...')
+      const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
+    
+      if (auth) get().iniciarConexion(auth)
+      else console.warn('❗ No se puede auto-reconectar: no hay auth disponible en el socket.')
+    }
+
+    // La re-conexión puede ser impulsada por el hook al ver el estado Quieto
+    // y la por sessionReady (que se vuelve a cargar después de limpiar localStorage).
+
+    // Auto-reconexión simple tras un timeout corto, si no quieres depender de sessionReady
+    // setTimeout(() => {
+    //   const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
+    //   if (auth) get().iniciarConexion(auth)
+    // }, 1000)
+  },
+
+  _manejarError(err: any) {
+    let msg = err.message ? `⚠️ Error: ${err.message}` : '⚠️ Error desconocido'
+
+    // El server expiró la sesión
+    if (err.data && err.data.action === 'clear_session') {
+      msg = '😵 Sesión expirada. Reestableciendo...'
+      get()._manejarExpiracion()
+      return
+    }
+
+    set({ status: StatusDeConexion.Error, error: msg })
+
+    /** @todo Podríamos llamar a get()._limpiarSocket() si el error es fatal e irreversible. */
   },
 }))
-
-/** Cose la sesión storeada con el server de WSS */
-export function useConexionWss(auth: Pasaporte) {
-  const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada()
-  const { status, conectar, desconectar, socket, session, error } = useConexionStore()
-
-  const haySocket = useRef(false)
-
-  const WssDebugPanel = useCallback(() => DebugPanel({ data: { status, session, error } }), [status, session, error])
-
-  // cuando el servidor nos da una nueva sesión → persistir
-  useEffect(() => {
-    if (!sessionReady) return
-
-    if (session) {
-      console.log(`Sesión actualizada, persistiendo...`)
-      saveSession(session)
-    }
-  }, [session, saveSession, sessionReady])
-
-  // cuando la sesión expira, limpiamos localStorage
-  useEffect(() => {
-    if (!sessionReady) return
-
-    if (status === StatusDeConexion.Expirado) {
-      console.log(`Sesión expirada, limpiando...`)
-      clearSession()
-    }
-  }, [status, clearSession, sessionReady])
-
-  // Cuando tengamos sesión, si el status es quieto y no hay socket (es decir, si estamos arrancando), triggereamos
-  useEffect(() => {
-    if (!sessionReady) return
-
-    if (status === StatusDeConexion.Quieto && !haySocket.current) {
-      console.log(`Sesión lista, conectando...`, status, socket)
-      haySocket.current = true
-      conectar(auth, storedSession?.sessionId)
-    } 
-
-    return () => {
-      if (isNonNullish(socket) && haySocket.current) {
-        haySocket.current = false
-        console.log(`Limpiando socket...`, socket.id)
-        desconectar()
-      }
-    }
-  }, [sessionReady, status, haySocket, storedSession])
-
-  return { estado: status, socket, conectar, session, error, WssDebugPanel }
-}

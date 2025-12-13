@@ -11,18 +11,18 @@ import Cabeza from '/svg/cabezasvgo.svg'
 // import Polls from '/svg/pollsvgo.svg'
 import { oscilar } from '@/lib/animaciones'
 import { EncuestaHidratada } from '@/wss/tipos'
-import { StatusDeConexion } from '../../../../components/hooks/use-conexion-wss'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
 export default function EncuestasEstudiante() {
-  const { estado, encuestas, error } = useEncuestaEstudiante()
+  const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 
   return (
     <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
-
+      <WssDebugPanel />
       {/* Header */}
       <div className="relative">
         <div className="absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl" />

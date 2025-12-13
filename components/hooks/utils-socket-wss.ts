@@ -10,6 +10,13 @@ if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
 /** Auth que espera el server de sockets */
 export type SocketServerAuth = {sessionId?: string} & Pasaporte
 
+/**
+ * Definición local del tipo de Socket con nuestro objeto 'auth' tipado.
+ */
+export interface SocketWssCli extends Socket {
+    auth: SocketServerAuth;
+}
+
 /** Endpoints para cada rol */
 export const conectores = {
   [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false, transports: ['websocket'] }),
@@ -40,24 +47,24 @@ export async function handshake(auth: SocketServerAuth) {
       break
   }
 
-  return sock
+  return sock as SocketWssCli
 }
 
 /**
  * Attachea event listeners. Imperativo.
  */
 export async function configurarListeners({ sock, listeners }: {
-  sock: Socket
+  sock: SocketWssCli
   listeners: {
-    onConnect: (socket: Socket) => void,
-    onError: (socket: Socket, error: Error) => void,
-    onDisconect: (socket: Socket, reason: string) => void
-    onSession: (socket: Socket, session: WssServerSession) => void
-    onExpired: (socket: Socket) => void
+    onConnect: (socket: SocketWssCli) => void,
+    onError: (socket: SocketWssCli, error: Error) => void,
+    onDisconnect: (socket: SocketWssCli, reason: string) => void
+    onSession: (socket: SocketWssCli, session: WssServerSession) => void
+    onExpired: (socket: SocketWssCli) => void
   }
 }) {
 
-  const { onConnect, onError, onDisconect, onSession, onExpired } = listeners
+  const { onConnect, onError, onDisconnect: onDisconect, onSession, onExpired } = listeners
 
   // En cualquier caso, le suscribimos unos handlers básicos
   sock.on('connect_error', error => {
@@ -88,7 +95,8 @@ export async function solicitarAuth() {
   return payload.token as string
 }
 
-export const limpiarListeners = (socket: Socket) => { 
+/** Limpia event listeners base y de sesión del socket */
+export const limpiarListeners = (socket: SocketWssCli) => { 
   socket.off('connect_error')
   socket.off('disconnect')
   socket.off('connect')

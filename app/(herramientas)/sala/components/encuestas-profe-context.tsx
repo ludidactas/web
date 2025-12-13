@@ -15,7 +15,8 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   const [linkSala, setLinkSala] = useState<string | null>(null)
 
   // El profe se conecta con su email como idSala
-  const { socket, estado, error } = useServerWebsockets(auth)
+  const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useServerWebsockets(auth)
+
   const {
     encuestas,
     estudiantes,
@@ -37,7 +38,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
         admiteAportes,
       }
 
-      socket!.emit('poll:create', nuevaEncuesta, (error?: string) => {
+      socketWssCli!.emit('poll:create', nuevaEncuesta, (error?: string) => {
         if (error) rej(error)
         res()
       })
@@ -45,67 +46,67 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
 
   /** Postea al server la acción de borrar */
   const borrarPregunta = (encuestaId: string) => {
-    socket!.emit('poll:delete', { pollId: encuestaId })
+    socketWssCli!.emit('poll:delete', { pollId: encuestaId })
   }
 
   /** Postea al server la acción de cerrar */
   const cerrarPregunta = (encuestaId: string) => {
-    socket!.emit('poll:close', { pollId: encuestaId })
+    socketWssCli!.emit('poll:close', { pollId: encuestaId })
   }
 
   /** Postea al server la acción de abrir */
   const abrirPregunta = (encuestaId: string) => {
-    socket!.emit('poll:open', { pollId: encuestaId })
+    socketWssCli!.emit('poll:open', { pollId: encuestaId })
   }
 
   /** Postea al sever la acción de publicar */
   const publicarPregunta = (encuestaId: string) => {
-    socket!.emit('poll:publish', { pollId: encuestaId })
+    socketWssCli!.emit('poll:publish', { pollId: encuestaId })
   }
 
   /** Postea al sever la acción de publicar */
   const esconderPregunta = (encuestaId: string) => {
-    socket!.emit('poll:hide', { pollId: encuestaId })
+    socketWssCli!.emit('poll:hide', { pollId: encuestaId })
   }
 
   /** Postea al sever la acción de enfocar */
   const enfocarPregunta = (encuestaId: string) => {
-    socket!.emit('poll:focus', { pollId: encuestaId })
+    socketWssCli!.emit('poll:focus', { pollId: encuestaId })
   }
 
   /** Postea al sever la acción de revelar opciones */
   const revelarOpciones = (encuestaId: string) => {
-    socket!.emit('poll:reveal', { pollId: encuestaId })
+    socketWssCli!.emit('poll:reveal', { pollId: encuestaId })
   }
 
   /** Postea al sever la acción de desrevelar opciones */
   const desrevelarOpciones = (encuestaId: string) => {
-    socket!.emit('poll:unreveal', { pollId: encuestaId })
+    socketWssCli!.emit('poll:unreveal', { pollId: encuestaId })
   }
 
   /** Limpia la lista de estudiantes */
   const limpiarEstudiantesSala = () => {
-    socket!.emit('sala:limpar_estudiantes_sala')
+    socketWssCli!.emit('sala:limpar_estudiantes_sala')
   }
 
   // Conectamos el socket a sus handlers
   useEffect(() => {
-    if (socket) {
-      socket.on('polls:list', setEncuestas)
-      socket.on('poll:updated', updateEncuesta)
-      socket.on('poll:created', addEncuesta)
-      socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+    if (socketWssCli) {
+      socketWssCli.on('polls:list', setEncuestas)
+      socketWssCli.on('poll:updated', updateEncuesta)
+      socketWssCli.on('poll:created', addEncuesta)
+      socketWssCli.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
 
-      socket.on('poll:error', ({ message }: { message: string }) => {
+      socketWssCli.on('poll:error', ({ message }: { message: string }) => {
         toast.error(message)
       })
 
-      socket.on('disconnect', () => {
+      socketWssCli.on('disconnect', () => {
         setTimeout(() => setLinkSala(null), 1000)
       })
 
       // Suscribimos a su respuesta
-      socket.on(
+      socketWssCli.on(
         'sala:abierta',
         ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
@@ -117,39 +118,39 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
         }
       )
 
-      socket.on('sala:estudiantes', setEstudiantes)
+      socketWssCli.on('sala:estudiantes', setEstudiantes)
 
-      socket.on('sala:estudiante_conectado', (estudiante: Estudiante) => {
+      socketWssCli.on('sala:estudiante_conectado', (estudiante: Estudiante) => {
         toast.success(`Estudiante conectado: ${estudiante.nombre}`)
         addEstudiante(estudiante)
       })
 
-      socket.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
+      socketWssCli.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
         removeEstudiante(estudiante.id)
       })
 
       // Pedimos la sala y la lista de estudiantes al server
-      socket.emit('sala:abrir')
+      socketWssCli.emit('sala:abrir')
 
       return () => {
-        socket.removeAllListeners('polls:list')
-        socket.removeAllListeners('poll:updated')
-        socket.removeAllListeners('poll:created')
-        socket.removeAllListeners('poll:deleted')
-        socket.removeAllListeners('poll:error')
-        socket.removeAllListeners('disconnect')
-        socket.removeAllListeners('sala:abierta')
-        socket.removeAllListeners('sala:estudiantes')
-        socket.removeAllListeners('sala:estudiante_conectado')
-        socket.removeAllListeners('sala:estudiante_desconectado')
+        socketWssCli.removeAllListeners('polls:list')
+        socketWssCli.removeAllListeners('poll:updated')
+        socketWssCli.removeAllListeners('poll:created')
+        socketWssCli.removeAllListeners('poll:deleted')
+        socketWssCli.removeAllListeners('poll:error')
+        socketWssCli.removeAllListeners('disconnect')
+        socketWssCli.removeAllListeners('sala:abierta')
+        socketWssCli.removeAllListeners('sala:estudiantes')
+        socketWssCli.removeAllListeners('sala:estudiante_conectado')
+        socketWssCli.removeAllListeners('sala:estudiante_desconectado')
       }
     }
-  }, [socket])
+  }, [socketWssCli])
 
   return {
-    socket,
-    estado,
-    error,
+    socket: socketWssCli,
+    estado: estadoWssCli,
+    error: errorWssCli,
     encuestas,
     linkSala,
     estudiantes,
@@ -163,6 +164,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     limpiarEstudiantesSala,
     revelarOpciones,
     desrevelarOpciones,
+    WssDebugPanel,
   }
 }
 

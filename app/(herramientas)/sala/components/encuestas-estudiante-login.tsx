@@ -10,21 +10,31 @@ import { animate, spring, stagger } from 'animejs'
 
 import { RolEncuesta } from '@/wss/tipos'
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
 import DibuEstudiante from '/svg/upssvgo.svg'
 import { oscilar } from '@/lib/animaciones'
+import { PasaporteEstudiante, PasaportePublico } from '@/wss/validators/auth'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   const { setDNI, setNombre, setIngresado, setNombreSala, nombreSala, nombre, dni } = useEncuestaEstudianteLogin()
 
+  // Creamos una referencia estable al auth
+  const authPublico = useMemo(
+    () => ({
+      rol: RolEncuesta.Publico,
+      idSala,
+    }) as PasaportePublico,
+    [idSala]
+  )
+
   // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
   // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
-  const { socket } = useServerWebsockets({ rol: RolEncuesta.Publico, idSala })
+  const { socket } = useServerWebsockets(authPublico)
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {

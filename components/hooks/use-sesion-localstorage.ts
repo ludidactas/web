@@ -37,18 +37,18 @@ export default function useSesionGuardada() {
   const { storedSession, clearSession, setReady, ready } = useSesionStore()
 
   useEffect(() => {
+    if (statusSesionNext === 'loading') return // todavía no cargó la sesión de next-auth
+
     const emailSesionNext = nextSession?.user?.email
     const emailSesionWss = (storedSession?.rol === RolEncuesta.Admin || storedSession?.rol === RolEncuesta.Profe) ? storedSession?.email : null
-    
-    if (
-      storedSession &&
-      statusSesionNext !== 'loading' &&
-      emailSesionWss !== emailSesionNext
-    ) {
+
+    if ( storedSession && emailSesionWss !== emailSesionNext ) {
+      console.log(`🧹 Limpiando sesión guardada por cambio de usuario o inconsistencia: next-auth(${emailSesionNext}) vs wss(${emailSesionWss})`)
       clearSession()
       return
     }
 
+    console.log(storedSession ? `🌀 Sesión ${storedSession.sessionId} cargarda con rol ${storedSession.rol}` : `🌀 No hay sesión guardada`)
     setReady(true)
   }, [statusSesionNext, storedSession, nextSession, clearSession, setReady, ready])
 

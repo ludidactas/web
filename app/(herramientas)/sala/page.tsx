@@ -1,4 +1,4 @@
-import EncuestasAdmin from '@/app/(herramientas)/sala/components/encuestas-profe'
+import EncuestasProfe from '@/app/(herramientas)/sala/components/encuestas-profe'
 import { auth } from '@/app/auth'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
@@ -26,7 +26,7 @@ export default async function Page() {
             <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
           <div className='w-screen md:px-4'>
-            <EncuestasAdmin />
+            <EncuestasProfe />
           </div>
 
           <div className="w-full" />

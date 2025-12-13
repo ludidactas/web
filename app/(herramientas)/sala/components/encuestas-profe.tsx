@@ -1,7 +1,6 @@
 'use client'
 
 import { LdSvg } from '@/components/custom/ld-svg'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ScrollBar } from '@/components/ui/scroll-area'
@@ -24,9 +23,11 @@ import { EstadisticaSvgConfig } from '../[idSala]/overlay/components/estadistica
 import { useEncuestaProfe } from './encuestas-profe-context'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import { pollBase } from '@/wss/validators/polls'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
-export default function EncuestasAdmin() {
-  const { linkSala, estado, encuestas } = useEncuestaProfe()
+export default function EncuestasProfe() {
+  const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
+  
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
   const encuestaEnfocada = encuestas.find((e) => e.isFocused) || encuestas[0]
@@ -61,8 +62,7 @@ export default function EncuestasAdmin() {
   return (
     <div className="flex flex-col">
       {/* DEBUG */}
-      {/* <pre>{JSON.stringify({ ready, storedSession }, null, 2)}</pre>
-      <pre>{JSON.stringify({ estado, error }, null, 2)}</pre> */}
+      <WssDebugPanel />
 
       <Status />
       <div className='flex flex-col md:flex-row p-2 md:py-2 md:gap-2 w-screen justify-center'>

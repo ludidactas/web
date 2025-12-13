@@ -1,5 +1,4 @@
 'use client'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { Encuesta, Opcion } from '@/wss/tipos'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
@@ -7,6 +6,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { useEncuestaEstudiante } from '../../../components/encuestas-estudiante-context'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {

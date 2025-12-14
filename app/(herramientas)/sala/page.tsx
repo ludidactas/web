@@ -1,14 +1,14 @@
-import EncuestasProfe from '@/app/(herramientas)/sala/components/encuestas-profe'
+import EncuestasProfe from '@/components/salas/encuestas-profe'
 import { auth } from '@/app/auth'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
-import { EncuestaProfeProvider } from './components/encuestas-profe-context'
-import HeaderSala from './components/header-sala'
 import { SessionProvider } from 'next-auth/react'
 import { tokenWss } from '@/server/token_wss'
 import { RolEncuesta } from '@/wss/tipos'
+import HeaderSala from '@/components/salas/header-sala'
+import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe-context'
 
 export default async function Page() {
   const session = await auth()

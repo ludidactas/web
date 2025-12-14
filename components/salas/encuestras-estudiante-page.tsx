@@ -4,12 +4,12 @@ import { nombreSplit } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
 import { useSession as useGoogleSession } from 'next-auth/react'
 import { ReactNode } from 'react'
-import EncuestasEstudiante from '../../app/(herramientas)/sala/components/encuestas-estudiante'
-import { EncuestaEstudianteProvider } from '../../app/(herramientas)/sala/components/encuestas-estudiante-context'
+import EncuestasEstudiante from './encuestas-estudiante'
+import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 
-import LoginSalaEstudiante from '../../app/(herramientas)/sala/components/encuestas-estudiante-login'
-import { useEncuestaEstudianteLogin } from '../../app/(herramientas)/sala/components/encuestas-estudiante-login-context'
-import HeaderSala from '@/app/(herramientas)/sala/components/header-sala'
+import LoginSalaEstudiante from './encuestas-estudiante-login'
+import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
+import HeaderSala from './header-sala'
 
 export default function EncuestasEstudiantePage({
   idSala,

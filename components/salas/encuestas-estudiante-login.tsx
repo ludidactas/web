@@ -12,7 +12,7 @@ import { RolEncuesta } from '@/wss/tipos'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { useEncuestaEstudianteLogin } from '../../app/(herramientas)/sala/components/encuestas-estudiante-login-context'
+import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
 import DibuEstudiante from '/svg/upssvgo.svg'
 import { oscilar } from '@/lib/animaciones'

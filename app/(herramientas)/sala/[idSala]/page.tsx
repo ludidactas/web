@@ -1,7 +1,8 @@
+import { EncuestaEstudianteLoginProvider } from '@/components/salas/encuestas-estudiante-login-context'
+import EncuestasEstudiantePage from '@/components/salas/encuestras-estudiante-page'
 import { Toaster } from 'sonner'
 import { SignIn, SignOut } from '../../login/components/botones'
-import EncuestasEstudiantePage from '../components/encuestras-estudiante-page'
-import { EncuestaEstudianteLoginProvider } from '../components/encuestas-estudiante-login-context'
+
 
 export default async function Page({ params }: { params: Promise<{ idSala: string }> }) {
   const { idSala } = await params

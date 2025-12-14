@@ -11,11 +11,14 @@ export interface Estudiante extends WssEstudianteSession {
 }
 
 interface EncuestaStore {
-  encuestas: Encuesta[]
   estudiantes: Estudiante[]
   addEstudiante: (estudiante: Estudiante) => void
   removeEstudiante: (estudianteId: string) => void
   setEstudiantes: (estudiantes: Estudiante[]) => void
+  estudianteConectado: (estudiante: Estudiante) => void
+  estudianteDesconectado: (estudianteId: string) => void
+  
+  encuestas: Encuesta[]
   addEncuesta: (encuesta: Encuesta) => void
   updateEncuesta: (encuesta: Encuesta) => void
   deleteEncuesta: (pollId: string) => void
@@ -24,20 +27,36 @@ interface EncuestaStore {
 
 export const useEncuestaStore = create<EncuestaStore>()(
   subscribeWithSelector((set) => ({
-    encuestas: [],
+
+    // Estudiantes
     estudiantes: [],
     addEstudiante: (estudiante) =>
       set((state) => ({
-        estudiantes: state.estudiantes.find(e => e.sessionId === estudiante.sessionId) ?
-          state.estudiantes.map(e => e.sessionId === estudiante.sessionId ? { ...e, conectado: true } : e) :
-          [...state.estudiantes, { ...estudiante, conectado: true }]
+        estudiantes: state.estudiantes.find((e) => e.id === estudiante.id)
+          ? state.estudiantes.map((e) => (e.id === estudiante.id ? { ...e, conectado: true } : e))
+          : [...state.estudiantes, { ...estudiante, conectado: true }],
       })),
-    removeEstudiante: (estudianteId) => set((state) => ({
-      estudiantes: state.estudiantes.map(e => e.sessionId === estudianteId ? { ...e, conectado: false } : e)
-    })),
-    setEstudiantes: (estudiantes) => set({
-      estudiantes: [...estudiantes]
-    }),
+    removeEstudiante: (estudianteId) =>
+      set(({ estudiantes }) => ({
+        estudiantes: estudiantes.filter((e) => e.id !== estudianteId),
+      })),
+    setEstudiantes: (estudiantes) =>
+      set({
+        estudiantes: [...estudiantes],
+      }),
+    estudianteConectado: (estudiante) => { 
+      set((state) => ({
+        estudiantes: state.estudiantes.map((e) => (e.id === estudiante.id ? { ...e, conectado: true } : e)),
+      }))
+    }, 
+    estudianteDesconectado: (estudianteId) => { 
+      set((state) => ({
+        estudiantes: state.estudiantes.map((e) => (e.id === estudianteId ? { ...e, conectado: false } : e)),
+      }))
+    },
+
+    // Encuestas
+    encuestas: [],
     addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),
     updateEncuesta: (encuesta) =>
       // Si la encuentra updatea, sino agrega

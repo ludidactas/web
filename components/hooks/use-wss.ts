@@ -17,7 +17,7 @@ export function useWss(auth: Pasaporte) {
 
   // Trigger de conexión
   useEffect(() => {
-    console.log(`🔌 useWss: Evaluando conexión...`, status)
+    // console.log(`🔌 useWss: Evaluando conexión...`, status)
 
     // 1. Esperar dependencias listas
     if (!sessionReady) {
@@ -38,21 +38,19 @@ export function useWss(auth: Pasaporte) {
     }
   }, [sessionReady, auth, storedSession, desconectar, status, iniciarConexion, socket])
 
-  // ----------------------------------------------------
-  // Lógica de sincronización del estado con sesión local
-  // ----------------------------------------------------
+  // Sync de la sesión
 
-  // 1. Cuando el servidor nos da una nueva sesión → persistir
+  // Cuando el servidor nos da una nueva sesión → persistir
   useEffect(() => {
     if (sessionReady && session) {
       saveSession(session)
     }
   }, [session, saveSession, sessionReady])
 
-  // 2. Cuando el status indica expiración → limpiar localStorage
+  // Cuando el status indica expiración → limpiar localStorage
   useEffect(() => {
     if (sessionReady && status === StatusDeConexion.Expirado) {
-      console.log(`Sesión expirada detectada, limpiando localStorage...`)
+      console.log(`🧹 Sesión expirada detectada, limpiando localStorage...`)
       clearSession()
       // La limpieza de clearSession() modificará 'storedSession',
       // lo cual re-ejecutará el useEffect de conexión, forzando la reconexión sin sessionId.

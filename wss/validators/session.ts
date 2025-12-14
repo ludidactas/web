@@ -11,7 +11,11 @@ const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolEncuesta.Estudiante),
   nombre: z.string().optional(),
   dni: z.string().optional(),
-  icono: z.string().optional()
+  email: z.string().email().optional(), // Por ahora no está en uso
+  icono: z.string().optional(),
+
+  // Derivado. Puede ser dni, email, ip o incluso sessionId. La idea es que sea un identificador único del estudiante en la sala.
+  id: z.string().optional(),
 })
 
 const WssProfeSessionSchema = WssSessionBaseSchema.extend({

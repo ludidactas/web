@@ -63,27 +63,23 @@ export default function EncuestasProfe() {
 
   return (
     <div className="flex flex-col">
-      {/* DEBUG */}
-      <WssDebugPanel />
+      {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
 
       <Status />
-      <div className='flex flex-col md:flex-row p-2 md:py-2 md:gap-2 justify-center'>
-        
+      <div className="flex flex-col md:flex-row p-2 md:py-2 md:gap-2 justify-center">
         {/* Preguntas Formulario*/}
         <div className="flex flex-col bg-white rounded-xl pb-2">
-          <div className='flex flex-col items-center justify-center p-4 h-24 bg-indigo-500 rounded-t-xl'>
-            <h1 className='text-xl md:text-3xl text-center text-white'>¡Haz una pregunta!</h1>
+          <div className="flex flex-col items-center justify-center p-4 h-24 bg-indigo-500 rounded-t-xl">
+            <h1 className="text-xl md:text-3xl text-center text-white">¡Haz una pregunta!</h1>
           </div>
-
 
           {linkSala && (
             <div className="flex flex-col items-center justify-center gap-1 mb-8">
-
               {/* Link sala */}
-              <div className='flex gap-2 text-xl pt-6'>
+              <div className="flex gap-2 text-xl pt-6">
                 <p className="leading-normal text-center text-sm md:text-lg">
                   Tu sala:{' '}
-                  <Link target='_blank' href={linkSala} className="text-blue-700 hover:underline">
+                  <Link target="_blank" href={linkSala} className="text-blue-700 hover:underline">
                     {linkSala}
                   </Link>
                 </p>
@@ -91,7 +87,6 @@ export default function EncuestasProfe() {
                   {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
                 </button>
               </div>
-
 
               {/* Lista de Participantes Mobile */}
               <ListaMobile>
@@ -107,19 +102,18 @@ export default function EncuestasProfe() {
             </div>
           )}
 
-          {!linkSala && <p className='text-center p-4 text-rose-500'>Link de sala no recibido</p>}
+          {!linkSala && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
 
           {/* Pregunta formulario */}
           {estado === StatusDeConexion.Conectado && (
             <div className="flex flex-col gap-10">
               <AgregarPregunta />
-
             </div>
           )}
 
           {estado !== StatusDeConexion.Conectado && (
             <p className="flex flex-col text-center text-xl gap-2 p-4 ">
-              <span className='text-3xl pb-2'>¡Ups!</span>
+              <span className="text-3xl pb-2">¡Ups!</span>
               <span>No se puede conectar con el servidor</span>
               <span>Actualizá la página, o envianos un mensaje a </span>
 
@@ -128,32 +122,32 @@ export default function EncuestasProfe() {
           )}
         </div>
 
-
-        {estado === StatusDeConexion.Conectado && (<>
-          {/* Lista de Preguntas Mobile */}
-          <div className='block mt-2 md:hidden flex-col bg-white gap-6 rounded-xl'>
-            <div className='flex flex-col justify-center bg-indigo-500 h-24 rounded-t-xl'>
-              <h1 className='text-3xl text-center text-white'>Preguntas</h1>
-              {/* Info para el usuario acerca de acciones */}
-              <DialogAcciones />
+        {estado === StatusDeConexion.Conectado && (
+          <>
+            {/* Lista de Preguntas Mobile */}
+            <div className="block mt-2 md:hidden flex-col bg-white gap-6 rounded-xl">
+              <div className="flex flex-col justify-center bg-indigo-500 h-24 rounded-t-xl">
+                <h1 className="text-3xl text-center text-white">Preguntas</h1>
+                {/* Info para el usuario acerca de acciones */}
+                <DialogAcciones />
+              </div>
+              <ListaEncuestas />
             </div>
-            <ListaEncuestas />
-          </div>
 
-          {/* Lista de Preguntas Desktop  */}
-          <div className="hidden md:flex flex-col bg-white gap-6 rounded-xl">
-            {/* Header */}
-            <div className='flex flex-col items-center p-4 bg-indigo-500 h-24 rounded-t-xl'>
-              <h1 className='text-3xl text-center text-white'>Preguntas</h1>
-              {/* Info para el usuario acerca de acciones */}
-              <DialogAcciones />
+            {/* Lista de Preguntas Desktop  */}
+            <div className="hidden md:flex flex-col bg-white gap-6 rounded-xl">
+              {/* Header */}
+              <div className="flex flex-col items-center p-4 bg-indigo-500 h-24 rounded-t-xl">
+                <h1 className="text-3xl text-center text-white">Preguntas</h1>
+                {/* Info para el usuario acerca de acciones */}
+                <DialogAcciones />
+              </div>
+              <ListaEncuestas />
             </div>
-            <ListaEncuestas />
-          </div></>
+          </>
         )}
 
-
-        <div className='flex flex-col gap-4'>
+        <div className="flex flex-col gap-4">
           {/* Lista estudiantes desktop */}
           <div className="hidden lg:block">
             <div className="sticky top-0 flex max-h-60 flex-col gap-4 bg-white rounded-xl p-8">
@@ -162,33 +156,35 @@ export default function EncuestasProfe() {
           </div>
 
           {/* Overlay Desktop */}
-          <div className='hidden md:flex md:flex-col rounded-xl text-indigo-500 items-center bg-white'>
+          <div className="hidden md:flex md:flex-col rounded-xl text-indigo-500 items-center bg-white">
             {encuestaEnfocada && (
-              <div className='flex flex-col p-2 gap-2 items-center'>
-                <p className='flex gap-2 font-bold '>Visualizador vista previa
-                  <CircleDot absoluteStrokeWidth className='animate-pulse text-emerald-500' />
+              <div className="flex flex-col p-2 gap-2 items-center">
+                <p className="flex gap-2 font-bold ">
+                  Visualizador vista previa
+                  <CircleDot absoluteStrokeWidth className="animate-pulse text-emerald-500" />
                 </p>
-                <div className='flex flex-col'>
-                  <p className="text-center text-md">
-                    Link:
-                  </p>
-                  <div className='flex gap-2'>
-                    <Link target='_blank' href={linkOverlay} className="text-blue-700 hover:underline">
+                <div className="flex flex-col">
+                  <p className="text-center text-md">Link:</p>
+                  <div className="flex gap-2">
+                    <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
                       {linkOverlay}
                     </Link>
                     <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                      {justCopied ? <SquareCheckBig className="text-emerald-700 w-4 h-4" /> : <Copy className='w-4 h-4' />}
+                      {justCopied ? (
+                        <SquareCheckBig className="text-emerald-700 w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
-              </div>)}
+              </div>
+            )}
             <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
           </div>
-
         </div>
       </div>
     </div>
-
   )
 }
 

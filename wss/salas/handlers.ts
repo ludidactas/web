@@ -53,15 +53,15 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   const notificar = safe(async () => {
-    await sala.marcarEstudiantePresente(socket.data.session.sessionId)
+    await sala.marcarEstudiantePresente(socket.data.session.id!)
     sala.socketProfe().emit('sala:estudiante_conectado', socket.data.session)
   })
   await notificar()
 
   socket.on('disconnect', safe(async (reason) => {
     console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-    await sala.marcarEstudianteAusente(socket.data.session.sessionId)
-    sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.sessionId })
+    await sala.marcarEstudianteAusente(socket.data.session.id!)
+    sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.id! })
   }))
 
 }

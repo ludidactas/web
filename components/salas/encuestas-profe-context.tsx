@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Encuesta } from '@/wss/tipos'
-import { CrearEncuesta } from '@/wss/validators/polls'
-import { PasaporteProfe } from '@/wss/validators/auth'
 import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
+import { Encuesta } from '@/wss/tipos'
+import { PasaporteProfe } from '@/wss/validators/auth'
+import { CrearEncuesta } from '@/wss/validators/polls'
 import { Estudiante, useEncuestaStore } from './encuestas-store'
 
 /** Cose el socket con el state para profe */
@@ -24,9 +24,9 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     setEncuestas,
     updateEncuesta,
     deleteEncuesta,
-    addEstudiante,
-    removeEstudiante,
     setEstudiantes,
+    addEstudiante,
+    estudianteDesconectado,
   } = useEncuestaStore()
 
   /** Postea al server la acción de crear */
@@ -126,7 +126,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
       })
 
       socketWssCli.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
-        removeEstudiante(estudiante.id)
+        estudianteDesconectado(estudiante.id)
       })
 
       // Pedimos la sala y la lista de estudiantes al server

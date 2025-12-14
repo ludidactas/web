@@ -5,9 +5,9 @@ import db from "../db"
 import { nombreDeFantasia } from "../salas/app"
 import { RolEncuesta } from "../tipos"
 import { socketIp } from "../utils"
-import { PasaporteSchema, SesionSchema } from "../validators/auth"
+import { Pasaporte, PasaporteSchema, SesionSchema } from "../validators/auth"
 import { decodearTokenNextAuth, registradoComoAdmin } from "./auth"
-import { WssServerSession, WssServerSessionSchema } from "../validators/session"
+import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from "../validators/session"
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -30,17 +30,21 @@ const deleteSession = (sessionId: string) => {
   sessions.delete(sessionId)
 }
 
-const openSession = <T extends { rol: RolEncuesta, nombre?: string }>(socket: Socket, payload: T) => {
+const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
 
   // Creamos el objeto (y lo validamos)
   const sessionData = WssServerSessionSchema.parse({
     ...payload,
     sessionId: randomUUID().split('-')[0],
-    nombre: payload.nombre ?? nombreDeFantasia(),
     userIp: socketIp(socket),
     agente: socket.handshake.headers['user-agent'],
-  }) // Validamos la sesión
+  }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
 
+  // Si es estudiante y no tiene id (es decir, si el pasaporte llegó sin dni ni email), le asignamos un nombre de fantasía y el sessionId como id
+  if (payload.rol === RolEncuesta.Estudiante && !sessionData.id) {
+    sessionData.nombre = nombreDeFantasia()
+    sessionData.id = sessionData.sessionId
+   }
 
   // Guardamos la sesión
   setSession(sessionData.sessionId, sessionData)
@@ -79,6 +83,7 @@ const login = async (socket: SocketConSesion) => {
   if (!success) 
     throw new Error(`Auth inválido: ${error ? error.message : 'error desconocido'}`)
 
+  // Sesión de estudiante
   if (auth.rol === RolEncuesta.Estudiante) {
     console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
 
@@ -87,9 +92,10 @@ const login = async (socket: SocketConSesion) => {
     
     socket.data.sala = auth.idSala
 
-    openSession(socket, auth)
+    openSession(socket, {...auth, id: auth.dni || auth.email}) // Si no tiene dni, usamos el nombre como id
   }
   
+  // Sesión de profe o admin
   if (auth.rol === RolEncuesta.Profe || auth.rol === RolEncuesta.Admin) {
     // Si es profe o admin, necesitamos token
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)

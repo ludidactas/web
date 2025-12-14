@@ -1,12 +1,12 @@
 import { DefaultEventsMap, ExtendedError, Socket } from "socket.io"
-import { SocketConSesion } from "./session"
-import { RolEncuesta } from "../tipos"
 import { ConfigSala } from "../salas/app"
-import { WssServerSession } from "../validators/session"
+import { RolEncuesta } from "../tipos"
+import { WssEstudianteSession, WssProfeSession } from "../validators/session"
+import { SocketConSesion } from "./session"
 
 /** Scoket con sesión de profe. Además de .session tiene .user y .config_sala */
 export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: WssServerSession
+  session: WssProfeSession
   user: { email: string, nombre?: string, dni?:string }
   /** _Puede_ venir la config de la sala al momento de crearla */
   config_sala?: Partial<ConfigSala> 
@@ -14,7 +14,7 @@ export type SocketProfe = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEven
 
 /** Socket de estudiante. Además de .session tiene .sala con el id de la sala a la que se está conectando */
 export type SocketEstudiante = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, {
-  session: WssServerSession
+  session: WssEstudianteSession
   /** ID de la sala a la que se conecta el estudiante */
   sala: string
 }>

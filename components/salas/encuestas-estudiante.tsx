@@ -22,7 +22,7 @@ export default function EncuestasEstudiante() {
 
   return (
     <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
-      <WssDebugPanel />
+      {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
       {/* Header */}
       <div className="relative">
         <div className="absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl" />

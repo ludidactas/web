@@ -6,6 +6,7 @@ export const PasaporteEstudianteSchema = z.object({
   idSala: z.string({message: "El id de la sala es obligatorio"}).min(1),
   nombre: z.string().optional(),
   icono: z.string().optional(),
+  email: z.string().email('El email debe tener un formato válido').optional(),
   dni: z.string().regex(/^\d+$/, 'El DNI debe contener solo dígitos').optional()
 })
 

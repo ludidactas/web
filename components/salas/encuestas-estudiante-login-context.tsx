@@ -1,10 +1,12 @@
 'use client'
 
+import { ConfigSala } from '@/wss/salas/app'
 import { useSession } from 'next-auth/react'
 import { createContext, useContext, useState } from 'react'
 
 export default function useEncuestaEstudianteLoginState() {
   const [nombreSala, setNombreSala] = useState<string>()
+  const [configSala, setConfigSala] = useState<ConfigSala>()
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const [dni, setDNI] = useState<string | undefined>(undefined)
   const [ingresado, setIngresado] = useState(false)
@@ -13,7 +15,7 @@ export default function useEncuestaEstudianteLoginState() {
   const { data: nextSession, status } = useSession()
   const nombreFinal = status === 'authenticated' ? (nextSession?.user?.name || 'Usuario') : nombre
 
-  return { nombre: nombreFinal, setNombre, dni, setDNI, ingresado, setIngresado, nombreSala, setNombreSala }
+  return { nombre: nombreFinal, setNombre, dni, setDNI, ingresado, setIngresado, nombreSala, setNombreSala, configSala, setConfigSala }
 }
 
 // Context

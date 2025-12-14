@@ -6,6 +6,7 @@ import { extractZodErrorMessages } from "../utils"
 import { pollBase, voteValidator } from "../validators/polls"
 import { assert } from "console"
 import db from "../db"
+import { getSession } from "../middleware/session"
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(email: string){ 
@@ -148,6 +149,11 @@ export async function estudianteSala(idSala: string, sessionId: string) {
   async function votar(voteData: z.infer<typeof voteValidator>) {
     const { pollId, optionId, aporte } = voteData
 
+    const session = getSession(sessionId)
+    if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada') 
+
+    const idVotante = session.rol === RolEncuesta.Estudiante ? session.id! : session.email
+
     await assertPollExists(idSala, pollId)
 
     // Agarramos la encuesta
@@ -156,7 +162,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
 
     // Validamos
     assertPollIsOpen(poll)
-    await assertElEstudianteNoVotoTodavia(poll, sessionId)
+    await assertElEstudianteNoVotoTodavia(poll, idVotante)
     if (aporte) assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
 
     // Guardamos el voto
@@ -167,7 +173,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
       poll.opciones.push({ id: nuevoId, texto: aporte, votos: 1 })
 
       // Guardamos
-      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, sessionId, nuevoId)
+      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, idVotante, nuevoId)
       
     } else {
       
@@ -179,7 +185,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
       poll.opciones[poll.opciones.indexOf(opc)].votos++
 
       // Guardamos
-      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, sessionId, optionId)
+      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, idVotante, optionId)
       
     }
 
@@ -187,7 +193,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
     await db.hset(`sala:${idSala}:polls`, poll.id, JSON.stringify(poll))
 
     // Registramos el voto
-    await db.sadd(`sala:${idSala}:poll:${pollId}:votantes`, sessionId)
+    await db.sadd(`sala:${idSala}:poll:${pollId}:votantes`, idVotante)
 
     return poll
   }
@@ -215,11 +221,11 @@ export async function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: 
 
 
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
-export async function hidratar(idSala: string, poll: Encuesta, sessionId: string): Promise<EncuestaHidratada> {
+export async function hidratar(idSala: string, poll: Encuesta, idVotante: string): Promise<EncuestaHidratada> {
 
-  const votoEmitido = await db.hget(`sala:${idSala}:poll:${poll.id}:votos`, sessionId)
+  const votoEmitido = await db.hget(`sala:${idSala}:poll:${poll.id}:votos`, idVotante)
 
-  console.log(`🔎 Hidratando encuesta ${poll.id} para estudiante ${sessionId}:`, votoEmitido ? `ya votó opción ${votoEmitido}` : 'no votó todavía')
+  console.log(`🔎 Hidratando encuesta ${poll.id} para estudiante ${idVotante}:`, votoEmitido ? `ya votó opción ${votoEmitido}` : 'no votó todavía')
 
   return {
     ...poll,
@@ -232,12 +238,17 @@ export async function hidratar(idSala: string, poll: Encuesta, sessionId: string
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export async function hidratadas(salaId: string, sessionId: string) {
   const sala = await getSalaById(salaId)
+  
+  // Agarramos la sesión y derivamos el id del votante
+  const session = getSession(sessionId)
+  if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada') 
+  const idVotante = session.rol === RolEncuesta.Estudiante ? session.id! : session.email
 
   // Agarramos todas las encuestas de la sala de la db
   const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)
   const pollsSala = Object.values(pollsSalaStr).map(pollStr => JSON.parse(pollStr) as Encuesta)
 
-  return await Promise.all(pollsSala.filter(e => e.isPublished).map(poll => hidratar(sala.id, poll, sessionId)))
+  return await Promise.all(pollsSala.filter(e => e.isPublished).map(poll => hidratar(sala.id, poll, idVotante)))
 } 
 
 

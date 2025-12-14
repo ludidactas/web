@@ -9,7 +9,7 @@ import { SocketProfe } from "../middleware/roles"
 export interface ConfigSala {
   pedir_dni: boolean
   permitir_anonimo: boolean
-  invitados: string[] // emails permitidos a entrar
+  // invitados: string[] // emails permitidos a entrar
   nombre_profe: string
 }
 
@@ -51,7 +51,11 @@ export const conHandlers = (sala: SalaData) => ({
     const invalidas = sesionesIds.filter(sid => !getSession(sid))
     if (invalidas.length > 0) {
       const emailProfe = await db.hget('salas_owners', sala.id)
-      console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${emailProfe}:`, invalidas)
+      console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${emailProfe}:`, invalidas, ` limpiando...`)
+      invalidas.forEach(sid => {
+        db.hdel(`sala:${sala.id}:estudiantes`, sid)
+        delete estudiantesData[sid]
+      })
     }
 
     return sesionesIds
@@ -136,7 +140,7 @@ export async function crearSala(socket: SocketProfe) {
   const config_default: ConfigSala = {
     pedir_dni: false,
     permitir_anonimo: true,
-    invitados: [],
+    // invitados: [],
     nombre_profe: email
   }
 

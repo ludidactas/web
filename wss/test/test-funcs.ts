@@ -50,7 +50,7 @@ export async function setupSocketLogging(socket: ReturnType<typeof io>) {
     localPolls.delete(data.pollId);
   });
 
-  socket.on('poll:error', (error) => {
+  socket.on('wss:error', (error) => {
     console.log('\n❌ Error:', error.message);
   });
 

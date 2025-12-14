@@ -6,7 +6,7 @@ export function extractZodErrorMessages(error: z.ZodError): string {
 }
 
 export function sendError(socket: Socket, message: string) {
-  socket.emit('poll:error', { message });
+  socket.emit('wss:error', { message });
   // socket.disconnect(true);
 }
 

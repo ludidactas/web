@@ -72,8 +72,8 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   const safe = conErrorHandling(socket)
   const emitir = safe(async () => {
     const sala = await getSalaById(idSala)
-    const nombre = `${sala.profe.nombre ?? sala.profe.email}`
-    socket.emit('sala:nombre', nombre)
+    if (!sala) throw new Error(`Sala ${idSala} no existe!`)
+    socket.emit('sala:config', sala.config)
   })
 
   await emitir()

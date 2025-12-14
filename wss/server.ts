@@ -15,6 +15,7 @@ export const io = mount(PORT)
 
 // Registramos las salas preexistentes en db
 const salas_preexistentes = await db.hkeys('salas')
+console.log(`🚪 Registrando ${salas_preexistentes.length} ${salas_preexistentes.length === 1 ? 'sala preexistente' : 'salas preexistentes'} en server...`)
 salas_preexistentes.forEach(registrarSalaEnServer)
 
 // Canal para profes
@@ -39,7 +40,7 @@ io.of('/test')
 
 io
   .on('connect_error', (error) => { console.log(`❌ Error en /:`, error.message) })
-  .on('connection', (socket) => { console.log(`🔌 Global connection: ${socket.id} to namespace ${socket.nsp.name}`) })
+  .on('connection', (socket) => { console.log(`🔌 Conexión global: ${socket.id} en namespace ${socket.nsp.name}`) })
   .on('ping', (socket) => socket.emit('pong'))
 
 io.of(/sala\/.+?\/estudiante/).use(async (socket, next) => {

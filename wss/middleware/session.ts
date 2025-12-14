@@ -183,10 +183,10 @@ export const conSession = async (socket: Socket, next: (err?: ExtendedError) => 
   try {
 
     if (socket.handshake.auth.sessionId) {
-      console.log('\n🔑 Validando sesión existente...')
+      console.log('\n🔑 Conexión entrante con sesión existente...')
       await validarSession(socket)
     } else {
-      console.log('\n🔑 Efectuando login...')
+      console.log('\n🔑 Conexión entrante efectuando login...')
       await login(socket)
     }
 

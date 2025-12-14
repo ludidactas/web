@@ -30,14 +30,14 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 
       // Conectamos el socket a sus handlers
       socket.on('polls:list', setEncuestas)
-      socket.on('poll:error', showError)
+      socket.on('wss:error', showError)
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
       
       return () => {
         socket.removeAllListeners('polls:list')
-        socket.removeAllListeners('poll:error')
+        socket.removeAllListeners('wss:error')
         socket.removeAllListeners('poll:updated')
         socket.removeAllListeners('poll:created')
         socket.removeAllListeners('poll:deleted')

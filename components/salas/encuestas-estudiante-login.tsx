@@ -7,50 +7,47 @@ import { Input } from '@/components/ui/input'
 import LoginEst from '@/svg/loginEst.svg'
 import { animate, spring, stagger } from 'animejs'
 
-
 import { RolEncuesta } from '@/wss/tipos'
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
-import DibuEstudiante from '/svg/upssvgo.svg'
 import { oscilar } from '@/lib/animaciones'
-import { PasaporteEstudiante, PasaportePublico } from '@/wss/validators/auth'
+import { PasaportePublico } from '@/wss/validators/auth'
+import DibuEstudiante from '/svg/upssvgo.svg'
+import { StatusDeConexion } from '../hooks/use-conexion-wss'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
-  const { setDNI, setNombre, setIngresado, setNombreSala, nombreSala, nombre, dni } = useEncuestaEstudianteLogin()
+  const { setDNI, setNombre, setIngresado, nombre, dni, configSala, setConfigSala } = useEncuestaEstudianteLogin()
 
   // Creamos una referencia estable al auth
   const authPublico = useMemo(
-    () => ({
-      rol: RolEncuesta.Publico,
-      idSala,
-    }) as PasaportePublico,
+    () =>
+      ({
+        rol: RolEncuesta.Publico,
+        idSala,
+      } as PasaportePublico),
     [idSala]
   )
 
   // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
   // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
-  const { socket } = useServerWebsockets(authPublico)
+  const { socket, estado } = useServerWebsockets(authPublico)
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {
     if (socket) {
-      console.log('Esperando nombre de sala...')
-      socket.on('sala:nombre', setNombreSala)
+      socket.on('sala:config', setConfigSala)
     }
   }, [socket])
-
-  const [isClient, setIsClient] = useState(false)
 
   const inputNombreRef = useRef<HTMLInputElement>(null)
   const inputDNIRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setIsClient(true)
     const storedName = localStorage.getItem(`encuestas-nombre-${idSala}`)
     if (storedName) {
       setNombre(storedName)
@@ -82,8 +79,15 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     setIngresado(true)
   }
 
-  // Pantalla de sala inválida
-  if (!nombreSala) {
+  if (estado === StatusDeConexion.Error)
+    return (
+      <div className="w-screen h-screen place-content-center">
+        <p className="text-xl md:text-6xl text-red-500 text-center">Error de conexión. Por favor, recargá la página.</p>
+      </div>
+    )
+
+  // Pantalla de sala inválida - Si no estamos en un estado de conexión "sano" y no tenemos config de sala
+  if (estado === StatusDeConexion.Conectado && !configSala)
     return (
       <div>
         <div className="flex flex-col  items-center mb-10 justify-center">
@@ -100,7 +104,13 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         </div>
       </div>
     )
-  }
+
+  if (estado !== StatusDeConexion.Conectado || !configSala)
+    return (
+      <div className="w-screen h-screen place-content-center">
+        <p className="text-xl md:text-6xl text-indigo-500 text-center">Cargando...</p>
+      </div>
+    )
 
   return (
     <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">
@@ -109,9 +119,6 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         SvgComponent={LoginEst}
         ids={['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'Personaje'] as const}
         animate={(nodos) => () => {
-          // const elem = document.querySelector(`[id$="item6"]`)
-          //console.log('registrando animacion...', nodos)
-
           animate([nodos.item6, nodos.item2, nodos.item3, nodos.item5, nodos.item1, nodos.item4, ,], {
             scale: [
               { to: 1.02, ease: 'inOut(3)', duration: 200 },
@@ -132,8 +139,8 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         </div>
         <p className="w-80">
           {' '}
-          Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala ?? idSala}</span>. Ingresa tu
-          nombre y DNI.
+          Estás a punto de ingresar a la sala <span className="text-teal-500">{configSala.nombre_profe ?? idSala}</span>
+          . Ingresa tu nombre y DNI.
         </p>
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 pt-8">

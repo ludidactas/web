@@ -97,7 +97,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
       socketWssCli.on('poll:created', addEncuesta)
       socketWssCli.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
 
-      socketWssCli.on('poll:error', ({ message }: { message: string }) => {
+      socketWssCli.on('wss:error', ({ message }: { message: string }) => {
         toast.error(message)
       })
 
@@ -137,7 +137,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
         socketWssCli.removeAllListeners('poll:updated')
         socketWssCli.removeAllListeners('poll:created')
         socketWssCli.removeAllListeners('poll:deleted')
-        socketWssCli.removeAllListeners('poll:error')
+        socketWssCli.removeAllListeners('wss:error')
         socketWssCli.removeAllListeners('disconnect')
         socketWssCli.removeAllListeners('sala:abierta')
         socketWssCli.removeAllListeners('sala:estudiantes')

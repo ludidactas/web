@@ -24,6 +24,8 @@ import { useEncuestaProfe } from './encuestas-profe-context'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import { pollBase } from '@/wss/validators/polls'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import Image from 'next/image'
+import Dedito from '@/public/img/icons8-one-finger-32.png'
 
 export default function EncuestasProfe() {
   const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
@@ -65,7 +67,8 @@ export default function EncuestasProfe() {
       <WssDebugPanel />
 
       <Status />
-      <div className='flex flex-col md:flex-row p-2 md:py-2 md:gap-2 w-screen justify-center'>
+      <div className='flex flex-col md:flex-row p-2 md:py-2 md:gap-2 justify-center'>
+        
         {/* Preguntas Formulario*/}
         <div className="flex flex-col bg-white rounded-xl pb-2">
           <div className='flex flex-col items-center justify-center p-4 h-24 bg-indigo-500 rounded-t-xl'>
@@ -426,7 +429,6 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
   return (
     <div className="p-4 m-4 rounded-xl border-4 border-indigo-500/10">
-
       {/* Titulo y status */}
       <div className="flex flex-col sm:flex-row md:gap-4 bg-indigo-500/10 text-indigo-500 rounded-xl p-2 md:p-4 justify-between sm:items-center">
         <div className="flex gap-2 items-center">
@@ -446,44 +448,63 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <span className="text-[0.6rem] whitespace-nowrap text-slate-400 text-right">
             {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
           </span>
-          <button
-            className="mt-2"
-            title="Copiar pregunta"
-            onClick={handleCopy(encuesta.pregunta + '\n' + opcionesInfo + '\n' + 'Total participantes: ' + totalVotos)}
-          >
-            {justCopied ? <SquareCheckBig absoluteStrokeWidth className="text-emerald-700" /> : <Copy absoluteStrokeWidth />}
-          </button>
+
+          {/* Botones de arriba a la derecha */}
+          <div className='flex items-center justify-end'>
+            {/* Lista de opciones y votos */}
+            <div className="flex justify-end">
+              {encuesta.isRevealed && <Eye absoluteStrokeWidth className="text-cyan-500 mr-6" />}{' '}
+              {!encuesta.isRevealed && <EyeOff absoluteStrokeWidth className="mr-6" />}
+            </div>
+            <button
+              className="mt-2"
+              title="Copiar pregunta"
+              onClick={handleCopy(
+                encuesta.pregunta + '\n' + opcionesInfo + '\n' + 'Total participantes: ' + totalVotos
+              )}
+            >
+              {justCopied ? (
+                <SquareCheckBig absoluteStrokeWidth className="text-emerald-700" />
+              ) : (
+                <Copy absoluteStrokeWidth />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {encuesta.admiteAportes && <p className="text-xs list-none text-center text-emerald-500">Los estudiantes pueden agregar opciones</p>}
+      {encuesta.admiteAportes && (
+        <p className="text-xs list-none text-center text-emerald-500">Los estudiantes pueden agregar opciones</p>
+      )}
 
       {/* Opciones */}
-      <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-indigo-500/10 text-slate-400 py-4 pl-8 md:px-10 items-center m-2 ">
-        {/* Lista de opciones y votos */}
-        <div className='flex justify-end'>{encuesta.isRevealed && <Eye absoluteStrokeWidth className='text-cyan-500 mr-6' />} {!encuesta.isRevealed && <EyeOff absoluteStrokeWidth className='mr-6' />}</div>
-
+      <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-indigo-500/10 text-slate-400 py-4 pl-8 md:px-10 flex flex-col gap-4 m-2 ">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
             <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
-              <p className="break-all">{opcion.texto}</p>
-              <p className={` font-bold w-40 text-right content-center ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}> {opcion.votos} votos</p>
+              <p className="w-64">{opcion.texto}</p>
+              <div className="w-24 flex items-center justify-end">
+                <p className={` font-bold  content-center ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}>
+                  {' '}
+                  {opcion.votos}
+                </p>
+                <Image className="shrink-0" src={Dedito} alt="dedito" />
+              </div>
             </div>
           </li>
         ))}
         <ol>
-          <li className='flex mt-2 text-md mx-16 text-indigo-500 rounded-xl bg-indigo-500/10 font-bold text-center justify-between p-2 gap-4'>
-            <p> Total Participantes </p> <p>{totalVotos}</p>  </li>
+          <li className="flex mt-2 text-md mx-16 text-indigo-500 rounded-xl bg-indigo-500/10 font-bold text-center justify-between p-2 gap-4">
+            <p> Total Participantes </p> <p>{totalVotos}</p>{' '}
+          </li>
         </ol>
       </ol>
 
       {/* Acciones */}
 
-      <div className='flex flex-col my-4 gap-2'>
-
+      <div className="flex flex-col my-4 gap-2">
         {/* Primera fila de botones */}
-        <div className='flex gap-4 items-center justify-center'>
-
+        <div className="flex gap-4 items-center justify-center">
           {/* Revelar y desrevelar votos */}
           {!encuesta.isRevealed && (
             <BotonEncuesta
@@ -491,7 +512,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               onClick={() => revelarOpciones(encuesta.id)}
               texto="Revelar votos"
               icon=""
-              title='Los estudiantes no pueden ver los votos. Haz click para revelarlos'
+              title="Los estudiantes no pueden ver los votos. Haz click para revelarlos"
             />
           )}
 
@@ -501,8 +522,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               onClick={() => desrevelarOpciones(encuesta.id)}
               texto="Ocultar votos"
               icon=""
-              title='Los estudiantes pueden ver los votos. Haz click para esconderlos'
-            />)}
+              title="Los estudiantes pueden ver los votos. Haz click para esconderlos"
+            />
+          )}
 
           {/* Enfocar */}
           {!encuesta.isFocused && (
@@ -535,7 +557,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         </div>
 
         {/* Segunda fila de boones  */}
-        <div className='flex gap-4 items-center justify-center'>
+        <div className="flex gap-4 items-center justify-center">
           {/* Abrir/Cerrar */}
           {!encuesta.isOpen && (
             <BotonEncuesta
@@ -557,20 +579,21 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           {/* Eliminar */}
           <Dialog>
             <DialogTrigger>
-              <p className="bg-rose-700 text-white px-4 py-2 rounded flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'"
-              >Eliminar</p>
+              <p className="bg-rose-700 text-white px-4 py-2 rounded flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'">
+                Eliminar
+              </p>
             </DialogTrigger>
-            <DialogContent className='flex flex-col items-center'>
+            <DialogContent className="flex flex-col items-center">
               <DialogHeader>
-                <DialogTitle className='text-center leading-6'>
+                <DialogTitle className="text-center leading-6">
                   ¿Estás seguro/a de que deseas eliminar la pregunta?
                 </DialogTitle>
               </DialogHeader>
-              <div className='flex gap-2'>
+              <div className="flex gap-2">
                 <DialogClose>
-                  <p
-                    className="bg-emerald-700/90 text-white px-4 py-2 flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded border"
-                  >Cancelar</p>
+                  <p className="bg-emerald-700/90 text-white px-4 py-2 flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded border">
+                    Cancelar
+                  </p>
                 </DialogClose>
                 <BotonEncuesta
                   className="bg-rose-700 text-white px-4 py-2 rounded"
@@ -708,38 +731,55 @@ function AgregarPregunta() {
 }
 
 function DialogAcciones() {
-  return <div className='flex rounded text-white items-center justify-center hover:font-bold hover:underline'>
-    <Dialog>
-      <DialogTrigger className='flex gap-1 '>
-        <Info /><p>Ver info sobre acciones</p>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className='text-center'>Acciones</DialogTitle>
-          <DialogDescription className='text-center'>
-            Te explicamos las acciones que puedes realizar en cada encuesta mediante los botones
-          </DialogDescription>
-        </DialogHeader>
-        <p className='font-bold'>Revelar/Desrevelar votos:</p>
-        <span>Por defecto, los participantes no pueden ver los votos en sus salas.
-          Para que puedan ver los votos, debes activar la opcion <span className='text-cyan-500'>revelar votos</span> </span>
-        <p className='font-bold'>Enfocar:</p>
-        <ol className='list-disc px-4'>
-          <li>Se activa para visualizar la pregunta y las respuestas en vivo en el overlay.</li>
-          <li>Solo cuando una pregunta está publicada, puede ser enfocada</li>
-          <li>El link para visualizar el overlay se encuentra junto con el link de la sala en la parte superior</li>
-        </ol>
-        <p className='font-bold'>Publicar/Esconder:</p><p>Cuando se crea una pregunta, esta no se publica en la sala de estudiantes inmediatamente.
-          Para hacerla visible se debe hacer click en <span className='text-cyan-500'>publicar</span>
-        </p>
-        <p className='font-bold'>Abrir/Cerrar:</p>
-        <ol className='list-disc px-4'>
-          <li>Todas las preguntas creadas, tienen el estado <span className='text-emerald-500'>abierto</span> y admite votos</li>
-          <li>Al cerrar la pregunta, los participantes seguirán viendo la pregunta publicada, pero no podrán emitir votos</li>
-        </ol>
-        <p className='font-bold'>Eliminar</p>
-        <p>Elimina definitivamente la pregunta <span className='text-rose-500'>!</span></p>
-      </DialogContent>
-    </Dialog>
-  </div>
+  return (
+    <div className="flex rounded text-white items-center justify-center hover:font-bold hover:underline">
+      <Dialog>
+        <DialogTrigger className="flex gap-1 ">
+          <Info />
+          <p>Ver info sobre acciones</p>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-center">Acciones de encuesta</DialogTitle>
+            <DialogDescription className="text-center">
+              Te explicamos las acciones que podés realizar en cada encuesta mediante los botones
+            </DialogDescription>
+          </DialogHeader>
+          <p className="font-bold">Revelar/Desrevelar votos:</p>
+          <span>
+            Por defecto, los participantes, incluído el <span className="text-cyan-500">overlay</span>, no pueden
+            ver las respuestas en sus salas. Para que puedan verlos, activá la opcion{' '}
+            <span className="text-cyan-500">revelar votos</span>{' '}
+          </span>
+          <p className="font-bold">Enfocar:</p>
+          <ol className="list-disc px-4">
+            <li>Se activa para visualizar la pregunta y las respuestas en vivo en el overlay.</li>
+            <li>Solo cuando una pregunta está publicada, puede ser enfocada</li>
+            <li>El link para visualizar el overlay se encuentra junto con el link de la sala en la parte superior</li>
+          </ol>
+          <p className="font-bold">Publicar/Esconder:</p>
+          <p>
+            Cuando se crea una pregunta, esta no se publica en la sala de estudiantes inmediatamente. Para hacerla
+            visible se debe hacer click en <span className="text-cyan-500">publicar</span>
+          </p>
+          <p className="font-bold">Abrir/Cerrar:</p>
+          <ol className="list-disc px-4">
+            <li>
+              Todas las preguntas creadas, tienen el estado <span className="text-emerald-500">abierto</span> y admite
+              votos
+            </li>
+            <li>
+              Al cerrar la pregunta, los participantes seguirán viendo la pregunta publicada, pero no podrán emitir
+              votos
+            </li>
+          </ol>
+          <p className="font-bold">Eliminar</p>
+          <p>
+            Elimina definitivamente la pregunta <span className="text-rose-500">!</span>. Podés copiarla a texto antes
+            con el ícono de copiar en el margen superior derecho.
+          </p>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
 }

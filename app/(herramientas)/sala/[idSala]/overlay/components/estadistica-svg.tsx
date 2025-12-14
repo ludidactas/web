@@ -89,7 +89,6 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: 
               transform: `translate(0, ${titleHeight + ops.indexOf(op) * barSpacing}px)`,
             }}
             transition={{ type: 'spring', stiffness: 120, damping: 20 }} // or use ease: "easeInOut"
-          // transform={`translate(0, ${titleHeight + ops.indexOf(op) * barSpacing})`}
           >
             <BarraEstadistica
               percentage={totalVotos > 0 ? op.votos / totalVotos : 0}
@@ -196,7 +195,7 @@ function BarraEstadistica({
         className="fill-emerald-500"
         style={{ fontSize: '12px', fontWeight: '600' }}
       >
-        {opcion.votos} votos
+        {opcion.votos} ☝️
       </text>
 
       <text

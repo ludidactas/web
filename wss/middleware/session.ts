@@ -138,7 +138,7 @@ const validarSession = async (socket: SocketConSesion) => {
     // Si el id que nos mandaron no coincide con el de la sesión, bochamos
     if (!session) throw new Error(`Sesión ${sessionData.sessionId} no encontrada!`)
     
-    console.log(`🔄 Reutilizando sesión ${JSON.stringify(sessionData)} para ${session?.nombre} (${session?.rol}) desde IP ${socketIp(socket)}`)
+    console.log(`🔄 Reutilizando sesión para ${session?.nombre ?? session.email ?? session.sessionId} (${session?.rol}) desde IP ${socketIp(socket)}`)
     
     // Sesión de estudiante (anónima)
     // Válida para profes o admins si están solicitando entrar como estudiantes

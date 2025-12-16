@@ -8,7 +8,7 @@ import { SessionProvider } from 'next-auth/react'
 import { tokenWss } from '@/server/token_wss'
 import { RolEncuesta } from '@/wss/tipos'
 import HeaderSala from '@/components/salas/header-sala'
-import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe-context'
+import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe/encuestas-profe-context'
 
 export default async function Page() {
   const session = await auth()

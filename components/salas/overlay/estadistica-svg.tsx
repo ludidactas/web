@@ -3,10 +3,10 @@ import { Encuesta, Opcion } from '@/wss/tipos'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
 
-import { useEncuestaEstudiante } from '../encuestas-estudiante-context'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { useEncuestaEstudiante } from '../encuestas-estudiante/encuestas-estudiante-context'
 
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {

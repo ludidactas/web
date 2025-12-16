@@ -7,7 +7,7 @@ import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Encuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 import { CrearEncuesta } from '@/wss/validators/polls'
-import { Estudiante, useEncuestaStore } from './encuestas-store'
+import { Estudiante, useEncuestaStore } from '../encuestas-store'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {

@@ -1,0 +1,165 @@
+import { useCopyToClipboard } from "usehooks-ts"
+import { useEncuestaProfe } from "./encuestas-profe-context"
+import { PropsWithChildren, useState } from "react"
+import { cn, exportarPlanilla } from "@/lib/utils"
+import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
+import getInitials, { getRandomColor } from "@/lib/avatarname"
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@radix-ui/react-dialog"
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
+
+export const ListaEstudiantes = () => {
+  const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
+  const [_copiedText, copy] = useCopyToClipboard()
+  const [justCopied, setJustCopied] = useState(false)
+
+  const handleCopy = (text: string) => () => {
+    copy(text)
+      .then(() => {
+        setJustCopied(true)
+
+        console.log(_copiedText)
+
+        setTimeout(() => {
+          setJustCopied(false)
+        }, 3000)
+      })
+      .catch((error) => {
+        console.error('Failed to copy!', error)
+      })
+  }
+
+  const handleExportToExcel = () => {
+    // Prepara los datos para Excel
+    const datosParaExcel = estudiantes.map((e) => ({
+      Nombre: e.nombre || 'Sin nombre',
+      Email: e.email || 'Sin email',
+      DNI: e.dni || 'Sin DNI',
+    }))
+
+    exportarPlanilla(datosParaExcel)
+  }
+
+  const datosEstudiantes = estudiantes
+    .map((e) => (e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`))
+    .join('\n')
+
+  return (
+    <div>
+      <div className="flex justify-between rounded-xl">
+        <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
+          <Users size={30} />
+          Participantes
+        </h1>
+
+        {/* Botones para limpiar y copiar  */}
+        <div className="flex gap-1">
+          <HoverCard>
+            <HoverCardTrigger>
+              <span
+                className="flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110"
+                onClick={limpiarEstudiantesSala}
+              >
+                <Eraser size={20} />
+              </span>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              {' '}
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Limpiar lista</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger>
+              <button
+                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110"
+                onClick={handleCopy(datosEstudiantes)}
+              >
+                {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              {' '}
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Copiar lista</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger>
+              <button
+                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleExportToExcel}
+                disabled={estudiantes.length === 0}
+              >
+                <Download size={20} />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Exportar a Excel</p>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+      </div>
+
+      {estudiantes.length === 0 && <p className="text-slate-400 italic p-2">Ningún estudiante conectado aún...</p>}
+
+      {estudiantes.length > 0 && (
+        <ul className="flex flex-col gap-2 p-2 rounded-xl">
+          {estudiantes.map((e) => (
+            <li
+              key={e.sessionId}
+              className={cn({
+                'text-black flex gap-2 ': e.conectado,
+                'text-slate-400 flex gap-2 grayscale': !e.conectado,
+              })}
+            >
+              {/* Avatar */}
+              <div
+                className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+                style={{
+                  backgroundImage: `url(${e.avatar})`,
+                  backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
+                }}
+              >
+                {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
+                {!e.avatar && getInitials(e.nombre || 'Anonimo')}
+              </div>
+              {/* Nombre, email y DNI */}
+              <div className="flex flex-col">
+                <span>{e.nombre}</span>
+                {/* <span className="text-teal-500">{e.email ?? `Anónimo`}</span> */}
+                {e.dni && <span className="text-teal-500">{e.dni}</span>}
+                {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
+                {!e.dni && !e.email && <span className="text-slate-400 italic">Anónimo</span>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export const ListaMobile = ({ children }: PropsWithChildren) => {
+  const [open, setOpen] = useState(false)
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+  }
+
+  return (<div className="block lg:hidden self-center">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger>
+        <h1 className="flex gap-2 text-md font-bold bg-indigo-50 p-4 mb-2 rounded-xl text-indigo-500">
+          <Users className="w-30 self-center" />
+          Lista de Participantes
+        </h1>
+      </DialogTrigger>
+      <DialogContent className="overflow-y-auto rounded-xl">
+        <DialogTitle />
+        {children}
+        <DialogClose className="justify-items-center">
+          <X size={40} className="bg-indigo-500 text-white  rounded-full p-2" />
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  </div>
+  )
+}

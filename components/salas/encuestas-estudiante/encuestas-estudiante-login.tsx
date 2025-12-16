@@ -16,7 +16,7 @@ import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context
 import { oscilar } from '@/lib/animaciones'
 import { PasaportePublico } from '@/wss/validators/auth'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { StatusDeConexion } from '../hooks/use-conexion-wss'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {

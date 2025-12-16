@@ -9,7 +9,7 @@ import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import HeaderSala from './header-sala'
+import HeaderSala from '../header-sala'
 
 export default function EncuestasEstudiantePage({
   idSala,

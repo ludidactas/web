@@ -1,6 +1,5 @@
-import { DialogHeader } from "@/components/ui/dialog"
+import { DialogHeader, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogDescription  } from "@/components/ui/dialog"
 import { Encuesta } from "@/wss/tipos"
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogDescription } from "@radix-ui/react-dialog"
 import { useEncuestaProfe } from "./encuestas-profe-context"
 import { cn } from "@/lib/utils"
 import { Icon } from '@iconify/react'
@@ -143,8 +142,7 @@ export const BotonEncuesta = ({
 )
 
 export function DialogAcciones() {
-  return (
-    <div className="flex rounded text-white items-center justify-center hover:font-bold hover:underline">
+  return (    <div className="flex rounded text-[#00B0D2] items-center justify-center hover:font-bold hover:underline">
       <Dialog>
         <DialogTrigger className="flex gap-1 ">
           <Info />
@@ -190,8 +188,11 @@ export function DialogAcciones() {
             Elimina definitivamente la pregunta <span className="text-rose-500">!</span>. Podés copiarla a texto antes
             con el ícono de copiar en el margen superior derecho.
           </p>
+          <DialogClose>
+            
+          </DialogClose>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
   )
 }

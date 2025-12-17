@@ -1,9 +1,9 @@
 import { pollBase } from "@/wss/validators/polls"
-import { Checkbox } from "@radix-ui/react-checkbox"
 import { X, CirclePlus, Send } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { useEncuestaProfe } from "./encuestas-profe-context"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export function AgregarPregunta() {
   const { enviarPregunta } = useEncuestaProfe()
@@ -44,7 +44,7 @@ export function AgregarPregunta() {
 
 
   return (
-    <div className="flex flex-col mx-2 rounded-xl bg-indigo-50 p-4 gap-2">
+    <div className="flex flex-col mx-2 rounded-xl bg-[#dfd3f675] p-4 gap-2">
       <p className="text-xl">Pregunta:</p>
       <textarea
         className="border-b w-full p-2 resize-none"
@@ -88,7 +88,7 @@ export function AgregarPregunta() {
 
       {/* Boton agregar respuesta */}
       <button
-        className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500/90 text-white px-2 md:px-4 py-2 rounded"
+        className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500 text-white px-2 md:px-4 py-2 rounded"
         onClick={agregarRespuesta}
         tabIndex={opciones.length + 2}
       >

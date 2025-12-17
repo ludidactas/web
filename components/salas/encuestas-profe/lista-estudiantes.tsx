@@ -4,7 +4,7 @@ import { PropsWithChildren, useState } from "react"
 import { cn, exportarPlanilla } from "@/lib/utils"
 import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
 import getInitials, { getRandomColor } from "@/lib/avatarname"
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@radix-ui/react-dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
 
 export const ListaEstudiantes = () => {
@@ -46,7 +46,7 @@ export const ListaEstudiantes = () => {
   return (
     <div>
       <div className="flex justify-between rounded-xl">
-        <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-indigo-500">
+        <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
           <Users size={30} />
           Participantes
         </h1>
@@ -56,7 +56,7 @@ export const ListaEstudiantes = () => {
           <HoverCard>
             <HoverCardTrigger>
               <span
-                className="flex text-center w-fit rounded-full bg-indigo-500/90 p-2 text-white font-bold hover:scale-110"
+                className="flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110"
                 onClick={limpiarEstudiantesSala}
               >
                 <Eraser size={20} />
@@ -64,13 +64,13 @@ export const ListaEstudiantes = () => {
             </HoverCardTrigger>
             <HoverCardContent>
               {' '}
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Limpiar lista</p>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Limpiar lista</p>
             </HoverCardContent>
           </HoverCard>
           <HoverCard>
             <HoverCardTrigger>
               <button
-                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110"
+                className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110"
                 onClick={handleCopy(datosEstudiantes)}
               >
                 {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
@@ -78,13 +78,13 @@ export const ListaEstudiantes = () => {
             </HoverCardTrigger>
             <HoverCardContent>
               {' '}
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Copiar lista</p>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Copiar lista</p>
             </HoverCardContent>
           </HoverCard>
           <HoverCard>
             <HoverCardTrigger>
               <button
-                className="items-center w-fit rounded-full bg-indigo-500/90 p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleExportToExcel}
                 disabled={estudiantes.length === 0}
               >
@@ -92,13 +92,13 @@ export const ListaEstudiantes = () => {
               </button>
             </HoverCardTrigger>
             <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500/50">Exportar a Excel</p>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Exportar a Excel</p>
             </HoverCardContent>
           </HoverCard>
         </div>
       </div>
 
-      {estudiantes.length === 0 && <p className="text-slate-400 italic p-2">Ningún estudiante conectado aún...</p>}
+      {estudiantes.length === 0 && <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>}
 
       {estudiantes.length > 0 && (
         <ul className="flex flex-col gap-2 p-2 rounded-xl">

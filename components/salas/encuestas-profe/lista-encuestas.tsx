@@ -12,6 +12,7 @@ import { useEncuestaProfe } from "./encuestas-profe-context"
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import Dedito from '@/public/img/icons8-one-finger-32.png'
 import Image from 'next/image'
+import { Acciones } from "./acciones"
 
 
 export function ListaEncuestas() {
@@ -56,9 +57,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
   const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
 
   return (
-    <div className="p-4 m-4 rounded-xl border-4 border-indigo-500/10">
+    <div className="p-4 mx-4 rounded-xl border-4 border-[#00B0D2]/30">
       {/* Titulo y status */}
-      <div className="flex flex-col sm:flex-row md:gap-4 bg-indigo-500/10 text-indigo-500 rounded-xl p-2 md:p-4 justify-between sm:items-center">
+      <div className="flex flex-col sm:flex-row md:gap-4 bg-[#00B0D2]/10 text-[#00B0D2] rounded-xl p-2 md:p-4 justify-between sm:items-center">
         <div className="flex gap-2 items-center">
           <MessageCircleQuestionIcon size={10} className="shrink-0 col-start-1 col-end-2 w-10 h-10" />
           <h3 className="text-sm break-words font-bold  md:text-xl">{encuesta.pregunta}</h3>
@@ -106,7 +107,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       )}
 
       {/* Opciones */}
-      <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-indigo-500/10 text-slate-400 py-4 pl-8 md:px-10 flex flex-col gap-4 m-2 ">
+      <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-[#00B0D2]/20 text-[#00B0D2]/80 py-4 pl-8 md:px-10 flex flex-col gap-4 m-2 ">
         {encuesta.opciones.map((opcion) => (
           <li key={opcion.id}>
             <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
@@ -122,13 +123,14 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           </li>
         ))}
         <ol>
-          <li className="flex mt-2 text-md mx-16 text-indigo-500 rounded-xl bg-indigo-500/10 font-bold text-center justify-between p-2 gap-4">
+          <li className="flex mt-2 text-md mx-16 text-[#00B0D2] rounded-xl bg-[#00B0D2]/10 font-bold text-center justify-between p-2 gap-4">
             <p> Total Participantes </p> <p>{totalVotos}</p>{' '}
           </li>
         </ol>
       </ol>
 
-   
+      <Acciones encuesta={encuesta} />
+
     </div>
   )
 }

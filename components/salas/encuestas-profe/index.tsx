@@ -13,6 +13,7 @@ import { AgregarPregunta } from './agregar-pregunta'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes, ListaMobile } from './lista-estudiantes'
 import { Status } from './status'
+import LoadingSala from '@/app/(herramientas)/sala/loading'
 
 export default function EncuestasProfe() {
   const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
@@ -46,19 +47,29 @@ export default function EncuestasProfe() {
       })
   }
 
+  if (
+    [
+      StatusDeConexion.Quieto,
+      StatusDeConexion.Conectando,
+      StatusDeConexion.Autenticando,
+      StatusDeConexion.CargandoDependencias,
+    ].includes(estado)
+  ) {
+    return <LoadingSala />
+  }
+
   return (
     <div className="flex flex-col">
       {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
 
       <Status />
       <div className="flex flex-col md:flex-row p-2 md:py-2 md:gap-2 justify-center">
-
         {/* Preguntas Formulario*/}
         <div className="flex flex-col bg-white rounded-xl" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">
             <h1 className="text-xl md:text-3xl text-center text-[#8345FE]">¡Haz una pregunta!</h1>
           </div>
-          <div className='bg-white h-full rounded-b-xl'>
+          <div className="bg-white h-full rounded-b-xl">
             {linkSala && (
               <div className="flex flex-col items-center justify-center gap-1 mb-8">
                 {/* Link sala */}
@@ -97,17 +108,17 @@ export default function EncuestasProfe() {
               </div>
             )}
 
-            {estado !== StatusDeConexion.Conectado && (
-              <p className="flex flex-col text-center text-xl gap-2 p-4 ">
-                <span className="text-3xl pb-2">¡Ups!</span>
-                <span>No se puede conectar con el servidor</span>
-                <span>Actualizá la página, o envianos un mensaje a </span>
+            {estado === StatusDeConexion.Error ||
+              (estado === StatusDeConexion.Expirado && (
+                <p className="flex flex-col text-center text-xl gap-2 p-4 ">
+                  <span className="text-3xl pb-2">¡Ups!</span>
+                  <span>No se puede conectar con el servidor</span>
+                  <span>Actualizá la página, o envianos un mensaje a </span>
 
-                <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-              </p>
-            )}
+                  <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+                </p>
+              ))}
           </div>
-
         </div>
 
         {estado === StatusDeConexion.Conectado && (
@@ -176,9 +187,3 @@ export default function EncuestasProfe() {
     </div>
   )
 }
-
-
-
-
-
-

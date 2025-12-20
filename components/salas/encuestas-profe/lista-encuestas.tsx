@@ -13,11 +13,17 @@ import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import Dedito from '@/public/img/icons8-one-finger-32.png'
 import Image from 'next/image'
 import { Acciones } from "./acciones"
+import { StatusDeConexion } from "@/components/hooks/use-conexion-wss"
 
 
 export function ListaEncuestas() {
-  const { encuestas } = useEncuestaProfe()
-  if (encuestas.length == 0) return <div>
+  const { encuestas, estado } = useEncuestaProfe()
+
+  if ([StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.Autenticando, StatusDeConexion.CargandoDependencias].includes(estado)) { 
+    return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>
+  }
+
+  if (estado === StatusDeConexion.Conectado && encuestas.length == 0) return <div>
     <p className='text-center m-4'> ¡Aún no haz hecho ninguna pregunta!</p>
     <LdSvg className='grayscale' SvgComponent={profeUps} />
   </div>

@@ -142,7 +142,8 @@ export const BotonEncuesta = ({
 )
 
 export function DialogAcciones() {
-  return (    <div className="flex rounded text-[#00B0D2] items-center justify-center hover:font-bold hover:underline">
+  return (
+    <div className="flex rounded text-[#00B0D2] items-center justify-center hover:font-bold hover:underline">
       <Dialog>
         <DialogTrigger className="flex gap-1 ">
           <Info />
@@ -157,8 +158,8 @@ export function DialogAcciones() {
           </DialogHeader>
           <p className="font-bold">Revelar/Desrevelar votos:</p>
           <span>
-            Por defecto, los participantes, incluído el <span className="text-cyan-500">overlay</span>, no pueden
-            ver las respuestas en sus salas. Para que puedan verlos, activá la opcion{' '}
+            Por defecto, los participantes, incluído el <span className="text-cyan-500">overlay</span>, no pueden ver
+            las respuestas en sus salas. Para que puedan verlos, activá la opcion{' '}
             <span className="text-cyan-500">revelar votos</span>{' '}
           </span>
           <p className="font-bold">Enfocar:</p>
@@ -185,14 +186,12 @@ export function DialogAcciones() {
           </ol>
           <p className="font-bold">Eliminar</p>
           <p>
-            Elimina definitivamente la pregunta <span className="text-rose-500">!</span>. Podés copiarla a texto antes
-            con el ícono de copiar en el margen superior derecho.
+            <span className="text-rose-400 font-bold">Elimina definitivamente</span> la pregunta! Antes podés copiarla a texto
+            junto con sus preguntas con el ícono de copiar en el margen superior derecho. Luego pegala en cualquier lugar donde puedas pegar texto.
           </p>
-          <DialogClose>
-            
-          </DialogClose>
+          <DialogClose></DialogClose>
         </DialogContent>
       </Dialog>
-      </div>
+    </div>
   )
 }

@@ -21,10 +21,10 @@ export default async function Page() {
         <Toaster />
         <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
 
-          <HeaderSala btnLogout={<SignOut />}>
+          <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
             <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
           </HeaderSala>
-          <div className='w-screen md:px-4'>
+          <div className='w-screen md:px-4 animate-aparecer'>
             <EncuestasProfe />
           </div>
 

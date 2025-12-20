@@ -1,10 +1,11 @@
 import Image from 'next/image'
 import { SignIn } from './botones'
 import Ilustracion from './ilustracion'
+import { cn } from '@/lib/utils'
 
-export default function Login() {
+export default function Login({className}: {className?: string}) {
   return (
-    <div className="h-screen self-normal flex drop-shadow-xl flex-col md:flex-row md:gap-16 bg-white md:m-40 p-8 md:p-10 md:rounded-xl items-center justify-center">
+    <div className={cn("h-screen self-normal flex drop-shadow-xl flex-col md:flex-row md:gap-16 bg-white md:m-40 p-8 md:p-10 md:rounded-xl items-center justify-center", className)}>
       <Ilustracion />
       <div className="flex flex-col md:h-fit md:mr-8 items-center">
         <div className="flex md:w-[30em] items-center gap-4">

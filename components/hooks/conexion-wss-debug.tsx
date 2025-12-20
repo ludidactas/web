@@ -4,7 +4,7 @@ import { Minimize2, Maximize2, Eye, EyeOff, Copy, Move, RotateCcw } from 'lucide
 export default function DebugPanel({ data, title = 'Debug Panel' }: { data: { [key: string]: any }; title?: string }) {
   const [position, setPosition] = useState({ x: 20, y: 20 })
   const [size, setSize] = useState({ width: 450, height: 350 })
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [isMaximized, setIsMaximized] = useState(false)
   const [isDragging, setIsDragging] = useState(false)

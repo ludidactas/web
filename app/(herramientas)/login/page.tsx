@@ -18,7 +18,6 @@ export default async function LoginPage({ searchParams }: Props) {
   if (!session?.user)
     return (
       <div className="flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 justify-center h-[100vh] w-[100vw]">
-        {callbackUrl}
         <Login className="animate-aparecer" intent={callbackUrl as Intent} />
       </div>
     )

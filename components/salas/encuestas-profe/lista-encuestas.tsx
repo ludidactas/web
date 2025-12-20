@@ -1,39 +1,62 @@
 import { LdSvg } from "@/components/custom/ld-svg"
+import { StatusDeConexion } from "@/components/hooks/use-conexion-wss"
 import { ScrollBar } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import Dedito from '@/public/img/icons8-one-finger-32.png'
+import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import { Encuesta } from "@/wss/tipos"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
+import { useDebounce } from "@uidotdev/usehooks"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
-import { MessageCircleQuestionIcon, Eye, EyeOff, SquareCheckBig, Copy } from "lucide-react"
-import { useState } from "react"
-import { useCopyToClipboard } from "usehooks-ts"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import profeUps from '@/svg/ProfeUpsSVGO.svg'
-import Dedito from '@/public/img/icons8-one-finger-32.png'
+import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from "lucide-react"
 import Image from 'next/image'
+import { useEffect, useState } from "react"
+import { useCopyToClipboard } from "usehooks-ts"
 import { Acciones } from "./acciones"
-import { StatusDeConexion } from "@/components/hooks/use-conexion-wss"
+import { useEncuestaProfe } from "./encuestas-profe-context"
 
 
 export function ListaEncuestas() {
   const { encuestas, estado } = useEncuestaProfe()
 
-  if ([StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.Autenticando, StatusDeConexion.CargandoDependencias].includes(estado)) { 
+  const posibleVacio = estado === StatusDeConexion.Conectado && encuestas.length === 0
+  const [confirmadoVacio, setConfirmadoVacio] = useState(false)
+  
+  // Retrasamos 2000ms la confirmación de vacío
+  useEffect(() => {
+    if (posibleVacio) {
+      // If it looks empty, start a timer
+      const timer = setTimeout(() => {
+        setConfirmadoVacio(true)
+      }, 1000)
+      // Cleanup: if data arrives before 2s, this cancels the timer
+      return () => clearTimeout(timer)
+    } else {
+      // If data arrives, reset immediately to false
+      setConfirmadoVacio(false)
+    }
+  }, [posibleVacio])
+
+  const conectando = [StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.Autenticando, StatusDeConexion.CargandoDependencias].includes(estado)
+
+  if (conectando || (posibleVacio && !confirmadoVacio)) {
     return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>
   }
 
-  if (estado === StatusDeConexion.Conectado && encuestas.length == 0) return <div>
-    <p className='text-center m-4'> ¡Aún no haz hecho ninguna pregunta!</p>
-    <LdSvg className='grayscale' SvgComponent={profeUps} />
-  </div>
+  if (confirmadoVacio && posibleVacio)
+    return (
+      <div>
+        <p className="text-center m-4"> ¡Aún no haz hecho ninguna pregunta!</p>
+        <LdSvg className="grayscale" SvgComponent={profeUps} />
+      </div>
+    )
 
   return (
     <ScrollArea className="h-[500px] overflow-y-auto" scrollHideDelay={1000}>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
-
       <ScrollBar orientation="vertical" />
     </ScrollArea>
   )

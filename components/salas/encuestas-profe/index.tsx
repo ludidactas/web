@@ -55,7 +55,7 @@ export default function EncuestasProfe() {
       StatusDeConexion.CargandoDependencias,
     ].includes(estado)
   ) {
-    return <LoadingSala />
+    return <LoadingSala overlay />
   }
 
   return (

@@ -59,7 +59,7 @@ export default function EncuestasProfe() {
   }
 
   return (
-    <div className="flex flex-col">
+    <>
       {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
 
       <Status />
@@ -184,6 +184,6 @@ export default function EncuestasProfe() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

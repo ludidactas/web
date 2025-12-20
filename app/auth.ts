@@ -24,6 +24,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.image = token.picture
       }
       return session
-    }
+    },
+    async authorized({ auth }) { 
+      // A esta altura el token ya está verificado y auth tiene la sesión si el usuario hizo login
+      return !!auth
+    },
   },
 })

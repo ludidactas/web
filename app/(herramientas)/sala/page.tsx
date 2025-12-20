@@ -9,28 +9,25 @@ import { RolEncuesta } from '@/wss/tipos'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
 
-export default async function Page() {
+export default async function SalaPage() {
   const session = await auth()
-  if (!session || !session.user) redirect('/login')
+  if (!session || !session.user) redirect('/login?callbackUrl=/sala')
 
   const token = await tokenWss()
 
   return (
-
-      <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
-        <Toaster />
-        <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
-
-          <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
-            <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session.user.name)}!</p>
-          </HeaderSala>
-          <div className='w-screen h-screen md:px-4 animate-aparecer'>
-            <EncuestasProfe />
-          </div>
-
-          <div className="w-full" />
+    <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
+      <Toaster />
+      <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
+        <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
+          <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user.name)}!</p>
+        </HeaderSala>
+        <div className="w-screen h-screen md:px-4 animate-aparecer">
+          <EncuestasProfe />
         </div>
-      </EncuestaProfeProvider>
 
+        <div className="w-full" />
+      </div>
+    </EncuestaProfeProvider>
   )
 }

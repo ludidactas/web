@@ -1,14 +1,13 @@
-import EncuestasProfe from '@/components/salas/encuestas-profe'
 import { auth } from '@/app/auth'
+import EncuestasProfe from '@/components/salas/encuestas-profe'
+import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe/encuestas-profe-context'
+import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
-import { redirect } from 'next/navigation'
-import { SignOut } from '../login/components/botones'
-import { SessionProvider } from 'next-auth/react'
 import { tokenWss } from '@/server/token_wss'
 import { RolEncuesta } from '@/wss/tipos'
-import HeaderSala from '@/components/salas/header-sala'
-import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe/encuestas-profe-context'
+import { redirect } from 'next/navigation'
+import { SignOut } from '../login/components/botones'
 
 export default async function Page() {
   const session = await auth()
@@ -17,7 +16,7 @@ export default async function Page() {
   const token = await tokenWss()
 
   return (
-    <SessionProvider>
+
       <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
         <Toaster />
         <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
@@ -32,6 +31,6 @@ export default async function Page() {
           <div className="w-full" />
         </div>
       </EncuestaProfeProvider>
-    </SessionProvider>
+
   )
 }

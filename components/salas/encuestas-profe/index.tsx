@@ -1,25 +1,22 @@
 'use client'
 
+import LoadingSala from '@/app/(herramientas)/sala/loading'
+import useClipboard from '@/components/hooks/use-clipboard'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
-import { useCopyToClipboard } from 'usehooks-ts'
-import { useEncuestaProfe } from './encuestas-profe-context'
 import { EncuestaSVG } from '../overlay/estadistica-svg'
 import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
+import { useEncuestaProfe } from './encuestas-profe-context'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes, ListaMobile } from './lista-estudiantes'
 import { Status } from './status'
-import LoadingSala from '@/app/(herramientas)/sala/loading'
 
 export default function EncuestasProfe() {
   const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
 
-  const [_copiedText, copy] = useCopyToClipboard()
-  const [justCopied, setJustCopied] = useState(false)
   const encuestaEnfocada = encuestas.find((e) => e.isFocused) || encuestas[0]
 
   // Configuracion del overlay
@@ -33,19 +30,7 @@ export default function EncuestasProfe() {
 
   const linkOverlay = linkSala + 'overlay'
 
-  const handleCopy = (text: string) => () => {
-    copy(text)
-      .then(() => {
-        setJustCopied(true)
-
-        setTimeout(() => {
-          setJustCopied(false)
-        }, 3000)
-      })
-      .catch((error) => {
-        console.error('Failed to copy!', error)
-      })
-  }
+  const { handleCopy, justCopied } = useClipboard()
 
   if (
     [

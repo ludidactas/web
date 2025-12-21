@@ -1,4 +1,5 @@
 import { LdSvg } from "@/components/custom/ld-svg"
+import useClipboard from "@/components/hooks/use-clipboard"
 import { StatusDeConexion } from "@/components/hooks/use-conexion-wss"
 import { ScrollBar } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
@@ -6,13 +7,11 @@ import Dedito from '@/public/img/icons8-one-finger-32.png'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import { Encuesta } from "@/wss/tipos"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
-import { useDebounce } from "@uidotdev/usehooks"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from "lucide-react"
 import Image from 'next/image'
 import { useEffect, useState } from "react"
-import { useCopyToClipboard } from "usehooks-ts"
 import { Acciones } from "./acciones"
 import { useEncuestaProfe } from "./encuestas-profe-context"
 
@@ -63,26 +62,10 @@ export function ListaEncuestas() {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
-  const [_copiedText, copy] = useCopyToClipboard()
-  const [justCopied, setJustCopied] = useState(false)
+  const { justCopied, handleCopy } = useClipboard()
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
   const totalVotos = encuesta.opciones.reduce((total, opcion) => total + opcion.votos, 0)
-
-  const handleCopy = (text: string) => () => {
-    copy(text)
-      .then(() => {
-        setJustCopied(true)
-
-        setTimeout(() => {
-          setJustCopied(false)
-        }, 3000)
-      })
-      .catch((error) => {
-        console.error('Failed to copy!', error)
-      })
-  }
-
   const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
 
   return (

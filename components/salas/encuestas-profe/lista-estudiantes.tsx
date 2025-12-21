@@ -1,32 +1,16 @@
-import { useCopyToClipboard } from "usehooks-ts"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import { PropsWithChildren, useState } from "react"
-import { cn, exportarPlanilla } from "@/lib/utils"
-import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
+import useClipboard from "@/components/hooks/use-clipboard"
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import getInitials, { getRandomColor } from "@/lib/avatarname"
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog"
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
+import { cn, exportarPlanilla } from "@/lib/utils"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@radix-ui/react-hover-card"
+import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
+import { PropsWithChildren, useState } from "react"
+import { useEncuestaProfe } from "./encuestas-profe-context"
 
 export const ListaEstudiantes = () => {
   const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
-  const [_copiedText, copy] = useCopyToClipboard()
-  const [justCopied, setJustCopied] = useState(false)
-
-  const handleCopy = (text: string) => () => {
-    copy(text)
-      .then(() => {
-        setJustCopied(true)
-
-        console.log(_copiedText)
-
-        setTimeout(() => {
-          setJustCopied(false)
-        }, 3000)
-      })
-      .catch((error) => {
-        console.error('Failed to copy!', error)
-      })
-  }
+  
+  const { handleCopy, justCopied } = useClipboard()
 
   const handleExportToExcel = () => {
     // Prepara los datos para Excel

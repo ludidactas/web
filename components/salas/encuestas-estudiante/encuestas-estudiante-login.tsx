@@ -8,7 +8,7 @@ import LoginEst from '@/svg/loginEst.svg'
 import { animate, spring, stagger } from 'animejs'
 import { RolEncuesta } from '@/wss/tipos'
 import Image from 'next/image'
-import { useEffect, useMemo, useRef, useState} from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import { oscilar } from '@/lib/animaciones'
@@ -16,6 +16,7 @@ import { PasaportePublico } from '@/wss/validators/auth'
 import DibuEstudiante from '/svg/upssvgo.svg'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -36,22 +37,10 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
   const { socket, estado } = useServerWebsockets(authPublico)
 
-  const posibleNoExiste = estado === StatusDeConexion.Conectado && !configSala
-  const [confirmadoNoExiste, setConfirmadoNoExiste] = useState(false)
-
-  useEffect(() => {
-    if (posibleNoExiste) {
-      // If it looks empty, start a timer
-      const timer = setTimeout(() => {
-        setConfirmadoNoExiste(true)
-      }, 1000)
-      // Cleanup: if data arrives before 2s, this cancels the timer
-      return () => clearTimeout(timer)
-    } else {
-      // If data arrives, reset immediately to false
-      setConfirmadoNoExiste(false)
-    }
-  }, [posibleNoExiste])
+  const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(
+    () => estado === StatusDeConexion.Conectado && !configSala,
+    1000
+  )
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {
@@ -120,8 +109,8 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         </div>
       </div>
     )
-  
-  if (posibleNoExiste && !confirmadoNoExiste ) return <LoadingSalaEstudiante overlay /> 
+
+  if (posibleNoExiste && !confirmadoNoExiste) return <LoadingSalaEstudiante overlay />
 
   if (estado !== StatusDeConexion.Conectado || !configSala) return <LoadingSalaEstudiante overlay />
 

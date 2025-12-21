@@ -15,27 +15,12 @@ import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
 
 export default function EncuestasEstudiante() {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
 
-  const posibleVacio = estado === StatusDeConexion.Conectado && encuestas.length === 0
-  const [confirmadoVacio, setConfirmadoVacio] = useState(false)
-
-  // Retrasamos 2000ms la confirmación de vacío
-  useEffect(() => {
-    if (posibleVacio) {
-      // If it looks empty, start a timer
-      const timer = setTimeout(() => {
-        setConfirmadoVacio(true)
-      }, 1000)
-      // Cleanup: if data arrives before 2s, this cancels the timer
-      return () => clearTimeout(timer)
-    } else {
-      // If data arrives, reset immediately to false
-      setConfirmadoVacio(false)
-    }
-  }, [posibleVacio])
+  const { valor: posibleVacio, confirmado: confirmadoVacio} = useConfirmarConDelay(() => StatusDeConexion.Conectado && encuestas.length === 0, 1000)
 
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
 

@@ -14,28 +14,13 @@ import Image from 'next/image'
 import { useEffect, useState } from "react"
 import { Acciones } from "./acciones"
 import { useEncuestaProfe } from "./encuestas-profe-context"
+import useConfirmarConDelay from "@/components/hooks/use-delay"
 
 
 export function ListaEncuestas() {
   const { encuestas, estado } = useEncuestaProfe()
 
-  const posibleVacio = estado === StatusDeConexion.Conectado && encuestas.length === 0
-  const [confirmadoVacio, setConfirmadoVacio] = useState(false)
-  
-  // Retrasamos 2000ms la confirmación de vacío
-  useEffect(() => {
-    if (posibleVacio) {
-      // If it looks empty, start a timer
-      const timer = setTimeout(() => {
-        setConfirmadoVacio(true)
-      }, 1000)
-      // Cleanup: if data arrives before 2s, this cancels the timer
-      return () => clearTimeout(timer)
-    } else {
-      // If data arrives, reset immediately to false
-      setConfirmadoVacio(false)
-    }
-  }, [posibleVacio])
+  const { valor: posibleVacio, confirmado: confirmadoVacio}  = useConfirmarConDelay( () => estado === StatusDeConexion.Conectado && encuestas.length === 0, 1000)
 
   const conectando = [StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.Autenticando, StatusDeConexion.CargandoDependencias].includes(estado)
 

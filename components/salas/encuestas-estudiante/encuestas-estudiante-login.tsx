@@ -8,13 +8,14 @@ import LoginEst from '@/svg/loginEst.svg'
 import { animate, spring, stagger } from 'animejs'
 import { RolEncuesta } from '@/wss/tipos'
 import Image from 'next/image'
-import { useEffect, useMemo, useRef} from 'react'
+import { useEffect, useMemo, useRef, useState} from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import { oscilar } from '@/lib/animaciones'
 import { PasaportePublico } from '@/wss/validators/auth'
 import DibuEstudiante from '/svg/upssvgo.svg'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -34,6 +35,23 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
   const { socket, estado } = useServerWebsockets(authPublico)
+
+  const posibleNoExiste = estado === StatusDeConexion.Conectado && !configSala
+  const [confirmadoNoExiste, setConfirmadoNoExiste] = useState(false)
+
+  useEffect(() => {
+    if (posibleNoExiste) {
+      // If it looks empty, start a timer
+      const timer = setTimeout(() => {
+        setConfirmadoNoExiste(true)
+      }, 1000)
+      // Cleanup: if data arrives before 2s, this cancels the timer
+      return () => clearTimeout(timer)
+    } else {
+      // If data arrives, reset immediately to false
+      setConfirmadoNoExiste(false)
+    }
+  }, [posibleNoExiste])
 
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {
@@ -85,7 +103,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     )
 
   // Pantalla de sala inválida - Si no estamos en un estado de conexión "sano" y no tenemos config de sala
-  if (estado === StatusDeConexion.Conectado && !configSala)
+  if (confirmadoNoExiste)
     return (
       <div>
         <div className="flex flex-col  items-center mb-10 justify-center">
@@ -102,13 +120,10 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         </div>
       </div>
     )
+  
+  if (posibleNoExiste && !confirmadoNoExiste ) return <LoadingSalaEstudiante overlay /> 
 
-  if (estado !== StatusDeConexion.Conectado || !configSala)
-    return (
-      <div className="w-screen h-screen place-content-center">
-        <p className="text-xl md:text-6xl text-indigo-500 text-center">Cargando...</p>
-      </div>
-    )
+  if (estado !== StatusDeConexion.Conectado || !configSala) return <LoadingSalaEstudiante overlay />
 
   return (
     <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">

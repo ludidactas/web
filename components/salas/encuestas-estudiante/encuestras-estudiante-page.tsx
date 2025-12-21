@@ -10,6 +10,7 @@ import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import HeaderSala from '../header-sala'
+import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -25,9 +26,7 @@ export default function EncuestasEstudiantePage({
 
   if (status === 'loading') {
     return (
-      <div className="w-screen h-screen place-content-center">
-        <p className="text-xl md:text-6xl text-indigo-500 text-center">Cargando...</p>
-      </div>
+      <LoadingSalaEstudiante overlay />
     )
   }
 

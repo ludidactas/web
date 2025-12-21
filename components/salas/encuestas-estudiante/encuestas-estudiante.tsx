@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 // import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { LdSvg } from '@/components/custom/ld-svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
@@ -14,11 +14,35 @@ import { EncuestaHidratada } from '@/wss/tipos'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 
 export default function EncuestasEstudiante() {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
 
+  const posibleVacio = estado === StatusDeConexion.Conectado && encuestas.length === 0
+  const [confirmadoVacio, setConfirmadoVacio] = useState(false)
+
+  // Retrasamos 2000ms la confirmación de vacío
+  useEffect(() => {
+    if (posibleVacio) {
+      // If it looks empty, start a timer
+      const timer = setTimeout(() => {
+        setConfirmadoVacio(true)
+      }, 1000)
+      // Cleanup: if data arrives before 2s, this cancels the timer
+      return () => clearTimeout(timer)
+    } else {
+      // If data arrives, reset immediately to false
+      setConfirmadoVacio(false)
+    }
+  }, [posibleVacio])
+
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
+
+  const conectando = [StatusDeConexion.Autenticando, StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.CargandoDependencias].includes(estado)
+
+  if (conectando || (posibleVacio && !confirmadoVacio))
+    return <LoadingSalaEstudiante overlay />
 
   return (
     <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
@@ -55,7 +79,7 @@ export default function EncuestasEstudiante() {
         </>
       )}
 
-      {encuestasVisibles.length == 0 && (
+      {confirmadoVacio && posibleVacio && (
         <div className="flex flex-col  items-center mb-10 justify-center">
           <LdSvg
             className="w-[300px] md:w-[500px] grayscale"

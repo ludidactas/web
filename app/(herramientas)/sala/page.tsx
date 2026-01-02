@@ -8,6 +8,7 @@ import { tokenWss } from '@/server/token_wss'
 import { RolEncuesta } from '@/wss/tipos'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
+import { sleep } from '@/wss/test/test-funcs'
 
 export default async function SalaPage() {
   const session = await auth()
@@ -16,6 +17,8 @@ export default async function SalaPage() {
 
   const token = await tokenWss()
 
+  await sleep(4000) // BORRAME
+
   return (
     <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
       <Toaster />
@@ -23,7 +26,7 @@ export default async function SalaPage() {
         <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
           <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user.name)}!</p>
         </HeaderSala>
-        <div className="w-screen h-screen md:px-4 animate-aparecer">
+        <div className="w-screen h-screen md:px-4">
           <EncuestasProfe />
         </div>
 

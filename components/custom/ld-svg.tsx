@@ -69,7 +69,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
   }, [animate]);
 
   // Gather y setup de nodos PARA ANIMEJS
-    useEffect(() => {
+  useEffect(() => {
     if (svgRef.current) {
       // Seleccionamos todos los nodos listados en la lista de ids
       // Tira error si no encuentra el id
@@ -138,7 +138,8 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
 
   return (
     <>
-      <SvgComponent className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
+      <SvgComponent preserveAspectRatio="xMidYMid meet"
+        className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
       {/* Le chantamos el contenido en los slots */}
       {slotsSVGDotJsRef.current &&
         entries(slotsSVGDotJsRef.current).map(([slotId, container]) => createPortal(slots[slotId as SvgSlotIds], container, slotId))}
@@ -189,7 +190,7 @@ function crearSlot(svg: SVGElement, id: string) {
  * Busca el id dentro del svg y lo devuelve como nodo de svgdotjs, o tira un error si no lo encuentra
  */
 function crearElem(svg: SVGElement, id: string) {
-  return SVG(getElem(svg,id))
+  return SVG(getElem(svg, id))
 }
 
 function getElem(svg: SVGElement, id: string) {

@@ -5,13 +5,7 @@ import db from "../db"
 import { io, registrarSalaEnServer } from "../server"
 import { getSession, SocketConSesion } from "../middleware/session"
 import { SocketProfe } from "../middleware/roles"
-
-export interface ConfigSala {
-  pedir_dni: boolean
-  permitir_anonimo: boolean
-  // invitados: string[] // emails permitidos a entrar
-  nombre_profe: string
-}
+import { ConfigSala } from "../validators/salas"
 
 export interface SalaData {
   id: string

@@ -39,7 +39,7 @@ export default function EncuestasEstudiantePage({
   return (
     <EncuestaEstudianteProvider idSala={idSala} nombre={nombre} dni={dni}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className="flex gap-2" btnLogout={status === 'authenticated' ? btnLogoutGoogle : undefined}>
+        <HeaderSala className="gap-2" btnLogout={status === 'authenticated' ? btnLogoutGoogle : undefined}>
           <p className="flex gap-2 justify-center items-center text-sm text-center sm:text-4xl">
             <Sparkles className=" w-4 md:w-10" />
             ¡Hola {nombreSplit(nombre)}!<Sparkles className="w-4 md:w-10" />

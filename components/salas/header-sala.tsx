@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { PropsWithChildren, ReactNode } from 'react'
 import { titulo } from '@/components/fonts'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 interface HeaderProps extends PropsWithChildren {
   className?: string
@@ -12,7 +13,7 @@ interface HeaderProps extends PropsWithChildren {
 export default function HeaderSala({ className, children, btnLogout }: HeaderProps) {
   return (
     <div className="relative">
-      <div className={`${className} bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3`}>
+      <div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
         <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
           <Link href="/" className="flex items-center gap-4">
             <Image
@@ -41,7 +42,7 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
       </div>
 
       {/* Shape divider justo después del header */}
-      <div className="shape-divider-waves h-[90px]"></div>
+      <div className={cn('shape-divider-waves h-[90px]', className)}></div>
     </div>
   )
 }

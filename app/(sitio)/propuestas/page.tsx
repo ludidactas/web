@@ -1,25 +1,18 @@
 import { Waypoints } from 'lucide-react'
 import { Metadata } from 'next'
-import NextLink from 'next/link'
-import { ComponentProps } from 'react'
+
 
 import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import { titulo as fuenteTitulo } from '@/components/fonts'
 
-import SvgTecnica from '@/svg/components/tecnica'
 import SvgDidactica from '@/svg/components/didactica'
 import SvgPedagogia from '@/svg/components/pedagogia'
+import SvgTecnica from '@/svg/components/tecnica'
 
 import { LogoTec } from '@/components/ui/logotec'
+import { LinkGradiente } from '@/components/custom/ld-link-gradiente'
 
-const Link = (props: ComponentProps<typeof NextLink>) => (
-  <NextLink
-    className="bg-gradient-to-r from-cyan-500 to-violet-500 
-    text-transparent bg-clip-text underline decoration-double 
-    hover:border-b border-violet-500"
-    {...props}
-  />
-)
+
 
 export const metadata: Metadata = {
   title: 'Propuestas',
@@ -135,13 +128,13 @@ const LineasModulo = () => {
         </p>
         <p className="m-4">
           <span className="font-bold text-[#06b6d4]">La clave está en la flexibilidad</span> debida a{' '}
-          <Link href="/identidad">nuestras necesidades identitarias</Link>. En los talleres, los estudiantes más
+          <LinkGradiente href="/identidad">nuestras necesidades identitarias</LinkGradiente>. En los talleres, los estudiantes más
           avanzados enseñan a los más nuevos, y así practican también la didáctica. El material generado durante las
           clases particulares se pone a disposición como recursos para que sirva a autodidactas y otrxs profes. En los
           seminarios directamente se dispensa formación técnica a chorro. Y en el blog se escribe sobre pedagogía y
           enseñanza al público más maduro.
         </p>
-        <Link href="https://instagram.com/ludidactas">¡Consultanos!</Link>
+        <LinkGradiente href="https://instagram.com/ludidactas">¡Consultanos!</LinkGradiente>
       </div>
 
       <Lineas

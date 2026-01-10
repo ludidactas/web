@@ -1,32 +1,16 @@
-import { useCopyToClipboard } from "usehooks-ts"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import { PropsWithChildren, useState } from "react"
-import { cn, exportarPlanilla } from "@/lib/utils"
-import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
+import useClipboard from "@/components/hooks/use-clipboard"
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import getInitials, { getRandomColor } from "@/lib/avatarname"
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog"
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@radix-ui/react-hover-card"
+import { cn, exportarPlanilla } from "@/lib/utils"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@radix-ui/react-hover-card"
+import { Copy, Download, Eraser, SquareCheckBig, Users, X } from "lucide-react"
+import { PropsWithChildren, useState } from "react"
+import { useEncuestaProfe } from "./encuestas-profe-context"
 
 export const ListaEstudiantes = () => {
   const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
-  const [_copiedText, copy] = useCopyToClipboard()
-  const [justCopied, setJustCopied] = useState(false)
-
-  const handleCopy = (text: string) => () => {
-    copy(text)
-      .then(() => {
-        setJustCopied(true)
-
-        console.log(_copiedText)
-
-        setTimeout(() => {
-          setJustCopied(false)
-        }, 3000)
-      })
-      .catch((error) => {
-        console.error('Failed to copy!', error)
-      })
-  }
+  
+  const { handleCopy, justCopied } = useClipboard()
 
   const handleExportToExcel = () => {
     // Prepara los datos para Excel
@@ -44,7 +28,9 @@ export const ListaEstudiantes = () => {
     .join('\n')
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
+
+      {/* Encabezado */}
       <div className="flex justify-between rounded-xl">
         <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
           <Users size={30} />
@@ -97,7 +83,7 @@ export const ListaEstudiantes = () => {
           </HoverCard>
         </div>
       </div>
-
+<div className="flex-1 overflow-y-auto">
       {estudiantes.length === 0 && <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>}
 
       {estudiantes.length > 0 && (
@@ -133,6 +119,7 @@ export const ListaEstudiantes = () => {
           ))}
         </ul>
       )}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { WssServerSession } from '@/wss/validators/session'
 import { isNullish } from 'remeda'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
+import { sleep } from '@/wss/test/test-funcs'
 
 // Máquina de estados finitos
 
@@ -70,6 +71,7 @@ export const useConexionWss = create<Estado>((set, get) => ({
 
     try {
       // Handshake (crea el socket y lo retorna)
+      await sleep(3000) // BORRAME
       const sock = await handshake({ ...auth, sessionId })
 
       // Asignamos los listeners del store *antes* de conectar

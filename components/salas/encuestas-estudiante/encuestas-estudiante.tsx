@@ -14,39 +14,54 @@ import { EncuestaHidratada } from '@/wss/tipos'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
+import EncuestasIcon from '@/svg/EncuestasEstIconSVGO.svg'
+import Conectado from '@/svg/ConectadoSVGO.svg'
 
-export default function EncuestasEstudiante() {
+export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
-
+  const { configSala } = useEncuestaEstudianteLogin()
+  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(() => StatusDeConexion.Conectado && encuestas.length === 0, 1000)
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
+  const conectando = [StatusDeConexion.Autenticando, StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.CargandoDependencias].includes(estado)
 
-  return (
-    <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
+  if (conectando || (posibleVacio && !confirmadoVacio))
+    return <LoadingSalaEstudiante overlay />
+
+  return (<div>
+    {/* Header */}
+    <div className='flex justify-between items-center mx-2'>
+      <LdSvg className="w-16 md:w-[800px]"
+        SvgComponent={EncuestasIcon}
+      />
+
+      {estado === StatusDeConexion.Conectado ? (
+        <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl">
+          <LdSvg className="w-16 md:w-[150px]" SvgComponent={Conectado} />
+        </span>
+      ) : (
+        <span className="text-red-700 text-xs md:text-xl">Desconectado</span>
+      )}
+    </div>
+
+
+
+    <div className="bg-white px-20 md:mx-40 mt-4 pb-6 rounded-xl">
       {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
-      {/* Header */}
-      <div className="relative">
-        <div className="absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl" />
-        <div className="relative z-20 flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <LdSvg
-              className="w-[100px] md:w-[150px]"
-              SvgComponent={Cabeza}
-              ids={['cabeza'] as const}
-              animation={oscilar(['cabeza'], 2, 1, 0.4)}
-            />
-            <h1 className="hidden md:block text-[3em] font-bold text-indigo-500">Encuestas</h1>
-          </div>
-          <div className="flex flex-col items-center justify-center">
-            <h1 className="block md:hidden text-2xl font-bold text-indigo-500">Encuestas</h1>
-            {estado === StatusDeConexion.Conectado ? (
-              <span className="text-emerald-700 animate-pulse">Conectado</span>
-            ) : (
-              <span className="text-red-700">Desconectado</span>
-            )}
-          </div>
-        </div>
+      <div className='flex gap-8 items-center justify-center'>
+        <LdSvg
+          className="w-[100px] md:w-[150px]"
+          SvgComponent={Cabeza}
+          ids={['cabeza'] as const}
+          animation={oscilar(['cabeza'], 2, 1, 0.4)}
+        />
+        <div className='flex flex-col text-center text-3xl'>
+          <p className=""> Estás en la sala de <span className="text-teal-500">{configSala.nombre_profe ?? idSala}</span></p>
+       <p className='text-indigo-500'>¡Participa respondiendo a las preguntas en vivo!</p>
+       </div>
       </div>
-
       {encuestasVisibles.length > 0 && (
         <>
           {encuestasVisibles.map((e) => (
@@ -55,7 +70,7 @@ export default function EncuestasEstudiante() {
         </>
       )}
 
-      {encuestasVisibles.length == 0 && (
+      {confirmadoVacio && posibleVacio && (
         <div className="flex flex-col  items-center mb-10 justify-center">
           <LdSvg
             className="w-[300px] md:w-[500px] grayscale"
@@ -70,6 +85,7 @@ export default function EncuestasEstudiante() {
         </div>
       )}
     </div>
+  </div >
   )
 }
 
@@ -84,9 +100,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [aporte, setAporte] = useState('')
 
   return (
-    <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 border-dashed border-8 border-indigo-50 shadow-indigo-200 rounded-xl">
+    <div className="flex flex-col gap-4 mt-6 md:p-8 bg-indigo-50/90 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
-      <div className="flex md:gap-6 items-center p-4 justify-between rounded-xl">
+      <div className="flex md:gap-6 items-center justify-between rounded-xl">
         <div
           className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
         >
@@ -98,9 +114,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
         <div className="flex flex-col items-end">
           <span
-            className={`text-xs md:text-sm ${
-              encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
-            }`}
+            className={`text-xs md:text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
+              }`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>

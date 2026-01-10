@@ -11,8 +11,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <LogoLema />
         <Menu />
       </div>
-      {/* Cajita punteada exterior */}
-      <div className="mx-2 lg:mx-10 border-x-4 border-slate-200 border-dashed flex flex-col items-center ">
+
+      {/* Bordes punteada exterior */}
+      <div className="mx-2 lg:mx-10 border-x-8 border-slate-200 border-dashed flex flex-col items-center ">
         {children}
       </div>
 
@@ -20,3 +21,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </Textura>
   )
 }
+

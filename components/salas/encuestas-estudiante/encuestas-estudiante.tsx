@@ -17,7 +17,7 @@ import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import EncuestasIcon from '@/svg/EncuestasEstIconSVGO.svg'
+import IconEnc from '@/svg/EncuestaIconSVGO.svg'
 import Conectado from '@/svg/ConectadoSVGO.svg'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
@@ -32,8 +32,8 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
 
   return (<div>
     {/* Header */}
-    <div className='flex justify-between items-center mx-2'>
-      <LdSvg className="w-16 md:w-[800px]"
+    {/* <div className='flex justify-between items-center mx-2'>
+      <LdSvg className="w-16 md:w-[600px]"
         SvgComponent={EncuestasIcon}
       />
 
@@ -44,46 +44,59 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
       ) : (
         <span className="text-red-700 text-xs md:text-xl">Desconectado</span>
       )}
-    </div>
+    </div> */}
 
 
 
-    <div className="bg-white px-20 md:mx-40 mt-4 pb-6 rounded-xl">
+    <div className="flex flex-col px-20 md:mx-20  gap-4">
       {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
-      <div className='flex gap-8 items-center justify-center'>
+      <div className='flex px-4 items-center justify-center gap-20 bg-white rounded-3xl  '>
         <LdSvg
-          className="w-[100px] md:w-[150px]"
+          className="w-[100px] md:w-[200px]"
           SvgComponent={Cabeza}
           ids={['cabeza'] as const}
           animation={oscilar(['cabeza'], 2, 1, 0.4)}
         />
+
         <div className='flex flex-col text-center text-3xl'>
-          <p className=""> Estás en la sala de <span className="text-teal-500">{configSala.nombre_profe ?? idSala}</span></p>
-       <p className='text-indigo-500'>¡Participa respondiendo a las preguntas en vivo!</p>
-       </div>
-      </div>
-      {encuestasVisibles.length > 0 && (
-        <>
-          {encuestasVisibles.map((e) => (
-            <DisplayEncuesta key={e.id} encuesta={e} />
-          ))}
-        </>
-      )}
-
-      {confirmadoVacio && posibleVacio && (
-        <div className="flex flex-col  items-center mb-10 justify-center">
-          <LdSvg
-            className="w-[300px] md:w-[500px] grayscale"
-            SvgComponent={DibuEstudiante}
-            ids={['signo1', 'signo2'] as const}
-            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
-          />
-
-          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
-            {error ? error : 'Parece que no hay encuestas activas.'}
+          <p className="flex gap-2 items-center"> Estás en la
+            <span className='flex items-center gap-2 text-4xl text-[#8345FE] rounded-full px-4  bg-[#8345FE]/5'> Sala de Encuestas
+              <LdSvg
+                className="w-20"
+                SvgComponent={IconEnc}
+              />
+            </span>
+            de
           </p>
+          <p className="text-teal-500"> {configSala?.nombre_profe ?? idSala}</p>
+          <p className='text-2xl p-4'>¡Participa respondiendo a las preguntas en vivo!</p>
         </div>
-      )}
+      </div>
+
+      <div className='bg-white rounded-3xl p-8 md:mx-10 '>
+        {encuestasVisibles.length > 0 && (
+          <>
+            {encuestasVisibles.map((e) => (
+              <DisplayEncuesta key={e.id} encuesta={e} />
+            ))}
+          </>
+        )}
+
+        {confirmadoVacio && posibleVacio && (
+          <div className="flex flex-col  items-center mb-10 justify-center">
+            <LdSvg
+              className="w-[300px] md:w-[500px] grayscale"
+              SvgComponent={DibuEstudiante}
+              ids={['signo1', 'signo2'] as const}
+              animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
+            />
+
+            <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
+              {error ? error : 'Parece que no hay encuestas activas.'}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   </div >
   )
@@ -106,7 +119,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         <div
           className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
         >
-          <MessageCircleQuestionIcon size={40} className="self-start" />
+          <MessageCircleQuestionIcon size={60} className="self-start" />
           {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
           {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>

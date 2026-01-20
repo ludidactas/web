@@ -177,7 +177,7 @@
 import LoadingSala from '@/app/(herramientas)/sala/loading'
 import useClipboard from '@/components/hooks/use-clipboard'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
-import { CircleDot, Copy, SquareCheckBig} from 'lucide-react'
+import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
 import { EncuestaSVG } from '../overlay/estadistica-svg'
 import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
@@ -234,80 +234,81 @@ export default function EncuestasProfe() {
       <div className="md:hidden animate-aparecer h-fit flex flex-col">
         {/* Menú de Navegación Mobile */}
         {estado === StatusDeConexion.Conectado && (
-            <Tabs defaultValue="formulario">
-              <TabsList className='rounded-none w-full bg-[#8345FE] text-white'>
-                <TabsTrigger className='text-xs ' value="formulario">¡Haz una pregunta!</TabsTrigger>
-                <TabsTrigger className='text-xs' value="preguntas">Preguntas</TabsTrigger>
-                <TabsTrigger className='text-xs' value="participantes">Participantes</TabsTrigger>
+          <Tabs defaultValue="formulario">
+            <TabsList className='rounded-none w-full bg-[#8345FE] text-white'>
+              <TabsTrigger className='text-xs ' value="formulario">¡Haz una pregunta!</TabsTrigger>
+              <TabsTrigger className='text-xs' value="preguntas">Preguntas</TabsTrigger>
+              <TabsTrigger className='text-xs' value="participantes">Participantes</TabsTrigger>
 
-              </TabsList>
-              <TabsContent value={'formulario'}>
-                {/* Vista Formulario - Haz una pregunta */}
-                <div className="flex flex-col bg-white p-2" tabIndex={0}>
-                    <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
-                
-                  <div className="bg-white h-full rounded-b-xl">
-                    {linkSala && (
-                      <div className="flex flex-col items-center justify-center gap-1 mb-8">
-                        <div className="flex gap-2 text-xl">
-                          <p className="leading-normal text-center text-sm">
-                            Tu sala:{' '}
-                            <Link target="_blank" href={linkSala} className="text-blue-700 hover:underline">
-                              {linkSala}
-                            </Link>
-                          </p>
-                          <button title="Copiar" onClick={handleCopy(linkSala)}>
-                            {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+            </TabsList>
+            <TabsContent value={'formulario'}>
+              {/* Vista Formulario - Haz una pregunta */}
+              <div className="flex flex-col bg-white p-2" tabIndex={0}>
+                <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
 
-                    {!linkSala && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
-
-                    {estado === StatusDeConexion.Conectado && (
-                      <div className="flex flex-col gap-10">
-                        <AgregarPregunta />
-                      </div>
-                    )}
-
-                    {estado === StatusDeConexion.Error ||
-                      (estado === StatusDeConexion.Expirado && (
-                        <p className="flex flex-col text-center text-xl gap-2 p-4">
-                          <span className="text-3xl pb-2">¡Ups!</span>
-                          <span>No se puede conectar con el servidor</span>
-                          <span>Actualizá la página, o envianos un mensaje a </span>
-                          <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+                <div className="bg-white h-full rounded-b-xl">
+                  {linkSala && (
+                    <div className="flex flex-col items-center justify-center gap-1 mb-8">
+                      <div className="flex gap-2 text-xl">
+                        <p className="leading-normal text-center text-sm">
+                          Tu sala:{' '}
+                          <Link target="_blank" href={linkSala} className="text-blue-700 hover:underline">
+                            {linkSala}
+                          </Link>
                         </p>
-                      ))}
-                      
-                  </div>
-                  </div>
-              </TabsContent>
+                        <button title="Copiar" onClick={handleCopy(linkSala)}>
+                          {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-              <TabsContent value='preguntas'>
-                <div className="flex flex-col bg-white">
-                  <div className="flex flex-col items-center justify-center p-4 h-24">
-                    <h1 className="text-3xl text-center text-[#00B0D2]">Lista de Preguntas</h1>
-                    <DialogAcciones />
-                  </div>
-                  <ListaEncuestas />
-                </div>
-              </TabsContent>
+                  {!linkSala && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
 
-              <TabsContent value='participantes'>
-                <div className="flex flex-col bg-white">
-                  <div className="p-4 min-h-screen">
-                    <ListaEstudiantes />
-                  </div>
+                  {estado === StatusDeConexion.Conectado && (
+                    <div className="flex flex-col gap-10">
+                      <AgregarPregunta />
+                    </div>
+                  )}
+
+                  {estado === StatusDeConexion.Error ||
+                    (estado === StatusDeConexion.Expirado && (
+                      <p className="flex flex-col text-center text-xl gap-2 p-4">
+                        <span className="text-3xl pb-2">¡Ups!</span>
+                        <span>No se puede conectar con el servidor</span>
+                        <span>Actualizá la página, o envianos un mensaje a </span>
+                        <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+                      </p>
+                    ))}
+
                 </div>
-              </TabsContent>
-            </Tabs>
-          )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value='preguntas'>
+              <div className="flex flex-col bg-white">
+                <div className="flex flex-col items-center justify-center p-4 h-24">
+                  <h1 className="text-3xl text-center text-[#00B0D2]">Lista de Preguntas</h1>
+                  <DialogAcciones />
+                </div>
+                <ListaEncuestas />
+              </div>
+            </TabsContent>
+
+            <TabsContent value='participantes'>
+              <div className="flex flex-col bg-white">
+                <div className="p-4 min-h-screen">
+                  <ListaEstudiantes />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
 
       {/* VISTA DESKTOP (sin cambios) */}
-      <div className="hidden md:flex animate-aparecer h-fit flex-row py-2 gap-2 justify-center">
+      <div className="hidden md:flex animate-aparecer py-2 gap-2">
+
         {/* Preguntas Formulario */}
         <div className="flex flex-col bg-white rounded-xl" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">
@@ -350,9 +351,10 @@ export default function EncuestasProfe() {
           </div>
         </div>
 
+        {/* Lista de preguntas */}
         {estado === StatusDeConexion.Conectado && (
-          <div className="grow flex flex-col bg-white gap-6 rounded-xl">
-            <div className="flex flex-col items-center p-4 h-24 rounded-t-xl">
+          <div className="flex flex-col grow bg-white gap-6 rounded-xl">
+            <div className="flex flex-col items-center p-6 h-24 rounded-t-xl">
               <h1 className="text-4xl text-center text-[#00B0D2]">Preguntas</h1>
               <DialogAcciones />
             </div>

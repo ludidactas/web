@@ -61,11 +61,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       {/* Pregunta desplegable */}
       <Accordion type="single"
         collapsible
-        className="flex flex-col items-center justify-center">
+        className="flex flex-col  justify-center">
         <AccordionItem value={"item-1"}>
-          <AccordionTrigger className="w-screen flex gap-4 bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30 rounded-full p-2 justify-between items-center cursor-pointer hover:bg-[#00B0D2]/20 transition-colors">
-            <div className="flex gap-2 items-center flex-1">
-              <MessageCircleQuestionIcon className="shrink-0 col-start-1 col-end-2 w-10 h-10" />
+          <AccordionTrigger className="flex w-full gap-4 bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30 rounded-full px-10 justify-between items-center cursor-pointer hover:bg-[#00B0D2]/20 transition-colors">
+            <div className="flex gap-2 items-center">
+              <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-10 h-10" />
               <h3 className="text-sm break-words font-bold md:text-xl">{encuesta.pregunta}</h3>
             </div>
             <div className="flex items-center gap-4">
@@ -115,7 +115,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               )}
 
               {/* Opciones */}
-              <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-[#00B0D2]/20 text-[#00B0D2]/80 py-4 px-8 md:px-10 flex flex-col gap-4 m-2 w-screen">
+              <ol className="list-[lower-latin] text-xs md:text-xl font-bold rounded-xl border-4 border-[#00B0D2]/20 text-[#00B0D2]/80 py-4 px-8 flex flex-col justify-center gap-4 w-full">
                 <div className="flex justify-end">
                   {encuesta.isRevealed && <Eye size={30} className="text-cyan-500 " />}{' '}
                   {!encuesta.isRevealed && <EyeOff size={30} className="text-slate-500 " />}

@@ -8,7 +8,6 @@ import { tokenWss } from '@/server/token_wss'
 import { RolEncuesta } from '@/wss/tipos'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
-import { sleep } from '@/wss/test/test-funcs'
 
 export default async function SalaPage() {
   const session = await auth()
@@ -16,8 +15,6 @@ export default async function SalaPage() {
   if (!session || !session.user) redirect('/login?callbackUrl=/sala')
 
   const token = await tokenWss()
-
-  await sleep(4000) // BORRAME
 
   return (
     <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>

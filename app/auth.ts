@@ -1,8 +1,29 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
+import Credentials from 'next-auth/providers/credentials'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google, 
+    // Añadir un proveedor de credenciales **solo en entorno de test**
+    ...(process.env.NODE_ENV === 'development' ? [
+      Credentials({
+        name: 'Login de Test',
+        credentials: {
+          name: { label: "Usuario", type: "text" },
+          email: { label: "Email", type: "text" }
+        },
+        async authorize(credentials) {
+          return {
+            id: (credentials.name as string).toLocaleLowerCase().replaceAll(' ', '-'),
+            name: credentials.name as string,
+            email: credentials.email as string,
+            image: 'https://placehold.co/100', // Mock
+          }
+        }
+      })
+    ] : [])
+  ],
   session: {
     strategy: 'jwt'
   },

@@ -10,7 +10,7 @@ test.describe('Test prueba', () => {
   })
 
   const nombreProfe = 'Eltes Tito'
-  test.only('loguearse como profe y acceder a la sala', async ({ browser, page, login }) => {
+  test.only('loguearse como profe y acceder a la sala como estudiante', async ({ browser, page, login }) => {
     // Hacemos login como profe de prueba
     await login({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
 

@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test'
 
-export async function loginFake(page: Page, user: {name: string, email: string}) {
+export async function loginFake(page: Page, user: { name: string; email: string }) {
   // NextAuth provee un CSRF token que requiere para el login
   const csrfResponse = await page.request.get('/api/auth/csrf')
   const { csrfToken } = await csrfResponse.json()
@@ -11,11 +11,11 @@ export async function loginFake(page: Page, user: {name: string, email: string})
       csrfToken,
       redirect: 'false',
       callbackUrl: '/sala',
-      ...user
+      ...user,
     },
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   })
 
   await expect(response.ok()).toBeTruthy()

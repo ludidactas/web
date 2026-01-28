@@ -10,35 +10,24 @@ test.describe('Test prueba', () => {
   })
 
   const nombreProfe = 'Eltes Tito'
-  test.only('loguearse como profe y acceder a la sala como estudiante', async ({ browser, page, login }) => {
-    // Hacemos login como profe de prueba
-    await login({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
 
-    // Vamos a la sala
-    await page.goto('/sala')
-    await expect(page.getByRole('heading', { name: '¡Haz una pregunta!' })).toBeVisible()
+  test('loguearse como profe y acceder a la sala como estudiante', async ({ setupSala }) => {
+    // Armar la sala como profe
+    const { sala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
 
-    // Capturamos el link de la sala
-    const linkSala = page.locator('p').filter({ hasText: 'Tu sala:' }).locator('a').first()
-    const fullUrl = await linkSala.getAttribute('href')
-    await expect(fullUrl).toBeDefined()
+    // Verificar que el profe puede ver la sala
+    await expect(sala.getByRole('heading', { name: '¡Haz una pregunta!' })).toBeVisible()
 
-    // Abrimos una nueva página como alumno
-    const alumnoContext = await browser.newContext()
-    const alumnoPage = await alumnoContext.newPage()
+    // Acceder como estudiante
+    const alumnoPage = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
 
-    // El alumno accede a la sala mediante el link
-    await alumnoPage.goto(fullUrl!)
-
-    // Debería verse la antesala con el nombre del profe
-    await expect(alumnoPage.getByText(nombreProfe)).toBeVisible()
-
-    // Hacemos un logincito
-    await alumnoPage.getByPlaceholder('Ingresá tu nombre').fill('Alumnini Pruebini')
-    await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill('32987654')
-    await alumnoPage.getByRole('button', { name: 'Conectarse' }).click()
-
-    // Debería verse el label de 'Sala de Encuestas'
+    // Verificar que el estudiante puede ver la sala
     await expect(alumnoPage.getByText('Sala de Encuestas')).toBeVisible()
   })
+
+  test.skip('crear una encuesta y responderla', async ({ setupSala }) => {})
+
+  test.skip('desloguearse y re-loguearse como profe y ver que todo siga normal', async ({ setupSala }) => {})
+
+  test.skip('desloguearse y re-loguearse como estudiante y ver que todo siga normal', async ({ setupSala }) => {})
 })

@@ -2,12 +2,12 @@ import { randomUUID } from 'crypto'
 import { pick } from 'remeda'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import db from '../db'
-import { nombreDeFantasia } from '../salas/app'
 import { RolEncuesta } from '../tipos'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema, SesionSchema } from '../validators/auth'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
+import { nombreDeFantasia } from '../salas/utils'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 

@@ -28,7 +28,9 @@ export const ListaEstudiantes = () => {
     .join('\n')
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
+
+      {/* Encabezado */}
       <div className="flex justify-between rounded-xl">
         <h1 className="flex gap-4 text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
           <Users size={30} />
@@ -81,7 +83,7 @@ export const ListaEstudiantes = () => {
           </HoverCard>
         </div>
       </div>
-
+<div className="flex-1 overflow-y-auto">
       {estudiantes.length === 0 && <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>}
 
       {estudiantes.length > 0 && (
@@ -117,6 +119,7 @@ export const ListaEstudiantes = () => {
           ))}
         </ul>
       )}
+      </div>
     </div>
   )
 }

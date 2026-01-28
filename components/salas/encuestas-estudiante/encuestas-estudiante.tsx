@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 // import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import { LdSvg } from '@/components/custom/ld-svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
@@ -16,69 +16,89 @@ import { Input } from '@/components/ui/input'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
+import IconEnc from '@/svg/EncuestaIconSVGO.svg'
+import Conectado from '@/svg/ConectadoSVGO.svg'
 
-export default function EncuestasEstudiante() {
+export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
-
-  const { valor: posibleVacio, confirmado: confirmadoVacio} = useConfirmarConDelay(() => StatusDeConexion.Conectado && encuestas.length === 0, 1000)
-
+  const { configSala } = useEncuestaEstudianteLogin()
+  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(() => StatusDeConexion.Conectado && encuestas.length === 0, 1000)
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
-
   const conectando = [StatusDeConexion.Autenticando, StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.CargandoDependencias].includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio))
     return <LoadingSalaEstudiante overlay />
 
-  return (
-    <div className="bg-white p-4 md:px-14  md:max-w-[54em] mx-auto rounded-xl">
+  return (<div>
+    {/* Header */}
+    {/* <div className='flex justify-between items-center mx-2'>
+      <LdSvg className="w-16 md:w-[600px]"
+        SvgComponent={EncuestasIcon}
+      />
+
+      {estado === StatusDeConexion.Conectado ? (
+        <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl">
+          <LdSvg className="w-16 md:w-[150px]" SvgComponent={Conectado} />
+        </span>
+      ) : (
+        <span className="text-red-700 text-xs md:text-xl">Desconectado</span>
+      )}
+    </div> */}
+
+
+
+    <div className="flex flex-col px-20 md:mx-20  gap-4">
       {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
-      {/* Header */}
-      <div className="relative">
-        <div className="absolute inset-y-8 md:inset-y-16 z-10 w-full h-18 sm:h-24 bg-indigo-200/30 rounded-xl" />
-        <div className="relative z-20 flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <LdSvg
-              className="w-[100px] md:w-[150px]"
-              SvgComponent={Cabeza}
-              ids={['cabeza'] as const}
-              animation={oscilar(['cabeza'], 2, 1, 0.4)}
-            />
-            <h1 className="hidden md:block text-[3em] font-bold text-indigo-500">Encuestas</h1>
-          </div>
-          <div className="flex flex-col items-center justify-center">
-            <h1 className="block md:hidden text-2xl font-bold text-indigo-500">Encuestas</h1>
-            {estado === StatusDeConexion.Conectado ? (
-              <span className="text-emerald-700 animate-pulse">Conectado</span>
-            ) : (
-              <span className="text-red-700">Desconectado</span>
-            )}
-          </div>
+      <div className='flex px-4 items-center justify-center gap-20 bg-white rounded-3xl  '>
+        <LdSvg
+          className="w-[100px] md:w-[200px]"
+          SvgComponent={Cabeza}
+          ids={['cabeza'] as const}
+          animation={oscilar(['cabeza'], 2, 1, 0.4)}
+        />
+
+        <div className='flex flex-col text-center text-3xl'>
+          <p className="flex gap-2 items-center"> Estás en la
+            <span className='flex items-center gap-2 text-4xl text-[#8345FE] rounded-full px-4  bg-[#8345FE]/5'> Sala de Encuestas
+              <LdSvg
+                className="w-20"
+                SvgComponent={IconEnc}
+              />
+            </span>
+            de
+          </p>
+          <p className="text-teal-500"> {configSala?.nombre_profe ?? idSala}</p>
+          <p className='text-2xl p-4'>¡Participa respondiendo a las preguntas en vivo!</p>
         </div>
       </div>
 
-      {encuestasVisibles.length > 0 && (
-        <>
-          {encuestasVisibles.map((e) => (
-            <DisplayEncuesta key={e.id} encuesta={e} />
-          ))}
-        </>
-      )}
+      <div className='bg-white rounded-3xl p-8 md:mx-10 '>
+        {encuestasVisibles.length > 0 && (
+          <>
+            {encuestasVisibles.map((e) => (
+              <DisplayEncuesta key={e.id} encuesta={e} />
+            ))}
+          </>
+        )}
 
-      {confirmadoVacio && posibleVacio && (
-        <div className="flex flex-col  items-center mb-10 justify-center">
-          <LdSvg
-            className="w-[300px] md:w-[500px] grayscale"
-            SvgComponent={DibuEstudiante}
-            ids={['signo1', 'signo2'] as const}
-            animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
-          />
+        {confirmadoVacio && posibleVacio && (
+          <div className="flex flex-col  items-center mb-10 justify-center">
+            <LdSvg
+              className="w-[300px] md:w-[500px] grayscale"
+              SvgComponent={DibuEstudiante}
+              ids={['signo1', 'signo2'] as const}
+              animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
+            />
 
-          <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
-            {error ? error : 'Parece que no hay encuestas activas.'}
-          </p>
-        </div>
-      )}
+            <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
+              {error ? error : 'Parece que no hay encuestas activas.'}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
+  </div >
   )
 }
 
@@ -93,13 +113,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [aporte, setAporte] = useState('')
 
   return (
-    <div className="flex flex-col gap-4 mt-6 md:p-4 md:m-10 border-dashed border-8 border-indigo-50 shadow-indigo-200 rounded-xl">
+    <div className="flex flex-col gap-4 mt-6 md:p-8 bg-indigo-50/90 shadow-indigo-200 rounded-xl">
       {/* Titulo y opciones */}
-      <div className="flex md:gap-6 items-center p-4 justify-between rounded-xl">
+      <div className="flex md:gap-6 items-center justify-between rounded-xl">
         <div
           className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
         >
-          <MessageCircleQuestionIcon size={40} className="self-start" />
+          <MessageCircleQuestionIcon size={60} className="self-start" />
           {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
           {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
@@ -107,9 +127,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
         <div className="flex flex-col items-end">
           <span
-            className={`text-xs md:text-sm ${
-              encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
-            }`}
+            className={`text-xs md:text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
+              }`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>

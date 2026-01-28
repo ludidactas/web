@@ -44,20 +44,25 @@ export function AgregarPregunta() {
 
 
   return (
-    <div className="flex flex-col mx-2 rounded-xl bg-[#dfd3f675] p-4 gap-2">
-      <p className="text-xl">Pregunta:</p>
+    <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2">
+      <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
       <textarea
-        className="border-b w-full p-2 resize-none"
+        className="w-full p-2 resize-none rounded"
+        placeholder="Haz tu pregunta..."
         value={pregunta}
         onChange={(e) => setPregunta(e.target.value)}
         tabIndex={1}
       />
 
+      <p className="text-2xl mt-4 text-[#8345FE]  font-bold">Opciones:</p>
+
       {opciones.map((respuesta, index) => (
-        <div key={index} className="flex gap-4 items-center">
-          <span className="whitespace-nowrap">Opc. {index + 1}</span>
-          <input
-            className="border-b w-full p-1"
+        <div key={index} className="flex gap-4 items-center ml-4">
+          <span className="whitespace-nowrap text-[#8345FE] font-bold">
+            {String.fromCharCode(97 + index)}.
+          </span>         
+           <input
+            className="rounded w-full p-1"
             type="text"
             value={respuesta}
             onChange={(e) => actualizarRespuesta(index, e.target.value)}
@@ -74,32 +79,34 @@ export function AgregarPregunta() {
           )}
         </div>
 
+
       ))}
+      {/* Boton agregar respuesta */}
+      <button
+        className="flex items-center self-center w-fit font-semibold gap-2  text-white px-2 py-2 rounded-full"
+        onClick={agregarRespuesta}
+        tabIndex={opciones.length + 2}
+      >
+        <CirclePlus className="text-[#8345FE] font-bold hover:scale-105" size={30} />
+      
+      </button>
 
       {/* Checkbox estudiantes pueden agregar respuestas */}
-      <div className="flex items-center justify-center gap-2 py-4">
+      <div className="flex items-center gap-1 px-4">
         <Checkbox className='bg-white' checked={admiteAportes} onCheckedChange={setAdmiteAportes} title="" />
-        <p className="text-indigo-500">Los estudiantes pueden agregar sus propias opciones</p>
+        <p className="text-indigo-500 text-sm">Los estudiantes pueden agregar sus propias opciones</p>
       </div>
 
       {error && (
         <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">(La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)</p>
       )}
 
-      {/* Boton agregar respuesta */}
-      <button
-        className=" flex place-content-center items-center font-semibold gap-2 bg-indigo-500 text-white px-2 md:px-4 py-2 rounded"
-        onClick={agregarRespuesta}
-        tabIndex={opciones.length + 2}
-      >
-        <CirclePlus size={20} />
-        Agregar opción
-      </button>
+
       {/* Boton postear pregunta */}
 
       <button
         disabled={!success}
-        className='flex place-content-center items-center font-semibold gap-2 bg-emerald-500 text-white px-2 md:px-4 py-2 rounded disabled:bg-slate-300 disabled:text-slate-500'
+        className='flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500'
         onClick={postearPregunta}
         tabIndex={opciones.length + 2}
       >

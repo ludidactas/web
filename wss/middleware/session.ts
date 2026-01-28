@@ -8,6 +8,7 @@ import { socketIp } from "../utils"
 import { Pasaporte, PasaporteSchema, SesionSchema } from "../validators/auth"
 import { decodearTokenNextAuth, registradoComoAdmin } from "./auth"
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from "../validators/session"
+import { sleep } from "../test/test-funcs"
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 

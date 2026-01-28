@@ -12,7 +12,7 @@ interface HeaderProps extends PropsWithChildren {
 
 export default function HeaderSala({ className, children, btnLogout }: HeaderProps) {
   return (
-    <div className="relative">
+    <div>
       <div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
         <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
           <Link href="/" className="flex items-center gap-4">

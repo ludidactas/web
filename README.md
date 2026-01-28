@@ -11,18 +11,11 @@ Viene empezando como biblioteca de recursos, de los cuales la columna vertebral 
 
 ## Setup
 
-- Instalarse la extensión 'MDX', para obtener syntax highlighting y todo eso en los archivos MDX
-
-## Changelog
-
-- Arrancamos con roadmaps svg exportados de affinity designer y levantado con `svgr` pasandole opciones a `svgo` para que no remueva los ids, de manera que podamos targetear los elementos svg con los nombres dados en affinity. Los ids tienen la forma `rm.[id]` para que puedan discernirse los elementos del resto de los ids por el prefijo.
-- Luego agregamos soporte para markdown con front-matter con MDX. La configuración de estas cositas está en `next.config.ts`.
-- Adoptamos `shadcn` como fuente de componentes.
-- Instalamos `remeda` como alternativa a `lodash`.
-- Agregamos zod para validación, sobre todo de los front-matter.
-- Armamos un LibretaContext, estado para llevar registro de las unidades, mirroreada al localStorage, y un hook `useLibreta`, para usarla de manera ergonómica.
-- Instalamos `usehooks`, en primera para el renderizado responsive con `useMediaQuery`, aunque cabe usar muchas otras de sus funciones.
-- Agregamos `glob` para levantar los archivos md dinámicamente
+- Correr un server redis. Puede ser standalone o con docker.
+- Correr `bun/npm i`
+- Correr el server con `bun/npm wss:dev`
+- Correr el proyecto next en otra terminal con `bun/npm dev`
+- Los tests se corren con `bun/npm e2e` (de end-to-end)
 
 ## Checkear
 

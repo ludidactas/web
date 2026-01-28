@@ -25,9 +25,7 @@ export default function EncuestasEstudiantePage({
   const { dni, nombre, ingresado } = useEncuestaEstudianteLogin()
 
   if (status === 'loading') {
-    return (
-      <LoadingSalaEstudiante overlay />
-    )
+    return <LoadingSalaEstudiante overlay />
   }
 
   // Formulario de acceso
@@ -46,7 +44,7 @@ export default function EncuestasEstudiantePage({
           </p>
         </HeaderSala>
         <div className="p-2 w-[inherit] md:p-8">
-          <EncuestasEstudiante />
+          <EncuestasEstudiante idSala={idSala} />
         </div>
       </div>
     </EncuestaEstudianteProvider>

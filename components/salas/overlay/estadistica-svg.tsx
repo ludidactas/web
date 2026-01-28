@@ -8,7 +8,6 @@ import { isNullish } from 'remeda'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import { useEncuestaEstudiante } from '../encuestas-estudiante/encuestas-estudiante-context'
 
-
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
   const { estado, encuestas, error } = useEncuestaEstudiante()
@@ -35,9 +34,11 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 // Componente para una encuesta individual
 export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
   if (isNullish(encuesta)) {
-    return<div className='bg-white w-full rounded-xl'>
-      <p className='text-center text-slate-400 p-4'>No hay encuestas enfocadas</p>
-    </div>
+    return (
+      <div className="bg-white w-full rounded-xl">
+        <p className="text-center text-slate-400 p-4">No hay encuestas enfocadas</p>
+      </div>
+    )
   }
   const maxVotos = Math.max(...encuesta.opciones.map((op) => op.votos))
   const totalVotos = encuesta.opciones.reduce((sum, op) => sum + op.votos, 0)
@@ -58,13 +59,12 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: 
 
   const ops = encuesta.opciones
     .toSorted((a, b) => b.votos - a.votos)
-    .map(opc => ({ ...opc, texto: encuesta.isRevealed ? opc.texto : '?????' }))
+    .map((opc) => ({ ...opc, texto: encuesta.isRevealed ? opc.texto : '?????' }))
 
   const { bg, barHeight, barSpacing, titleHeight, margin } = config
 
   // Calcular dimensiones
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
-
 
   return (
     <div className="w-auto rounded-xl p-6" style={{ backgroundColor: bg, margin: `${margin}px` }}>
@@ -122,11 +122,11 @@ function BarraEstadistica({
 }) {
   const [animatedWidth, setAnimatedWidth] = useState(0)
 
-  const p = maxPercentage ? (percentage / maxPercentage) : percentage
+  const p = maxPercentage ? percentage / maxPercentage : percentage
 
   // Calcular dimensiones
   const maxBarWidth = 400
-  const targetWidth = p > 0 ? (p) * maxBarWidth : 0
+  const targetWidth = p > 0 ? p * maxBarWidth : 0
   const percentage100s = percentage * 100
 
   // Animación de la barra

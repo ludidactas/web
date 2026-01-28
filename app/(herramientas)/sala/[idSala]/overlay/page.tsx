@@ -1,9 +1,12 @@
-import { estadisticaSvgConfigValidator } from "@/components/salas/overlay/estadistica-svg-config"
+import { estadisticaSvgConfigValidator } from '@/components/salas/overlay/estadistica-svg-config'
 import TestEstadisticaApp from '@/components/salas/overlay/estadistica-svg'
-import { EncuestaEstudianteProvider } from "@/components/salas/encuestas-estudiante/encuestas-estudiante-context"
+import { EncuestaEstudianteProvider } from '@/components/salas/encuestas-estudiante/encuestas-estudiante-context'
 
-export default async function OverlayEncuestas({ params, searchParams }: {
-  params: Promise<{ idSala: string }>,
+export default async function OverlayEncuestas({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ idSala: string }>
   searchParams: Promise<unknown>
 }) {
   const { idSala } = await params

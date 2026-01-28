@@ -18,10 +18,11 @@ export default function LoadingSalaEstudiante({ overlay = false }: LoadingSalaPr
           : 'h-screen w-screen' // Default (en loading.tsx)
       )}
     >
-      <p className='text-5xl text-white'>Cargando...</p>
-      <LdSvg className='w-80 h-80' SvgComponent={loadingEst}
+      <p className="text-5xl text-white">Cargando...</p>
+      <LdSvg
+        className="w-80 h-80"
+        SvgComponent={loadingEst}
         ids={['uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho'] as const}
-
         animate={(nodos) => () => {
           animate([nodos.uno, nodos.dos, nodos.tres, nodos.cuatro, nodos.cinco, nodos.seis, nodos.siete, nodos.ocho], {
             scale: [
@@ -31,7 +32,8 @@ export default function LoadingSalaEstudiante({ overlay = false }: LoadingSalaPr
             delay: stagger(100),
             loop: true,
           })
-        }} />
+        }}
+      />
     </div>
   )
 }

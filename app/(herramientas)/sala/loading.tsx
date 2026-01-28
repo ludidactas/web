@@ -1,42 +1,38 @@
-
- 'use client'
+'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { cn } from '@/lib/utils'
 import loading from '@/svg/loadingSVGO.svg'
 import { Icon } from '@iconify/react'
-
 
 interface LoadingSalaProps {
   overlay?: boolean
 }
 
 export default function LoadingSala({ overlay = false }: LoadingSalaProps) {
-  const loadingIcon= <div className='flex flex-col items-center gap-20'>
-    <p className='text-7xl'>Cargando...</p>
-    <Icon className='h-60 w-60' icon={'line-md:loading-alt-loop'}/></div>
-  
+  const loadingIcon = (
+    <div className="flex flex-col items-center gap-20">
+      <p className="text-7xl">Cargando...</p>
+      <Icon className="h-60 w-60" icon={'line-md:loading-alt-loop'} />
+    </div>
+  )
 
   return (
     <div
       className={cn(
         'flex items-center justify-center bg-gradient-to-r from-cyan-500 to-indigo-500',
-        overlay
-          ? 'fixed inset-0 z-50 h-screen w-screen'
-          : 'h-screen w-screen'
+        overlay ? 'fixed inset-0 z-50 h-screen w-screen' : 'h-screen w-screen'
       )}
     >
-     
-        <LdSvg
-          className="flex w-[300px] md:w-[800px] drop-shadow-xl"
-          SvgComponent={loading}
-          ids={['slot'] as const}
-           slots={
-        {
-          'slot': loadingIcon,
-        } as const
-      }
-        />
-      
+      <LdSvg
+        className="flex w-[300px] md:w-[800px] drop-shadow-xl"
+        SvgComponent={loading}
+        ids={['slot'] as const}
+        slots={
+          {
+            slot: loadingIcon,
+          } as const
+        }
+      />
     </div>
   )
 }

@@ -187,13 +187,7 @@ import { useEncuestaProfe } from './encuestas-profe-context'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function EncuestasProfe() {
   const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
@@ -235,11 +229,16 @@ export default function EncuestasProfe() {
         {/* Menú de Navegación Mobile */}
         {estado === StatusDeConexion.Conectado && (
           <Tabs defaultValue="formulario">
-            <TabsList className='rounded-none w-full bg-[#8345FE] text-white'>
-              <TabsTrigger className='text-xs ' value="formulario">¡Haz una pregunta!</TabsTrigger>
-              <TabsTrigger className='text-xs' value="preguntas">Preguntas</TabsTrigger>
-              <TabsTrigger className='text-xs' value="participantes">Participantes</TabsTrigger>
-
+            <TabsList className="rounded-none w-full bg-[#8345FE] text-white">
+              <TabsTrigger className="text-xs " value="formulario">
+                ¡Haz una pregunta!
+              </TabsTrigger>
+              <TabsTrigger className="text-xs" value="preguntas">
+                Preguntas
+              </TabsTrigger>
+              <TabsTrigger className="text-xs" value="participantes">
+                Participantes
+              </TabsTrigger>
             </TabsList>
             <TabsContent value={'formulario'}>
               {/* Vista Formulario - Haz una pregunta */}
@@ -270,22 +269,11 @@ export default function EncuestasProfe() {
                       <AgregarPregunta />
                     </div>
                   )}
-
-                  {estado === StatusDeConexion.Error ||
-                    (estado === StatusDeConexion.Expirado && (
-                      <p className="flex flex-col text-center text-xl gap-2 p-4">
-                        <span className="text-3xl pb-2">¡Ups!</span>
-                        <span>No se puede conectar con el servidor</span>
-                        <span>Actualizá la página, o envianos un mensaje a </span>
-                        <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-                      </p>
-                    ))}
-
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value='preguntas'>
+            <TabsContent value="preguntas">
               <div className="flex flex-col bg-white">
                 <div className="flex flex-col items-center justify-center p-4 h-24">
                   <h1 className="text-3xl text-center text-[#00B0D2]">Lista de Preguntas</h1>
@@ -295,7 +283,7 @@ export default function EncuestasProfe() {
               </div>
             </TabsContent>
 
-            <TabsContent value='participantes'>
+            <TabsContent value="participantes">
               <div className="flex flex-col bg-white">
                 <div className="p-4 min-h-screen">
                   <ListaEstudiantes />
@@ -304,11 +292,18 @@ export default function EncuestasProfe() {
             </TabsContent>
           </Tabs>
         )}
+        {(estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado) && (
+          <p className="flex flex-col text-center text-xl gap-2 p-4">
+            <span className="text-3xl pb-2">¡Ups!</span>
+            <span>No se puede conectar con el servidor</span>
+            <span>Actualizá la página, o envianos un mensaje a </span>
+            <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
+          </p>
+        )}
       </div>
 
       {/* VISTA DESKTOP (sin cambios) */}
       <div className="hidden md:flex animate-aparecer py-2 gap-2">
-
         {/* Preguntas Formulario */}
         <div className="flex flex-col bg-white rounded-xl" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">

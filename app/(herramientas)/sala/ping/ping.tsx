@@ -5,7 +5,7 @@ import { toast, Toaster } from 'sonner'
 import { useEffect } from 'react'
 import { RolEncuesta } from '@/wss/tipos'
 
-export default function PingClient({ url }: {url : string}) {
+export default function PingClient({ url }: { url: string }) {
   const { socket, ...resto } = useServerWebsockets({ nombre: 'pingo', rol: RolEncuesta.Tester, url })
 
   useEffect(() => {

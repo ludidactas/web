@@ -1,9 +1,9 @@
-import { pollBase } from "@/wss/validators/polls"
-import { X, CirclePlus, Send } from "lucide-react"
-import { useState } from "react"
-import { toast } from "sonner"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import { Checkbox } from "@/components/ui/checkbox"
+import { pollBase } from '@/wss/validators/polls'
+import { X, CirclePlus, Send } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { useEncuestaProfe } from './encuestas-profe-context'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export function AgregarPregunta() {
   const { enviarPregunta } = useEncuestaProfe()
@@ -42,7 +42,6 @@ export function AgregarPregunta() {
       .catch((msg) => toast.error(msg))
   }
 
-
   return (
     <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2">
       <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
@@ -58,10 +57,8 @@ export function AgregarPregunta() {
 
       {opciones.map((respuesta, index) => (
         <div key={index} className="flex gap-4 items-center ml-4">
-          <span className="whitespace-nowrap text-[#8345FE] font-bold">
-            {String.fromCharCode(97 + index)}.
-          </span>         
-           <input
+          <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
+          <input
             className="rounded w-full p-1"
             type="text"
             value={respuesta}
@@ -78,8 +75,6 @@ export function AgregarPregunta() {
             </button>
           )}
         </div>
-
-
       ))}
       {/* Boton agregar respuesta */}
       <button
@@ -88,25 +83,25 @@ export function AgregarPregunta() {
         tabIndex={opciones.length + 2}
       >
         <CirclePlus className="text-[#8345FE] font-bold hover:scale-105" size={30} />
-      
       </button>
 
       {/* Checkbox estudiantes pueden agregar respuestas */}
       <div className="flex items-center gap-1 px-4">
-        <Checkbox className='bg-white' checked={admiteAportes} onCheckedChange={setAdmiteAportes} title="" />
+        <Checkbox className="bg-white" checked={admiteAportes} onCheckedChange={setAdmiteAportes} title="" />
         <p className="text-indigo-500 text-sm">Los estudiantes pueden agregar sus propias opciones</p>
       </div>
 
       {error && (
-        <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">(La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)</p>
+        <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
+          (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
+        </p>
       )}
-
 
       {/* Boton postear pregunta */}
 
       <button
         disabled={!success}
-        className='flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500'
+        className="flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500"
         onClick={postearPregunta}
         tabIndex={opciones.length + 2}
       >
@@ -115,4 +110,3 @@ export function AgregarPregunta() {
     </div>
   )
 }
-

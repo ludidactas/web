@@ -23,16 +23,24 @@ import Conectado from '@/svg/ConectadoSVGO.svg'
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
   const { configSala } = useEncuestaEstudianteLogin()
-  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(() => StatusDeConexion.Conectado && encuestas.length === 0, 1000)
+  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
+    () => StatusDeConexion.Conectado && encuestas.length === 0,
+    1000
+  )
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
-  const conectando = [StatusDeConexion.Autenticando, StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.CargandoDependencias].includes(estado)
+  const conectando = [
+    StatusDeConexion.Autenticando,
+    StatusDeConexion.Quieto,
+    StatusDeConexion.Conectando,
+    StatusDeConexion.CargandoDependencias,
+  ].includes(estado)
 
-  if (conectando || (posibleVacio && !confirmadoVacio))
-    return <LoadingSalaEstudiante overlay />
+  if (conectando || (posibleVacio && !confirmadoVacio)) return <LoadingSalaEstudiante overlay />
 
-  return (<div>
-    {/* Header */}
-    {/* <div className='flex justify-between items-center mx-2'>
+  return (
+    <div>
+      {/* Header */}
+      {/* <div className='flex justify-between items-center mx-2'>
       <LdSvg className="w-16 md:w-[600px]"
         SvgComponent={EncuestasIcon}
       />
@@ -46,59 +54,58 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
       )}
     </div> */}
 
+      <div className="flex flex-col px-20 md:mx-20  gap-4">
+        {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
+        <div className="flex px-4 items-center justify-center gap-20 bg-white rounded-3xl  ">
+          <LdSvg
+            className="w-[100px] md:w-[200px]"
+            SvgComponent={Cabeza}
+            ids={['cabeza'] as const}
+            animation={oscilar(['cabeza'], 2, 1, 0.4)}
+          />
 
+          <div className="flex flex-col text-center text-3xl">
+            <p className="flex gap-2 items-center">
+              {' '}
+              Estás en la
+              <span className="flex items-center gap-2 text-4xl text-[#8345FE] rounded-full px-4  bg-[#8345FE]/5">
+                {' '}
+                Sala de Encuestas
+                <LdSvg className="w-20" SvgComponent={IconEnc} />
+              </span>
+              de
+            </p>
+            <p className="text-teal-500"> {configSala?.nombre_profe ?? idSala}</p>
+            <p className="text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
+          </div>
+        </div>
 
-    <div className="flex flex-col px-20 md:mx-20  gap-4">
-      {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
-      <div className='flex px-4 items-center justify-center gap-20 bg-white rounded-3xl  '>
-        <LdSvg
-          className="w-[100px] md:w-[200px]"
-          SvgComponent={Cabeza}
-          ids={['cabeza'] as const}
-          animation={oscilar(['cabeza'], 2, 1, 0.4)}
-        />
+        <div className="bg-white rounded-3xl p-8 md:mx-10 ">
+          {encuestasVisibles.length > 0 && (
+            <>
+              {encuestasVisibles.map((e) => (
+                <DisplayEncuesta key={e.id} encuesta={e} />
+              ))}
+            </>
+          )}
 
-        <div className='flex flex-col text-center text-3xl'>
-          <p className="flex gap-2 items-center"> Estás en la
-            <span className='flex items-center gap-2 text-4xl text-[#8345FE] rounded-full px-4  bg-[#8345FE]/5'> Sala de Encuestas
+          {confirmadoVacio && posibleVacio && (
+            <div className="flex flex-col  items-center mb-10 justify-center">
               <LdSvg
-                className="w-20"
-                SvgComponent={IconEnc}
+                className="w-[300px] md:w-[500px] grayscale"
+                SvgComponent={DibuEstudiante}
+                ids={['signo1', 'signo2'] as const}
+                animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
               />
-            </span>
-            de
-          </p>
-          <p className="text-teal-500"> {configSala?.nombre_profe ?? idSala}</p>
-          <p className='text-2xl p-4'>¡Participa respondiendo a las preguntas en vivo!</p>
+
+              <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
+                {error ? error : 'Parece que no hay encuestas activas.'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
-
-      <div className='bg-white rounded-3xl p-8 md:mx-10 '>
-        {encuestasVisibles.length > 0 && (
-          <>
-            {encuestasVisibles.map((e) => (
-              <DisplayEncuesta key={e.id} encuesta={e} />
-            ))}
-          </>
-        )}
-
-        {confirmadoVacio && posibleVacio && (
-          <div className="flex flex-col  items-center mb-10 justify-center">
-            <LdSvg
-              className="w-[300px] md:w-[500px] grayscale"
-              SvgComponent={DibuEstudiante}
-              ids={['signo1', 'signo2'] as const}
-              animation={oscilar(['signo1', 'signo2'], 2, 1, 0.4)}
-            />
-
-            <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
-              {error ? error : 'Parece que no hay encuestas activas.'}
-            </p>
-          </div>
-        )}
-      </div>
     </div>
-  </div >
   )
 }
 
@@ -127,8 +134,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
         <div className="flex flex-col items-end">
           <span
-            className={`text-xs md:text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
-              }`}
+            className={`text-xs md:text-sm ${
+              encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
+            }`}
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>

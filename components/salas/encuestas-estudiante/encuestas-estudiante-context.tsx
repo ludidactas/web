@@ -8,9 +8,14 @@ import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string, dni?: string) => {
-
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
-  const { socket, session, estado, error, WssDebugPanel } = useServerWebsockets({ nombre, idSala, icono, dni, rol: RolEncuesta.Estudiante })
+  const { socket, session, estado, error, WssDebugPanel } = useServerWebsockets({
+    nombre,
+    idSala,
+    icono,
+    dni,
+    rol: RolEncuesta.Estudiante,
+  })
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)
@@ -18,8 +23,8 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 
   /** Postea un voto */
   const votar = (pollId: string, optionId?: string, aporte?: string) => {
-    if(aporte) socket!.emit('poll:vote', { pollId: pollId, aporte })
-      else socket!.emit('poll:vote', { pollId: pollId, optionId })
+    if (aporte) socket!.emit('poll:vote', { pollId: pollId, aporte })
+    else socket!.emit('poll:vote', { pollId: pollId, optionId })
   }
 
   // Cuando el socket conecta...
@@ -34,7 +39,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
-      
+
       return () => {
         socket.removeAllListeners('polls:list')
         socket.removeAllListeners('wss:error')
@@ -57,16 +62,18 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
 }
 
 // Context
-export const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(undefined)
+export const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncuestaEstudianteState> | undefined>(
+  undefined
+)
 
 // Provider
-export const EncuestaEstudianteProvider: React.FC<{ idSala: string; nombre?: string; icono?: string, dni?: string, children: React.ReactNode }> = ({
-  idSala,
-  nombre,
-  icono,
-  dni,
-  children,
-}) => {
+export const EncuestaEstudianteProvider: React.FC<{
+  idSala: string
+  nombre?: string
+  icono?: string
+  dni?: string
+  children: React.ReactNode
+}> = ({ idSala, nombre, icono, dni, children }) => {
   return (
     <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala, nombre, icono, dni)}>
       {children}

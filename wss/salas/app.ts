@@ -1,11 +1,11 @@
-import { randomUUID } from "crypto"
-import { capitalize, first, mergeDeep, shuffle } from "remeda"
+import { randomUUID } from 'crypto'
+import { capitalize, first, mergeDeep, shuffle } from 'remeda'
 
-import db from "../db"
-import { io, registrarSalaEnServer } from "../server"
-import { getSession, SocketConSesion } from "../middleware/session"
-import { SocketProfe } from "../middleware/roles"
-import { ConfigSala } from "../validators/salas"
+import db from '../db'
+import { io, registrarSalaEnServer } from '../server'
+import { getSession, SocketConSesion } from '../middleware/session'
+import { SocketProfe } from '../middleware/roles'
+import { ConfigSala } from '../validators/salas'
 
 export interface SalaData {
   id: string
@@ -42,44 +42,53 @@ export const conHandlers = (sala: SalaData) => ({
     const estudiantesData = await db.hgetall(`sala:${sala.id}:estudiantes`)
     const sesionesIds = Object.keys(estudiantesData)
 
-    const invalidas = sesionesIds.filter(sid => !getSession(sid))
+    const invalidas = sesionesIds.filter((sid) => !getSession(sid))
     if (invalidas.length > 0) {
       const emailProfe = await db.hget('salas_owners', sala.id)
       console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${emailProfe}:`, invalidas, ` limpiando...`)
-      invalidas.forEach(sid => {
+      invalidas.forEach((sid) => {
         db.hdel(`sala:${sala.id}:estudiantes`, sid)
         delete estudiantesData[sid]
       })
     }
 
     return sesionesIds
-      .map(sid => {
+      .map((sid) => {
         const session = getSession(sid)
-        return session ? {
-          ...session,
-          conectado: estudiantesData[sid] === '1'
-        } : null
+        return session
+          ? {
+              ...session,
+              conectado: estudiantesData[sid] === '1',
+            }
+          : null
       })
       .filter(Boolean)
   },
 
   /** Envía a admin, profe y estudiantes de la sala */
-  broadcast: async (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => Promise<any> = async data => data) => {
-
+  broadcast: async (
+    event: string,
+    data: unknown,
+    mapper: (data: unknown, socket: SocketConSesion) => Promise<any> = async (data) => data
+  ) => {
     const sock_profe = sockets_profes.get(sala.profe.email)
     if (!sock_profe) throw new Error(`Profe ${sala.profe.email} no tiene socket!`)
-    
+
     console.log(`📡 Broadcasteando evento '${event}' en sala ${sala.id}`)
 
     await Promise.all([
       // A los admins
-      ...io.of('/sala/admin').sockets.values()
-        .map(async s => s.emit(event, await mapper(data, s))),
+      ...io
+        .of('/sala/admin')
+        .sockets.values()
+        .map(async (s) => s.emit(event, await mapper(data, s))),
       // Al profe
       sock_profe.emit(event, await mapper(data, sock_profe)),
       // A los estudiantes
-      ...io.of(`/sala/${sala.id}/estudiante`).sockets.values()
-        .map(async s => s.emit(event, await mapper(data, s))),
+      ...io
+        .of(`/sala/${sala.id}/estudiante`)
+        .sockets.values()
+        .map(async (s) => s.emit(event, await mapper(data, s))),
     ])
   },
 
@@ -135,14 +144,13 @@ export async function crearSala(socket: SocketProfe) {
     pedir_dni: false,
     permitir_anonimo: true,
     // invitados: [],
-    nombre_profe: email
+    nombre_profe: email,
   }
 
   const config = {
     nombre_profe: socket.data.user.nombre || email,
-    ...socket.data.config_sala ?? {}
+    ...(socket.data.config_sala ?? {}),
   } as Partial<ConfigSala>
-
 
   const config_sala = mergeDeep(config_default, config) as ConfigSala
 
@@ -176,7 +184,6 @@ export async function getSalaById(salaId: string) {
   return conHandlers(JSON.parse(salaDataStr!) as SalaData)
 }
 
-
 /** Funciones de relaciones: */
 
 /** Obtiene el ID de la sala del profe, _creandola si no existe_ */
@@ -200,38 +207,138 @@ export async function getSalaByEmailProfe(email: string) {
 }
 
 /** Devuelve el socket de un profe por id de sala (el owner) */
-export async function getSocketProfeDeSala (salaId: string) {
+export async function getSocketProfeDeSala(salaId: string) {
   return (await getSalaById(salaId)).socketProfe()
 }
-
 
 // Generador de nombres de fantasía
 
 const nombres = [
-  'Burbujito', 'Pompón', 'Chispitas', 'Bolitas', 'Pelotín', 'Globito', 'Saltarín',
-  'Zigzag', 'Tintín', 'Pimpón', 'Bambú', 'Coco', 'Kiwi', 'Mango', 'Pera',
-  'Tofú', 'Sushi', 'Wasabi', 'Matcha', 'Oreo', 'Dorito', 'Nacho', 'Taco',
-  'Pixel', 'Emoji', 'WiFi', 'Oveja', 'Androide', 'Avatar', 'Bit', 'Byte',
-  'Neo', 'Zeta', 'Alfa', 'Beta', 'Gamma', 'Delta', 'Omega', 'Sigma',
-  'Turbo', 'Nitro', 'Flash', 'Sonic', 'Dash', 'Rush', 'Voltio', 'Chispa',
-  'Cosmo', 'Astro', 'Estelar', 'Nova', 'Quasar', 'Cohete', 'Cometa'
-];
+  'Burbujito',
+  'Pompón',
+  'Chispitas',
+  'Bolitas',
+  'Pelotín',
+  'Globito',
+  'Saltarín',
+  'Zigzag',
+  'Tintín',
+  'Pimpón',
+  'Bambú',
+  'Coco',
+  'Kiwi',
+  'Mango',
+  'Pera',
+  'Tofú',
+  'Sushi',
+  'Wasabi',
+  'Matcha',
+  'Oreo',
+  'Dorito',
+  'Nacho',
+  'Taco',
+  'Pixel',
+  'Emoji',
+  'WiFi',
+  'Oveja',
+  'Androide',
+  'Avatar',
+  'Bit',
+  'Byte',
+  'Neo',
+  'Zeta',
+  'Alfa',
+  'Beta',
+  'Gamma',
+  'Delta',
+  'Omega',
+  'Sigma',
+  'Turbo',
+  'Nitro',
+  'Flash',
+  'Sonic',
+  'Dash',
+  'Rush',
+  'Voltio',
+  'Chispa',
+  'Cosmo',
+  'Astro',
+  'Estelar',
+  'Nova',
+  'Quasar',
+  'Cohete',
+  'Cometa',
+]
 
 const apellidos = [
-  'Saltamontes', 'Mariposa', 'Libélula', 'Colibrí', 'Caracol', 'Lombriz', 'Oruga',
-  'Pompaburbuja', 'Remolino', 'Torbellino', 'Huracán', 'Tornado', 'Ciclón', 'Vendaval',
-  'Arcoíris', 'Destello', 'Centelleo', 'Parpadeo', 'Guiño', 'Pestañeo', 'Titileo',
-  'Rebote', 'Zigzagueo', 'Espiral', 'Voltereta', 'Pirueta', 'Mareo', 'Vértigo',
-  'Cosquillas', 'Carcajada', 'Risita', 'Sonrisa', 'Mueca', 'Guiño', 'Abrazo',
-  'Saltatrampas', 'Rompenubes', 'Cazaestrellas', 'Persueño', 'Atrapaluna', 'Robasonrisa',
-  'Comecocos', 'Bebesoda', 'Masticanubes', 'Tragaluces', 'Absorbebrisa', 'Soplafuego',
-  'Electrochoque', 'Megavoltio', 'Gigarayo', 'Teravatio', 'Nanómetro',
-  'Supersónico', 'Hiperbólico', 'Parabólico', 'Geométrico', 'Algebraico', 'Trigonométrico',
-  'Galáctico', 'Intergaláctico', 'Multiversal', 'Dimensional', 'Cuántico', 'Holográfico'
-];
+  'Saltamontes',
+  'Mariposa',
+  'Libélula',
+  'Colibrí',
+  'Caracol',
+  'Lombriz',
+  'Oruga',
+  'Pompaburbuja',
+  'Remolino',
+  'Torbellino',
+  'Huracán',
+  'Tornado',
+  'Ciclón',
+  'Vendaval',
+  'Arcoíris',
+  'Destello',
+  'Centelleo',
+  'Parpadeo',
+  'Guiño',
+  'Pestañeo',
+  'Titileo',
+  'Rebote',
+  'Zigzagueo',
+  'Espiral',
+  'Voltereta',
+  'Pirueta',
+  'Mareo',
+  'Vértigo',
+  'Cosquillas',
+  'Carcajada',
+  'Risita',
+  'Sonrisa',
+  'Mueca',
+  'Guiño',
+  'Abrazo',
+  'Saltatrampas',
+  'Rompenubes',
+  'Cazaestrellas',
+  'Persueño',
+  'Atrapaluna',
+  'Robasonrisa',
+  'Comecocos',
+  'Bebesoda',
+  'Masticanubes',
+  'Tragaluces',
+  'Absorbebrisa',
+  'Soplafuego',
+  'Electrochoque',
+  'Megavoltio',
+  'Gigarayo',
+  'Teravatio',
+  'Nanómetro',
+  'Supersónico',
+  'Hiperbólico',
+  'Parabólico',
+  'Geométrico',
+  'Algebraico',
+  'Trigonométrico',
+  'Galáctico',
+  'Intergaláctico',
+  'Multiversal',
+  'Dimensional',
+  'Cuántico',
+  'Holográfico',
+]
 
 export function nombreDeFantasia() {
   const nombre = capitalize(first(shuffle(nombres))!)
   const apellido = capitalize(first(shuffle(apellidos))!)
-  return `${nombre} ${apellido}`;
+  return `${nombre} ${apellido}`
 }

@@ -1,19 +1,19 @@
-import z from "zod";
+import z from 'zod'
 
-export const pollBase = z.object({
-  pregunta: z.string().min(1, "La pregunta es obligatoria"),
-  opciones: z.array(z.string()),
-  admiteAportes: z.boolean().optional().default(false),
-}).refine((datos) => datos.admiteAportes || datos.opciones.filter(op => op.trim().length > 0).length >= 2, {
-  message: "La pregunta debe tener al menos dos opciones o admitir aportes de los participantes"
-});
-
+export const pollBase = z
+  .object({
+    pregunta: z.string().min(1, 'La pregunta es obligatoria'),
+    opciones: z.array(z.string()),
+    admiteAportes: z.boolean().optional().default(false),
+  })
+  .refine((datos) => datos.admiteAportes || datos.opciones.filter((op) => op.trim().length > 0).length >= 2, {
+    message: 'La pregunta debe tener al menos dos opciones o admitir aportes de los participantes',
+  })
 
 export type CrearEncuesta = z.infer<typeof pollBase>
 
 export const voteValidator = z.object({
-  pollId: z.string().min(1, "El ID de la encuesta es obligatorio"),
-  optionId: z.string().min(1, "El ID de la opción es obligatorio"),
+  pollId: z.string().min(1, 'El ID de la encuesta es obligatorio'),
+  optionId: z.string().min(1, 'El ID de la opción es obligatorio'),
   aporte: z.string().optional(),
-});
-
+})

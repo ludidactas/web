@@ -1,34 +1,34 @@
-import { z } from "zod"
-import { RolEncuesta } from "../tipos"
+import { z } from 'zod'
+import { RolEncuesta } from '../tipos'
 
 export const PasaporteEstudianteSchema = z.object({
   rol: z.literal(RolEncuesta.Estudiante),
-  idSala: z.string({message: "El id de la sala es obligatorio"}).min(1),
+  idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
   nombre: z.string().optional(),
   icono: z.string().optional(),
   email: z.string().email('El email debe tener un formato válido').optional(),
-  dni: z.string().regex(/^\d+$/, 'El DNI debe contener solo dígitos').optional()
+  dni: z.string().regex(/^\d+$/, 'El DNI debe contener solo dígitos').optional(),
 })
 
 export const PasaporteProfeSchema = z.object({
   rol: z.literal(RolEncuesta.Profe),
-  token: z.string().min(1)
+  token: z.string().min(1),
 })
 
 export const PasaporteAdminSchema = z.object({
   rol: z.literal(RolEncuesta.Admin),
-  token: z.string().min(1)
+  token: z.string().min(1),
 })
 
 export const PasaporteTesterSchema = z.object({
   rol: z.literal(RolEncuesta.Tester),
   url: z.string(),
-  nombre: z.string().optional()
+  nombre: z.string().optional(),
 })
 
 export const PasaportePublicoSchema = z.object({
   rol: z.literal(RolEncuesta.Publico),
-  idSala: z.string().min(1)
+  idSala: z.string().min(1),
 })
 
 export const PasaporteSchema = z.discriminatedUnion('rol', [
@@ -64,9 +64,5 @@ export const SesionAdminSchema = z.object({
   sessionId: z.string().min(1),
   token: z.string(),
 })
-  
-export const SesionSchema = z.discriminatedUnion('rol', [
-  SesionEstudianteSchema,
-  SesionProfeSchema,
-  SesionAdminSchema,
-])
+
+export const SesionSchema = z.discriminatedUnion('rol', [SesionEstudianteSchema, SesionProfeSchema, SesionAdminSchema])

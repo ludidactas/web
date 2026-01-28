@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import Redis from 'ioredis'
 
 // Se asume que hay un server redis corriendo
 const redis = new Redis({
@@ -9,9 +9,12 @@ const redis = new Redis({
 /** Keys de hasmaps que tenemos en redis (declaración) */
 type WssHashmaps =
   // Globales de sala
-  'salas_owners' | 'owners_salas' | 'salas'
+  | 'salas_owners'
+  | 'owners_salas'
+  | 'salas'
   // Por sala
-  | `sala:${string}:estudiantes` | `sala:${string}:polls`
+  | `sala:${string}:estudiantes`
+  | `sala:${string}:polls`
   // Por encuesta
   | `sala:${string}:poll:${string}:votos`
 
@@ -22,11 +25,11 @@ type WssKeys = `sala:${string}:polls:focused`
 type WssSets = `sala:${string}:poll:${string}:votantes`
 
 /** Sobreescribimos los tipos de redis para auto-ayudarnos con hints */
-interface RedisWss extends Omit<Redis, 'smismember'> { 
+interface RedisWss extends Omit<Redis, 'smismember'> {
   hget(key: WssHashmaps, field: string): Promise<string | null>
   get(key: WssKeys): Promise<string | null>
   set(key: WssKeys, value: string): Promise<'OK'>
-  // Ojo, estamos chamuyando un poco con esta: 
+  // Ojo, estamos chamuyando un poco con esta:
   smismember(key: WssSets, ...members: string[]): Promise<number[]>
 }
 

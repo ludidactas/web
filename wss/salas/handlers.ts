@@ -1,13 +1,11 @@
-
-import { Socket } from "socket.io"
-import { conErrorHandling } from "../middleware/error-handling"
-import { profeSala } from "../polls/app"
-import { SocketConSesion } from "../middleware/session"
-import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from "./app"
-import { SocketEstudiante, SocketProfe } from "../middleware/roles"
+import { Socket } from 'socket.io'
+import { conErrorHandling } from '../middleware/error-handling'
+import { profeSala } from '../polls/app'
+import { SocketConSesion } from '../middleware/session'
+import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
+import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 
 export const handlersSalaProfe = async (socket: SocketProfe) => {
-
   const safe = conErrorHandling(socket)
 
   if (!socket.data.user.email) throw new Error('Profe sin email en sesión!')
@@ -20,27 +18,35 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
 
-  socket.on('sala:listar_estudiantes', safe(async () => {
-    socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-  }))
-
-  socket.on('sala:limpar_estudiantes_sala', safe(async () => {
-    await sala.limpiarEstudiantes()
-    socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-  }))
-
-  socket.on('sala:abrir', safe(async () => {
-    socket.emit('sala:abierta', {
-      sala: sala.raw(),
-      polls: await profe.listarEncuestas(),
-      estudiantes: await sala.listarEstudiantes()
+  socket.on(
+    'sala:listar_estudiantes',
+    safe(async () => {
+      socket.emit('sala:estudiantes', await sala.listarEstudiantes())
     })
-  }))
+  )
+
+  socket.on(
+    'sala:limpar_estudiantes_sala',
+    safe(async () => {
+      await sala.limpiarEstudiantes()
+      socket.emit('sala:estudiantes', await sala.listarEstudiantes())
+    })
+  )
+
+  socket.on(
+    'sala:abrir',
+    safe(async () => {
+      socket.emit('sala:abierta', {
+        sala: sala.raw(),
+        polls: await profe.listarEncuestas(),
+        estudiantes: await sala.listarEstudiantes(),
+      })
+    })
+  )
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
-
 }
 
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
@@ -49,7 +55,9 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   const user = socket.data.session.nombre
   const sala = await getSalaById(idSala)
 
-  console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`)
+  console.log(
+    `🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`
+  )
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   const notificar = safe(async () => {
@@ -58,12 +66,14 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   })
   await notificar()
 
-  socket.on('disconnect', safe(async (reason) => {
-    console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-    await sala.marcarEstudianteAusente(socket.data.session.id!)
-    sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.id! })
-  }))
-
+  socket.on(
+    'disconnect',
+    safe(async (reason) => {
+      console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+      await sala.marcarEstudianteAusente(socket.data.session.id!)
+      sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.id! })
+    })
+  )
 }
 
 /** Handlers para exponer info pública de la sala */
@@ -86,4 +96,3 @@ export const handlersAdmin = async (socket: SocketConSesion) => {
     console.log(`❌ Admin ${socket.id} desconectado: ${reason}`)
   })
 }
-

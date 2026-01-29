@@ -9,6 +9,7 @@ const WssSessionBaseSchema = z.object({
 
 const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolEncuesta.Estudiante),
+  idSala: z.string(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
   email: z.string().email().optional(), // Por ahora no está en uso

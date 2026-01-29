@@ -1,13 +1,12 @@
 import { randomUUID } from 'crypto'
-import { pick } from 'remeda'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import db from '../db'
+import { nombreDeFantasia } from '../salas/utils'
 import { RolEncuesta } from '../tipos'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema, SesionSchema } from '../validators/auth'
-import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
-import { nombreDeFantasia } from '../salas/utils'
+import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -18,7 +17,6 @@ export type SocketConSesion = Socket<
   DefaultEventsMap,
   {
     session: WssServerSession
-    [etc: string]: any
   }
 >
 
@@ -26,14 +24,7 @@ export type SocketConSesion = Socket<
 
 const sessions = new Map<string, WssServerSession>()
 
-const setSession = (sessionId: string, data: WssServerSession) => {
-  sessions.set(sessionId, data)
-}
-
-const deleteSession = (sessionId: string) => {
-  sessions.delete(sessionId)
-}
-
+/** Abre la sesión en el storage, la attachea al socket y la emite de inmediato al cliente */
 const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
   // Creamos el objeto (y lo validamos)
   const sessionData = WssServerSessionSchema.parse({
@@ -43,14 +34,15 @@ const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) =
     agente: socket.handshake.headers['user-agent'],
   }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
 
-  // Si es estudiante y no tiene id (es decir, si el pasaporte llegó sin dni ni email), le asignamos un nombre de fantasía y el sessionId como id
+  // Caso especial anónimos:
+  // Si es estudiante y no tiene id (es decir, si el pasaporte llegó sin dni ni email ni nombre), le asignamos un nombre de fantasía y el sessionId como id
   if (payload.rol === RolEncuesta.Estudiante && !sessionData.id) {
     sessionData.nombre = nombreDeFantasia()
     sessionData.id = sessionData.sessionId
   }
 
   // Guardamos la sesión
-  setSession(sessionData.sessionId, sessionData)
+  sessions.set(sessionData.sessionId, sessionData)
 
   // La adjuntamos al socket
   socket.data.session = sessionData
@@ -70,10 +62,12 @@ export const getSession = (sessionId: string) => {
 
 /**
  * Hace login al server de websockets.
- *
- * Si hay token, autentica que sea emitido por el servidor Next y usa su info para abrir una sesión.
- *
- * Si no hay token, abre una sesión anónima de estudiante.
+ * - Valida el auth del socket
+ * - Abre una sesión acorde al rol
+ *  - Si es estudiante, verifica que la sala exista y abre una sesión anónima.
+ * - Si es profe o admin:
+ *  - Valida el token, autentica que sea emitido por el servidor Next y usa su info para abrir una sesión.
+ * - Adjunta la sesión al socket
  */
 const login = async (socket: SocketConSesion) => {
   // Extraemos el auth del socket y lo validamos
@@ -88,9 +82,7 @@ const login = async (socket: SocketConSesion) => {
     // Verificamos que la sala exista
     if (!(await db.hexists('salas', auth.idSala))) throw new Error(`La sala ${auth.idSala} no existe!`)
 
-    socket.data.sala = auth.idSala
-
-    openSession(socket, { ...auth, id: auth.dni || auth.email }) // Si no tiene dni, usamos el nombre como id
+    openSession(socket, { ...auth, id: auth.dni || auth.email || auth.nombre }) // Si no tiene dni, usamos el nombre como id
   }
 
   // Sesión de profe o admin
@@ -98,12 +90,6 @@ const login = async (socket: SocketConSesion) => {
     // Si es profe o admin, necesitamos token
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
     const payload = decodearTokenNextAuth(auth.token)
-
-    // Le seteamos al user el email y el nombre del token emitido por next
-    socket.data.user = {
-      email: payload.email,
-      nombre: payload.name ?? 'Sin nombre',
-    }
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
     if (registradoComoAdmin(payload.email) && auth.rol === RolEncuesta.Admin) {
@@ -144,7 +130,7 @@ const validarSession = async (socket: SocketConSesion) => {
     // Válida para profes o admins si están solicitando entrar como estudiantes
     if (sessionData.rol === RolEncuesta.Estudiante) {
       // Le attacheamos al socket la data de sesión
-      socket.data = { ...(socket.data || {}), session }
+      socket.data.session = session
       return
     }
 
@@ -162,12 +148,12 @@ const validarSession = async (socket: SocketConSesion) => {
         throw new Error(`Sesión ${session.sessionId} no válida para el usuario ${payload.email}!`)
 
       // Le attacheamos al socket la data de sesión
-      socket.data = { ...(socket.data || {}), session, user: pick(session, ['email', 'nombre']) }
+      socket.data = { ...(socket.data || {}), session }
     }
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error
     console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
-    deleteSession(sessionData.sessionId)
+    sessions.delete(sessionData.sessionId)
     throw err
   }
 }
@@ -181,9 +167,11 @@ const validarSession = async (socket: SocketConSesion) => {
 export const conSession = async (socket: Socket, next: (err?: ExtendedError) => void) => {
   try {
     if (socket.handshake.auth.sessionId) {
+      // Si el socket trae sessionId, validamos la sesión existente
       console.log('\n🔑 Conexión entrante con sesión existente...')
       await validarSession(socket)
     } else {
+      // Si no, login
       console.log('\n🔑 Conexión entrante efectuando login...')
       await login(socket)
     }

@@ -7,7 +7,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  const sala = await getSalaByEmailProfe(socket.data.user.email)
+  const sala = await getSalaByEmailProfe(socket.data.session.email)
   const profe = await profeSala(sala.profe.email)
 
   socket.on(

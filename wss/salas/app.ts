@@ -115,7 +115,7 @@ export const conHandlers = (sala: SalaData) => ({
 
 /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
 export async function obtenerOCrearSala(socket: SocketProfe): Promise<ReturnType<typeof conHandlers>> {
-  const email = socket.data.user.email
+  const email = socket.data.session.email
 
   // Registramos que el profe nos está hablando desde este socket:
   sockets_profes.set(email, socket)
@@ -137,7 +137,7 @@ export async function obtenerOCrearSala(socket: SocketProfe): Promise<ReturnType
 /** Crea una sala nueva en memoria y la asigna a un profe */
 export async function crearSala(socket: SocketProfe) {
   const id = randomUUID().split('-')[0]
-  const email = socket.data.user.email
+  const email = socket.data.session.email
 
   // Todavía no está en uso
   const config_default: ConfigSala = {
@@ -148,7 +148,7 @@ export async function crearSala(socket: SocketProfe) {
   }
 
   const config = {
-    nombre_profe: socket.data.user.nombre || email,
+    nombre_profe: socket.data.session.nombre || email,
     ...(socket.data.config_sala ?? {}),
   } as Partial<ConfigSala>
 

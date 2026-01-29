@@ -4,14 +4,13 @@ import { RolEncuesta } from '../tipos'
 import { WssEstudianteSession, WssProfeSession } from '../validators/session'
 import { SocketConSesion } from './session'
 
-/** Scoket con sesión de profe. Además de .session tiene .user y .config_sala */
+/** Scoket con sesión de profe. Además de .session puede tener .config_sala */
 export type SocketProfe = Socket<
   DefaultEventsMap,
   DefaultEventsMap,
   DefaultEventsMap,
   {
     session: WssProfeSession
-    user: { email: string; nombre?: string; dni?: string }
     /** _Puede_ venir la config de la sala al momento de crearla */
     config_sala?: Partial<ConfigSala>
   }
@@ -24,8 +23,6 @@ export type SocketEstudiante = Socket<
   DefaultEventsMap,
   {
     session: WssEstudianteSession
-    /** ID de la sala a la que se conecta el estudiante */
-    sala: string
   }
 >
 

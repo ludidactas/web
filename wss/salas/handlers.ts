@@ -8,7 +8,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  if (!socket.data.user.email) throw new Error('Profe sin email en sesión!')
+  if (!socket.data.session.email) throw new Error('Profe sin email en sesión!')
 
   // Se conectó un profe, le armamos una sala:
   const sala = await obtenerOCrearSala(socket)

@@ -129,6 +129,9 @@ const validarSession = async (socket: SocketConSesion) => {
     // Sesión de estudiante (anónima)
     // Válida para profes o admins si están solicitando entrar como estudiantes
     if (sessionData.rol === RolEncuesta.Estudiante) {
+      // Verificamos que la sala siga existiendo
+      if (!(await db.hexists('salas', sessionData.idSala)))
+        throw new Error(`La sala ${sessionData.idSala} ya no existe!`)
       // Le attacheamos al socket la data de sesión
       socket.data.session = session
       return
@@ -148,7 +151,7 @@ const validarSession = async (socket: SocketConSesion) => {
         throw new Error(`Sesión ${session.sessionId} no válida para el usuario ${payload.email}!`)
 
       // Le attacheamos al socket la data de sesión
-      socket.data = { ...(socket.data || {}), session }
+      socket.data.session = session
     }
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error

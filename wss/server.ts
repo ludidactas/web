@@ -6,6 +6,7 @@ import { handlersEncuestasEstudiante, handlersEncuestasProfe } from './polls/han
 import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from './salas/handlers'
 import { handlersTest } from './test/handlers'
 import { esAdmin, esProfe, SocketEstudiante, SocketProfe } from './middleware/roles'
+import { conPermisosDe } from './middleware/auth'
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
 
@@ -89,6 +90,7 @@ export function registrarSalaEnServer(salaId: string) {
   // Registramos la sala en el servidor (endpoint de estudiantes)
   io.of(`/sala/${salaId}/estudiante`)
     .use(conSession)
+    .use(conPermisosDe(salaId))
     .on('connect_error', (error) => {
       console.log(`❌ Error en /sala/${salaId}/estudiante:`, error.message)
     })

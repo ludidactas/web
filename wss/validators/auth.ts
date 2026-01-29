@@ -51,6 +51,7 @@ export type PasaporteAdmin = z.infer<typeof PasaporteAdminSchema>
 export const SesionEstudianteSchema = z.object({
   rol: z.literal(RolEncuesta.Estudiante),
   sessionId: z.string().min(1),
+  idSala: z.string().min(1),
 })
 
 export const SesionProfeSchema = z.object({

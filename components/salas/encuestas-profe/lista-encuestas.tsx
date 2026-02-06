@@ -67,10 +67,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
       {/* Pregunta desplegable */}
       <Accordion type="single" collapsible className="flex flex-col  justify-center">
         <AccordionItem value={'item-1'}>
-          <AccordionTrigger className="flex w-full gap-4 bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30 rounded-full px-10 justify-between items-center cursor-pointer hover:bg-[#00B0D2]/20 transition-colors">
+          <AccordionTrigger
+            className={cn(
+              'flex w-full gap-4',
+              'bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30',
+              'rounded-2xl px-4 md:px-8 justify-between items-center cursor-pointer ',
+              'hover:bg-[#00B0D2]/20 transition-colors'
+            )}
+          >
             <div className="flex gap-2 items-center">
-              <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-10 h-10" />
-              <h3 className="text-sm break-words font-bold md:text-xl">{encuesta.pregunta}</h3>
+              <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
+              <h3 className="text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex flex-col md:gap-1 items-end">
@@ -83,7 +90,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                 >
                   {estado}
                 </span>
-                <span className="text-[0.6rem] whitespace-nowrap text-slate-400 text-right">
+                <span className="text-[0.6rem]  text-slate-400 text-right">
                   {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
                 </span>
 

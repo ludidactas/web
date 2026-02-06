@@ -126,7 +126,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         <div
           className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
         >
-          <MessageCircleQuestionIcon size={60} className="self-start" />
+          <MessageCircleQuestionIcon size={60} className="self-start shrink-0" />
           {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
           {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>

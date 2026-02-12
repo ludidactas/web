@@ -3,12 +3,14 @@ import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
 import ArrowUpLd from '@/components/custom/ld-arrow-up'
+import { LdSvg } from '@/components/custom/ld-svg'
+import contacto from '@/svg/titles/ContactoSVGO.svg'
 
 export default function Contacto() {
   return (
     <div className="contactoini">
       <Pantalla classname='mb-0'
-        title="Contacto"
+        title={<LdSvg className='h-8 lg:h-20' SvgComponent={contacto}/>}
         one={
           <div className='flex flex-col max-w-[720px] items-center p-8 text-[1.5em] md:text-xl gap-4'>
             <p className="text-[#46BFD7] font-bold mb-4">

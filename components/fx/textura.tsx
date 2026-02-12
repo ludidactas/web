@@ -31,7 +31,7 @@ const Textura = ({ children }: PropsWithChildren) => {
 
   return (
     <div className='w-screen'>
-      <div ref={canvasContainer} className="fixed z-[-1]"></div>
+      <div ref={canvasContainer} className="fixed lg:z-[-1]"></div>
       {children}
     </div>
   )

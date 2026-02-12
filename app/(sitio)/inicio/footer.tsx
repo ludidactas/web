@@ -2,13 +2,15 @@ import Link from 'next/link'
 import { Instagram } from 'lucide-react'
 import Image from 'next/image'
 import { titulo } from '@/components/fonts'
+import { cn } from '@/lib/utils'
 
 export default function Footer() {
-  return (
-    <div className="flex flex-col items-center bg-slate-200/50 text-center pt-10">
-      {/* Desktop */}
+  return (<>
+  
+    <div className="flex flex-col items-center text-center  bg-indigo-300/50">
+             <div className={cn('shape-divider-waves w-full text-white')}/>
 
-      <div className="text-[0.8em] lg:text-[14px] lg:text-[15px] flex flex-col items-center text-center pt-1 dark:text-slate-50 gap-8">
+      <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center dark:text-slate-50 gap-4 pt-10">
         <div className="flex flex-col items-center gap-2">
           <Image className="w-[50px] lg:w-[100px]" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
           <Image className="w-[200px] lg:w-[300px]" src="/img/lema_sketchy.gif" alt={''} width={300} height={300} />
@@ -36,5 +38,6 @@ export default function Footer() {
         </div>
       </div>
     </div>
+  </>
   )
 }

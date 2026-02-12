@@ -13,7 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </div>
 
       {/* Bordes punteada exterior */}
-      <div className="mx-2 lg:mx-10 border-x-8 border-slate-200 border-dashed flex flex-col items-center ">
+      <div className="mx-2 lg:mx-10  flex flex-col items-center ">
         {children}
       </div>
 

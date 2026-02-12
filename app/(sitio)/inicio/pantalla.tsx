@@ -1,10 +1,11 @@
 // import { LdSvg } from '@/components/custom/ld-svg'
 import { titulo } from '@/components/fonts'
+import { cn } from '@/lib/utils'
 // import { secuenciar } from '@/lib/utils';
 // import CajaTexto from '@/svg/CajaPrueba3SVGO.svg'
 
 export interface PantallaProps {
-  title: string,
+  title?: React.ReactNode,
   one: JSX.Element,
   two: JSX.Element,
   btn: JSX.Element,
@@ -15,13 +16,15 @@ export interface PantallaProps {
 }
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }: PantallaProps) => {
-  return (
-    <div className={`w-[100vw] h-[100vh] flex-col items-center place-content-center mb-40 ${classname}`}>
+  return (<>
+       <div className={cn('shape-divider-waves h-[90px] w-full text-white')}/>
+
+    <div className={`w-[100vw] h-[100vh] flex-col items-center place-content-center mb-20 ${classname}`}>
 
       {/* DESKTOP */}
       <div className="hidden lg:flex flex-col items-center my-10 ">
         <h2
-          className={`${titulo.className} text-7xl mb-20 drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-[#9B74D0] text-transparent bg-clip-text`}
+          className={`${titulo.className} text-7xl mb-20 drop-shadow-[4px_4px_2px_rgba(20,20,20)] bg-gradient-to-r from-cyan-500 to-[#9B74D0] text-transparent bg-clip-text`}
         >
           {title}
         </h2>
@@ -29,7 +32,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
         <div className={`flex items-center gap-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
 
           <div
-            className=" flex flex-col w-fit gap-8 text-left bg-white/60"
+            className=" flex flex-col w-fit gap-8 text-left bg-white/60 p-10 rounded-xl"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
             {one}
@@ -47,8 +50,8 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
 
       {/* MOBILE */}
 
-      <div className="flex lg:hidden flex-col place-content-center items-center w-full h-full">
-        <div className="flex flex-col mx-8 items-center text-[0.5em] text-center bg-white p-4">
+      <div className="flex lg:hidden flex-col place-content-center items-center w-full h-full my-20 pb-10">
+        <div className="flex flex-col mx-8 items-center text-[0.5em] text-center p-4">
           <h2
             data-aos="fade-down"
             className={`${titulo.className} text-4xl drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text`}
@@ -62,7 +65,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
           </div>
 
           <div
-            className="w-full self-center text-center"
+            className="w-full self-center text-center p-2 rounded-xl bg-white/50"
             data-aos={espejado ? 'fade-left' : 'fade-right'}
           >
             {one}
@@ -76,6 +79,11 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
         </div>
       </div>
     </div>
+
+    {/* Shape divider bottom */}
+        <div className={cn('shape-divider-waves-bottom h-[90px] w-full text-white')}/>
+
+    </>
   )
 }
 export default Pantalla

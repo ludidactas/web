@@ -5,14 +5,16 @@ import Image from 'next/image'
 import Pantalla from './pantalla'
 import { Hl } from './highlight'
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
+import { LdSvg } from '@/components/custom/ld-svg'
+import propuestas from '@/svg/titles/PropuestasSVGO.svg'
 
 export default function Propuestas() {
   return (
     <div className="propuestasini">
       <Pantalla
-        title="Propuestas"
+        title={<LdSvg className='h-8 lg:h-20' SvgComponent={propuestas}/>}
         one={
-          <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.4em] md:text-[0.9em]">
+          <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.4em] md:text-[1em]">
             <p>
               El proyecto nace, vive y se sostiene en su comunidad y se ordena en torno la visión de construir la
               educación que queremos ver.

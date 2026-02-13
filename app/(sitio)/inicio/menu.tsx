@@ -1,6 +1,9 @@
+'use client'
 import Link from 'next/link'
-import { ComponentProps } from 'react'
-import { MenuMobile } from './menu-mobile'
+import { ComponentProps, useState } from 'react'
+import { AlignJustify } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Separator } from '@radix-ui/react-dropdown-menu'
 
 //version props derivados existentes en Link
 const MenuLink = (props: ComponentProps<typeof Link>) => (
@@ -9,6 +12,55 @@ const MenuLink = (props: ComponentProps<typeof Link>) => (
     className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black "
   />
 )
+
+const MenuMobile = () => {
+  const [open, setOpen] = useState(false)
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+  }
+
+  const handleItemClick = () => {
+    setOpen(false)
+  }
+
+  return (
+    <div>
+      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+        <DropdownMenuTrigger>
+          <AlignJustify size={30} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="text-right font-bold bg-white/60 text-black  rounded-xl p-4 mr-4" onClick={handleItemClick}>
+          <DropdownMenuItem onSelect={handleItemClick}>
+            <Link href="/identidad">Identidad</Link>
+          </DropdownMenuItem>
+          <Separator className="my-1 border border-black border-dashed" />
+          <DropdownMenuItem onSelect={handleItemClick}>
+            <Link href="/propuestas">Propuestas</Link>
+          </DropdownMenuItem>
+          <Separator className="my-1 border border-black border-dashed" />
+          <DropdownMenuItem onSelect={handleItemClick}>
+            <Link href="/sala">Sala</Link>
+          </DropdownMenuItem>
+          <Separator className="my-1 border border-black border-dashed" />
+          <DropdownMenuItem onSelect={handleItemClick}>
+            <Link target="_blank" href="https://www.instagram.com/ludidactas/">
+              Contacto
+            </Link>
+          </DropdownMenuItem>
+          <Separator className="my-1 border border-black border-dashed" />
+          <DropdownMenuItem onSelect={handleItemClick}>
+            <Link target="_blank" href="https://ludidactas.medium.com/">
+              Blog
+            </Link>
+            <Separator className="my-1 border border-black border-dashed" />
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 
 const MenuDesktop = () => (
   <div className="flex gap-4 bg-white/50 items-center mr-10">

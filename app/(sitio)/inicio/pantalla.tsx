@@ -11,20 +11,22 @@ export interface PantallaProps {
   btn: JSX.Element,
   scroll: JSX.Element,
   espejado?: boolean,
-  classname?:string,
+  classname?: string,
 
 }
 
 const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }: PantallaProps) => {
   return (<>
-       <div className={cn('shape-divider-waves h-[90px] w-full text-white')}/>
+
+    {/* Shape divider top */}
+    <div className={cn('shape-divider-waves h-[90px] w-full text-white')} />
 
     <div className={`w-[100vw] h-[100vh] flex-col items-center place-content-center mb-20 ${classname}`}>
 
       {/* DESKTOP */}
       <div className="hidden lg:flex flex-col items-center my-10 ">
         <h2
-          className={`${titulo.className} text-7xl mb-20 drop-shadow-[4px_4px_2px_rgba(20,20,20)] bg-gradient-to-r from-cyan-500 to-[#9B74D0] text-transparent bg-clip-text`}
+          className={`${titulo.className} text-7xl mb-20 drop-shadow-[4px_4px_2px_rgba(20,20,20)]`}
         >
           {title}
         </h2>
@@ -81,9 +83,9 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
     </div>
 
     {/* Shape divider bottom */}
-        <div className={cn('shape-divider-waves-bottom h-[90px] w-full text-white')}/>
+    <div className={cn('shape-divider-waves-bottom h-[90px] w-full text-white')} />
 
-    </>
+  </>
   )
 }
 export default Pantalla

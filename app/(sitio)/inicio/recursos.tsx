@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Pantalla from './pantalla'
 import { LdSvg } from '@/components/custom/ld-svg'
 import salasRecursos from '@/svg/titles/SalasRecursosSVGO.svg'
+import { Hl } from './highlight'
 
 export default function Recursos() {
   return (
@@ -14,13 +15,14 @@ export default function Recursos() {
         title={<LdSvg className='h-8 lg:h-20' SvgComponent={salasRecursos}/>}
         one={
           <div className='flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl'>
+             <p>El primer recurso que hemos desarrollado es una <Hl>sala de herramientas de para la gestión de interactividad en las clases online</Hl>.
+              Está disponible para que la utilices conectándote con tu cuenta de google. </p>
             <p>
               Estamos trabajando en hacer disponibles en el sitio los contenidos producidos en los talleres, cursos y
               seminarios de modo que este funcione como biblioteca de recursos y material de referencia, abierto y
               gratuito, para docentes y talleristas.
             </p>
-            <p>El primer recurso que hemos desarrollado es una sala de herramientas de para la gestión de interactividad en las clases online.
-              Está disponible para que la utilices conectándote con tu cuenta de google. </p>
+           
           </div>
         }
         two={<Imagenes />}

@@ -5,7 +5,7 @@ import db from '../db'
 import { SocketProfe } from '../middleware/roles'
 import { getSession, SocketConSesion } from '../middleware/session'
 import { io, registrarSalaEnServer } from '../server'
-import { ConfigSala } from '../validators/salas'
+import { configSala, ConfigSala } from '../validators/salas'
 
 export interface SalaData {
   id: string
@@ -107,6 +107,19 @@ export const conHandlers = (sala: SalaData) => ({
   /** Marca un estudiante como ausente en la sala */
   marcarEstudianteAusente: async (sessionId: string) => {
     await db.hset(`sala:${sala.id}:estudiantes`, sessionId, '0')
+  },
+
+  /** Valida lo que recibe y si pasa actualiza la config de la sala */
+  actualizarConfig: async (payload: unknown) => {
+    // Validamos
+    const config = configSala.strict().partial().parse(payload)
+    const configActual = sala.config
+    const nuevaConfig = mergeDeep(configActual, config) as ConfigSala
+    sala.config = nuevaConfig
+
+    await db.hset('salas', sala.id, JSON.stringify(sala))
+
+    return sala
   },
 
   /** Devuelve solo la data serializable (sin funciones) */

@@ -1,9 +1,9 @@
 import { Socket } from 'socket.io'
 import { conErrorHandling } from '../middleware/error-handling'
-import { profeSala } from '../polls/app'
-import { SocketConSesion } from '../middleware/session'
-import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
+import { SocketConSesion } from '../middleware/session'
+import { profeSala } from '../polls/app'
+import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
@@ -17,6 +17,16 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   // socket.emit('sala:abierta', { sala: sala.raw(), polls: profe.listarEncuestas(), estudiantes: getEstudiantesEnSala(sala.id) })
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
+
+  socket.on('sala:actualizar_config', safe(async (payload: unknown) => { 
+    // `actualizarConfig` valida
+    const salaUpdateada = await sala.actualizarConfig(payload)
+
+    // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
+
+    // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
+    await sala.broadcast('sala:config_actualizada', salaUpdateada.config)
+  }))
 
   socket.on(
     'sala:listar_estudiantes',
@@ -43,6 +53,13 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       })
     })
   )
+
+  // Emisión inicial de la config de la sala al profe, para que tenga la config al abrir la sala
+  const emitir = safe(async () => {
+    socket.emit('sala:config_actualizada', sala.config)
+  })
+
+  await emitir()
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
@@ -83,7 +100,7 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   const emitir = safe(async () => {
     const sala = await getSalaById(idSala)
     if (!sala) throw new Error(`Sala ${idSala} no existe!`)
-    socket.emit('sala:config', sala.config)
+    socket.emit('sala:config_actualizada', sala.config)
   })
 
   await emitir()

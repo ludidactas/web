@@ -7,7 +7,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <Textura>
       <Topbar/>
       {/* Contenido pantallas de inicio */}
-      <div className="mx-2 flex flex-col items-center ">
+      <div className="flex flex-col items-center ">
         {children}
       </div>
       <Footer />

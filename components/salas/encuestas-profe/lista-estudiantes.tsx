@@ -3,9 +3,10 @@ import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { cn, exportarPlanilla } from '@/lib/utils'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
-import { Copy, Download, Eraser, SquareCheckBig, Users, X } from 'lucide-react'
+import { Copy, Download, Eraser, SquareCheckBig, Users, X, Settings } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
 import { useEncuestaProfe } from './encuestas-profe-context'
+import PanelConfigSala from './panel-config-sala'
 
 export const ListaEstudiantes = () => {
   const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
@@ -78,6 +79,18 @@ export const ListaEstudiantes = () => {
             </HoverCardTrigger>
             <HoverCardContent>
               <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Exportar a Excel</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger>
+              <PanelConfigSala>
+                <button className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Settings size={20} />
+                </button>
+              </PanelConfigSala>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Configuración</p>
             </HoverCardContent>
           </HoverCard>
         </div>

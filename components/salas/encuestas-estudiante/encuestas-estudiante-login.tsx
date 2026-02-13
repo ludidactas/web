@@ -1,22 +1,22 @@
 'use client'
 
+import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 import { LdSvg } from '@/components/custom/ld-svg'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { oscilar } from '@/lib/animaciones'
 import LoginEst from '@/svg/loginEst.svg'
-import { animate, spring, stagger } from 'animejs'
 import { RolEncuesta } from '@/wss/tipos'
+import { PasaportePublico } from '@/wss/validators/auth'
+import { animate, spring, stagger } from 'animejs'
 import Image from 'next/image'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import { oscilar } from '@/lib/animaciones'
-import { PasaportePublico } from '@/wss/validators/auth'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
-import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
-import useConfirmarConDelay from '@/components/hooks/use-delay'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -37,6 +37,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
   const { socket, estado } = useServerWebsockets(authPublico)
 
+  // Aguantamos un segundo antes de confirmar que la sala no existe
   const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(
     () => estado === StatusDeConexion.Conectado && !configSala,
     1000
@@ -45,13 +46,22 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // Al obtener un socket suscribimos a sus señales
   useEffect(() => {
     if (socket) {
-      socket.on('sala:config', setConfigSala)
+      socket.on('sala:config_actualizada', setConfigSala)
     }
   }, [socket])
+
+  // DEBUG
+  // useEffect(() => {
+  //   console.log(configSala)
+  // }, [configSala])
+
+  const mensajeDeAuth = `Ingresá con tu nombre${configSala?.pedir_dni ? ' y DNI' : ''}`
+  const nombreSala = configSala?.nombre_profe ? `de ${configSala.nombre_profe}` : idSala
 
   const inputNombreRef = useRef<HTMLInputElement>(null)
   const inputDNIRef = useRef<HTMLInputElement>(null)
 
+  // Cargamos lo que hubiera en el localStorage
   useEffect(() => {
     const storedName = localStorage.getItem(`encuestas-nombre-${idSala}`)
     if (storedName) {
@@ -63,11 +73,12 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     }
   }, [idSala])
 
+  // Al clickear en conectarse
   const handleConectarse = () => {
     const valueNombre = inputNombreRef.current?.value?.trim()
     const valueDNI = inputDNIRef.current?.value?.trim()
 
-    if (!valueDNI) {
+    if (configSala?.pedir_dni && !valueDNI) {
       toast.warning(`Falta el DNI!`)
       return
     }
@@ -76,11 +87,13 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
       setNombre(valueNombre)
       localStorage.setItem(`encuestas-nombre-${idSala}`, valueNombre)
     }
+
     if (valueDNI) {
       setDNI(valueDNI)
       localStorage.setItem(`encuestas-dni-${idSala}`, valueDNI)
     }
 
+    // Esto triggerea el ingreso (que se renderice el `EncuestaEstudianteProvider`)
     setIngresado(true)
   }
 
@@ -139,13 +152,15 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
             <Image className="w-[200px] md:w-[800px]" src="/img/lema_sketchy.gif" alt={''} width={200} height={200} />
           </div>
         </div>
+
         <p className="w-80">
-          {' '}
-          Estás a punto de ingresar a la sala <span className="text-teal-500">{configSala.nombre_profe ?? idSala}</span>
-          . Ingresa tu nombre y DNI.
+          Estás a punto de ingresar a la sala <span className="text-teal-500">{nombreSala}</span>.
         </p>
+        <p className="w-80">{mensajeDeAuth}.</p>
+
         <div className="flex flex-col gap-2">
           <div className="flex flex-col gap-2 pt-8">
+            {/* Nombre -- lo pedimos siempre */}
             <Input
               className=" bg-indigo-100/50"
               placeholder="Ingresá tu nombre"
@@ -159,22 +174,26 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
                 }
               }}
             />
-            <Input
-              className=" bg-indigo-100/50"
-              placeholder="Ingresá tu DNI"
-              id="dni"
-              ref={inputDNIRef}
-              defaultValue={dni}
-              required
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleConectarse()
-                }
-              }}
-            />
+
+            {/* DNI -- configurable */}
+            {configSala.pedir_dni && (
+              <Input
+                className=" bg-indigo-100/50"
+                placeholder="Ingresá tu DNI"
+                id="dni"
+                ref={inputDNIRef}
+                defaultValue={dni}
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleConectarse()
+                  }
+                }}
+              />
+            )}
           </div>
           <Button className=" bg-[#6F41CB] font-semibold" type="button" onClick={handleConectarse}>
-            Conectarse con nombre y DNI
+            Conectarse con nombre {configSala.pedir_dni ? 'y DNI' : ''}
           </Button>
 
           {/* Descomentar para volver a habilitar login de google */}

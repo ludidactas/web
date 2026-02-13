@@ -8,11 +8,14 @@ import { Encuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 import { CrearEncuesta } from '@/wss/validators/polls'
 import { Estudiante, useEncuestaStore } from '../encuestas-store'
+import { ConfigSala } from '@/wss/validators/salas'
+import { SalaData } from '@/wss/salas/app'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {
   // El profe recibe el id de la sala del server de ws
   const [linkSala, setLinkSala] = useState<string | null>(null)
+  const [configSala, setConfigSala] = useState<ConfigSala | null>(null)
 
   // El profe se conecta con su email como idSala
   const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useServerWebsockets(auth)
@@ -89,6 +92,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     socketWssCli!.emit('sala:limpar_estudiantes_sala')
   }
 
+  const actualizarConfig = (config: Partial<ConfigSala>) => {
+    console.log(`Enviando update de config al server! `, config)
+    socketWssCli!.emit('sala:actualizar_config', config)
+  }
+
   // Conectamos el socket a sus handlers
   useEffect(() => {
     if (socketWssCli) {
@@ -108,7 +116,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
       // Suscribimos a su respuesta
       socketWssCli.on(
         'sala:abierta',
-        ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
+        ({ sala, polls, estudiantes }: { sala: SalaData; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
           setLinkSala(`${process.env.NEXT_PUBLIC_HOST}/sala/${sala.id}/`)
 
@@ -127,6 +135,12 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
 
       socketWssCli.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
         estudianteDesconectado(estudiante.id)
+      })
+
+      socketWssCli.on('sala:config_actualizada', (config: ConfigSala) => {
+        toast.success(`Configuración actualizada!`)
+        console.log(`Config actualizada a: `, config)
+        setConfigSala(config)
       })
 
       // Pedimos la sala y la lista de estudiantes al server
@@ -153,6 +167,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     error: errorWssCli,
     encuestas,
     linkSala,
+    configSala,
     estudiantes,
     enviarPregunta,
     borrarPregunta,
@@ -162,6 +177,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     esconderPregunta,
     enfocarPregunta,
     limpiarEstudiantesSala,
+    actualizarConfig,
     revelarOpciones,
     desrevelarOpciones,
     WssDebugPanel,

@@ -29,7 +29,7 @@ export default function EncuestasEstudiantePage({
   }
 
   // Formulario de acceso
-  if (status === 'unauthenticated' && (!dni || !nombre || !ingresado)) {
+  if (status === 'unauthenticated' && !ingresado) {
     return <LoginSalaEstudiante idSala={idSala} />
   }
 

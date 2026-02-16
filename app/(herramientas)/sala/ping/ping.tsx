@@ -1,12 +1,12 @@
 'use client'
-import { useServerWebsockets } from '../../../../components/hooks/use-server-encuestas'
 import { Button } from '@/components/ui/button'
 import { toast, Toaster } from 'sonner'
 import { useEffect } from 'react'
 import { RolEncuesta } from '@/wss/tipos'
+import { useWss } from '@/components/hooks/use-wss'
 
 export default function PingClient({ url }: { url: string }) {
-  const { socket, ...resto } = useServerWebsockets({ nombre: 'pingo', rol: RolEncuesta.Tester, url })
+  const { socket, ...resto } = useWss({ nombre: 'pingo', rol: RolEncuesta.Tester, url })
 
   useEffect(() => {
     if (!socket) return

@@ -3,13 +3,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
+import { useWss } from '@/components/hooks/use-wss'
+import { SalaData } from '@/wss/salas/app'
 import { Encuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 import { CrearEncuesta } from '@/wss/validators/polls'
-import { Estudiante, useEncuestaStore } from '../encuestas-store'
 import { ConfigSala } from '@/wss/validators/salas'
-import { SalaData } from '@/wss/salas/app'
+import { Estudiante, useEncuestaStore } from '../encuestas-store'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: PasaporteProfe) => {
@@ -18,7 +18,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
   const [configSala, setConfigSala] = useState<ConfigSala | null>(null)
 
   // El profe se conecta con su email como idSala
-  const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useServerWebsockets(auth)
+  const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useWss(auth)
 
   const {
     encuestas,

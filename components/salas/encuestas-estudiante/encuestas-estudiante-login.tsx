@@ -4,7 +4,7 @@ import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
+import { useWss } from '@/components/hooks/use-wss'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
@@ -35,7 +35,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
   // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
-  const { socket, estado } = useServerWebsockets(authPublico)
+  const { socket, estado } = useWss(authPublico)
 
   // Aguantamos un segundo antes de confirmar que la sala no existe
   const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(

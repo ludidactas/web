@@ -104,7 +104,12 @@ const login = async (socket: SocketConSesion) => {
   // Extraemos el auth del socket y lo validamos
   const { data: auth, error, success } = PasaporteSchema.safeParse(socket.handshake.auth)
 
-  if (!success) throw new Error(`Auth inválido: ${error ? error.message : 'error desconocido'}`)
+  if (!success)
+    throw new Error(
+      `Auth inválido: ${
+        error ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') : 'error desconocido'
+      }`
+    )
 
   // Sesión de estudiante
   if (auth.rol === RolEncuesta.Estudiante) {
@@ -219,6 +224,7 @@ export const conSession = async (socket: Socket, next: (err?: ExtendedError) => 
     next()
   } catch (err) {
     // Cómo tipar los errores que van entre wss y fe?
+    console.log(`@Error: `, err.message)
     err.data = {
       type: 'SessionError',
       action: 'clear_session', // Le decimos al cliente que porfa limpie la sesión

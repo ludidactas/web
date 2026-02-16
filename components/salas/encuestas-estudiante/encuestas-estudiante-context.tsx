@@ -1,23 +1,31 @@
 'use client'
 
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { useWss } from '@/components/hooks/use-wss'
+import { RolEncuesta } from '@/wss/tipos'
 import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
-import { RolEncuesta } from '@/wss/tipos'
 import { useEncuestaStore } from '../encuestas-store'
-import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string, dni?: string) => {
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
   const { setIngresado } = useEncuestaEstudianteLogin()
-  const { socket, session, estado, error, WssDebugPanel } = useServerWebsockets({
+  const { socket, session, estado, error, WssDebugPanel } = useWss({
     nombre,
     idSala,
     icono,
     dni,
     rol: RolEncuesta.Estudiante,
   })
+
+  // Si la conexión expira, sacamos al usuario de la sala
+  useEffect(() => {
+    if (estado === StatusDeConexion.Expirado) {
+      setIngresado(false)
+    }
+  }, [estado])
 
   const showError = ({ message }: { message: string }) => {
     toast.error(message)

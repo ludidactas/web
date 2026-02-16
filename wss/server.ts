@@ -100,7 +100,7 @@ export function registrarSalaEnServer(salaId: string) {
     })
 
   io.of(`/sala/${salaId}/publico`)
-    .use(conSession)
+    // .use(conSession)
     .on('connect_error', (error) => {
       console.log(`❌ Error en /sala/${salaId}/publico:`, error.message)
     })

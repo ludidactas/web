@@ -5,8 +5,15 @@ import { isNullish } from 'remeda'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
 import { sleep } from '@/wss/test/test-funcs'
+import { toast } from 'sonner'
 
 // Máquina de estados finitos
+
+export interface RazonExpiracion {
+  type: string
+  action: string
+  message: string
+}
 
 export enum StatusDeConexion {
   Quieto = 'idle',
@@ -28,7 +35,7 @@ type Estado = {
   desconectar: () => void
   // Acciones internas para gestionar transiciones de estado
   _manejarError: (err: any) => void
-  _manejarExpiracion: () => void
+  _manejarExpiracion: (autorreconectar?: boolean) => void
   _limpiarSocket: (reason?: string) => void // Renombrado
 }
 
@@ -47,7 +54,7 @@ export const useConexionWss = create<Estado>((set, get) => ({
     if ([StatusDeConexion.Conectado, StatusDeConexion.Conectando].includes(current.status))
       console.warn('❗ Conexión ya en curso o activa. Ignorando solicitud de inicio.')
 
-    // Nos fijamos si hay un cambio de rol o sala en el socket para saber si es reconexión 
+    // Nos fijamos si hay un cambio de rol o sala en el socket para saber si es reconexión
     // (en cuyo caso, desconectar antes).
     // Maneja la transición Publico -> Autenticado.
     const sockAuth = current.socket && current.socket.auth
@@ -81,14 +88,13 @@ export const useConexionWss = create<Estado>((set, get) => ({
           onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
           onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
           onSession: (_, sesion) => set({ session: sesion }),
-          onExpired: () => get()._manejarExpiracion(),
+          onExpired: (_, data) => get()._manejarExpiracion(),
           onError: (_, err) => get()._manejarError(err),
         },
       })
 
       // Boom 🚀
       sock.connect()
-
     } catch (err) {
       console.error('Error durante el handshake:', err)
       set({ status: StatusDeConexion.Error, error: 'Error al iniciar el handshake.' })
@@ -103,12 +109,12 @@ export const useConexionWss = create<Estado>((set, get) => ({
       console.warn('❗ No hay socket activo para desconectar.')
       return
     }
-    
+
     // Desconexión efectiva
     console.log(`🔌 Desconectando del WSS (Forzado)...`)
     sock.disconnect() // Esto disparará el evento 'disconnect' y llamará a _limpiarSocket
 
-    // Limpiamos 
+    // Limpiamos
     console.log(`♻️ Limpiando el socket`)
     get()._limpiarSocket(razon)
   },
@@ -140,7 +146,7 @@ export const useConexionWss = create<Estado>((set, get) => ({
     if (autoreconectar) {
       console.log('♻️ Auto-reconectando tras expiración...')
       const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
-    
+
       if (auth) get().iniciarConexion(auth)
       else console.warn('❗ No se puede auto-reconectar: no hay auth disponible en el socket.')
     }
@@ -161,8 +167,15 @@ export const useConexionWss = create<Estado>((set, get) => ({
     // El server expiró la sesión
     if (err.data && err.data.action === 'clear_session') {
       msg = '😵 Sesión expirada. Reestableciendo...'
-      get()._manejarExpiracion()
+
+      toast.error(err.data.message)
+
+      get()._manejarExpiracion(err.data)
       return
+    }
+
+    if (err.data && err.data.message) {
+      toast.error(err.data.message)
     }
 
     set({ status: StatusDeConexion.Error, error: msg })

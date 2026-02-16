@@ -1,7 +1,7 @@
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import { ConfigSala } from '../validators/salas'
 import { RolEncuesta } from '../tipos'
-import { WssEstudianteSession, WssProfeSession } from '../validators/session'
+import { WssEstudianteSession, WssProfeSession, WssServerSession } from '../validators/session'
 import { SocketConSesion } from './session'
 
 /** Scoket con sesión de profe. Además de .session puede tener .config_sala */

@@ -1,9 +1,10 @@
 import { randomUUID } from 'crypto'
-import { first, isTruthy, mergeDeep } from 'remeda'
+import { first, mergeDeep } from 'remeda'
 
+import { RemoteSocket } from 'socket.io'
 import db from '../db'
 import { SocketProfe } from '../middleware/roles'
-import { getSession, getUserSessions, revocarSesiones, revocarUsuarios, SocketConSesion } from '../middleware/session'
+import { getUserSessions, revocarUsuarios } from '../middleware/session'
 import { io, registrarSalaEnServer } from '../server'
 import { RolEncuesta } from '../tipos'
 import { configSala, ConfigSala } from '../validators/salas'
@@ -37,20 +38,18 @@ export const salaService = async (salaId: string) => {
   async function broadcast(
     event: string,
     data: unknown,
-    mapper: (data: unknown, socket: SocketConSesion) => Promise<any> = async (data) => data
+    mapper: (data: unknown, socket: RemoteSocket<any, any>) => Promise<any> = async (data) => data
   ) {
     const sala = await get()
 
     console.log(`📡 Broadcasteando evento '${event}' en sala ${sala.id}`)
 
-    // Acá s es Socket | RemoteSocker
-    /** @todo tipar bien luego de refactorizar para usar rooms */
-    const enviarMapeado = async (s: any) => s.emit(event, await mapper(data, s))
+    const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
 
-    const socketsAdmin = Array.from(io.of('/sala/admin').sockets.values())
-    const socketsProfe = Array.from(await io.of(`/sala/profe`).in(`profe:${sala.profe.email}`).fetchSockets())
-    const socketsEstudiantes = Array.from(io.of(`/sala/${sala.id}/estudiante`).sockets.values())
-    const socketsPublico = Array.from(io.of(`/sala/${sala.id}/publico`).sockets.values())
+    const socketsAdmin = await io.of('/sala/admin').in('admin').fetchSockets()
+    const socketsProfe = await io.of(`/sala/profe`).in(`profe:${sala.profe.email}`).fetchSockets()
+    const socketsEstudiantes = await io.of(`/sala/${sala.id}/estudiante`).in(`estudiantes:${sala.id}`).fetchSockets()
+    const socketsPublico = await io.of(`/sala/${sala.id}/publico`).in(`publico:${sala.id}`).fetchSockets()
 
     await Promise.all([
       // A los admins
@@ -90,7 +89,6 @@ export const salaService = async (salaId: string) => {
       // Invalidamos (las borramos de db y de la respuesta que vamos a dar)
       invalidas.forEach((sid) => {
         db.hdel(`sala:${salaId}:estudiantes`, sid) // de la lista de estudiantes de la sala
-        // delete estudiantesData[sid] /** @todo: es necesario esto? */
       })
     }
 

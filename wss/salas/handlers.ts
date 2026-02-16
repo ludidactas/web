@@ -80,6 +80,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 
   // Los joineamos a una sala grupal y a una individual (para rutearle mensajes!)
   socket.join(idSala)
+  socket.join(`estudiantes:${idSala}`)
   socket.join(`${idSala}:${socket.data.session.id}`)
 
   const user = socket.data.session.nombre
@@ -112,6 +113,10 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 /** Handlers para exponer info pública de la sala */
 export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   console.log(`🔍 Cliente público conectado para sala ${idSala} (socket ${socket.id})`)
+
+  socket.join(idSala)
+  socket.join(`publico:${idSala}`)
+
   const safe = conErrorHandling(socket)
   const emitir = safe(async () => {
     const sala = await getSalaById(idSala)

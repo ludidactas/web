@@ -5,10 +5,12 @@ import { toast } from 'sonner'
 import { RolEncuesta } from '@/wss/tipos'
 import { useEncuestaStore } from '../encuestas-store'
 import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
+import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string, dni?: string) => {
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
+  const { setIngresado } = useEncuestaEstudianteLogin()
   const { socket, session, estado, error, WssDebugPanel } = useServerWebsockets({
     nombre,
     idSala,
@@ -39,6 +41,11 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
       socket.on('poll:updated', updateEncuesta)
       socket.on('poll:created', addEncuesta)
       socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+      socket.on('sala:kick', ({ motivo }) => {
+        toast.error(motivo)
+        socket.disconnect()
+        setIngresado(false)
+      })
 
       return () => {
         socket.removeAllListeners('polls:list')

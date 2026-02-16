@@ -139,7 +139,6 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
 
       socketWssCli.on('sala:config_actualizada', (config: ConfigSala) => {
         toast.success(`Configuración actualizada!`)
-        console.log(`Config actualizada a: `, config)
         setConfigSala(config)
       })
 

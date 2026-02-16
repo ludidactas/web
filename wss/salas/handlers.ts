@@ -10,6 +10,9 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   if (!socket.data.session.email) throw new Error('Profe sin email en sesión!')
 
+  // Guardamos el socket del profe en una SALA para poder comunicarnos con él cuando se conecten estudiantes
+  socket.join(`profe:${socket.data.session.email}`)
+
   // Se conectó un profe, le armamos una sala:
   const sala = await obtenerOCrearSala(socket)
   const profe = await profeSala(sala.profe.email)
@@ -18,15 +21,21 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
 
-  socket.on('sala:actualizar_config', safe(async (payload: unknown) => { 
-    // `actualizarConfig` valida
-    const salaUpdateada = await sala.actualizarConfig(payload)
+  socket.on(
+    'sala:actualizar_config',
+    safe(async (payload: unknown) => {
+      // `actualizarConfig` valida
+      await sala.actualizarConfig(payload)
 
-    // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
+      // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
+      await sala.sanitizar()
 
-    // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
-    await sala.broadcast('sala:config_actualizada', salaUpdateada.config)
-  }))
+      const { config } = await sala.get()
+
+      // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
+      await sala.broadcast('sala:config_actualizada', config)
+    })
+  )
 
   socket.on(
     'sala:listar_estudiantes',
@@ -47,7 +56,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     'sala:abrir',
     safe(async () => {
       socket.emit('sala:abierta', {
-        sala: sala.raw(),
+        sala: await sala.raw(),
         polls: await profe.listarEncuestas(),
         estudiantes: await sala.listarEstudiantes(),
       })
@@ -56,7 +65,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   // Emisión inicial de la config de la sala al profe, para que tenga la config al abrir la sala
   const emitir = safe(async () => {
-    socket.emit('sala:config_actualizada', sala.config)
+    socket.emit('sala:config_actualizada', (await sala.get()).config)
   })
 
   await emitir()
@@ -69,6 +78,10 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
+  // Los joineamos a una sala grupal y a una individual (para rutearle mensajes!)
+  socket.join(idSala)
+  socket.join(`${idSala}:${socket.data.session.id}`)
+
   const user = socket.data.session.nombre
   const sala = await getSalaById(idSala)
 
@@ -78,8 +91,10 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   const notificar = safe(async () => {
-    await sala.marcarEstudiantePresente(socket.data.session.id!)
-    sala.socketProfe().emit('sala:estudiante_conectado', socket.data.session)
+    await sala.marcarEstudiantePresente(socket.data.session.id)
+
+    const socks = await sala.socketsProfe()
+    socks.forEach((s) => s.emit('sala:estudiante_conectado', socket.data.session))
   })
   await notificar()
 
@@ -87,8 +102,9 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     'disconnect',
     safe(async (reason) => {
       console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-      await sala.marcarEstudianteAusente(socket.data.session.id!)
-      sala.socketProfe().emit('sala:estudiante_desconectado', { id: socket.data.session.id! })
+      await sala.marcarEstudianteAusente(socket.data.session.id)
+      const socks = await sala.socketsProfe()
+      socks.forEach((s) => s.emit('sala:estudiante_desconectado', { id: socket.data.session.id }))
     })
   )
 }
@@ -100,7 +116,7 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   const emitir = safe(async () => {
     const sala = await getSalaById(idSala)
     if (!sala) throw new Error(`Sala ${idSala} no existe!`)
-    socket.emit('sala:config_actualizada', sala.config)
+    socket.emit('sala:config_actualizada', (await sala.get()).config)
   })
 
   await emitir()

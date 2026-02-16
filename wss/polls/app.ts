@@ -1,6 +1,6 @@
 import { merge } from 'remeda'
 import { z } from 'zod'
-import { conHandlers, getSalaByEmailProfe, getSalaById } from '../salas/app'
+import { salaService, getSalaByEmailProfe, getSalaById } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
 import { extractZodErrorMessages } from '../utils'
 import { pollBase, voteValidator } from '../validators/polls'
@@ -146,8 +146,9 @@ export async function estudianteSala(idSala: string, sessionId: string) {
 
     const session = getSession(sessionId)
     if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada')
+    if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo votar: Rol público no tiene permitido votar')
 
-    const idVotante = session.rol === RolEncuesta.Estudiante ? session.id! : session.email
+    const idVotante = session.id
 
     await assertPollExists(idSala, pollId)
 
@@ -200,10 +201,10 @@ export async function estudianteSala(idSala: string, sessionId: string) {
 }
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
-export async function broadcastPoll(sala: ReturnType<typeof conHandlers>, poll: Encuesta) {
+export async function broadcastPoll(sala: Awaited<ReturnType<typeof salaService>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
-    // console.log(`Broadcasteado poll ${(poll as any).id} a ${socket.id} (sesion ${JSON.stringify(socket.data.session)})`)
-    if (socket.data.session.rol === RolEncuesta.Estudiante) {
+    console.log(`Broadcasteado poll ${(poll as any).id} a ${socket.id} (sesion ${JSON.stringify(socket.data.session)})`)
+    if (socket.data.session && socket.data.session.rol === RolEncuesta.Estudiante) {
       return await hidratar(sala.id, poll as Encuesta, socket.data.session.sessionId)
     }
     return poll
@@ -232,7 +233,9 @@ export async function hidratadas(salaId: string, sessionId: string) {
 
   // Agarramos la sesión y derivamos el id del votante
   const session = getSession(sessionId)
-  if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada')
+  if (!session) throw new Error('No se pudo hidratar: Sesión inválida o expirada')
+  if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo hidratar: Rol público no tiene permitido')
+
   const idVotante = session.rol === RolEncuesta.Estudiante ? session.id! : session.email
 
   // Agarramos todas las encuestas de la sala de la db

@@ -19,7 +19,7 @@ const salas_preexistentes = await db.hkeys('salas')
 console.log(
   `🚪 Registrando ${salas_preexistentes.length} ${
     salas_preexistentes.length === 1 ? 'sala preexistente' : 'salas preexistentes'
-  } en server...`
+  } en redis...`
 )
 salas_preexistentes.forEach(registrarSalaEnServer)
 
@@ -100,6 +100,7 @@ export function registrarSalaEnServer(salaId: string) {
     })
 
   io.of(`/sala/${salaId}/publico`)
+    .use(conSession)
     .on('connect_error', (error) => {
       console.log(`❌ Error en /sala/${salaId}/publico:`, error.message)
     })

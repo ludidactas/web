@@ -6,7 +6,7 @@ import useSesionGuardada from './use-sesion-localstorage'
 
 /** Cose la sesión storeada con el server de WSS. @warning **PASARLE UN AUTH ESTABLE**. */
 export function useWss(auth: Pasaporte) {
-  const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada()
+  const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada(auth.rol)
   const { status, iniciarConexion, desconectar, socket, session, error } = useConexionWss()
 
   // Pequeño hack: prevenimos re-triggering por referencialidad

@@ -4,57 +4,51 @@ import DebugPanel from './conexion-wss-debug'
 import { StatusDeConexion, useConexionWss } from './use-conexion-wss'
 import useSesionGuardada from './use-sesion-localstorage'
 
-/** Cose la sesión storeada con el server de WSS */
+/** Cose la sesión storeada con el server de WSS. @warning **PASARLE UN AUTH ESTABLE**. */
 export function useWss(auth: Pasaporte) {
   const { storedSession, saveSession, clearSession, ready: sessionReady } = useSesionGuardada()
   const { status, iniciarConexion, desconectar, socket, session, error } = useConexionWss()
 
+  // Pequeño hack: prevenimos re-triggering por referencialidad
+  const authKey = JSON.stringify(auth)
+
+  // Sesión WSS guardada -- si cambia hay que cerrar/re-establecer la conexión
+  const sessionIdToUse = storedSession?.sessionId
+
   // Al desmontar, desconectar
-  useEffect(() => {
-    return desconectar
-  }, [desconectar])
+  useEffect(() => desconectar, [desconectar])
 
   // Trigger de conexión
   useEffect(() => {
-    // console.log(`🔌 useWss: Evaluando conexión...`, status)
-
-    // 1. Esperar dependencias listas
-    if (!sessionReady) {
-      // Opcional: setear un estado de "CargandoDependencias" si el hook de React lo necesita
-      return
-    }
+    // 1. Esperar saber si hay sesión wss guardada o sesión de google
+    if (!sessionReady) return
 
     // 2. Condición principal: Conectar SOLO si estamos en estado Quieto, Expirado (lo que forzó a Quieto), o Error
     const hayQueReconectar =
       status === StatusDeConexion.Quieto || status === StatusDeConexion.Expirado || status === StatusDeConexion.Error // Reintento automático tras error
 
     if (hayQueReconectar) {
-      const sessionIdToUse = storedSession?.sessionId
       console.log(`✅ Dependencias listas, estado es ${status}. Iniciando conexión...`)
 
       // El store maneja internamente la lógica de si hay un socket activo o si debe cerrarlo (Publico -> Estudiante)
       iniciarConexion(auth, sessionIdToUse)
     }
-  }, [sessionReady, auth, storedSession, desconectar, status, iniciarConexion, socket])
+  }, [sessionReady, authKey, sessionIdToUse, status, iniciarConexion])
 
-  // Sync de la sesión
-
-  // Cuando el servidor nos da una nueva sesión → persistir
+  // Sync de la sesión (Guardado y Limpieza) -- afecta storedSession (triggerea otros effects!)
   useEffect(() => {
-    if (sessionReady && session) {
-      saveSession(session)
-    }
-  }, [session, saveSession, sessionReady])
+    if (!sessionReady) return
 
-  // Cuando el status indica expiración → limpiar localStorage
-  useEffect(() => {
-    if (sessionReady && status === StatusDeConexion.Expirado) {
+    // Cuando el servidor nos da una nueva sesión → persistir
+    if (session) saveSession(session)
+
+    // Cuando el status indica expiración → limpiar localStorage
+    if (status === StatusDeConexion.Expirado) {
       console.log(`🧹 Sesión expirada detectada, limpiando localStorage...`)
       clearSession()
-      // La limpieza de clearSession() modificará 'storedSession',
-      // lo cual re-ejecutará el useEffect de conexión, forzando la reconexión sin sessionId.
     }
-  }, [auth, clearSession, sessionReady, status, storedSession])
+    // 👇 Quitamos auth y storedSession que no se usaban dentro de este efecto.
+  }, [sessionReady, session, status, saveSession, clearSession])
 
   return {
     estado: status,

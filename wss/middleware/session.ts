@@ -179,6 +179,8 @@ const validarSession = async (socket: SocketConSesion) => {
       return
     }
 
+    /** @todo: cuando se accede logueado como profe se dispara el siguiente if. Debería en cambio abrir otra sesión diferente. */
+
     // Pasado este punto nos aseguramos que el rol que viene en la sesión coincida con el de la sesión guardada
     if (sessionIdData.rol !== storedSession.rol)
       throw new Error(`Rol de sesión inválido: se esperaba ${storedSession.rol} y se recibió ${sessionIdData.rol}`)

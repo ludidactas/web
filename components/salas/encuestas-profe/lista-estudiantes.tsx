@@ -41,12 +41,12 @@ export const ListaEstudiantes = () => {
         <div className="flex gap-1">
           <HoverCard>
             <HoverCardTrigger asChild>
-              <span
+              <button
                 className="flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110"
                 onClick={limpiarEstudiantesSala}
               >
                 <Eraser size={20} />
-              </span>
+              </button>
             </HoverCardTrigger>
             <HoverCardContent>
               {' '}

@@ -16,7 +16,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
 
   return (
     <Dialog>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="flex flex-col items-center" aria-description="Configuración de la sala">
         <DialogHeader>
           <DialogTitle className="text-center leading-6">Configuración de la sala</DialogTitle>

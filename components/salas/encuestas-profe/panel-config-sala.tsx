@@ -22,7 +22,9 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
           <DialogTitle className="text-center leading-6">Configuración de la sala</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <pre className="text-xs">{JSON.stringify(configSala, null, 2)}</pre>
+          {/* Debug: */}
+          {/* <pre className="text-xs">{JSON.stringify(configSala, null, 2)}</pre> */}
+
           <SwitchCard
             title="DNI obligatorio"
             description="Los participantes tienen que ingresar DNI para participar"

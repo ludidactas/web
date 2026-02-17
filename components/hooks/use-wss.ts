@@ -10,10 +10,9 @@ export function useWss(auth: Pasaporte) {
   const { status, iniciarConexion, desconectar, socket, session, error } = useConexionWss()
 
   // Al desmontar, desconectar
-  useEffect(() => { 
+  useEffect(() => {
     return desconectar
   }, [desconectar])
-
 
   // Trigger de conexión
   useEffect(() => {

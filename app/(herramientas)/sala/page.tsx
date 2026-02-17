@@ -18,7 +18,7 @@ export default async function SalaPage() {
   const token = await tokenWss()
 
   return (
-    <EncuestaProfeProvider auth={{ rol: RolEncuesta.Profe, token }}>
+    <EncuestaProfeProvider auth={{ token }}>
       <Toaster />
       <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
         <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>

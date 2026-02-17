@@ -3,7 +3,7 @@
 import { nombreSplit } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
 import { useSession as useGoogleSession } from 'next-auth/react'
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 
@@ -20,22 +20,28 @@ export default function EncuestasEstudiantePage({
   btnLoginGoogle: ReactNode
   btnLogoutGoogle: ReactNode
 }) {
-  const { status } = useGoogleSession()
+  const { status, data } = useGoogleSession()
 
   const { dni, nombre, ingresado } = useEncuestaEstudianteLogin()
+
+  // Armamos el auth para el provider de la sala
+  const auth = useMemo(
+    () => ({ idSala, nombre, dni, email: data?.user?.email ?? undefined, avatar: data?.user?.image ?? undefined }),
+    [idSala, nombre, dni, data?.user?.email]
+  )
 
   if (status === 'loading') {
     return <LoadingSalaEstudiante overlay />
   }
 
   // Formulario de acceso
-  if (status === 'unauthenticated' && !ingresado) {
+  if (!ingresado) {
     return <LoginSalaEstudiante idSala={idSala} />
   }
 
   // Devolvemos la página
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre={nombre} dni={dni}>
+    <EncuestaEstudianteProvider auth={auth}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         <HeaderSala className="gap-2" btnLogout={status === 'authenticated' ? btnLogoutGoogle : undefined}>
           <p className="flex gap-2 justify-center items-center text-sm text-center sm:text-4xl">

@@ -14,8 +14,10 @@ const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   idSala: z.string(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
-  email: z.string().email().optional(), // Por ahora no está en uso
   icono: z.string().optional(),
+  // Estudiantes con sesión de Google:
+  email: z.string().email().optional(),
+  avatar: z.string().optional(),
 }).transform((data) => ({
   ...data,
   nombre: data.nombre || nombreDeFantasia(),

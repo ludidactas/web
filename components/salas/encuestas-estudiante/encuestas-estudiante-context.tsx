@@ -7,16 +7,14 @@ import React, { createContext, useContext, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaStore } from '../encuestas-store'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
+import { PasaporteEstudiante } from '@/wss/validators/auth'
 
 /** Cose el socket con el state para estudiante */
-const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: string, dni?: string) => {
+const useEncuestaEstudianteState = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
   const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
   const { setIngresado } = useEncuestaEstudianteLogin()
   const { socket, session, estado, error, WssDebugPanel } = useWss({
-    nombre,
-    idSala,
-    icono,
-    dni,
+    ...auth,
     rol: RolEncuesta.Estudiante,
   })
 
@@ -71,7 +69,7 @@ const useEncuestaEstudianteState = (idSala: string, nombre?: string, icono?: str
     error,
     encuestas,
     votar,
-    nombre,
+    nombre: auth.nombre,
     WssDebugPanel,
   }
 }
@@ -83,14 +81,11 @@ export const EncuestaEstudianteContext = createContext<ReturnType<typeof useEncu
 
 // Provider
 export const EncuestaEstudianteProvider: React.FC<{
-  idSala: string
-  nombre?: string
-  icono?: string
-  dni?: string
+  auth: Omit<PasaporteEstudiante, 'rol'>
   children: React.ReactNode
-}> = ({ idSala, nombre, icono, dni, children }) => {
+}> = ({ auth, children }) => {
   return (
-    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(idSala, nombre, icono, dni)}>
+    <EncuestaEstudianteContext.Provider value={useEncuestaEstudianteState(auth)}>
       {children}
     </EncuestaEstudianteContext.Provider>
   )

@@ -40,7 +40,7 @@ export const ListaEstudiantes = () => {
         {/* Botones para limpiar y copiar  */}
         <div className="flex gap-1">
           <HoverCard>
-            <HoverCardTrigger>
+            <HoverCardTrigger asChild>
               <span
                 className="flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110"
                 onClick={limpiarEstudiantesSala}
@@ -54,7 +54,7 @@ export const ListaEstudiantes = () => {
             </HoverCardContent>
           </HoverCard>
           <HoverCard>
-            <HoverCardTrigger>
+            <HoverCardTrigger asChild>
               <button
                 className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110"
                 onClick={handleCopy(datosEstudiantes)}
@@ -68,7 +68,7 @@ export const ListaEstudiantes = () => {
             </HoverCardContent>
           </HoverCard>
           <HoverCard>
-            <HoverCardTrigger>
+            <HoverCardTrigger asChild>
               <button
                 className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleExportToExcel}
@@ -82,13 +82,13 @@ export const ListaEstudiantes = () => {
             </HoverCardContent>
           </HoverCard>
           <HoverCard>
-            <HoverCardTrigger>
-              <PanelConfigSala>
+            <PanelConfigSala>
+              <HoverCardTrigger asChild>
                 <button className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
                   <Settings size={20} />
                 </button>
-              </PanelConfigSala>
-            </HoverCardTrigger>
+              </HoverCardTrigger>
+            </PanelConfigSala>
             <HoverCardContent>
               <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Configuración</p>
             </HoverCardContent>
@@ -104,7 +104,7 @@ export const ListaEstudiantes = () => {
           <ul className="flex flex-col gap-2 p-2 rounded-xl">
             {estudiantes.map((e) => (
               <li
-                key={e.sessionId}
+                key={e.id}
                 className={cn({
                   'text-black flex gap-2 ': e.conectado,
                   'text-slate-400 flex gap-2 grayscale': !e.conectado,
@@ -124,10 +124,8 @@ export const ListaEstudiantes = () => {
                 {/* Nombre, email y DNI */}
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
-                  {/* <span className="text-teal-500">{e.email ?? `Anónimo`}</span> */}
-                  {e.dni && <span className="text-teal-500">{e.dni}</span>}
-                  {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
-                  {!e.dni && !e.email && <span className="text-slate-400 italic">Anónimo</span>}
+                  {e.id && <span className="text-teal-500">{e.id}</span>}
+                  {!e.id && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
               </li>
             ))}

@@ -2,10 +2,9 @@ import { RolEncuesta } from '@/wss/tipos'
 import { Pasaporte } from '@/wss/validators/auth'
 import { WssServerSession } from '@/wss/validators/session'
 import { isNullish } from 'remeda'
+import { toast } from 'sonner'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
-import { sleep } from '@/wss/test/test-funcs'
-import { toast } from 'sonner'
 
 // Máquina de estados finitos
 
@@ -50,10 +49,6 @@ export const useConexionWss = create<Estado>((set, get) => ({
   async iniciarConexion(auth, sessionId) {
     const current = get()
 
-    // Si estamos intentando reconectar pero ya estamos conectados o en proceso, por lo menos chiflamos.
-    if ([StatusDeConexion.Conectado, StatusDeConexion.Conectando].includes(current.status))
-      console.warn('❗ Conexión ya en curso o activa. Ignorando solicitud de inicio.')
-
     // Nos fijamos si hay un cambio de rol o sala en el socket para saber si es reconexión
     // (en cuyo caso, desconectar antes).
     // Maneja la transición Publico -> Autenticado.
@@ -63,9 +58,16 @@ export const useConexionWss = create<Estado>((set, get) => ({
       sockAuth?.rol === RolEncuesta.Estudiante &&
       auth.rol === RolEncuesta.Estudiante &&
       sockAuth?.idSala !== auth.idSala
+
     const huboCambioDeRol = sockAuth?.rol !== auth.rol
 
     const precisaAuthNueva = huboCambioDeRol || huboCambioDeSala
+
+    // Si estamos intentando reconectar pero ya estamos conectados o en proceso, abortamos.
+    if (!precisaAuthNueva && [StatusDeConexion.Conectado, StatusDeConexion.Conectando].includes(current.status)) {
+      console.warn('❗ Conexión ya en curso o activa. Ignorando solicitud de inicio.')
+      return
+    }
 
     // Forzamos una desconexión limpia.
     if (precisaAuthNueva) {
@@ -78,7 +80,6 @@ export const useConexionWss = create<Estado>((set, get) => ({
 
     try {
       // Handshake (crea el socket y lo retorna)
-      await sleep(3000) // BORRAME
       const sock = await handshake({ ...auth, sessionId })
 
       // Asignamos los listeners del store *antes* de conectar
@@ -87,7 +88,7 @@ export const useConexionWss = create<Estado>((set, get) => ({
         listeners: {
           onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
           onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
-          onSession: (_, sesion) => set({ session: sesion }),
+          onSession: (_, session) => set({ session }),
           onExpired: (_, data) => get()._manejarExpiracion(),
           onError: (_, err) => get()._manejarError(err),
         },
@@ -141,41 +142,32 @@ export const useConexionWss = create<Estado>((set, get) => ({
     set({ status: StatusDeConexion.Expirado, session: null })
 
     // Forzamos un reintento limpio
-    get().desconectar() // Dispara _limpiarSocket -> Quieto
-
     if (autoreconectar) {
       console.log('♻️ Auto-reconectando tras expiración...')
       const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
+      get().desconectar() // Dispara _limpiarSocket -> Quieto
 
-      if (auth) get().iniciarConexion(auth)
+      // Reconectamos con delay
+      if (auth) setTimeout(() => get().iniciarConexion(auth), 500)
       else console.warn('❗ No se puede auto-reconectar: no hay auth disponible en el socket.')
     }
-
-    // La re-conexión puede ser impulsada por el hook al ver el estado Quieto
-    // y la por sessionReady (que se vuelve a cargar después de limpiar localStorage).
-
-    // Auto-reconexión simple tras un timeout corto, si no quieres depender de sessionReady
-    // setTimeout(() => {
-    //   const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
-    //   if (auth) get().iniciarConexion(auth)
-    // }, 1000)
   },
 
   _manejarError(err: any) {
-    let msg = err.message ? `⚠️ Error: ${err.message}` : '⚠️ Error desconocido'
+    let msg = err.message ? err.message : '⚠️ Error desconocido'
 
     // El server expiró la sesión
-    if (err.data && err.data.action === 'clear_session') {
-      msg = '😵 Sesión expirada. Reestableciendo...'
+    if (err.data) {
+      msg = err.data.message ?? '😵 Sesión expirada'
 
-      toast.error(err.data.message)
+      // Mesaje
+      toast.error(msg)
 
-      get()._manejarExpiracion(err.data)
-      return
-    }
-
-    if (err.data && err.data.message) {
-      toast.error(err.data.message)
+      // Comanda
+      if (err.data.action === 'clear_session') {
+        get()._manejarExpiracion()
+        return
+      }
     }
 
     set({ status: StatusDeConexion.Error, error: msg })

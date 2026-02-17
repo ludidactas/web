@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import DibuEstudiante from '/svg/upssvgo.svg'
+import Link from 'next/link'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -35,11 +36,17 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
   // Ojo: esto captura el websocket!
   // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
-  const { socket, estado } = useWss(authPublico)
+  const { socket, estado, error } = useWss(authPublico)
 
   // Aguantamos un segundo antes de confirmar que la sala no existe
   const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(
-    () => estado === StatusDeConexion.Conectado && !configSala,
+    () => estado === StatusDeConexion.Error && error === 'Invalid namespace',
+    1000
+  )
+
+  // Aguantamos un segundo antes de confirmar que la sala no existe
+  const { valor: posibleError, confirmado: confirmadoError } = useConfirmarConDelay(
+    () => estado === StatusDeConexion.Error,
     1000
   )
 
@@ -49,11 +56,6 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
       socket.on('sala:config_actualizada', setConfigSala)
     }
   }, [socket])
-
-  // DEBUG
-  // useEffect(() => {
-  //   console.log(configSala)
-  // }, [configSala])
 
   const mensajeDeAuth = `Ingresá con tu nombre${configSala?.pedir_dni ? ' y DNI' : ''}`
   const nombreSala = configSala?.nombre_profe ? `de ${configSala.nombre_profe}` : idSala
@@ -97,18 +99,11 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     setIngresado(true)
   }
 
-  if (estado === StatusDeConexion.Error)
-    return (
-      <div className="w-screen h-screen place-content-center">
-        <p className="text-xl md:text-6xl text-red-500 text-center">Error de conexión. Por favor, recargá la página.</p>
-      </div>
-    )
-
   // Pantalla de sala inválida - Si no estamos en un estado de conexión "sano" y no tenemos config de sala
   if (confirmadoNoExiste)
     return (
       <div>
-        <div className="flex flex-col  items-center mb-10 justify-center">
+        <div className="flex flex-col items-center mb-10 justify-center">
           <LdSvg
             className="w-[300px] md:w-[500px]"
             SvgComponent={DibuEstudiante}
@@ -119,11 +114,24 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
           <p className="text-gray-500 text-xl font-bold md:w-[400px] text-center ">
             Esta sala no existe. Por favor, verifica el id de la sala
           </p>
+
+          <Link className="hover:underline text-gray-500 mt-8" href="/">
+            Volver al sitio
+          </Link>
         </div>
       </div>
     )
 
+  if (confirmadoError)
+    return (
+      <div className="w-screen h-screen place-content-center">
+        <p className="text-xl md:text-4xl text-red-500 text-center">Error de conexión. Por favor, recargá la página.</p>
+        <p className="text-xl md:text-2xl text-red-500 text-center">{error}</p>
+      </div>
+    )
+
   if (posibleNoExiste && !confirmadoNoExiste) return <LoadingSalaEstudiante overlay />
+  if (posibleError && !confirmadoError) return <LoadingSalaEstudiante overlay />
 
   if (estado !== StatusDeConexion.Conectado || !configSala) return <LoadingSalaEstudiante overlay />
 

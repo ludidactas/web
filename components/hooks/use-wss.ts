@@ -24,8 +24,7 @@ export function useWss(auth: Pasaporte) {
     if (!sessionReady) return
 
     // 2. Condición principal: Conectar SOLO si estamos en estado Quieto, Expirado (lo que forzó a Quieto), o Error
-    const hayQueReconectar =
-      status === StatusDeConexion.Quieto || status === StatusDeConexion.Expirado || status === StatusDeConexion.Error // Reintento automático tras error
+    const hayQueReconectar = status === StatusDeConexion.Quieto || status === StatusDeConexion.Expirado // Reintento automático tras error
 
     if (hayQueReconectar) {
       console.log(`✅ Dependencias listas, estado es ${status}. Iniciando conexión...`)

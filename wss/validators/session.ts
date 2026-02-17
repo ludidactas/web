@@ -21,6 +21,7 @@ const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
 }).transform((data) => ({
   ...data,
   nombre: data.nombre || nombreDeFantasia(),
+  es_anonimo: !data.dni && !data.email,
   id: data.dni || data.email || data.nombre || `estudiante-${randomUUID().split('-')[0]}`,
 }))
 

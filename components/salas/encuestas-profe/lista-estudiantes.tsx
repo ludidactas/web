@@ -124,8 +124,8 @@ export const ListaEstudiantes = () => {
                 {/* Nombre, email y DNI */}
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
-                  {e.id && <span className="text-teal-500">{e.id}</span>}
-                  {!e.id && <span className="text-slate-400 italic">Anónimo</span>}
+                  {!e.es_anonimo && <span className="text-teal-500">{e.id}</span>}
+                  {e.es_anonimo && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
               </li>
             ))}

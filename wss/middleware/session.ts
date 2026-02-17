@@ -118,7 +118,11 @@ const login = async (socket: SocketConSesion) => {
     // Verificamos que la sala exista
     if (!(await db.hexists('salas', auth.idSala))) throw new Error(`La sala ${auth.idSala} no existe!`)
 
-    console.log(auth)
+    const sala = await getSalaById(auth.idSala)
+
+    // Si la sala requiere dni y la sesión no lo tiene, bochamos
+    if ((await sala.get()).config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)
+
     openSession(socket, auth)
   }
 
@@ -142,7 +146,7 @@ const login = async (socket: SocketConSesion) => {
 const validarSession = async (socket: SocketConSesion) => {
   // Si estamos acá, es porque socket.handshake.auth.sessionId está definido
 
-  const { data: sessionIdData, success, error } = SesionSchema.safeParse(socket.handshake.auth)
+  const { data: socketAuthData, success, error } = SesionSchema.safeParse(socket.handshake.auth)
 
   if (!success) throw new Error(`Sesión inválida: ${error ? error.message : 'error desconocido'}`)
 
@@ -152,10 +156,10 @@ const validarSession = async (socket: SocketConSesion) => {
     // - solo token de autenticación, si es profe o admin
     // - ambos, si es profesor o admin con sesión existente
 
-    const storedSession = getSession(sessionIdData.sessionId)
+    const storedSession = getSession(socketAuthData.sessionId)
 
     // Si el id que nos mandaron no coincide con el de la sesión, bochamos
-    if (!storedSession) throw new Error(`Sesión ${sessionIdData.sessionId} no encontrada!`)
+    if (!storedSession) throw new Error(`Sesión ${socketAuthData.sessionId} no encontrada!`)
     if (storedSession.rol === RolEncuesta.Publico) throw new Error(`Las sesiones públicas son efímeras`)
 
     console.log(
@@ -164,6 +168,9 @@ const validarSession = async (socket: SocketConSesion) => {
       }) desde IP ${socketIp(socket)}`
     )
 
+    if (socketAuthData.rol !== storedSession.rol)
+      throw new Error(`Rol de sesión inválido: se esperaba ${storedSession.rol} y se recibió ${socketAuthData.rol}`)
+
     // Sesión de estudiante (anónima)
     // Válida para profes o admins si están solicitando entrar como estudiantes
     if (storedSession.rol === RolEncuesta.Estudiante) {
@@ -171,6 +178,8 @@ const validarSession = async (socket: SocketConSesion) => {
       if (!(await existeSala(storedSession.idSala))) throw new Error(`La sala ${storedSession.idSala} ya no existe!`)
 
       const sala = await getSalaById(storedSession.idSala)
+
+      // Si la sala requiere dni y la sesión no lo tiene, bochamos
       if ((await sala.get()).config.pedir_dni && !storedSession.dni)
         throw new Error(`La sala ${storedSession.idSala} requiere dni!`)
 
@@ -179,16 +188,10 @@ const validarSession = async (socket: SocketConSesion) => {
       return
     }
 
-    /** @todo: cuando se accede logueado como profe se dispara el siguiente if. Debería en cambio abrir otra sesión diferente. */
-
-    // Pasado este punto nos aseguramos que el rol que viene en la sesión coincida con el de la sesión guardada
-    if (sessionIdData.rol !== storedSession.rol)
-      throw new Error(`Rol de sesión inválido: se esperaba ${storedSession.rol} y se recibió ${sessionIdData.rol}`)
-
     // Sesión de profe o admin
-    if (storedSession.rol === RolEncuesta.Profe || storedSession.rol === RolEncuesta.Admin) {
+    if (socketAuthData.rol === RolEncuesta.Profe || socketAuthData.rol === RolEncuesta.Admin) {
       // Extraemos la data del token
-      const payload = decodearTokenNextAuth(sessionIdData.token)
+      const payload = decodearTokenNextAuth(socketAuthData.token)
 
       // Si el username de sesión no coincide con el email del token, bochamos
       if (storedSession.email !== payload.email)
@@ -200,7 +203,7 @@ const validarSession = async (socket: SocketConSesion) => {
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error
     console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
-    sessions.delete(sessionIdData.sessionId)
+    revocarSession(socketAuthData.sessionId)
     throw err
   }
 }

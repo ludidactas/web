@@ -55,11 +55,12 @@ export const useConexionWss = create<Estado>((set, get) => ({
     const sockAuth = current.socket && current.socket.auth
 
     const huboCambioDeSala =
-      sockAuth?.rol === RolEncuesta.Estudiante &&
+      sockAuth &&
+      sockAuth.rol === RolEncuesta.Estudiante &&
       auth.rol === RolEncuesta.Estudiante &&
-      sockAuth?.idSala !== auth.idSala
+      sockAuth.idSala !== auth.idSala
 
-    const huboCambioDeRol = sockAuth?.rol !== auth.rol
+    const huboCambioDeRol = sockAuth && sockAuth.rol !== auth.rol
 
     const precisaAuthNueva = huboCambioDeRol || huboCambioDeSala
 

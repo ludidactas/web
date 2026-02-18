@@ -24,3 +24,9 @@ export const conErrorHandling =
       }
     }
   }
+
+export const conErrorLogging = async (socket: Socket) => {
+  socket.on('connect_error', (error) => {
+    console.error(`❌ Error en ${socket.nsp.name}:`, error.message)
+  })
+}

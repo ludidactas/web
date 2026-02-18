@@ -7,6 +7,7 @@ import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaP
 import { handlersTest } from './test/handlers'
 import { esAdmin, esProfe, SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conPermisosDe } from './middleware/auth'
+import { conErrorLogging } from './middleware/error-handling'
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
 
@@ -27,9 +28,7 @@ salas_preexistentes.forEach(registrarSalaEnServer)
 io.of('/sala/profe')
   .use(conSession)
   .use(esProfe)
-  .on('connect_error', (error) => {
-    console.error(`❌ Error en /sala/profe:`, error.message)
-  })
+  .use(conErrorLogging)
   .on('connection', async (socket: SocketProfe) => {
     await handlersSalaProfe(socket)
     await handlersEncuestasProfe(socket)
@@ -39,30 +38,24 @@ io.of('/sala/profe')
 io.of('/sala/admin')
   .use(conSession)
   .use(esAdmin)
-  .on('connect_error', (error) => {
-    console.log(`❌ Error en /sala/admin:`, error.message)
-  })
+  .use(conErrorLogging)
   .on('connection', async (socket: SocketConSesion) => {
     await handlersAdmin(socket)
   })
 
 // Canal de test
 io.of('/test')
-  .on('connect_error', (error) => {
-    console.log(`❌ Error en /test:`, error.message)
-  })
+  .use(conErrorLogging)
   .on('connection', (socket: Socket) => handlersTest(socket))
 
 /** Setup global */
 
-io.on('connect_error', (error) => {
-  console.log(`❌ Error en /:`, error.message)
+io.use(conErrorLogging).on('connection', (socket) => {
+  console.log(`🔌 Conexión global: ${socket.id} en namespace ${socket.nsp.name}`)
+  socket.on('ping', (socket) => socket.emit('pong'))
 })
-  .on('connection', (socket) => {
-    console.log(`🔌 Conexión global: ${socket.id} en namespace ${socket.nsp.name}`)
-  })
-  .on('ping', (socket) => socket.emit('pong'))
 
+// Cambiar para usar rooms!
 io.of(/sala\/.+?\/estudiante/).use(async (socket, next) => {
   const matchSalaId = socket.nsp.name.match(/^\/sala\/([a-zA-Z0-9_-]{3,50})\/estudiante$/)
 
@@ -91,9 +84,7 @@ export function registrarSalaEnServer(salaId: string) {
   io.of(`/sala/${salaId}/estudiante`)
     .use(conSession)
     .use(conPermisosDe(salaId))
-    .on('connect_error', (error) => {
-      console.log(`❌ Error en /sala/${salaId}/estudiante:`, error.message)
-    })
+    .use(conErrorLogging)
     .on('connection', async (socket: SocketEstudiante) => {
       await handlersSalaEstudiante(socket, salaId)
       await handlersEncuestasEstudiante(socket, salaId)
@@ -101,9 +92,7 @@ export function registrarSalaEnServer(salaId: string) {
 
   io.of(`/sala/${salaId}/publico`)
     // .use(conSession)
-    .on('connect_error', (error) => {
-      console.log(`❌ Error en /sala/${salaId}/publico:`, error.message)
-    })
+    .use(conErrorLogging)
     .on('connection', async (socket: SocketEstudiante) => {
       await handlersSalaPublico(socket, salaId)
     })

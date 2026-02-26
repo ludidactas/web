@@ -1,3 +1,9 @@
+import { cn } from "@/lib/utils";
 import { PropsWithChildren } from "react";
 
-export const Hl = ({ children }: PropsWithChildren) => <span className="text-[#46BFD7] font-bold">{children}</span>
+interface HlProps extends PropsWithChildren{
+    className?:string
+}
+
+
+export const Hl = ({className, children}:HlProps) => <span className={cn('text-[#46BFD7] font-bold', className)}>{children}</span>

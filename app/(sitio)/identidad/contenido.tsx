@@ -16,10 +16,10 @@ import ale from '@/svg/titles/AlejandraSVGO.svg'
 import vla from '@/svg/titles/VladimirSVGO.svg'
 import proyecto from '@/svg/titles/ProyectoSVGO.svg'
 import juego from '@/svg/titles/JuegoSVGO.svg'
-import ShapeDividerWaves from '../shape-divider'
+import ShapeDividerWaves from '../custom/shape-divider'
 
 export default function ContenidoIdentidad() {
-  const styletitle = 'drop-shadow-[2px_2px_2px_rgba(0,0,0)]'
+  const styletitle = 'drop-shadow-[2px_2px_2px_rgba(0,0,0)] h-10 md:h-20 '
   const stylediv = 'w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4 flex flex-col items-center gap-8 mt-10 text-center'
   return (
     <WithAOS>
@@ -27,7 +27,7 @@ export default function ContenidoIdentidad() {
         {/* El proyecto */}
         <div className={`${stylediv}`}>
           {/* Titulo */}
-          <LdSvg className={`h-20 ${styletitle}`} data-aos="fade-left" SvgComponent={proyecto} />
+          <LdSvg className={`${styletitle}`} data-aos="fade-left" SvgComponent={proyecto} />
 
           {/* Texto */}
           <p>
@@ -70,20 +70,20 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves top colorText="text-indigo-200/60" />
       <div className="bg-indigo-200/60 w-screen flex flex-col items-center gap-4">
         <div className={`${stylediv}`}>
-          <LdSvg className={`h-20 ${styletitle}`} data-aos="fade-left" SvgComponent={equipo} />
+          <LdSvg className={`${styletitle}`} data-aos="fade-left" SvgComponent={equipo} />
           <div className="flex flex-col gap-8 items-center">
             <div className="relative items-center">
-              <div className='flex flex-col justify-center items-center float-left [shape-outside:circle(50%)] [shape-margin:0.05rem]'>
+              <div className='flex flex-col justify-center items-center float-left [shape-outside:circle(50%)] [shape-margin:0.05rem] mr-12'>
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
-                  className="rounded-full bg-[#55B7D4] mx-8 "
+                  className="rounded-full bg-[#55B7D4] h-32 w-32 md:h-60 md:w-60 "
                   src={'/img/Vlad.png'}
                   height={200}
                   width={200}
                   alt=""
                 />
-                <LdSvg className={`h-10 -translate-y-7 ${styletitle}`} data-aos="fade-right" SvgComponent={vla} />
+                <LdSvg className={`md:w-80 -translate-y-7 ${styletitle}`} data-aos="fade-right" SvgComponent={vla} />
 
               </div>
               <p className={`text-justify leading-relaxed`}>
@@ -92,21 +92,22 @@ export default function ContenidoIdentidad() {
               </p>
               <div className="clear-left"></div>
             </div>
-            <div className="relative items-center">
-              <div className='flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full '>
+            <div className="relative">
+              <div className='flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full ml-12 '>
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
-                  className="mx-8 bg-[#55B7D4] rounded-full"
+                  className="mx-8 bg-[#55B7D4] rounded-full h-32 w-32 md:h-60 md:w-60"
                   src={'/img/Aleja.png'}
                   height={200}
                   width={200}
                   alt="Team member 2"
                 />
-                <LdSvg className={`h-10 -translate-y-7 ${styletitle}`} data-aos="fade-left" SvgComponent={ale} />
+                <LdSvg className={`md:w-80  -translate-y-7 ${styletitle}`} data-aos="fade-left" SvgComponent={ale} />
               </div>
               <p className="text-justify leading-relaxed">
-                Profesional en Filosofia, Ilustradora y Desarrolladora Front-End autodidacta. Es quien se encuentra detrás del diseño UX/UI de la página.
+                Profesional en Filosofia, Ilustradora y Desarrolladora Front-End autodidacta. Es quien se encuentra detrás del diseño UX/UI de la página y 
+                asiste en el desarrollo de los talleres. Participa del proyecto desde el 2024.
               </p>
               <div className="clear-right"></div>
             </div>
@@ -119,7 +120,7 @@ export default function ContenidoIdentidad() {
       <div className="mt-10 lg:mt-20">
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
-          <LdSvg className={`h-20 ${styletitle}`} data-aos="fade-left" SvgComponent={vision} />
+          <LdSvg className={`${styletitle}`} data-aos="fade-left" SvgComponent={vision} />
           {/* Texto */}
           <p>Nos reconocemos en una época que pide regeneración.</p>
           <p>
@@ -193,7 +194,7 @@ export default function ContenidoIdentidad() {
 
 
       {/* Juego */}
-      <LdSvg className={`h-20 mt-20  ${styletitle}`} data-aos="fade-left" SvgComponent={juego} />
+      <LdSvg className={`mt-20  ${styletitle}`} data-aos="fade-left" SvgComponent={juego} />
       <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
         <p>Ocupa un lugar central en nuestra propuesta.
           Entendemos{' '}
@@ -286,7 +287,7 @@ const TituloYDosColumnas = ({ titulo, children, invertido = false }: TituloYDosC
     </h1>
 
     <div
-      className="flex flex-col lg:grid lg:grid-cols-2 lg:grid-rows-none gap-4 items-center justify-items-center"
+      className="flex text-sm md:text-xl flex-col lg:grid lg:grid-cols-2 lg:grid-rows-none gap-4 items-center justify-items-center"
       style={invertido ? { direction: 'rtl' } : {}}
     >
       {children}

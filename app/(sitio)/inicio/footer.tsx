@@ -2,19 +2,17 @@ import Link from 'next/link'
 import { Instagram } from 'lucide-react'
 import Image from 'next/image'
 import { titulo } from '@/components/fonts'
-import { cn } from '@/lib/utils'
+import ShapeDividerWaves from '../custom/shape-divider'
 
 export default function Footer() {
   return (<>
-  
-    <div className="flex flex-col items-center text-center  bg-indigo-300/50">
-             <div className={cn('shape-divider-waves w-full text-white')}/>
-
-      <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center dark:text-slate-50 gap-4 pt-10">
+    <ShapeDividerWaves top colorText='text-indigo-300/50' />
+    <div className="flex flex-col items-center text-center bg-indigo-300/50">
+      <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center gap-4 pt-10">
         <div className="flex flex-col items-center gap-2">
           <Image className="w-[50px] lg:w-[100px]" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
           <Image className="w-[200px] lg:w-[300px]" src="/img/lema_sketchy.gif" alt={''} width={300} height={300} />
-          <p className={`font-medium pt-1 dark:text-slate-50 ${titulo.className} text-[1em] m-0`}>
+          <p className={`font-medium pt-1 ${titulo.className} text-[1em] m-0`}>
             Educación emergente{' '}
           </p>
         </div>

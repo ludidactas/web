@@ -56,7 +56,7 @@ export const conPermisosDe =
     try {
       configSala = (JSON.parse(sala!) as SalaData).config
     } catch {
-      throw new Error(`No se pudo parsear la configuración de la sala ${salaId}`)
+      return next(new Error(`No se pudo parsear la configuración de la sala ${salaId}`))
     }
 
     // Verificamos permisos

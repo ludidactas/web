@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io'
+import { ExtendedError, Socket } from 'socket.io'
 
 // Functiones de arquitectura, orquestan la ejecución de las otras:
 type Middleware<T extends unknown[]> = (...args: T) => Promise<void>
@@ -25,8 +25,9 @@ export const conErrorHandling =
     }
   }
 
-export const conErrorLogging = async (socket: Socket) => {
+export const conErrorLogging = async (socket: Socket, next: (err?: ExtendedError) => void) => {
   socket.on('connect_error', (error) => {
     console.error(`❌ Error en ${socket.nsp.name}:`, error.message)
   })
+  next()
 }

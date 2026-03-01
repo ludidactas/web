@@ -1,14 +1,13 @@
 import { randomUUID } from 'crypto'
+import { values } from 'remeda'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import db from '../db'
-import { nombreDeFantasia } from '../salas/utils'
+import { existeSala, getSalaById } from '../salas/app'
 import { RolEncuesta } from '../tipos'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema, SesionSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
-import { existeSala, getSalaById } from '../salas/app'
-import { isTruthy } from 'remeda'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -24,11 +23,11 @@ export type SocketConSesion = Socket<
 
 // Funciones de manejo de sesiones en memoria - Pasar a redis?
 
-const sessions = new Map<string, WssServerSession>()
-const userSessions = new Map<string, string[]>()
+// const sessions = new Map<string, WssServerSession>()
+// const userSessions = new Map<string, string[]>()
 
 /** Abre la sesión en el storage, la attachea al socket y la emite de inmediato al cliente */
-const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
+const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
   // Creamos el objeto (y lo validamos)
   const sessionData = WssServerSessionSchema.parse({
     ...payload,
@@ -38,15 +37,10 @@ const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) =
   }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
 
   // Guardamos la sesión
-  sessions.set(sessionData.sessionId, sessionData)
+  await db.hset(`session:${sessionData.sessionId}`, sessionData)
 
-  // Guardamos la sesión en la lista de sesiones del usuario (para poder revocarlas todas juntas si es necesario)
-  const sesionesDeUsuario = userSessions.get(sessionData.id)
-  if (sesionesDeUsuario) {
-    userSessions.set(sessionData.id, [...sesionesDeUsuario, sessionData.sessionId])
-  } else {
-    userSessions.set(sessionData.id, [sessionData.sessionId])
-  }
+  // Para poder buscar las sesiones de un usuario
+  await db.hset(`sessions:${sessionData.id}`, `${sessionData.rol}:${sessionData.idSala ?? 'NA'}`, sessionData.sessionId)
 
   // La adjuntamos al socket
   socket.data.session = sessionData
@@ -57,39 +51,37 @@ const openSession = <T extends Partial<Pasaporte>>(socket: Socket, payload: T) =
   socket.emit('session:opened', sessionData)
 }
 
-/** Devuelve todas las sesiones de un uid */
-export const getSessionsByUserId = (userId: string) => {
-  const sessionIds = userSessions.get(userId)
-  if (!sessionIds) return []
-  return sessionIds.map((sessionId) => sessions.get(sessionId)).filter(isTruthy)
-}
-
 /** Devuelve una sesión dado su sessionId, o undefined si no existe */
-export const getSession = (sessionId: string) => {
-  return sessions.get(sessionId)
+export const getSession = async (sessionId: string) => {
+  return (await db.hgetall(`session:${sessionId}`)) as WssServerSession
 }
 
-export const getUserSessions = (userId: string) => {
-  const sessionIds = userSessions.get(userId)
-  if (!sessionIds) return []
-  return sessionIds.map((sessionId) => sessions.get(sessionId)).filter(isTruthy)
+export const getUserSessions = async (userId: string) => {
+  const sessions = await db.hgetall(`sessions:${userId}`)
+  if (!sessions) return []
+  return await Promise.all(values(sessions).map((sid) => db.hgetall(`session:${sid}`) as Promise<WssServerSession>))
 }
 
-export const revocarSession = (sessionId: string) => {
-  sessions.delete(sessionId)
+export const revocarSession = async (sessionId: string) => {
+  const session = await getSession(sessionId)
+  await db.del(`session:${sessionId}`)
+
+  const idEnUserSessions =
+    session.rol === RolEncuesta.Estudiante ? `${session.rol}:${session.idSala}` : `${session.rol}:NA`
+  await db.hdel(`sessions:${session.id}`, idEnUserSessions)
 }
 
-export const revocarSesiones = (sessionsIds: string[]) => sessionsIds.forEach(revocarSession)
-
-export const revocarUsuarios = (userIds: string[]) => {
-  userIds.forEach((userId) => {
-    const sessionsIds = userSessions.get(userId)
-    if (sessionsIds) {
-      revocarSesiones(sessionsIds)
-      userSessions.delete(userId)
-    }
-  })
+export const revocarUsuario = async (userId: string) => {
+  const sessions = await getUserSessions(userId)
+  if (sessions) {
+    await Promise.all(sessions.map((s) => revocarSession(s.sessionId)))
+    await db.del(`sessions:${userId}`)
+  }
 }
+
+export const revocarSesiones = (sessionsIds: string[]) => Promise.all(sessionsIds.map(revocarSession))
+
+export const revocarUsuarios = (userIds: string[]) => Promise.all(userIds.map(revocarUsuario))
 
 /**
  * Hace login al server de websockets.
@@ -123,7 +115,7 @@ const login = async (socket: SocketConSesion) => {
     // Si la sala requiere dni y la sesión no lo tiene, bochamos
     if ((await sala.get()).config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)
 
-    openSession(socket, auth)
+    await openSession(socket, auth)
   }
 
   // Sesión de profe o admin
@@ -134,9 +126,9 @@ const login = async (socket: SocketConSesion) => {
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
     if (registradoComoAdmin(payload.email) && auth.rol === RolEncuesta.Admin) {
-      openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
+      await openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
     } else {
-      openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
+      await openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
     }
   }
 
@@ -156,7 +148,7 @@ const validarSession = async (socket: SocketConSesion) => {
     // - solo token de autenticación, si es profe o admin
     // - ambos, si es profesor o admin con sesión existente
 
-    const storedSession = getSession(socketAuthData.sessionId)
+    const storedSession = await getSession(socketAuthData.sessionId)
 
     // Si el id que nos mandaron no coincide con el de la sesión, bochamos
     if (!storedSession) throw new Error(`Sesión ${socketAuthData.sessionId} no encontrada!`)
@@ -203,7 +195,7 @@ const validarSession = async (socket: SocketConSesion) => {
   } catch (err: any) {
     // Si hubo un error, cerramos la sesión y emitimos el error
     console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
-    revocarSession(socketAuthData.sessionId)
+    await revocarSession(socketAuthData.sessionId)
     throw err
   }
 }

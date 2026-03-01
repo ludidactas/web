@@ -144,7 +144,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
   async function votar(voteData: z.infer<typeof voteValidator>) {
     const { pollId, optionId, aporte } = voteData
 
-    const session = getSession(sessionId)
+    const session = await getSession(sessionId)
     if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada')
     if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo votar: Rol público no tiene permitido votar')
 
@@ -232,7 +232,7 @@ export async function hidratadas(salaId: string, sessionId: string) {
   const sala = await getSalaById(salaId)
 
   // Agarramos la sesión y derivamos el id del votante
-  const session = getSession(sessionId)
+  const session = await getSession(sessionId)
   if (!session) throw new Error('No se pudo hidratar: Sesión inválida o expirada')
   if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo hidratar: Rol público no tiene permitido')
 

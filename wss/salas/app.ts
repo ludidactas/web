@@ -71,14 +71,8 @@ export const salaService = async (salaId: string) => {
     const userIds = Object.keys(estudiantesData)
 
     // Filtramos las sesiones que no existen más
-    const invalidas = userIds.filter((uid) => getUserSessions(uid).length === 0)
-
-    console.log(`LISTANDO ESTUDIANTES, LIMPIANDO SESIONES INVÁLIDAS...`, {
-      sesionesIds: userIds,
-      estudiantesData,
-      invalidas,
-      allSessions: userIds.flatMap(getUserSessions),
-    })
+    const sesionesPorUsuario = await Promise.all(userIds.map(getUserSessions)) // getUserSessions devuelve un _array_ de sesiones, aunque normalmente debería ser 1 o 0
+    const invalidas = sesionesPorUsuario.filter((sessions) => sessions.length === 0).map((_, i) => userIds[i])
 
     // Las limpiamos de redis
     if (invalidas.length > 0) {
@@ -93,7 +87,7 @@ export const salaService = async (salaId: string) => {
     }
 
     // Las válidas las devolvemos
-    return userIds.filter((sid) => getUserSessions(sid).length > 0)
+    return sesionesPorUsuario.filter((sessions) => sessions.length > 0)
   }
 
   /** Devuelve la lista de estudiantes en la sala, limpiando previamente las sesiones revocadas. */
@@ -101,9 +95,9 @@ export const salaService = async (salaId: string) => {
     await limpiarEstudiantesSinSesion()
 
     const userStatus = await db.hgetall(`sala:${salaId}:estudiantes`)
+    const sesionesPorUsuario = await Promise.all(Object.keys(userStatus).map(getUserSessions))
 
-    const conectados = Object.keys(userStatus)
-      .map(getUserSessions)
+    const conectados = sesionesPorUsuario
       .filter((sessions) => sessions.length > 0)
       .map((sessions) => ({
         ...first(sessions)! /** @todo ver mejor qué hacer acá */,

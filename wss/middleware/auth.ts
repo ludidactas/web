@@ -72,7 +72,7 @@ export const conPermisosDe =
     if (configSala.permitir_anonimo) return next()
 
     // Si no permite anónimos, pero el usuario es profe o admin, puede entrar
-    if (configSala.pedir_dni && !socket.data.session.dni) {
+    if (configSala.pedir_dni && socket.data.session.rol === RolEncuesta.Estudiante && !socket.data.session.dni) {
       return next(new Error(`Se requiere DNI para entrar a esta sala`))
     }
 

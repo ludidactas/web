@@ -8,8 +8,6 @@ import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  if (!socket.data.session.email) throw new Error('Profe sin email en sesión!')
-
   // Guardamos el socket del profe en una SALA para poder comunicarnos con él cuando se conecten estudiantes
   socket.join(`profe:${socket.data.session.email}`)
 
@@ -18,9 +16,9 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   const profe = await profeSala(sala.profe.email)
 
   socket.emit('sala:abierta', {
-    sala: sala.raw(),
-    polls: profe.listarEncuestas(),
-    estudiantes: sala.listarEstudiantes(),
+    sala: await sala.raw(),
+    polls: await profe.listarEncuestas(),
+    estudiantes: await sala.listarEstudiantes(),
   })
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)

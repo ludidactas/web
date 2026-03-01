@@ -1,12 +1,5 @@
 import { RolEncuesta } from '@/wss/tipos'
-import {
-  Pasaporte,
-  PasaporteTester,
-  PasaporteProfe,
-  PasaporteEstudiante,
-  PasaportePublico,
-  PasaporteAdmin,
-} from '@/wss/validators/auth'
+import { Pasaporte } from '@/wss/validators/auth'
 import { WssServerSession } from '@/wss/validators/session'
 import { io, Socket } from 'socket.io-client'
 import { RazonExpiracion } from './use-conexion-wss'
@@ -26,46 +19,17 @@ export interface SocketWssCli extends Socket {
 }
 
 /** Endpoints para cada rol */
-export const conectores = {
-  [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false }),
-  [RolEncuesta.Admin]: (auth: PasaporteAdmin) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false }),
-  [RolEncuesta.Profe]: (auth: PasaporteProfe) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/profe`, { auth, autoConnect: false }),
-  [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/estudiante`, {
-      auth,
-      autoConnect: false,
-    }),
-  [RolEncuesta.Publico]: (auth: PasaportePublico) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/publico`, {
-      auth,
-      autoConnect: false,
-    }),
+export const paths = {
+  [RolEncuesta.Admin]: `/sala/admin`,
+  [RolEncuesta.Profe]: `/sala/profe`,
+  [RolEncuesta.Estudiante]: `/sala/estudiante`,
+  [RolEncuesta.Publico]: `/sala/publico`,
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function handshake(auth: SocketServerAuth) {
-  let sock: Socket
-  switch (auth.rol) {
-    case RolEncuesta.Tester:
-      sock = io(auth.url, { auth: { rol: RolEncuesta.Tester }, autoConnect: false, transports: ['websocket'] })
-      break
-    case RolEncuesta.Profe:
-      sock = conectores[RolEncuesta.Profe](auth)
-      break
-    case RolEncuesta.Estudiante:
-      sock = conectores[RolEncuesta.Estudiante](auth)
-      break
-    case RolEncuesta.Publico:
-      sock = conectores[RolEncuesta.Publico](auth)
-      break
-    case RolEncuesta.Admin:
-      sock = conectores[RolEncuesta.Admin](auth)
-      break
-  }
-
-  return sock as SocketWssCli
+  const path = paths[auth.rol]
+  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}${path}`, { auth, autoConnect: false }) as SocketWssCli
 }
 
 /**

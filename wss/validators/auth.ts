@@ -29,14 +29,6 @@ export const PasaporteAdminSchema = z
   })
   .strict()
 
-export const PasaporteTesterSchema = z
-  .object({
-    rol: z.literal(RolEncuesta.Tester),
-    url: z.string(),
-    nombre: z.string().optional(),
-  })
-  .strict()
-
 export const PasaportePublicoSchema = z
   .object({
     rol: z.literal(RolEncuesta.Publico),
@@ -48,14 +40,12 @@ export const PasaporteSchema = z.discriminatedUnion('rol', [
   PasaporteEstudianteSchema,
   PasaporteProfeSchema,
   PasaporteAdminSchema,
-  PasaporteTesterSchema,
   PasaportePublicoSchema,
 ])
 
 export type Pasaporte = z.infer<typeof PasaporteSchema>
 export type PasaporteEstudiante = z.infer<typeof PasaporteEstudianteSchema>
 export type PasaporteProfe = z.infer<typeof PasaporteProfeSchema>
-export type PasaporteTester = z.infer<typeof PasaporteTesterSchema>
 export type PasaportePublico = z.infer<typeof PasaportePublicoSchema>
 export type PasaporteAdmin = z.infer<typeof PasaporteAdminSchema>
 

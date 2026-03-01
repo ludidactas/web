@@ -1,22 +1,20 @@
-// import { LdSvg } from "@/components/custom/ld-svg"
+import { LdSvg } from '@/components/custom/ld-svg'
 import useClipboard from '@/components/hooks/use-clipboard'
 import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { Accordion, AccordionContent } from '@/components/ui/accordion'
 import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
 import { Encuesta } from '@/wss/tipos'
+import { Icon as Iconito } from '@iconify/react'
+import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { Acciones } from './acciones'
 import { useEncuestaProfe } from './encuestas-profe-context'
-import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { Icon as Iconito } from '@iconify/react'
-import { useState } from 'react'
-import { LdSvg } from '@/components/custom/ld-svg'
-import { Accordion, AccordionContent } from '@/components/ui/accordion'
-import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
 
 export function ListaEncuestas() {
   const { encuestas, estado } = useEncuestaProfe()

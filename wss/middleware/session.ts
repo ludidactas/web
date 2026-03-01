@@ -21,11 +21,6 @@ export type SocketConSesion = Socket<
   }
 >
 
-// Funciones de manejo de sesiones en memoria - Pasar a redis?
-
-// const sessions = new Map<string, WssServerSession>()
-// const userSessions = new Map<string, string[]>()
-
 /** Abre la sesión en el storage, la attachea al socket y la emite de inmediato al cliente */
 const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
   // Creamos el objeto (y lo validamos)
@@ -119,7 +114,7 @@ const login = async (socket: SocketConSesion) => {
   }
 
   // Sesión de profe o admin
-  if (auth.rol === RolEncuesta.Profe || auth.rol === RolEncuesta.Admin) {
+  else if (auth.rol === RolEncuesta.Profe || auth.rol === RolEncuesta.Admin) {
     // Si es profe o admin, necesitamos token
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
     const payload = decodearTokenNextAuth(auth.token)
@@ -133,6 +128,7 @@ const login = async (socket: SocketConSesion) => {
   }
 
   // Publico y test no establecen sesión y por lo tanto tampoco hacen login
+  else throw new Error(`Rol ${auth.rol} no permitido para login!`)
 }
 
 const validarSession = async (socket: SocketConSesion) => {

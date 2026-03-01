@@ -45,11 +45,17 @@ export const registradoComoAdmin = (email: string) => {
 
 // --
 
+export const conPermisosDeSala = async (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
+  const session = socket.data.session
+  if (session.rol === RolEncuesta.Estudiante) conPermisosDe(session.idSala)(socket, next)
+}
+
 /** Autorización. Verifica la sesión del usuario contra las políticas de la sala. */
 export const conPermisosDe =
   (salaId: string) => async (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
     // Si estamos acá, la existencia de la sala ya fue verificada en `login` o `validarSession`
     const sala = await db.hget('salas', salaId)
+    if (!sala) next(new Error(`La sala ${salaId} no existe!`))
 
     // Parseamos la configuración de la sala
     let configSala

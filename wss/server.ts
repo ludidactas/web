@@ -1,13 +1,12 @@
 import { Socket } from 'socket.io'
-import db from './db'
+import { conPermisosDeSala } from './middleware/auth'
+import { conErrorLogging } from './middleware/error-handling'
+import { esAdmin, esProfeOAdmin, SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
 import { handlersEncuestasEstudiante, handlersEncuestasProfe } from './polls/handlers'
 import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from './salas/handlers'
 import { handlersTest } from './test/handlers'
-import { esAdmin, esProfe, SocketEstudiante, SocketProfe } from './middleware/roles'
-import { conPermisosDe } from './middleware/auth'
-import { conErrorLogging } from './middleware/error-handling'
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
 
@@ -15,19 +14,10 @@ export const io = mount(PORT)
 
 /** Setup de app */
 
-// Registramos las salas preexistentes en db
-const salas_preexistentes = await db.hkeys('salas')
-console.log(
-  `🚪 Registrando ${salas_preexistentes.length} ${
-    salas_preexistentes.length === 1 ? 'sala preexistente' : 'salas preexistentes'
-  } en redis...`
-)
-salas_preexistentes.forEach(registrarSalaEnServer)
-
 // Canal para profes
 io.of('/sala/profe')
   .use(conSession)
-  .use(esProfe)
+  .use(esProfeOAdmin)
   .use(conErrorLogging)
   .on('connection', async (socket: SocketProfe) => {
     await handlersSalaProfe(socket)
@@ -55,45 +45,19 @@ io.use(conErrorLogging).on('connection', (socket) => {
   socket.on('ping', (socket) => socket.emit('pong'))
 })
 
-// Cambiar para usar rooms!
-io.of(/sala\/.+?\/estudiante/).use(async (socket, next) => {
-  const matchSalaId = socket.nsp.name.match(/^\/sala\/([a-zA-Z0-9_-]{3,50})\/estudiante$/)
+io.of('/sala/publico')
+  .use(conErrorLogging)
+  .on('connection', async (socket: Socket) => {
+    const salaId = socket.handshake.auth.idSala
+    await handlersSalaPublico(socket, salaId)
+  })
 
-  // Vemos si la sala existe
-  const salaId = matchSalaId ? matchSalaId[1] : null
-  if (!salaId) {
-    console.log(`❌ Intento de conexión a sala inválida: ${socket.nsp.name}`)
-    return next(new Error(`Sala inválida`))
-  }
-
-  // Vemos si tiene owner
-  const tiene_owner = await db.hget('salas_owners', salaId)
-  if (!tiene_owner) {
-    console.log(`❌ Intento de conexión a sala huérfana: ${socket.nsp.name}`)
-    next(new Error(`Sala huérfana`))
-  }
-
-  next()
-})
-
-/** Crea y hace el setup del canal para estudiantes de la sala */
-export function registrarSalaEnServer(salaId: string) {
-  console.log(`🏫 Creando namespace para sala: /sala/${salaId}/estudiante`)
-
-  // Registramos la sala en el servidor (endpoint de estudiantes)
-  io.of(`/sala/${salaId}/estudiante`)
-    .use(conSession)
-    .use(conPermisosDe(salaId))
-    .use(conErrorLogging)
-    .on('connection', async (socket: SocketEstudiante) => {
-      await handlersSalaEstudiante(socket, salaId)
-      await handlersEncuestasEstudiante(socket, salaId)
-    })
-
-  io.of(`/sala/${salaId}/publico`)
-    // .use(conSession)
-    .use(conErrorLogging)
-    .on('connection', async (socket: SocketEstudiante) => {
-      await handlersSalaPublico(socket, salaId)
-    })
-}
+io.of('/sala/estudiante')
+  .use(conSession)
+  .use(conPermisosDeSala)
+  .use(conErrorLogging)
+  .on('connection', async (socket: SocketEstudiante) => {
+    const salaId = socket.data.session.idSala
+    await handlersSalaEstudiante(socket, salaId)
+    await handlersEncuestasEstudiante(socket, salaId)
+  })

@@ -8,21 +8,16 @@ import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  // Guardamos el socket del profe en una SALA para poder comunicarnos con él cuando se conecten estudiantes
-  socket.join(`profe:${socket.data.session.email}`)
-
   // Se conectó un profe, le armamos una sala:
   const sala = await obtenerOCrearSala(socket)
   const profe = await profeSala(sala.profe.email)
 
-  socket.emit('sala:abierta', {
-    sala: await sala.raw(),
-    polls: await profe.listarEncuestas(),
-    estudiantes: await sala.listarEstudiantes(),
-  })
+  // // Rooms
+  socket.join([`profe:${socket.data.session.email}`, `sala:${sala.id}`, `sala:${sala.id}:profe`])
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
 
+  // Listener para actualizar configuración de la sala
   socket.on(
     'sala:actualizar_config',
     safe(async (payload: unknown) => {
@@ -39,6 +34,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
+  // Listener para lista de estudiantes de la sala
   socket.on(
     'sala:listar_estudiantes',
     safe(async () => {
@@ -46,6 +42,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
+  // Listener para que el profe pida limpiar la lista de estudiantes sin sesiones activas
   socket.on(
     'sala:limpar_estudiantes_sala',
     safe(async () => {
@@ -54,6 +51,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
+  // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
   socket.on(
     'sala:abrir',
     safe(async () => {
@@ -65,13 +63,20 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
-  // Emisión inicial de la config de la sala al profe, para que tenga la config al abrir la sala
+  // Emitimos de inmediato la info inicial
   const emitir = safe(async () => {
     socket.emit('sala:config_actualizada', (await sala.get()).config)
+
+    socket.emit('sala:abierta', {
+      sala: await sala.raw(),
+      polls: await profe.listarEncuestas(),
+      estudiantes: await sala.listarEstudiantes(),
+    })
   })
 
   await emitir()
 
+  // Console logueamos la desconexión del profe
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
@@ -80,10 +85,8 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
-  // Los joineamos a una sala grupal y a una individual (para rutearle mensajes!)
-  socket.join(idSala)
-  socket.join(`estudiantes:${idSala}`)
-  socket.join(`${idSala}:${socket.data.session.id}`)
+  // Rooms
+  socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.id}`])
 
   const user = socket.data.session.nombre
   const sala = await getSalaById(idSala)
@@ -116,8 +119,8 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   console.log(`🔍 Cliente público conectado para sala ${idSala} (socket ${socket.id})`)
 
-  socket.join(idSala)
-  socket.join(`publico:${idSala}`)
+  // Rooms
+  socket.join([`sala:${idSala}`, `sala:${idSala}:publico`])
 
   const safe = conErrorHandling(socket)
   const emitir = safe(async () => {

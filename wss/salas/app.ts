@@ -5,7 +5,7 @@ import { RemoteSocket } from 'socket.io'
 import db from '../db'
 import { SocketProfe } from '../middleware/roles'
 import { getUserSessions, revocarUsuarios } from '../middleware/session'
-import { io, registrarSalaEnServer } from '../server'
+import { io } from '../server'
 import { RolEncuesta } from '../tipos'
 import { configSala, ConfigSala } from '../validators/salas'
 
@@ -47,9 +47,9 @@ export const salaService = async (salaId: string) => {
     const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
 
     const socketsAdmin = await io.of('/sala/admin').in('admin').fetchSockets()
-    const socketsProfe = await io.of(`/sala/profe`).in(`profe:${sala.profe.email}`).fetchSockets()
-    const socketsEstudiantes = await io.of(`/sala/${sala.id}/estudiante`).in(`estudiantes:${sala.id}`).fetchSockets()
-    const socketsPublico = await io.of(`/sala/${sala.id}/publico`).in(`publico:${sala.id}`).fetchSockets()
+    const socketsProfe = await io.of(`/sala/profe`).in(`sala:${sala.id}:profe`).fetchSockets()
+    const socketsEstudiantes = await io.of(`/sala/estudiante`).in(`sala:${sala.id}:estudiantes`).fetchSockets()
+    const socketsPublico = await io.of(`/sala/publico`).in(`sala:${sala.id}:publico`).fetchSockets()
 
     await Promise.all([
       // A los admins
@@ -130,7 +130,7 @@ export const salaService = async (salaId: string) => {
       // Notificamos y desconectamos(kick)
       sinDni.forEach((e) => {
         // Los desconectamos enviándoles un mensaje de error a su sala
-        const socks = io.of(`/sala/${sala.id}/estudiante`).in(`${sala.id}:${e.id}`)
+        const socks = io.of(`/sala/estudiante`).in(`sala:${sala.id}:${e.id}`)
         socks.emit('sala:kick', {
           motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
         })
@@ -235,7 +235,6 @@ export async function obtenerOCrearSala(socket: SocketProfe): Promise<ReturnType
   // Si no tiene, le creamos una
   if (!owner) {
     const sala = await crearSala(socket)
-    registrarSalaEnServer(sala.id)
     console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
   }
 

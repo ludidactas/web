@@ -15,7 +15,7 @@ export default async function OverlayEncuestas({
   const { data, success, error } = estadisticaSvgConfigValidator.safeParse(await searchParams)
 
   return (
-    <EncuestaEstudianteProvider idSala={idSala} nombre="Overlay">
+    <EncuestaEstudianteProvider auth={{ idSala, nombre: 'Overlay' }}>
       <div className="w-full h-full min-h-screen flex flex-col items-center justify-center">
         {success && <TestEstadisticaApp config={data} />}
         {!success && <p className="text-red-700">Error en configuración: {error.message}</p>}

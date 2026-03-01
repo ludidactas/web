@@ -104,7 +104,7 @@ export const ListaEstudiantes = () => {
           <ul className="flex flex-col gap-2 p-2 rounded-xl">
             {estudiantes.map((e) => (
               <li
-                key={e.id}
+                key={e.userId}
                 className={cn({
                   'text-black flex gap-2 ': e.conectado,
                   'text-slate-400 flex gap-2 grayscale': !e.conectado,
@@ -124,7 +124,7 @@ export const ListaEstudiantes = () => {
                 {/* Nombre, email y DNI */}
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
-                  {!e.es_anonimo && <span className="text-teal-500">{e.id}</span>}
+                  {!e.es_anonimo && <span className="text-teal-500">{e.userId}</span>}
                   {e.es_anonimo && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
               </li>

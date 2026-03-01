@@ -22,7 +22,7 @@ const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   ...data,
   nombre: data.nombre || nombreDeFantasia(),
   es_anonimo: !data.dni && !data.email,
-  id: data.dni || data.email || data.nombre || `estudiante-${randomUUID().split('-')[0]}`,
+  userId: data.dni || data.email || data.nombre || `estudiante-${randomUUID().split('-')[0]}`,
 }))
 
 const WssProfeSessionSchema = WssSessionBaseSchema.extend({
@@ -30,18 +30,18 @@ const WssProfeSessionSchema = WssSessionBaseSchema.extend({
   email: z.string().email(),
   nombre: z.string().min(1),
   avatar: z.string().optional(),
-}).transform((data) => ({ ...data, id: data.email }))
+}).transform((data) => ({ ...data, userId: data.email }))
 
 const WssAdminSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolEncuesta.Admin),
   email: z.string().email(),
   nombre: z.string().min(1),
   avatar: z.string().optional(),
-}).transform((data) => ({ ...data, id: data.email }))
+}).transform((data) => ({ ...data, userId: data.email }))
 
 const WssPublicSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolEncuesta.Publico),
-}).transform((data) => ({ ...data, id: `publico-${data.userIp ?? 'NOIP'}-${randomUUID().split('-')[0]}` }))
+}).transform((data) => ({ ...data, userId: `publico-${data.userIp ?? 'NOIP'}-${randomUUID().split('-')[0]}` }))
 
 /** Esquema de sesión válida. Requiere rol. Puede ser o bien de estudiantes, o bien de profe, o bien de admin. Profe y admin requieren email y nombre. */
 export const WssServerSessionSchema = z.union([

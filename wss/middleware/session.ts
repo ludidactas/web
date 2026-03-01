@@ -35,7 +35,11 @@ const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload
   await db.hset(`session:${sessionData.sessionId}`, sessionData)
 
   // Para poder buscar las sesiones de un usuario
-  await db.hset(`sessions:${sessionData.id}`, `${sessionData.rol}:${sessionData.idSala ?? 'NA'}`, sessionData.sessionId)
+  await db.hset(
+    `sessions:${sessionData.userId}`,
+    `${sessionData.rol}:${sessionData.idSala ?? 'NA'}`,
+    sessionData.sessionId
+  )
 
   // La adjuntamos al socket
   socket.data.session = sessionData
@@ -63,7 +67,7 @@ export const revocarSession = async (sessionId: string) => {
 
   const idEnUserSessions =
     session.rol === RolEncuesta.Estudiante ? `${session.rol}:${session.idSala}` : `${session.rol}:NA`
-  await db.hdel(`sessions:${session.id}`, idEnUserSessions)
+  await db.hdel(`sessions:${session.userId}`, idEnUserSessions)
 }
 
 export const revocarUsuario = async (userId: string) => {

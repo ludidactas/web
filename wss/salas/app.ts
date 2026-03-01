@@ -101,7 +101,7 @@ export const salaService = async (salaId: string) => {
       .filter((sessions) => sessions.length > 0)
       .map((sessions) => ({
         ...first(sessions)! /** @todo ver mejor qué hacer acá */,
-        conectado: sessions.some((s) => userStatus[s.id] === '1'),
+        conectado: sessions.some((s) => userStatus[s.userId] === '1'),
       }))
 
     return conectados
@@ -124,13 +124,13 @@ export const salaService = async (salaId: string) => {
       // Chiflamos al log!
       console.warn(
         `⚠️  Estudiantes sin DNI en sala ${sala.id} al activar pedir_dni:`,
-        sinDni.map((e) => e.id)
+        sinDni.map((e) => e.userId)
       )
 
       // Notificamos y desconectamos(kick)
       sinDni.forEach((e) => {
         // Los desconectamos enviándoles un mensaje de error a su sala
-        const socks = io.of(`/sala/estudiante`).in(`sala:${sala.id}:${e.id}`)
+        const socks = io.of(`/sala/estudiante`).in(`sala:${sala.id}:${e.userId}`)
         socks.emit('sala:kick', {
           motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
         })
@@ -138,7 +138,7 @@ export const salaService = async (salaId: string) => {
       })
 
       // Los borramos de la lista de estudiantes de la sala
-      await Promise.all(sinDni.map((e) => db.hdel(`sala:${sala.id}:estudiantes`, e.id)))
+      await Promise.all(sinDni.map((e) => db.hdel(`sala:${sala.id}:estudiantes`, e.userId)))
 
       // Revocamos sus sesiones -- pendiente discriminar por sala!
       revocarUsuarios(sinDni.map((e) => e.sessionId))

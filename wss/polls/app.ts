@@ -148,7 +148,7 @@ export async function estudianteSala(idSala: string, sessionId: string) {
     if (!session) throw new Error('No se pudo votar: Sesión inválida o expirada')
     if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo votar: Rol público no tiene permitido votar')
 
-    const idVotante = session.id
+    const idVotante = session.userId
 
     await assertPollExists(idSala, pollId)
 
@@ -236,7 +236,7 @@ export async function hidratadas(salaId: string, sessionId: string) {
   if (!session) throw new Error('No se pudo hidratar: Sesión inválida o expirada')
   if (session.rol === RolEncuesta.Publico) throw new Error('No se pudo hidratar: Rol público no tiene permitido')
 
-  const idVotante = session.rol === RolEncuesta.Estudiante ? session.id! : session.email
+  const idVotante = session.rol === RolEncuesta.Estudiante ? session.userId! : session.email
 
   // Agarramos todas las encuestas de la sala de la db
   const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)

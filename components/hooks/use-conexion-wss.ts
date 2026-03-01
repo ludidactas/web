@@ -14,15 +14,31 @@ export interface RazonExpiracion {
   message: string
 }
 
+/** Representa los posibles estados de nuestra conexión al WebSocket Server (WSS). */
 export enum StatusDeConexion {
+  /** Conexión quieta. O bien todavía no intentamos conectar o bien ya cerramos la conexión. */
   Quieto = 'idle',
+  /** @todo: poner en uso este estado. */
   Autenticando = 'authenticating',
+  /** @todo: poner en uso este estado. */
   CargandoDependencias = 'loading_deps',
+  /** Estableciendo conexión con el WSS. */
   Conectando = 'connecting',
+  /** Conexión establecida :) */
   Conectado = 'connected',
+  /** Error. Si el estado es este `error` contiene un mensaje. */
   Error = 'error',
+  /** El servidor bochó la conexión. */
   Expirado = 'expired',
 }
+
+/** Enumera los estados de la conexión para los que tenemos que mostrar la pantalla de loading */
+export const statusesDeCarga = [
+  StatusDeConexion.Quieto,
+  StatusDeConexion.Conectando,
+  StatusDeConexion.Autenticando,
+  StatusDeConexion.CargandoDependencias,
+]
 
 type Estado = {
   socket: SocketWssCli | null
@@ -90,7 +106,7 @@ export const useConexionWss = create<Estado>((set, get) => ({
           onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
           onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
           onSession: (_, session) => set({ session }),
-          onExpired: (_, data) => get()._manejarExpiracion(),
+          onExpired: (_, _data) => get()._manejarExpiracion(),
           onError: (_, err) => get()._manejarError(err),
         },
       })

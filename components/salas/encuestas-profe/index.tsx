@@ -1,7 +1,7 @@
 'use client'
 
 import useClipboard from '@/components/hooks/use-clipboard'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
@@ -33,14 +33,7 @@ export default function EncuestasProfe() {
 
   const { handleCopy, justCopied } = useClipboard()
 
-  if (
-    [
-      StatusDeConexion.Quieto,
-      StatusDeConexion.Conectando,
-      StatusDeConexion.Autenticando,
-      StatusDeConexion.CargandoDependencias,
-    ].includes(estado)
-  ) {
+  if (statusesDeCarga.includes(estado)) {
     return <LoadingSala overlay />
   }
 

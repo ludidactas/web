@@ -1,6 +1,6 @@
 // import { LdSvg } from "@/components/custom/ld-svg"
 import useClipboard from '@/components/hooks/use-clipboard'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
 import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
@@ -26,12 +26,7 @@ export function ListaEncuestas() {
     1000
   )
 
-  const conectando = [
-    StatusDeConexion.Quieto,
-    StatusDeConexion.Conectando,
-    StatusDeConexion.Autenticando,
-    StatusDeConexion.CargandoDependencias,
-  ].includes(estado)
+  const conectando = statusesDeCarga.includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio)) {
     return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>

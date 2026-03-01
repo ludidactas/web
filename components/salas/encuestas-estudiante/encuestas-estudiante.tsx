@@ -2,14 +2,12 @@
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-// import Image from 'next/image'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import Cabeza from '/svg/cabezasvgo.svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
-// import Polls from '/svg/pollsvgo.svg'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
@@ -27,12 +25,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
     1000
   )
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)
-  const conectando = [
-    StatusDeConexion.Autenticando,
-    StatusDeConexion.Quieto,
-    StatusDeConexion.Conectando,
-    StatusDeConexion.CargandoDependencias,
-  ].includes(estado)
+  const conectando = statusesDeCarga.includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio))
     return <LoadingSala overlay mensaje="Contactando con server de salas..." />

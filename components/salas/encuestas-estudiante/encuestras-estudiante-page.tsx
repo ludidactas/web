@@ -7,10 +7,10 @@ import { ReactNode, useMemo } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 import { EncuestaEstudianteProvider } from './encuestas-estudiante-context'
 
+import HeaderSala from '../header-sala'
+import LoadingSala from '../loading-sala'
 import LoginSalaEstudiante from './encuestas-estudiante-login'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import HeaderSala from '../header-sala'
-import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -31,7 +31,7 @@ export default function EncuestasEstudiantePage({
   )
 
   if (status === 'loading') {
-    return <LoadingSalaEstudiante overlay />
+    return <LoadingSala overlay mensaje="Verificando sesiones existentes..." />
   }
 
   // Formulario de acceso

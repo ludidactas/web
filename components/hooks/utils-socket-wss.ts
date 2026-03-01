@@ -27,23 +27,20 @@ export interface SocketWssCli extends Socket {
 
 /** Endpoints para cada rol */
 export const conectores = {
-  [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) =>
-    io(url, { auth, autoConnect: false, transports: ['websocket'] }),
+  [RolEncuesta.Tester]: (auth: PasaporteTester, url: string) => io(url, { auth, autoConnect: false }),
   [RolEncuesta.Admin]: (auth: PasaporteAdmin) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false, transports: ['websocket'] }),
+    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/admin`, { auth, autoConnect: false }),
   [RolEncuesta.Profe]: (auth: PasaporteProfe) =>
-    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/profe`, { auth, autoConnect: false, transports: ['websocket'] }),
+    io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/profe`, { auth, autoConnect: false }),
   [RolEncuesta.Estudiante]: (auth: PasaporteEstudiante) =>
     io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/estudiante`, {
       auth,
       autoConnect: false,
-      transports: ['websocket'],
     }),
   [RolEncuesta.Publico]: (auth: PasaportePublico) =>
     io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/sala/${auth.idSala}/publico`, {
       auth,
       autoConnect: false,
-      transports: ['websocket'],
     }),
 }
 
@@ -90,15 +87,12 @@ export async function configurarListeners({
   const { onConnect, onError, onDisconnect: onDisconect, onSession, onExpired } = listeners
 
   // En cualquier caso, le suscribimos unos handlers básicos
-  sock.on('connect_error', (error) => {
-    onError(sock, error)
-  })
+  sock.on('connect_error', (error) => onError(sock, error))
   sock.on('disconnect', (reason: string) => onDisconect(sock, reason))
   sock.on('connect', () => onConnect(sock))
-  sock.on('connect_timeout', (error) => {
-    console.error('Connection timeout:', error)
+  sock.on('connect_timeout', (error) =>
     onError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
-  })
+  )
 
   // Suscribimos a la sesión abierta y la persistimos
   sock.on('session:opened', (session) => onSession(sock, session))

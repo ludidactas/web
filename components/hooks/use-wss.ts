@@ -55,6 +55,7 @@ export function useWss(auth: Pasaporte) {
     iniciarConexion,
     session,
     error,
-    WssDebugPanel: () => DebugPanel({ data: { status, session, error, socket: { id: socket?.id } } }),
+    WssDebugPanel: () =>
+      DebugPanel({ data: { status, session, error, socket: { id: socket?.id }, auth, storedSession } }),
   }
 }

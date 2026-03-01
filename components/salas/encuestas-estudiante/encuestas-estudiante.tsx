@@ -3,22 +3,21 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 // import Image from 'next/image'
+import { LdSvg } from '@/components/custom/ld-svg'
 import { useState } from 'react'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
-import { LdSvg } from '@/components/custom/ld-svg'
-import DibuEstudiante from '/svg/upssvgo.svg'
 import Cabeza from '/svg/cabezasvgo.svg'
+import DibuEstudiante from '/svg/upssvgo.svg'
 // import Polls from '/svg/pollsvgo.svg'
+import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
+import IconEnc from '@/svg/EncuestaIconSVGO.svg'
 import { EncuestaHidratada } from '@/wss/tipos'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
-import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
-import useConfirmarConDelay from '@/components/hooks/use-delay'
+import LoadingSala from '../loading-sala'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import IconEnc from '@/svg/EncuestaIconSVGO.svg'
-import Conectado from '@/svg/ConectadoSVGO.svg'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
@@ -35,7 +34,8 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
     StatusDeConexion.CargandoDependencias,
   ].includes(estado)
 
-  if (conectando || (posibleVacio && !confirmadoVacio)) return <LoadingSalaEstudiante overlay />
+  if (conectando || (posibleVacio && !confirmadoVacio))
+    return <LoadingSala overlay mensaje="Contactando con server de salas..." />
 
   return (
     <div>

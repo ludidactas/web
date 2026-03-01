@@ -1,10 +1,11 @@
 'use client'
 
-import LoadingSala from '@/app/(herramientas)/sala/loading'
 import useClipboard from '@/components/hooks/use-clipboard'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
+import LoadingSala from '../loading-sala'
 import { EncuestaSVG } from '../overlay/estadistica-svg'
 import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
 import { DialogAcciones } from './acciones'
@@ -13,7 +14,6 @@ import { useEncuestaProfe } from './encuestas-profe-context'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function EncuestasProfe() {
   const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
@@ -43,6 +43,9 @@ export default function EncuestasProfe() {
   ) {
     return <LoadingSala overlay />
   }
+
+  if (estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado)
+    return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
 
   return (
     <>
@@ -118,14 +121,6 @@ export default function EncuestasProfe() {
             </TabsContent>
           </Tabs>
         )}
-        {(estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado) && (
-          <p className="flex flex-col text-center text-xl gap-2 p-4">
-            <span className="text-3xl pb-2">¡Ups!</span>
-            <span>No se puede conectar con el servidor</span>
-            <span>Actualizá la página, o envianos un mensaje a </span>
-            <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-          </p>
-        )}
       </div>
 
       {/* VISTA DESKTOP (sin cambios) */}
@@ -159,16 +154,6 @@ export default function EncuestasProfe() {
                 <AgregarPregunta />
               </div>
             )}
-
-            {estado === StatusDeConexion.Error ||
-              (estado === StatusDeConexion.Expirado && (
-                <p className="flex flex-col text-center text-xl gap-2 p-4">
-                  <span className="text-3xl pb-2">¡Ups!</span>
-                  <span>No se puede conectar con el servidor</span>
-                  <span>Actualizá la página, o envianos un mensaje a </span>
-                  <span className="text-cyan-500">ludidactas.adm@gmail.com</span>
-                </p>
-              ))}
           </div>
         </div>
 

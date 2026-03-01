@@ -42,7 +42,6 @@ export const useSesionStore = create<EstadoSesion>()(
  */
 export default function useSesionGuardada(sessionKey: string) {
   const { data: nextSession, status: statusSesionNext } = useSessionNext()
-  // const { sessions, setReady, ready, saveSession, clearSession } = useSesionStore()
 
   const storedSession = useSesionStore((state) => state.sessions[sessionKey] || null)
   const saveSessionAction = useSesionStore((state) => state.saveSession)

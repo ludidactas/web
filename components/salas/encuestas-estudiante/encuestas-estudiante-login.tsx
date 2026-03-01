@@ -1,6 +1,5 @@
 'use client'
 
-import LoadingSalaEstudiante from '@/app/(herramientas)/sala/[idSala]/loading'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
@@ -13,11 +12,12 @@ import { RolEncuesta } from '@/wss/tipos'
 import { PasaportePublico } from '@/wss/validators/auth'
 import { animate, spring, stagger } from 'animejs'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
+import LoadingSala from '../loading-sala'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import Link from 'next/link'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -130,10 +130,12 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
       </div>
     )
 
-  if (posibleNoExiste && !confirmadoNoExiste) return <LoadingSalaEstudiante overlay />
-  if (posibleError && !confirmadoError) return <LoadingSalaEstudiante overlay />
+  if (posibleNoExiste && !confirmadoNoExiste)
+    return <LoadingSala overlay mensaje="Verificando existencia de la sala..." />
+  if (posibleError && !confirmadoError) return <LoadingSala overlay mensaje="Verificando estado..." />
 
-  if (estado !== StatusDeConexion.Conectado || !configSala) return <LoadingSalaEstudiante overlay />
+  if (estado !== StatusDeConexion.Conectado || !configSala)
+    return <LoadingSala overlay mensaje="Conectando con serivdor en vivo..." />
 
   return (
     <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">

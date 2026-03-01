@@ -8,8 +8,6 @@ import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  console.log(`Entró profe! Socket ${socket.id}, sesión de ${socket.data.session.email}`)
-
   if (!socket.data.session.email) throw new Error('Profe sin email en sesión!')
 
   // Guardamos el socket del profe en una SALA para poder comunicarnos con él cuando se conecten estudiantes

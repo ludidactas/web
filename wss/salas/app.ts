@@ -164,7 +164,7 @@ export namespace Salas {
       id: salaId,
 
       /** Devuelve la sala actualizada */
-      get: getFromDb,
+      config: () => getFromDb().then((sala) => sala.config),
 
       /** Lleva a cabo las acciones necesarias para que el estado respete la config (e.g. kickear a los estudiantes que no tengan DNI cuando es pedido) */
       sanitizar,

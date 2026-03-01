@@ -28,10 +28,8 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
       await sala.sanitizar()
 
-      const { config } = await sala.get()
-
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
-      await sala.broadcast('sala:config_actualizada', config)
+      await sala.broadcast('sala:config_actualizada', await sala.config())
     })
   )
 
@@ -66,7 +64,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   // Emitimos de inmediato la info inicial
   const emitir = safe(async () => {
-    socket.emit('sala:config_actualizada', (await sala.get()).config)
+    socket.emit('sala:config_actualizada', await sala.config())
 
     socket.emit('sala:abierta', {
       sala: await sala.raw(),
@@ -121,7 +119,7 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   const emitir = safe(async () => {
     const sala = await Salas.get(idSala)
     if (!sala) throw new Error(`Sala ${idSala} no existe!`)
-    socket.emit('sala:config_actualizada', (await sala.get()).config)
+    socket.emit('sala:config_actualizada', await sala.config())
   })
 
   await emitir()

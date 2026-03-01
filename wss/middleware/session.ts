@@ -67,9 +67,10 @@ const login = async (socket: SocketConSesion) => {
     if (!(await db.hexists('salas', auth.idSala))) throw new Error(`La sala ${auth.idSala} no existe!`)
 
     const sala = await Salas.get(auth.idSala)
+    const config = await sala.config()
 
     // Si la sala requiere dni y la sesión no lo tiene, bochamos
-    if ((await sala.get()).config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)
+    if (config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)
 
     await openSession(socket, auth)
   }

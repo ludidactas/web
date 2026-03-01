@@ -4,6 +4,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
 import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
+import { io } from '../server'
 
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
@@ -91,16 +92,13 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   const user = socket.data.session.nombre
   const sala = await getSalaById(idSala)
 
-  console.log(
-    `🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`
-  )
-
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   const notificar = safe(async () => {
+    console.log(
+      `🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`
+    )
     await sala.marcarEstudiantePresente(socket.data.session.userId)
-
-    const socks = await sala.socketsProfe()
-    socks.forEach((s) => s.emit('sala:estudiante_conectado', socket.data.session))
+    await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
   })
   await notificar()
 
@@ -109,8 +107,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     safe(async (reason) => {
       console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
       await sala.marcarEstudianteAusente(socket.data.session.userId)
-      const socks = await sala.socketsProfe()
-      socks.forEach((s) => s.emit('sala:estudiante_desconectado', { id: socket.data.session.userId }))
+      await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: socket.data.session.userId })
     })
   )
 }

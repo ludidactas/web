@@ -131,8 +131,10 @@ const login = async (socket: SocketConSesion) => {
     }
   }
 
-  // Publico y test no establecen sesión y por lo tanto tampoco hacen login
-  else throw new Error(`Rol ${auth.rol} no permitido para login!`)
+  // Publico y test no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
+  else {
+    console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
+  }
 }
 
 const validarSession = async (socket: SocketConSesion) => {

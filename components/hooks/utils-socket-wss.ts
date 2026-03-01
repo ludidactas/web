@@ -1,4 +1,3 @@
-import { RolEncuesta } from '@/wss/tipos'
 import { Pasaporte } from '@/wss/validators/auth'
 import { WssServerSession } from '@/wss/validators/session'
 import { io, Socket } from 'socket.io-client'
@@ -18,18 +17,9 @@ export interface SocketWssCli extends Socket {
   auth: SocketServerAuth
 }
 
-/** Endpoints para cada rol */
-export const paths = {
-  [RolEncuesta.Admin]: `/sala/admin`,
-  [RolEncuesta.Profe]: `/sala/profe`,
-  [RolEncuesta.Estudiante]: `/sala/estudiante`,
-  [RolEncuesta.Publico]: `/sala/publico`,
-}
-
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function handshake(auth: SocketServerAuth) {
-  const path = paths[auth.rol]
-  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}${path}`, { auth, autoConnect: false }) as SocketWssCli
+  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, { auth, autoConnect: false }) as SocketWssCli
 }
 
 /**

@@ -1,13 +1,14 @@
 import { randomUUID } from 'crypto'
-import { first, mergeDeep } from 'remeda'
+import { entries, groupBy, mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
 import db from '../db'
 import { SocketProfe } from '../middleware/roles'
-import { getUserSessions, revocarUsuarios } from '../middleware/session'
+import { revocarUsuarios } from '../middleware/session'
 import { io } from '../server'
 import { RolEncuesta } from '../tipos'
 import { configSala, ConfigSala } from '../validators/salas'
+import { WssServerSession } from '../validators/session'
 
 export interface SalaData {
   id: string
@@ -40,39 +41,25 @@ export const salaService = async (salaId: string) => {
     data: unknown,
     mapper: (data: unknown, socket: RemoteSocket<any, any>) => Promise<any> = async (data) => data
   ) {
-    const sala = await get()
-
-    console.log(`📡 Broadcasteando evento '${event}' en sala ${sala.id}`)
+    console.log(`📡 Broadcasteando evento '${event}' en sala ${salaId}`)
 
     const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
 
-    const socketsAdmin = await io.of('/sala/admin').in('admin').fetchSockets()
-    const socketsProfe = await io.of(`/sala/profe`).in(`sala:${sala.id}:profe`).fetchSockets()
-    const socketsEstudiantes = await io.of(`/sala/estudiante`).in(`sala:${sala.id}:estudiantes`).fetchSockets()
-    const socketsPublico = await io.of(`/sala/publico`).in(`sala:${sala.id}:publico`).fetchSockets()
+    const sockets = await io.to(`sala:${salaId}`).fetchSockets()
 
-    await Promise.all([
-      // A los admins
-      ...socketsAdmin.map(enviarMapeado),
-      // Al profe
-      ...socketsProfe.map(enviarMapeado),
-      // A los estudiantes
-      ...socketsEstudiantes.map(enviarMapeado),
-      // Al público (los que están en la pantalla de login)
-      ...socketsPublico.map(enviarMapeado),
-    ])
-
-    return
+    await Promise.all(sockets.map(enviarMapeado))
   }
 
   /** Limpia las que según la sala existen pero que no están en redis (fueron revocadas) */
   async function limpiarEstudiantesSinSesion() {
     const estudiantesData = await db.hgetall(`sala:${salaId}:estudiantes`)
-    const userIds = Object.keys(estudiantesData)
+    const userIdsState = Object.keys(estudiantesData)
 
-    // Filtramos las sesiones que no existen más
-    const sesionesPorUsuario = await Promise.all(userIds.map(getUserSessions)) // getUserSessions devuelve un _array_ de sesiones, aunque normalmente debería ser 1 o 0
-    const invalidas = sesionesPorUsuario.filter((sessions) => sessions.length === 0).map((_, i) => userIds[i])
+    const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+    const userIdsSockets = socketsEstudiantesSala.map((s) => s.data.session.userId)
+
+    // Las inválidas son las que estén en estudiantesData pero no en sockets
+    const invalidas = userIdsState.filter((id) => !userIdsSockets.includes(id))
 
     // Las limpiamos de redis
     if (invalidas.length > 0) {
@@ -87,22 +74,20 @@ export const salaService = async (salaId: string) => {
     }
 
     // Las válidas las devolvemos
-    return sesionesPorUsuario.filter((sessions) => sessions.length > 0)
+    return socketsEstudiantesSala.map((s) => s.data.session)
   }
 
   /** Devuelve la lista de estudiantes en la sala, limpiando previamente las sesiones revocadas. */
   async function listarEstudiantes() {
     await limpiarEstudiantesSinSesion()
 
-    const userStatus = await db.hgetall(`sala:${salaId}:estudiantes`)
-    const sesionesPorUsuario = await Promise.all(Object.keys(userStatus).map(getUserSessions))
+    const socketsConectados = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+    const socketsPorUsuario = groupBy(socketsConectados, (s) => s.data.session.userId)
 
-    const conectados = sesionesPorUsuario
-      .filter((sessions) => sessions.length > 0)
-      .map((sessions) => ({
-        ...first(sessions)! /** @todo ver mejor qué hacer acá */,
-        conectado: sessions.some((s) => userStatus[s.userId] === '1'),
-      }))
+    // Nos quedamos con la primera sesión (socket) de cada usuario
+    const conectados = entries(socketsPorUsuario)
+      .map(([_, sockets]) => (sockets.length ? sockets[0].data.session : null))
+      .filter((s): s is WssServerSession => s !== null)
 
     return conectados
   }
@@ -123,14 +108,14 @@ export const salaService = async (salaId: string) => {
 
       // Chiflamos al log!
       console.warn(
-        `⚠️  Estudiantes sin DNI en sala ${sala.id} al activar pedir_dni:`,
+        `⚠️  Estudiantes sin DNI en sala ${salaId} al activar pedir_dni:`,
         sinDni.map((e) => e.userId)
       )
 
       // Notificamos y desconectamos(kick)
       sinDni.forEach((e) => {
         // Los desconectamos enviándoles un mensaje de error a su sala
-        const socks = io.of(`/sala/estudiante`).in(`sala:${sala.id}:${e.userId}`)
+        const socks = io.in(`sala:${salaId}:${e.userId}`)
         socks.emit('sala:kick', {
           motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
         })
@@ -138,35 +123,26 @@ export const salaService = async (salaId: string) => {
       })
 
       // Los borramos de la lista de estudiantes de la sala
-      await Promise.all(sinDni.map((e) => db.hdel(`sala:${sala.id}:estudiantes`, e.userId)))
+      await Promise.all(sinDni.map((e) => db.hdel(`sala:${salaId}:estudiantes`, e.userId)))
 
       // Revocamos sus sesiones -- pendiente discriminar por sala!
-      revocarUsuarios(sinDni.map((e) => e.sessionId))
+      await revocarUsuarios(sinDni.map((e) => e.sessionId))
     }
   }
 
   /** Quita los inactivos de la lista de la sala */
   async function limpiarEstudiantes() {
-    const sala = await get()
-
-    const estudiantes = await db.hgetall(`sala:${sala.id}:estudiantes`)
+    const estudiantes = await db.hgetall(`sala:${salaId}:estudiantes`)
 
     const pipeline = db.pipeline()
 
     for (const [id, activo] of Object.entries(estudiantes)) {
       if (activo === '0') {
-        pipeline.hdel(`sala:${sala.id}:estudiantes`, id)
+        pipeline.hdel(`sala:${salaId}:estudiantes`, id)
       }
     }
 
     await pipeline.exec()
-  }
-
-  async function socketsProfe() {
-    const sala = await get()
-    const socks = io.of(`/sala/profe`).in(`profe:${sala.profe.email}`).fetchSockets()
-    if (!socks) throw new Error(`Socket de profe ${sala.profe.email} no encontrado! D:`)
-    return socks
   }
 
   async function marcarEstudiantePresente(userId: string) {
@@ -205,9 +181,6 @@ export const salaService = async (salaId: string) => {
 
     /** Broadcastea un mensaje a todos los sockets en la sala */
     broadcast,
-
-    /** Devuelve el socket del profe */
-    socketsProfe,
 
     /** Marca un estudiante como presente en la sala */
     marcarEstudiantePresente,
@@ -312,9 +285,4 @@ export async function getEmailProfeDeSala(salaId: string) {
 export async function getSalaByEmailProfe(email: string) {
   const salaId = await getSalaId(email)
   return getSalaById(salaId)
-}
-
-/** Devuelve el socket de un profe por id de sala (el owner) */
-export async function getSocketProfeDeSala(salaId: string) {
-  return (await getSalaById(salaId)).socketsProfe()
 }

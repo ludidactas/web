@@ -1,63 +1,40 @@
-import { Socket } from 'socket.io'
-import { conPermisosDeSala } from './middleware/auth'
+import { isNullish } from 'remeda'
 import { conErrorLogging } from './middleware/error-handling'
-import { esAdmin, esProfeOAdmin, SocketEstudiante, SocketProfe } from './middleware/roles'
+import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
 import { handlersEncuestasEstudiante, handlersEncuestasProfe } from './polls/handlers'
 import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from './salas/handlers'
-import { handlersTest } from './test/handlers'
+import { RolEncuesta } from './tipos'
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
 
 export const io = mount(PORT)
 
 /** Setup de app */
-
-// Canal para profes
-io.of('/sala/profe')
+io.use(conErrorLogging)
   .use(conSession)
-  .use(esProfeOAdmin)
-  .use(conErrorLogging)
-  .on('connection', async (socket: SocketProfe) => {
-    await handlersSalaProfe(socket)
-    await handlersEncuestasProfe(socket)
-  })
-
-// Canal para admins
-io.of('/sala/admin')
-  .use(conSession)
-  .use(esAdmin)
-  .use(conErrorLogging)
+  // Despachamos los handlers según el rol del usuario:
   .on('connection', async (socket: SocketConSesion) => {
-    await handlersAdmin(socket)
-  })
+    // Publico: no requiere sesión, pero sí el id de sala para validar que exista y enviar la config pública
+    if (isNullish(socket.data) || isNullish(socket.data.session)) {
+      await handlersSalaPublico(socket, socket.handshake.auth.idSala)
+    }
 
-// Canal de test
-io.of('/test')
-  .use(conErrorLogging)
-  .on('connection', (socket: Socket) => handlersTest(socket))
+    // Estudiante: requiere sesión de estudiante válida, y permisos para la sala (chequeados en `conSession`)
+    else if (socket.data.session.rol === RolEncuesta.Estudiante) {
+      await handlersSalaEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
+      await handlersEncuestasEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
+    }
 
-/** Setup global */
+    // Profe: requiere sesión de profe válida
+    else if (socket.data.session.rol === RolEncuesta.Profe) {
+      await handlersSalaProfe(socket as SocketProfe)
+      await handlersEncuestasProfe(socket as SocketProfe)
+    }
 
-io.use(conErrorLogging).on('connection', (socket) => {
-  console.log(`🔌 Conexión global: ${socket.id} en namespace ${socket.nsp.name}`)
-  socket.on('ping', (socket) => socket.emit('pong'))
-})
-
-io.of('/sala/publico')
-  .use(conErrorLogging)
-  .on('connection', async (socket: Socket) => {
-    const salaId = socket.handshake.auth.idSala
-    await handlersSalaPublico(socket, salaId)
-  })
-
-io.of('/sala/estudiante')
-  .use(conSession)
-  .use(conPermisosDeSala)
-  .use(conErrorLogging)
-  .on('connection', async (socket: SocketEstudiante) => {
-    const salaId = socket.data.session.idSala
-    await handlersSalaEstudiante(socket, salaId)
-    await handlersEncuestasEstudiante(socket, salaId)
+    // Admin: requiere sesión de admin válida
+    else if (socket.data.session.rol === RolEncuesta.Admin) {
+      await handlersAdmin(socket)
+    }
   })

@@ -1,13 +1,13 @@
 import { ExtendedError } from 'socket.io'
 import { conErrorHandling } from '../middleware/error-handling'
-import { getSalaByEmailProfe, getSalaById } from '../salas/app'
 import { broadcastPoll, estudianteSala, profeSala } from './app'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
+import { Salas } from '../salas/app'
 
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  const sala = await getSalaByEmailProfe(socket.data.session.email)
+  const sala = await Salas.getByEmailProfe(socket.data.session.email)
   const profe = await profeSala(sala.profe.email)
 
   socket.on(
@@ -73,7 +73,7 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   const safe = conErrorHandling(socket)
 
   const user = socket.data.session.nombre
-  const sala = await getSalaById(idSala)
+  const sala = await Salas.get(idSala)
 
   const estudiante = await estudianteSala(idSala, socket.data.session.userId)
 

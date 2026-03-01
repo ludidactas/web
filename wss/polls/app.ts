@@ -1,15 +1,15 @@
+import { assert } from 'console'
 import { merge } from 'remeda'
 import { z } from 'zod'
-import { salaService, getSalaByEmailProfe, getSalaById } from '../salas/app'
+import db from '../db'
+import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
 import { extractZodErrorMessages } from '../utils'
 import { pollBase, voteValidator } from '../validators/polls'
-import { assert } from 'console'
-import db from '../db'
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(email: string) {
-  const { id: salaId } = await getSalaByEmailProfe(email)
+  const { id: salaId } = await Salas.getByEmailProfe(email)
 
   // Acciones de profe:
 
@@ -194,7 +194,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 }
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
-export async function broadcastPoll(sala: Awaited<ReturnType<typeof salaService>>, poll: Encuesta) {
+export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
     if (socket.data.session && socket.data.session.rol === RolEncuesta.Estudiante) {
       return await hidratar(sala.id, poll as Encuesta, socket.data.session.sessionId)
@@ -221,7 +221,7 @@ export async function hidratar(idSala: string, poll: Encuesta, idVotante: string
 
 /** Devuelve la lista de encuestas publicadas hidratadas para un user  */
 export async function hidratadas(salaId: string, userId: string) {
-  const sala = await getSalaById(salaId)
+  const sala = await Salas.get(salaId)
 
   // Agarramos todas las encuestas de la sala de la db
   const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)

@@ -3,14 +3,14 @@ import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
-import { getEmailProfeDeSala, getSalaById, obtenerOCrearSala } from './app'
 import { io } from '../server'
+import { Salas } from './app'
 
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
   // Se conectó un profe, le armamos una sala:
-  const sala = await obtenerOCrearSala(socket)
+  const sala = await Salas.obtenerOCrear(socket)
   const profe = await profeSala(sala.profe.email)
 
   // // Rooms
@@ -90,13 +90,11 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.userId}`])
 
   const user = socket.data.session.nombre
-  const sala = await getSalaById(idSala)
+  const sala = await Salas.get(idSala)
 
   // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
   const notificar = safe(async () => {
-    console.log(
-      `🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${await getEmailProfeDeSala(idSala)}, socket ${socket.id})`
-    )
+    console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
     await sala.marcarEstudiantePresente(socket.data.session.userId)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
   })
@@ -121,7 +119,7 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
 
   const safe = conErrorHandling(socket)
   const emitir = safe(async () => {
-    const sala = await getSalaById(idSala)
+    const sala = await Salas.get(idSala)
     if (!sala) throw new Error(`Sala ${idSala} no existe!`)
     socket.emit('sala:config_actualizada', (await sala.get()).config)
   })

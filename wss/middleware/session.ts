@@ -1,12 +1,12 @@
 import { randomUUID } from 'crypto'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import db from '../db'
-import { getSalaById } from '../salas/app'
 import { RolEncuesta } from '../tipos'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
+import { Salas } from '../salas/app'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -66,7 +66,7 @@ const login = async (socket: SocketConSesion) => {
     // Verificamos que la sala exista
     if (!(await db.hexists('salas', auth.idSala))) throw new Error(`La sala ${auth.idSala} no existe!`)
 
-    const sala = await getSalaById(auth.idSala)
+    const sala = await Salas.get(auth.idSala)
 
     // Si la sala requiere dni y la sesión no lo tiene, bochamos
     if ((await sala.get()).config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)

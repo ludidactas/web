@@ -48,25 +48,3 @@ export type PasaporteEstudiante = z.infer<typeof PasaporteEstudianteSchema>
 export type PasaporteProfe = z.infer<typeof PasaporteProfeSchema>
 export type PasaportePublico = z.infer<typeof PasaportePublicoSchema>
 export type PasaporteAdmin = z.infer<typeof PasaporteAdminSchema>
-
-// Schemas para validar la sesión en el handshake (cuando ya hizo login y tiene una sesión guardada):
-
-export const SesionEstudianteSchema = z.object({
-  rol: z.literal(RolEncuesta.Estudiante),
-  sessionId: z.string().min(1),
-  idSala: z.string().min(1),
-})
-
-export const SesionProfeSchema = z.object({
-  rol: z.literal(RolEncuesta.Profe),
-  sessionId: z.string().min(1),
-  token: z.string(),
-})
-
-export const SesionAdminSchema = z.object({
-  rol: z.literal(RolEncuesta.Admin),
-  sessionId: z.string().min(1),
-  token: z.string(),
-})
-
-export const SesionSchema = z.discriminatedUnion('rol', [SesionEstudianteSchema, SesionProfeSchema, SesionAdminSchema])

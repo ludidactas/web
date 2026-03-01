@@ -75,7 +75,7 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   const user = socket.data.session.nombre
   const sala = await getSalaById(idSala)
 
-  const estudiante = await estudianteSala(idSala, socket.data.session.sessionId)
+  const estudiante = await estudianteSala(idSala, socket.data.session.userId)
 
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   socket.emit('polls:list', await estudiante.listar())

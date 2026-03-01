@@ -4,7 +4,6 @@ import { entries, groupBy, mergeDeep } from 'remeda'
 import { RemoteSocket } from 'socket.io'
 import db from '../db'
 import { SocketProfe } from '../middleware/roles'
-import { revocarUsuarios } from '../middleware/session'
 import { io } from '../server'
 import { RolEncuesta } from '../tipos'
 import { configSala, ConfigSala } from '../validators/salas'
@@ -55,11 +54,17 @@ export const salaService = async (salaId: string) => {
     const estudiantesData = await db.hgetall(`sala:${salaId}:estudiantes`)
     const userIdsState = Object.keys(estudiantesData)
 
+    console.log(`Estudiantes de sala según redis: `, userIdsState)
+
     const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
     const userIdsSockets = socketsEstudiantesSala.map((s) => s.data.session.userId)
 
+    console.log(`Estudiantes de sala según socketio: `, userIdsSockets)
+
     // Las inválidas son las que estén en estudiantesData pero no en sockets
     const invalidas = userIdsState.filter((id) => !userIdsSockets.includes(id))
+
+    console.log(`Sesiones inválidas detectadas: `, invalidas)
 
     // Las limpiamos de redis
     if (invalidas.length > 0) {
@@ -86,7 +91,10 @@ export const salaService = async (salaId: string) => {
 
     // Nos quedamos con la primera sesión (socket) de cada usuario
     const conectados = entries(socketsPorUsuario)
-      .map(([_, sockets]) => (sockets.length ? sockets[0].data.session : null))
+      .map(([_, sockets]) => ({
+        ...sockets[0].data.session,
+        conectado: true,
+      }))
       .filter((s): s is WssServerSession => s !== null)
 
     return conectados
@@ -98,10 +106,13 @@ export const salaService = async (salaId: string) => {
     // Si pasamos a requerir dni, kickeamos a los estudiantes sin dni
     if (sala.config.pedir_dni) {
       // Colectamos
-      const estudiantes = await listarEstudiantes()
-      const sinDni = estudiantes.filter((e) => e.rol === RolEncuesta.Estudiante && !e.dni)
+      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sinDni = sockets.filter((s) => s.data.session.rol === RolEncuesta.Estudiante && !s.data.session.dni)
 
-      console.log(`ESTUDIANTES AL MOMENTO DE SANITIZAR: `, estudiantes)
+      // const estudiantes = await listarEstudiantes()
+      // const sinDni = estudiantes.filter((e) => e.rol === RolEncuesta.Estudiante && !e.dni)
+
+      // console.log(`ESTUDIANTES AL MOMENTO DE SANITIZAR: `, estudiantes)
 
       // Si no hay ninguno, no hay nada más que hacer
       if (sinDni.length === 0) return
@@ -109,24 +120,19 @@ export const salaService = async (salaId: string) => {
       // Chiflamos al log!
       console.warn(
         `⚠️  Estudiantes sin DNI en sala ${salaId} al activar pedir_dni:`,
-        sinDni.map((e) => e.userId)
+        sinDni.map((s) => s.data.session.userId)
       )
 
       // Notificamos y desconectamos(kick)
-      sinDni.forEach((e) => {
+      sinDni.forEach((s) => {
         // Los desconectamos enviándoles un mensaje de error a su sala
-        const socks = io.in(`sala:${salaId}:${e.userId}`)
-        socks.emit('sala:kick', {
+        s.emit('sala:kick', {
           motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
         })
-        socks.disconnectSockets()
+        s.disconnect()
       })
 
-      // Los borramos de la lista de estudiantes de la sala
-      await Promise.all(sinDni.map((e) => db.hdel(`sala:${salaId}:estudiantes`, e.userId)))
-
-      // Revocamos sus sesiones -- pendiente discriminar por sala!
-      await revocarUsuarios(sinDni.map((e) => e.sessionId))
+      /** @todo: Marcar el drop para la lista de presentes */
     }
   }
 

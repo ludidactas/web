@@ -1,11 +1,10 @@
 import { randomUUID } from 'crypto'
-import { values } from 'remeda'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
 import db from '../db'
-import { existeSala, getSalaById } from '../salas/app'
+import { getSalaById } from '../salas/app'
 import { RolEncuesta } from '../tipos'
 import { socketIp } from '../utils'
-import { Pasaporte, PasaporteSchema, SesionSchema } from '../validators/auth'
+import { Pasaporte, PasaporteSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 
@@ -21,7 +20,7 @@ export type SocketConSesion = Socket<
   }
 >
 
-/** Abre la sesión en el storage, la attachea al socket y la emite de inmediato al cliente */
+/** Parsea (valida) y attachea la sesión al socket y la emite de inmediato al cliente */
 const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
   // Creamos el objeto (y lo validamos)
   const sessionData = WssServerSessionSchema.parse({
@@ -31,16 +30,6 @@ const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload
     agente: socket.handshake.headers['user-agent'],
   }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
 
-  // Guardamos la sesión
-  await db.hset(`session:${sessionData.sessionId}`, sessionData)
-
-  // Para poder buscar las sesiones de un usuario
-  await db.hset(
-    `sessions:${sessionData.userId}`,
-    `${sessionData.rol}:${sessionData.idSala ?? 'NA'}`,
-    sessionData.sessionId
-  )
-
   // La adjuntamos al socket
   socket.data.session = sessionData
 
@@ -49,38 +38,6 @@ const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload
   // La emitimos al cliente
   socket.emit('session:opened', sessionData)
 }
-
-/** Devuelve una sesión dado su sessionId, o undefined si no existe */
-export const getSession = async (sessionId: string) => {
-  return (await db.hgetall(`session:${sessionId}`)) as WssServerSession
-}
-
-export const getUserSessions = async (userId: string) => {
-  const sessions = await db.hgetall(`sessions:${userId}`)
-  if (!sessions) return []
-  return await Promise.all(values(sessions).map((sid) => db.hgetall(`session:${sid}`) as Promise<WssServerSession>))
-}
-
-export const revocarSession = async (sessionId: string) => {
-  const session = await getSession(sessionId)
-  await db.del(`session:${sessionId}`)
-
-  const idEnUserSessions =
-    session.rol === RolEncuesta.Estudiante ? `${session.rol}:${session.idSala}` : `${session.rol}:NA`
-  await db.hdel(`sessions:${session.userId}`, idEnUserSessions)
-}
-
-export const revocarUsuario = async (userId: string) => {
-  const sessions = await getUserSessions(userId)
-  if (sessions) {
-    await Promise.all(sessions.map((s) => revocarSession(s.sessionId)))
-    await db.del(`sessions:${userId}`)
-  }
-}
-
-export const revocarSesiones = (sessionsIds: string[]) => Promise.all(sessionsIds.map(revocarSession))
-
-export const revocarUsuarios = (userIds: string[]) => Promise.all(userIds.map(revocarUsuario))
 
 /**
  * Hace login al server de websockets.
@@ -137,71 +94,6 @@ const login = async (socket: SocketConSesion) => {
   }
 }
 
-const validarSession = async (socket: SocketConSesion) => {
-  // Si estamos acá, es porque socket.handshake.auth.sessionId está definido
-
-  const { data: socketAuthData, success, error } = SesionSchema.safeParse(socket.handshake.auth)
-
-  if (!success) throw new Error(`Sesión inválida: ${error ? error.message : 'error desconocido'}`)
-
-  try {
-    // Puede venir:
-    // - solo sessionId, si es un estudiante anónimo
-    // - solo token de autenticación, si es profe o admin
-    // - ambos, si es profesor o admin con sesión existente
-
-    const storedSession = await getSession(socketAuthData.sessionId)
-
-    // Si el id que nos mandaron no coincide con el de la sesión, bochamos
-    if (!storedSession) throw new Error(`Sesión ${socketAuthData.sessionId} no encontrada!`)
-    if (storedSession.rol === RolEncuesta.Publico) throw new Error(`Las sesiones públicas son efímeras`)
-
-    console.log(
-      `🔄 Reutilizando sesión para ${storedSession?.nombre ?? storedSession.email ?? storedSession.sessionId} (${
-        storedSession?.rol
-      }) desde IP ${socketIp(socket)}`
-    )
-
-    if (socketAuthData.rol !== storedSession.rol)
-      throw new Error(`Rol de sesión inválido: se esperaba ${storedSession.rol} y se recibió ${socketAuthData.rol}`)
-
-    // Sesión de estudiante (anónima)
-    // Válida para profes o admins si están solicitando entrar como estudiantes
-    if (storedSession.rol === RolEncuesta.Estudiante) {
-      // Verificamos que la sala siga existiendo
-      if (!(await existeSala(storedSession.idSala))) throw new Error(`La sala ${storedSession.idSala} ya no existe!`)
-
-      const sala = await getSalaById(storedSession.idSala)
-
-      // Si la sala requiere dni y la sesión no lo tiene, bochamos
-      if ((await sala.get()).config.pedir_dni && !storedSession.dni)
-        throw new Error(`La sala ${storedSession.idSala} requiere dni!`)
-
-      // Le attacheamos al socket la data de sesión
-      socket.data.session = storedSession
-      return
-    }
-
-    // Sesión de profe o admin
-    if (socketAuthData.rol === RolEncuesta.Profe || socketAuthData.rol === RolEncuesta.Admin) {
-      // Extraemos la data del token
-      const payload = decodearTokenNextAuth(socketAuthData.token)
-
-      // Si el username de sesión no coincide con el email del token, bochamos
-      if (storedSession.email !== payload.email)
-        throw new Error(`Sesión ${storedSession.sessionId} no válida para el usuario ${payload.email}!`)
-
-      // Le attacheamos al socket la data de sesión
-      socket.data.session = storedSession
-    }
-  } catch (err: any) {
-    // Si hubo un error, cerramos la sesión y emitimos el error
-    console.log(`⛔ Revocando sesión! Causa: ${err.message || 'Error de sesión'}`)
-    await revocarSession(socketAuthData.sessionId)
-    throw err
-  }
-}
-
 /**
  * Middleware de sesión
  *
@@ -210,15 +102,8 @@ const validarSession = async (socket: SocketConSesion) => {
  */
 export const conSession = async (socket: Socket, next: (err?: ExtendedError) => void) => {
   try {
-    if (socket.handshake.auth.sessionId) {
-      // Si el socket trae sessionId, validamos la sesión existente
-      console.log('\n🔑 Conexión entrante con sesión existente...')
-      await validarSession(socket)
-    } else {
-      // Si no, login
-      console.log('\n🔑 Conexión entrante efectuando login...')
-      await login(socket)
-    }
+    console.log('\n🔑 Conexión entrante efectuando login...')
+    await login(socket)
 
     next()
   } catch (err) {

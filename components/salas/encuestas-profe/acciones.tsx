@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogClose,
   DialogDescription,
-  DialogFooter,
+  
 } from '@/components/ui/dialog'
 import { Encuesta } from '@/wss/tipos'
 import { useEncuestaProfe } from './encuestas-profe-context'
@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils'
 import { Icon } from '@iconify/react'
 import { ComponentProps } from 'react'
 import { Info } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export function Acciones({ encuesta }: { encuesta: Encuesta }) {
   const {
@@ -32,10 +31,11 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
     <div className="flex flex-col my-4 gap-2">
       {/* Primera fila de botones */}
       <div className="flex gap-4 items-center justify-center">
+
         {/* Revelar y desrevelar votos */}
         {!encuesta.isRevealed && (
           <BotonEncuesta
-            className="m-0 md:px-0 bg-cyan-100 text-cyan-600 border-2 border-cyan-500 py-2"
+            className="m-0 md:px-0 bg-cyan-100 text-cyan-600 border-cyan-500 py-2"
             onClick={() => revelarOpciones(encuesta.id)}
             texto="Revelar votos"
             icon=""
@@ -56,7 +56,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {/* Enfocar */}
         {!encuesta.isFocused && (
           <BotonEncuesta
-            className="bg-purple-500 text-white px-4 py-2 disabled:bg-slate-100 disabled:border-2 disabled:border-slate-500 disabled:text-slate-500"
+            className="bg-purple-500 text-white px-4 py-2 disabled:bg-slate-100 disabled:border-slate-500 disabled:text-slate-500"
             onClick={() => enfocarPregunta(encuesta.id)}
             disabled={!encuesta.isPublished}
             texto="Enfocar"
@@ -75,7 +75,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         )}
         {encuesta.isPublished && (
           <BotonEncuesta
-            className="bg-emerald-100 text-emerald-600 p-2 border-2 border-emerald-500"
+            className="bg-emerald-100 text-emerald-600 p-2 border-emerald-500"
             onClick={() => esconderPregunta(encuesta.id)}
             texto="Esconder"
             icon="mdi:hide"
@@ -96,7 +96,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         )}
         {encuesta.isOpen && (
           <BotonEncuesta
-            className="bg-indigo-100 px-2 md:px-4 py-2 border-2 text-indigo-500 border-indigo-500"
+            className="bg-indigo-100 px-2 md:px-4 py-2 text-indigo-500 border-indigo-500"
             onClick={() => cerrarPregunta(encuesta.id)}
             texto="Cerrar"
             icon="mdi:hand-back-left"
@@ -106,7 +106,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {/* Eliminar */}
         <Dialog>
           <DialogTrigger>
-            <p className="bg-rose-700 text-white px-4 py-2 rounded-full flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'">
+            <p className="bg-rose-700 text-white px-4 py-2 rounded-xl flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'">
               Eliminar
             </p>
           </DialogTrigger>
@@ -143,7 +143,7 @@ export const BotonEncuesta = ({
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
   <button
     className={cn(
-      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded-full border',
+      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded-xl border-2 border-white',
       className
     )}
     {...props}

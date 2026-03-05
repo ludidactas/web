@@ -33,7 +33,9 @@ export function AgregarPregunta() {
   const { success, error } = pollBase.safeParse({ pregunta, opciones, admiteAportes })
 
   const postearPregunta = () => {
-    enviarPregunta(pregunta, opciones, admiteAportes === 'indeterminate' ? false : admiteAportes)
+  const opcionesFiltradas = opciones.filter((o) => o.trim() !== '')
+
+    enviarPregunta(pregunta, opcionesFiltradas, admiteAportes === 'indeterminate' ? false : admiteAportes)
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
@@ -43,7 +45,7 @@ export function AgregarPregunta() {
   }
 
   return (
-    <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2">
+    <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2 md:min-w-[450px]">
       <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
       <textarea
         className="w-full p-2 resize-none rounded"

@@ -5,7 +5,6 @@ import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
 import { tokenWss } from '@/server/token_wss'
-import { RolEncuesta } from '@/wss/tipos'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
 

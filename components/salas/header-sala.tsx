@@ -4,6 +4,7 @@ import { PropsWithChildren, ReactNode } from 'react'
 import { titulo } from '@/components/fonts'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import ShapeDividerWaves from '@/app/(sitio)/custom/shape-divider'
 
 interface HeaderProps extends PropsWithChildren {
   className?: string
@@ -42,7 +43,6 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
       </div>
 
       {/* Shape divider justo después del header */}
-      <div className={cn('shape-divider-waves h-[90px]', className)}></div>
-    </div>
+      <ShapeDividerWaves bottom colorText='text-white' />    </div>
   )
 }

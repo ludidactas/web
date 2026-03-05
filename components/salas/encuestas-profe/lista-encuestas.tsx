@@ -1,30 +1,30 @@
-// import { LdSvg } from "@/components/custom/ld-svg"
-import useClipboard from "@/components/hooks/use-clipboard"
-import { StatusDeConexion } from "@/components/hooks/use-conexion-wss"
-import { ScrollBar } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
+import { LdSvg } from '@/components/custom/ld-svg'
+import useClipboard from '@/components/hooks/use-clipboard'
+import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { Accordion, AccordionContent } from '@/components/ui/accordion'
+import { ScrollBar } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 import profeUps from '@/svg/ProfeUpsSVGO.svg'
-import { Encuesta } from "@/wss/tipos"
-import { ScrollArea } from "@radix-ui/react-scroll-area"
-import { formatDistanceToNow } from "date-fns"
-import { es } from "date-fns/locale"
-import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from "lucide-react"
-import { Acciones } from "./acciones"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import useConfirmarConDelay from "@/components/hooks/use-delay"
+import { Encuesta } from '@/wss/tipos'
 import { Icon as Iconito } from '@iconify/react'
-import { useState } from 'react'
-import { LdSvg } from "@/components/custom/ld-svg"
-import { Accordion, AccordionContent } from "@/components/ui/accordion"
-import { AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
-
+import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
+import { Acciones } from './acciones'
+import { useEncuestaProfe } from './encuestas-profe-context'
 
 export function ListaEncuestas() {
   const { encuestas, estado } = useEncuestaProfe()
 
-  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(() => estado === StatusDeConexion.Conectado && encuestas.length === 0, 1000)
+  const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
+    () => estado === StatusDeConexion.Conectado && encuestas.length === 0,
+    1000
+  )
 
-  const conectando = [StatusDeConexion.Quieto, StatusDeConexion.Conectando, StatusDeConexion.Autenticando, StatusDeConexion.CargandoDependencias].includes(estado)
+  const conectando = statusesDeCarga.includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio)) {
     return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>
@@ -57,16 +57,20 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
   return (
     <div className="p-2 mx-4  mb-2 rounded-3xl">
-
       {/* Pregunta desplegable */}
-      <Accordion type="single"
-        collapsible
-        className="flex flex-col  justify-center">
-        <AccordionItem value={"item-1"}>
-          <AccordionTrigger className="flex w-full gap-4 bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30 rounded-full px-10 justify-between items-center cursor-pointer hover:bg-[#00B0D2]/20 transition-colors">
+      <Accordion type="single" collapsible className="flex flex-col  justify-center">
+        <AccordionItem value={'item-1'}>
+          <AccordionTrigger
+            className={cn(
+              'flex w-full gap-4',
+              'bg-[#00B0D2]/10 text-[#00B0D2] border-4 border-[#00B0D2]/30',
+              'rounded-2xl px-4 md:px-8 justify-between items-center cursor-pointer ',
+              'hover:bg-[#00B0D2]/20 transition-colors'
+            )}
+          >
             <div className="flex gap-2 items-center">
-              <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-10 h-10" />
-              <h3 className="text-sm break-words font-bold md:text-xl">{encuesta.pregunta}</h3>
+              <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
+              <h3 className="text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex flex-col md:gap-1 items-end">
@@ -79,12 +83,12 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                 >
                   {estado}
                 </span>
-                <span className="text-[0.6rem] whitespace-nowrap text-slate-400 text-right">
+                <span className="text-[0.6rem]  text-slate-400 text-right">
                   {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
                 </span>
 
                 {/* Botón de copiar */}
-                <div className='flex items-center justify-end mb-2'>
+                <div className="flex items-center justify-end mb-2">
                   <p
                     title="Copiar pregunta"
                     onClick={(e) => {
@@ -111,7 +115,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           <AccordionContent>
             <div className="mt-4">
               {encuesta.admiteAportes && (
-                <p className="text-xs list-none text-center p-4 text-emerald-500">Los estudiantes pueden agregar opciones</p>
+                <p className="text-xs list-none text-center p-4 text-emerald-500">
+                  Los estudiantes pueden agregar opciones
+                </p>
               )}
 
               {/* Opciones */}
@@ -125,11 +131,18 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                     <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
                       <p className="w-64">{opcion.texto}</p>
                       <div className="w-24 flex items-center justify-end gap-2">
-                        <p className={` font-bold  content-center ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}>
+                        <p
+                          className={` font-bold  content-center ${
+                            encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'
+                          }`}
+                        >
                           {' '}
                           {opcion.votos}
                         </p>
-                        <Iconito className={`h-8 w-8 ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`} icon={"streamline-freehand:camera-settings-hand-motion"} />
+                        <Iconito
+                          className={`h-8 w-8 ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}
+                          icon={'streamline-freehand:camera-settings-hand-motion'}
+                        />
                       </div>
                     </div>
                   </li>
@@ -144,11 +157,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
               <Acciones encuesta={encuesta} />
             </div>
-
           </AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
-
   )
 }

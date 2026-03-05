@@ -1,9 +1,7 @@
-
 import { Toaster } from 'sonner'
 import { SignIn, SignOut } from '../../login/components/botones'
 import { EncuestaEstudianteLoginProvider } from '@/components/salas/encuestas-estudiante/encuestas-estudiante-login-context'
 import EncuestasEstudiantePage from '@/components/salas/encuestas-estudiante/encuestras-estudiante-page'
-
 
 export default async function Page({ params }: { params: Promise<{ idSala: string }> }) {
   const { idSala } = await params

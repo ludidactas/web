@@ -1,6 +1,6 @@
 'use client'
 
-import { ConfigSala } from '@/wss/salas/app'
+import { ConfigSala } from '@/wss/validators/salas'
 import { useSession } from 'next-auth/react'
 import { createContext, useContext, useState } from 'react'
 
@@ -13,19 +13,34 @@ export default function useEncuestaEstudianteLoginState() {
 
   // Usamos el nombre de la sesión si está autenticado con google, sino el que nos de
   const { data: nextSession, status } = useSession()
-  const nombreFinal = status === 'authenticated' ? (nextSession?.user?.name || 'Usuario') : nombre
+  const nombreFinal = status === 'authenticated' ? nextSession?.user?.name || 'Usuario' : nombre
 
-  return { nombre: nombreFinal, setNombre, dni, setDNI, ingresado, setIngresado, nombreSala, setNombreSala, configSala, setConfigSala }
+  return {
+    nombre: nombreFinal,
+    setNombre,
+    dni,
+    setDNI,
+    ingresado,
+    setIngresado,
+    nombreSala,
+    setNombreSala,
+    configSala,
+    setConfigSala,
+  }
 }
 
 // Context
-const EncuestaEstudianteLoginContext = createContext<ReturnType<typeof useEncuestaEstudianteLoginState> | undefined>(undefined)
+const EncuestaEstudianteLoginContext = createContext<ReturnType<typeof useEncuestaEstudianteLoginState> | undefined>(
+  undefined
+)
 
 // Provider - El auth viene del server
-export const EncuestaEstudianteLoginProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  return <EncuestaEstudianteLoginContext.Provider value={useEncuestaEstudianteLoginState()}>{children}</EncuestaEstudianteLoginContext.Provider>
+export const EncuestaEstudianteLoginProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <EncuestaEstudianteLoginContext.Provider value={useEncuestaEstudianteLoginState()}>
+      {children}
+    </EncuestaEstudianteLoginContext.Provider>
+  )
 }
 
 /** Provee el context de login de estudiante: state para nombre, dni, y `ingresado` === true si ya le dió al botón de ingresar */

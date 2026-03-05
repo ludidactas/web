@@ -1,13 +1,12 @@
 /** Crea el socket y le registra los eventos base */
 
-import { Server } from "socket.io"
+import { Server } from 'socket.io'
 
 export const mount = (port: number) => {
-
   const io = new Server({
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: '*',
+      methods: ['GET', 'POST'],
     },
     // serveClient: false
   })
@@ -15,9 +14,9 @@ export const mount = (port: number) => {
   // Start the server
   io.listen(port)
 
-  io.engine.on("connection_error", (err) => {
-    console.log("❌ Error de engine: ", err.message);
-  });
+  io.engine.on('connection_error', (err) => {
+    console.log('❌ Error de engine: ', err.message)
+  })
 
   console.log(`🚀 Servidor de salas corriendo en el puerto ${port}`)
 

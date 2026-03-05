@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from 'zod'
 
 export const configSala = z.object({
   pedir_dni: z.boolean(),

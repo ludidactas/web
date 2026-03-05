@@ -1,11 +1,20 @@
-import { DialogHeader, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { Encuesta } from "@/wss/tipos"
-import { useEncuestaProfe } from "./encuestas-profe-context"
-import { cn } from "@/lib/utils"
+import {
+  DialogHeader,
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Encuesta } from '@/wss/tipos'
+import { useEncuestaProfe } from './encuestas-profe-context'
+import { cn } from '@/lib/utils'
 import { Icon } from '@iconify/react'
-import { ComponentProps } from "react"
-import { Info } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ComponentProps } from 'react'
+import { Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function Acciones({ encuesta }: { encuesta: Encuesta }) {
   const {
@@ -109,9 +118,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
             </DialogHeader>
             <div className="flex gap-2">
               <DialogClose>
-                <p className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full">
-                  Cancelar
-                </p>
+                <p className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full">Cancelar</p>
               </DialogClose>
               <BotonEncuesta
                 className="bg-rose-700 text-white px-4 py-2 rounded-full"
@@ -123,7 +130,8 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
           </DialogContent>
         </Dialog>
       </div>
-    </div>)
+    </div>
+  )
 }
 
 export const BotonEncuesta = ({
@@ -133,7 +141,13 @@ export const BotonEncuesta = ({
   icon,
   ...props
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
-  <button className={cn('flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded-full border', className)} {...props}>
+  <button
+    className={cn(
+      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded-full border',
+      className
+    )}
+    {...props}
+  >
     <span className="hidden md:block">{texto}</span>
     <span className="md:hidden w-full flex justify-center">
       <Icon icon={icon} />
@@ -187,12 +201,13 @@ export function DialogAcciones() {
           </ol>
           <p className="font-bold">Eliminar</p>
           <p>
-            <span className="text-rose-400 font-bold">Elimina definitivamente</span> la pregunta! Antes podés copiarla a texto
-            junto con sus preguntas con el ícono de copiar en el margen superior derecho. Luego pegala en cualquier lugar donde puedas pegar texto.
+            <span className="text-rose-400 font-bold">Elimina definitivamente</span> la pregunta! Antes podés copiarla a
+            texto junto con sus preguntas con el ícono de copiar en el margen superior derecho. Luego pegala en
+            cualquier lugar donde puedas pegar texto.
           </p>
 
           <DialogClose className="flex justify-center">
-            <Icon className="w-10 h-10" icon={"lets-icons:close-ring"} />
+            <Icon className="w-10 h-10" icon={'lets-icons:close-ring'} />
           </DialogClose>
         </DialogContent>
       </Dialog>

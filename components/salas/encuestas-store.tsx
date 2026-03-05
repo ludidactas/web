@@ -17,7 +17,7 @@ interface EncuestaStore {
   setEstudiantes: (estudiantes: Estudiante[]) => void
   estudianteConectado: (estudiante: Estudiante) => void
   estudianteDesconectado: (estudianteId: string) => void
-  
+
   encuestas: Encuesta[]
   addEncuesta: (encuesta: Encuesta) => void
   updateEncuesta: (encuesta: Encuesta) => void
@@ -27,31 +27,30 @@ interface EncuestaStore {
 
 export const useEncuestaStore = create<EncuestaStore>()(
   subscribeWithSelector((set) => ({
-
     // Estudiantes
     estudiantes: [],
     addEstudiante: (estudiante) =>
       set((state) => ({
-        estudiantes: state.estudiantes.find((e) => e.id === estudiante.id)
-          ? state.estudiantes.map((e) => (e.id === estudiante.id ? { ...e, conectado: true } : e))
+        estudiantes: state.estudiantes.find((e) => e.userId === estudiante.userId)
+          ? state.estudiantes.map((e) => (e.userId === estudiante.userId ? { ...e, conectado: true } : e))
           : [...state.estudiantes, { ...estudiante, conectado: true }],
       })),
     removeEstudiante: (estudianteId) =>
       set(({ estudiantes }) => ({
-        estudiantes: estudiantes.filter((e) => e.id !== estudianteId),
+        estudiantes: estudiantes.filter((e) => e.userId !== estudianteId),
       })),
     setEstudiantes: (estudiantes) =>
       set({
         estudiantes: [...estudiantes],
       }),
-    estudianteConectado: (estudiante) => { 
+    estudianteConectado: (estudiante) => {
       set((state) => ({
-        estudiantes: state.estudiantes.map((e) => (e.id === estudiante.id ? { ...e, conectado: true } : e)),
+        estudiantes: state.estudiantes.map((e) => (e.userId === estudiante.userId ? { ...e, conectado: true } : e)),
       }))
-    }, 
-    estudianteDesconectado: (estudianteId) => { 
+    },
+    estudianteDesconectado: (estudianteId) => {
       set((state) => ({
-        estudiantes: state.estudiantes.map((e) => (e.id === estudianteId ? { ...e, conectado: false } : e)),
+        estudiantes: state.estudiantes.map((e) => (e.userId === estudianteId ? { ...e, conectado: false } : e)),
       }))
     },
 

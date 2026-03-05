@@ -1,11 +1,13 @@
-import { randomUUID } from "crypto"
-import { capitalize, first, mergeDeep, shuffle } from "remeda"
+import { randomUUID } from 'crypto'
+import { entries, groupBy, mergeDeep } from 'remeda'
 
-import db from "../db"
-import { io, registrarSalaEnServer } from "../server"
-import { getSession, SocketConSesion } from "../middleware/session"
-import { SocketProfe } from "../middleware/roles"
-import { ConfigSala } from "../validators/salas"
+import { RemoteSocket } from 'socket.io'
+import db from '../db'
+import { SocketProfe } from '../middleware/roles'
+import { io } from '../server'
+import { RolEncuesta } from '../tipos'
+import { configSala, ConfigSala } from '../validators/salas'
+import { WssServerSession } from '../validators/session'
 
 export interface SalaData {
   id: string
@@ -16,222 +18,245 @@ export interface SalaData {
   config: ConfigSala
 }
 
-// Map email_profe: socket
-export const sockets_profes = new Map<string, SocketProfe>()
+export namespace Salas {
+  export async function get(salaId: string) {
+    async function getFromDb() {
+      const exists = await db.hexists('salas', salaId)
+      if (!exists) {
+        throw new Error(`La sala ${salaId} no existe`)
+      }
+      const salaDataStr = await db.hget('salas', salaId)
+      return JSON.parse(salaDataStr!) as SalaData
+    }
 
-export const conHandlers = (sala: SalaData) => ({
-  ...sala,
+    /**
+     * Envía a admin, profe y estudiantes de la sala
+     *
+     * @param event El evento a emitir
+     * @param data La data a emitir. Debería ser un objeto serializable.
+     * @param [mapper=async (data) => data] Función opcional para mapear los datos a enviar a cada socket, en caso de que queramos enviar data personalizada a cada uno. Recibe la data original y el socket, y debe devolver la data a enviar a ese socket. Lo usamos principalmente para adjuntar a cada estudiante el estado de sus respuestas cuando broadcasteamos una pregunta.
+     */
+    async function broadcast(
+      event: string,
+      data: unknown,
+      mapper: (data: unknown, socket: RemoteSocket<any, any>) => Promise<any> = async (data) => data
+    ) {
+      console.log(`📡 Broadcasteando evento '${event}' en sala ${salaId}`)
 
-  /** Borra los estudiantes desconectados de la lista */
-  limpiarEstudiantes: async () => {
-    const estudiantes = await db.hgetall(`sala:${sala.id}:estudiantes`)
+      const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
 
-    const pipeline = db.pipeline()
+      const sockets = await io.to(`sala:${salaId}`).fetchSockets()
 
-    for (const [sessionId, activo] of Object.entries(estudiantes)) {
-      if (activo === '0') {
-        pipeline.hdel(`sala:${sala.id}:estudiantes`, sessionId)
+      await Promise.all(sockets.map(enviarMapeado))
+    }
+
+    /** Limpia las que según la sala existen pero que no están en redis (fueron revocadas) */
+    async function limpiarEstudiantesSinSesion() {
+      const estudiantesData = await db.hgetall(`sala:${salaId}:estudiantes`)
+      const userIdsState = Object.keys(estudiantesData)
+
+      const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const userIdsSockets = socketsEstudiantesSala.map((s) => s.data.session.userId)
+
+      // Las inválidas son las que estén en estudiantesData pero no en sockets
+      const invalidas = userIdsState.filter((id) => !userIdsSockets.includes(id))
+
+      // Las limpiamos de redis
+      if (invalidas.length > 0) {
+        // Logueamos
+        const emailProfe = await db.hget('salas_owners', salaId)
+        console.warn(`⚠️  Sesiones inválidas en sala ${salaId} de ${emailProfe}:`, invalidas, ` limpiando...`)
+
+        // Invalidamos (las borramos de db y de la respuesta que vamos a dar)
+        invalidas.forEach((sid) => {
+          db.hdel(`sala:${salaId}:estudiantes`, sid) // de la lista de estudiantes de la sala
+        })
+      }
+
+      // Las válidas las devolvemos
+      return socketsEstudiantesSala.map((s) => s.data.session)
+    }
+
+    /** Devuelve la lista de estudiantes en la sala, limpiando previamente las sesiones revocadas. */
+    async function listarEstudiantes() {
+      await limpiarEstudiantesSinSesion()
+
+      const socketsConectados = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const socketsPorUsuario = groupBy(socketsConectados, (s) => s.data.session.userId)
+
+      // Nos quedamos con la primera sesión (socket) de cada usuario
+      const conectados = entries(socketsPorUsuario)
+        .map(([_, sockets]) => ({
+          ...sockets[0].data.session,
+          conectado: true,
+        }))
+        .filter((s): s is WssServerSession => s !== null)
+
+      return conectados
+    }
+
+    async function sanitizar() {
+      const sala = await getFromDb()
+
+      // Si pasamos a requerir dni, kickeamos a los estudiantes sin dni
+      if (sala.config.pedir_dni) {
+        // Colectamos
+        const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+        const sinDni = sockets.filter((s) => s.data.session.rol === RolEncuesta.Estudiante && !s.data.session.dni)
+
+        // Si no hay ninguno, no hay nada más que hacer
+        if (sinDni.length === 0) return
+
+        // Chiflamos al log!
+        console.warn(
+          `⚠️  Estudiantes sin DNI en sala ${salaId} al activar pedir_dni:`,
+          sinDni.map((s) => s.data.session.userId)
+        )
+
+        // Notificamos y desconectamos(kick)
+        sinDni.forEach((s) => {
+          // Los desconectamos enviándoles un mensaje de error a su sala
+          s.emit('sala:kick', {
+            motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
+          })
+          s.disconnect()
+        })
+
+        /** @todo: Marcar el drop para la lista de presentes */
       }
     }
 
-    await pipeline.exec()
-  },
+    /** Quita los inactivos de la lista de la sala */
+    async function limpiarEstudiantes() {
+      const estudiantes = await db.hgetall(`sala:${salaId}:estudiantes`)
 
-  /** Devuelve la lista de estudiantes, y anota si están presentes */
-  listarEstudiantes: async () => {
-    const estudiantesData = await db.hgetall(`sala:${sala.id}:estudiantes`)
-    const sesionesIds = Object.keys(estudiantesData)
+      const pipeline = db.pipeline()
 
-    const invalidas = sesionesIds.filter(sid => !getSession(sid))
-    if (invalidas.length > 0) {
-      const emailProfe = await db.hget('salas_owners', sala.id)
-      console.warn(`⚠️  Sesiones inválidas en sala ${sala.id} de ${emailProfe}:`, invalidas, ` limpiando...`)
-      invalidas.forEach(sid => {
-        db.hdel(`sala:${sala.id}:estudiantes`, sid)
-        delete estudiantesData[sid]
-      })
+      for (const [id, activo] of Object.entries(estudiantes)) {
+        if (activo === '0') {
+          pipeline.hdel(`sala:${salaId}:estudiantes`, id)
+        }
+      }
+
+      await pipeline.exec()
     }
 
-    return sesionesIds
-      .map(sid => {
-        const session = getSession(sid)
-        return session ? {
-          ...session,
-          conectado: estudiantesData[sid] === '1'
-        } : null
-      })
-      .filter(Boolean)
-  },
+    async function marcarEstudiantePresente(userId: string) {
+      await db.hset(`sala:${salaId}:estudiantes`, userId, '1')
+    }
 
-  /** Envía a admin, profe y estudiantes de la sala */
-  broadcast: async (event: string, data: unknown, mapper: (data: unknown, socket: SocketConSesion) => Promise<any> = async data => data) => {
+    async function marcarEstudianteAusente(userId: string) {
+      await db.hset(`sala:${salaId}:estudiantes`, userId, '0')
+    }
 
-    const sock_profe = sockets_profes.get(sala.profe.email)
-    if (!sock_profe) throw new Error(`Profe ${sala.profe.email} no tiene socket!`)
-    
-    console.log(`📡 Broadcasteando evento '${event}' en sala ${sala.id}`)
+    async function actualizarConfig(payload: unknown) {
+      const sala = await getFromDb()
+      // Validamos
+      const config = configSala.strict().partial().parse(payload)
+      const configActual = sala.config
+      const nuevaConfig = mergeDeep(configActual, config) as ConfigSala
+      sala.config = nuevaConfig
 
-    await Promise.all([
-      // A los admins
-      ...io.of('/sala/admin').sockets.values()
-        .map(async s => s.emit(event, await mapper(data, s))),
-      // Al profe
-      sock_profe.emit(event, await mapper(data, sock_profe)),
-      // A los estudiantes
-      ...io.of(`/sala/${sala.id}/estudiante`).sockets.values()
-        .map(async s => s.emit(event, await mapper(data, s))),
-    ])
-  },
+      await db.hset('salas', sala.id, JSON.stringify(sala))
+    }
 
-  /** Devuelve el socket del profe */
-  socketProfe: () => {
-    const sock = sockets_profes.get(sala.profe.email)
-    if (!sock) throw new Error(`Socket de profe ${sala.profe.email} no encontrado! D:`)
-    return sock
-  },
+    return {
+      id: salaId,
 
-  /** Marca un estudiante como presente en la sala */
-  marcarEstudiantePresente: async (sessionId: string) => {
-    await db.hset(`sala:${sala.id}:estudiantes`, sessionId, '1')
-  },
+      /** Devuelve la sala actualizada */
+      config: () => getFromDb().then((sala) => sala.config),
 
-  /** Marca un estudiante como ausente en la sala */
-  marcarEstudianteAusente: async (sessionId: string) => {
-    await db.hset(`sala:${sala.id}:estudiantes`, sessionId, '0')
-  },
+      /** Lleva a cabo las acciones necesarias para que el estado respete la config (e.g. kickear a los estudiantes que no tengan DNI cuando es pedido) */
+      sanitizar,
 
-  /** Devuelve solo la data serializable (sin funciones) */
-  raw: () => sala,
-})
+      /** Borra los estudiantes desconectados de la lista */
+      limpiarEstudiantes,
 
-/** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-export async function obtenerOCrearSala(socket: SocketProfe): Promise<ReturnType<typeof conHandlers>> {
-  const email = socket.data.user.email
+      /** Devuelve la lista de estudiantes, y anota si están presentes */
+      listarEstudiantes,
 
-  // Registramos que el profe nos está hablando desde este socket:
-  sockets_profes.set(email, socket)
+      /** Broadcastea un mensaje a todos los sockets en la sala */
+      broadcast,
 
-  // Averiguamos si ya tiene sala
-  const owner = await db.hget('owners_salas', email)
+      /** Marca un estudiante como presente en la sala */
+      marcarEstudiantePresente,
 
-  // Si no tiene, le creamos una
-  if (!owner) {
-    const sala = await crearSala(socket)
-    registrarSalaEnServer(sala.id)
-    console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
+      /** Marca un estudiante como ausente en la sala */
+      marcarEstudianteAusente,
+
+      /** Valida lo que recibe y si pasa actualiza la config de la sala */
+      actualizarConfig,
+
+      /** Devuelve solo la data serializable (sin funciones) */
+      raw: getFromDb,
+
+      profe: (await getFromDb()).profe,
+    }
   }
 
-  // Recuperamos la sala
-  return getSalaByEmailProfe(email)
-}
+  /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
+  export async function obtenerOCrear(socket: SocketProfe): Promise<ReturnType<typeof get>> {
+    const email = socket.data.session.email
 
-/** Crea una sala nueva en memoria y la asigna a un profe */
-export async function crearSala(socket: SocketProfe) {
-  const id = randomUUID().split('-')[0]
-  const email = socket.data.user.email
+    // Averiguamos si ya tiene sala
+    const owner = await db.hget('owners_salas', email)
 
-  // Todavía no está en uso
-  const config_default: ConfigSala = {
-    pedir_dni: false,
-    permitir_anonimo: true,
-    // invitados: [],
-    nombre_profe: email
+    // Si no tiene, le creamos una
+    if (!owner) {
+      const sala = await crear(socket)
+      console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
+    }
+
+    // Recuperamos la sala
+    return getByEmailProfe(email)
   }
 
-  const config = {
-    nombre_profe: socket.data.user.nombre || email,
-    ...socket.data.config_sala ?? {}
-  } as Partial<ConfigSala>
+  /** Crea una sala nueva en memoria y la asigna a un profe */
+  export async function crear(socket: SocketProfe) {
+    const id = randomUUID().split('-')[0]
+    const email = socket.data.session.email
 
+    // Todavía no está en uso
+    const config_default: ConfigSala = {
+      pedir_dni: false,
+      permitir_anonimo: true,
+      // invitados: [],
+      nombre_profe: email,
+    }
 
-  const config_sala = mergeDeep(config_default, config) as ConfigSala
+    const config = {
+      nombre_profe: socket.data.session.nombre || email,
+      ...(socket.data.config_sala ?? {}),
+    } as Partial<ConfigSala>
 
-  // Le creamos los buffers
-  const salaData: SalaData = {
-    id,
-    profe: { email, nombre: config_sala.nombre_profe },
-    config: config_sala,
+    const config_sala = mergeDeep(config_default, config) as ConfigSala
+
+    const salaData: SalaData = {
+      id,
+      profe: { email, nombre: config_sala.nombre_profe },
+      config: config_sala,
+    }
+
+    // Guardamos en DB
+    await db.hset('salas', id, JSON.stringify(salaData))
+    await db.hset('owners_salas', email, id)
+    await db.hset('salas_owners', id, email)
+
+    console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
+
+    return get(id)
   }
 
-  // Guardamos en DB
-  await db.hset('salas', id, JSON.stringify(salaData))
-  await db.hset('owners_salas', email, id)
-  await db.hset('salas_owners', id, email)
-
-  console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
-
-  return conHandlers(salaData)
-}
-
-/**
- * Devuelve la data de polls, votantes y votos de la sala
- * @throws Error si la sala no existe
- */
-export async function getSalaById(salaId: string) {
-  const exists = await db.hexists('salas', salaId)
-  if (!exists) {
-    throw new Error(`La sala ${salaId} no existe`)
+  export async function existe(salaId: string) {
+    return (await db.hexists('salas', salaId)) === 1
   }
-  const salaDataStr = await db.hget('salas', salaId)
-  return conHandlers(JSON.parse(salaDataStr!) as SalaData)
-}
 
+  /** Funciones de relaciones: */
 
-/** Funciones de relaciones: */
-
-/** Obtiene el ID de la sala del profe, _creandola si no existe_ */
-export async function getSalaId(email: string) {
-  const idSala = await db.hget('owners_salas', email)
-  if (!idSala) throw new Error(`El profe ${email} no tiene sala asignada!`)
-  return idSala
-}
-
-/** Obtiene el email del profe dueño de la sala, dado el id de la sala */
-export async function getEmailProfeDeSala(salaId: string) {
-  const owner = await db.hget('salas_owners', salaId)
-  if (!owner) throw new Error(`Sala ${salaId} sin profe!`)
-  return owner
-}
-
-/** Devuelve la data de polls, votantes y votos de la sala del profe, dado su email */
-export async function getSalaByEmailProfe(email: string) {
-  const salaId = await getSalaId(email)
-  return getSalaById(salaId)
-}
-
-/** Devuelve el socket de un profe por id de sala (el owner) */
-export async function getSocketProfeDeSala (salaId: string) {
-  return (await getSalaById(salaId)).socketProfe()
-}
-
-
-// Generador de nombres de fantasía
-
-const nombres = [
-  'Burbujito', 'Pompón', 'Chispitas', 'Bolitas', 'Pelotín', 'Globito', 'Saltarín',
-  'Zigzag', 'Tintín', 'Pimpón', 'Bambú', 'Coco', 'Kiwi', 'Mango', 'Pera',
-  'Tofú', 'Sushi', 'Wasabi', 'Matcha', 'Oreo', 'Dorito', 'Nacho', 'Taco',
-  'Pixel', 'Emoji', 'WiFi', 'Oveja', 'Androide', 'Avatar', 'Bit', 'Byte',
-  'Neo', 'Zeta', 'Alfa', 'Beta', 'Gamma', 'Delta', 'Omega', 'Sigma',
-  'Turbo', 'Nitro', 'Flash', 'Sonic', 'Dash', 'Rush', 'Voltio', 'Chispa',
-  'Cosmo', 'Astro', 'Estelar', 'Nova', 'Quasar', 'Cohete', 'Cometa'
-];
-
-const apellidos = [
-  'Saltamontes', 'Mariposa', 'Libélula', 'Colibrí', 'Caracol', 'Lombriz', 'Oruga',
-  'Pompaburbuja', 'Remolino', 'Torbellino', 'Huracán', 'Tornado', 'Ciclón', 'Vendaval',
-  'Arcoíris', 'Destello', 'Centelleo', 'Parpadeo', 'Guiño', 'Pestañeo', 'Titileo',
-  'Rebote', 'Zigzagueo', 'Espiral', 'Voltereta', 'Pirueta', 'Mareo', 'Vértigo',
-  'Cosquillas', 'Carcajada', 'Risita', 'Sonrisa', 'Mueca', 'Guiño', 'Abrazo',
-  'Saltatrampas', 'Rompenubes', 'Cazaestrellas', 'Persueño', 'Atrapaluna', 'Robasonrisa',
-  'Comecocos', 'Bebesoda', 'Masticanubes', 'Tragaluces', 'Absorbebrisa', 'Soplafuego',
-  'Electrochoque', 'Megavoltio', 'Gigarayo', 'Teravatio', 'Nanómetro',
-  'Supersónico', 'Hiperbólico', 'Parabólico', 'Geométrico', 'Algebraico', 'Trigonométrico',
-  'Galáctico', 'Intergaláctico', 'Multiversal', 'Dimensional', 'Cuántico', 'Holográfico'
-];
-
-export function nombreDeFantasia() {
-  const nombre = capitalize(first(shuffle(nombres))!)
-  const apellido = capitalize(first(shuffle(apellidos))!)
-  return `${nombre} ${apellido}`;
+  /** Devuelve la sala dado el email del profe */
+  export async function getByEmailProfe(email: string) {
+    const idSala = await db.hget('owners_salas', email)
+    if (!idSala) throw new Error(`El profe ${email} no tiene sala asignada!`)
+    return get(idSala)
+  }
 }

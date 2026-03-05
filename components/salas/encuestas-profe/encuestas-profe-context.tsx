@@ -3,19 +3,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import { useServerWebsockets } from '@/components/hooks/use-server-encuestas'
-import { Encuesta } from '@/wss/tipos'
+import { useWss } from '@/components/hooks/use-wss'
+import { SalaData } from '@/wss/salas/app'
+import { Encuesta, RolEncuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 import { CrearEncuesta } from '@/wss/validators/polls'
+import { ConfigSala } from '@/wss/validators/salas'
 import { Estudiante, useEncuestaStore } from '../encuestas-store'
 
 /** Cose el socket con el state para profe */
-const useEncuestaProfeState = (auth: PasaporteProfe) => {
+const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
   // El profe recibe el id de la sala del server de ws
   const [linkSala, setLinkSala] = useState<string | null>(null)
+  const [configSala, setConfigSala] = useState<ConfigSala | null>(null)
 
   // El profe se conecta con su email como idSala
-  const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useServerWebsockets(auth)
+  const {
+    socket: socketWssCli,
+    estado: estadoWssCli,
+    error: errorWssCli,
+    WssDebugPanel,
+  } = useWss({ ...auth, rol: RolEncuesta.Profe })
 
   const {
     encuestas,
@@ -89,6 +97,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     socketWssCli!.emit('sala:limpar_estudiantes_sala')
   }
 
+  const actualizarConfig = (config: Partial<ConfigSala>) => {
+    console.log(`Enviando update de config al server! `, config)
+    socketWssCli!.emit('sala:actualizar_config', config)
+  }
+
   // Conectamos el socket a sus handlers
   useEffect(() => {
     if (socketWssCli) {
@@ -108,7 +121,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
       // Suscribimos a su respuesta
       socketWssCli.on(
         'sala:abierta',
-        ({ sala, polls, estudiantes }: { sala: { id: string }; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
+        ({ sala, polls, estudiantes }: { sala: SalaData; polls: Encuesta[]; estudiantes: Estudiante[] }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
           setLinkSala(`${process.env.NEXT_PUBLIC_HOST}/sala/${sala.id}/`)
 
@@ -127,6 +140,11 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
 
       socketWssCli.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
         estudianteDesconectado(estudiante.id)
+      })
+
+      socketWssCli.on('sala:config_actualizada', (config: ConfigSala) => {
+        toast.success(`Configuración actualizada!`)
+        setConfigSala(config)
       })
 
       // Pedimos la sala y la lista de estudiantes al server
@@ -153,6 +171,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     error: errorWssCli,
     encuestas,
     linkSala,
+    configSala,
     estudiantes,
     enviarPregunta,
     borrarPregunta,
@@ -162,6 +181,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
     esconderPregunta,
     enfocarPregunta,
     limpiarEstudiantesSala,
+    actualizarConfig,
     revelarOpciones,
     desrevelarOpciones,
     WssDebugPanel,
@@ -172,7 +192,7 @@ const useEncuestaProfeState = (auth: PasaporteProfe) => {
 const EncuestaProfeContext = createContext<ReturnType<typeof useEncuestaProfeState> | undefined>(undefined)
 
 // Provider - El auth viene del server
-export const EncuestaProfeProvider: React.FC<{ auth: PasaporteProfe; children: React.ReactNode }> = ({
+export const EncuestaProfeProvider: React.FC<{ auth: Omit<PasaporteProfe, 'rol'>; children: React.ReactNode }> = ({
   auth,
   children,
 }) => {

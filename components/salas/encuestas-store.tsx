@@ -1,77 +1,33 @@
 import { Encuesta } from '@/wss/tipos'
-import { WssEstudianteSession } from '@/wss/validators/session'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-export interface Estudiante extends WssEstudianteSession {
-  conectado: boolean
-  // Optionales, para los que están logueados con google
-  email?: string
-  avatar?: string
+interface EncuestaState {
+  items: Encuesta[]
+  add: (item: Encuesta) => void
+  update: (item: Encuesta) => void
+  remove: (id: string) => void
+  set: (items: Encuesta[]) => void
 }
 
-interface EncuestaStore {
-  estudiantes: Estudiante[]
-  addEstudiante: (estudiante: Estudiante) => void
-  removeEstudiante: (estudianteId: string) => void
-  setEstudiantes: (estudiantes: Estudiante[]) => void
-  estudianteConectado: (estudiante: Estudiante) => void
-  estudianteDesconectado: (estudianteId: string) => void
-
-  encuestas: Encuesta[]
-  addEncuesta: (encuesta: Encuesta) => void
-  updateEncuesta: (encuesta: Encuesta) => void
-  deleteEncuesta: (pollId: string) => void
-  setEncuestas: (encuestas: Encuesta[]) => void
-}
-
-export const useEncuestaStore = create<EncuestaStore>()(
+export const useEncuestaStore = create<EncuestaState>()(
   subscribeWithSelector((set) => ({
-    // Estudiantes
-    estudiantes: [],
-    addEstudiante: (estudiante) =>
-      set((state) => ({
-        estudiantes: state.estudiantes.find((e) => e.userId === estudiante.userId)
-          ? state.estudiantes.map((e) => (e.userId === estudiante.userId ? { ...e, conectado: true } : e))
-          : [...state.estudiantes, { ...estudiante, conectado: true }],
-      })),
-    removeEstudiante: (estudianteId) =>
-      set(({ estudiantes }) => ({
-        estudiantes: estudiantes.filter((e) => e.userId !== estudianteId),
-      })),
-    setEstudiantes: (estudiantes) =>
-      set({
-        estudiantes: [...estudiantes],
-      }),
-    estudianteConectado: (estudiante) => {
-      set((state) => ({
-        estudiantes: state.estudiantes.map((e) => (e.userId === estudiante.userId ? { ...e, conectado: true } : e)),
-      }))
-    },
-    estudianteDesconectado: (estudianteId) => {
-      set((state) => ({
-        estudiantes: state.estudiantes.map((e) => (e.userId === estudianteId ? { ...e, conectado: false } : e)),
-      }))
-    },
+    items: [],
 
-    // Encuestas
-    encuestas: [],
-    addEncuesta: (encuesta) => set((state) => ({ encuestas: [...state.encuestas, encuesta] })),
-    updateEncuesta: (encuesta) =>
-      // Si la encuentra updatea, sino agrega
-      set((state) =>
-        state.encuestas.find((e) => e.id === encuesta.id)
-          ? {
-              encuestas: state.encuestas.map((e) => (e.id === encuesta.id ? { ...encuesta } : e)),
-            }
-          : {
-              encuestas: [...state.encuestas, encuesta],
-            }
-      ),
-    deleteEncuesta: (pollId) =>
+    add: (item) => set((state) => ({ items: [...state.items, item] })),
+
+    update: (item) =>
       set((state) => ({
-        encuestas: state.encuestas.filter((e) => e.id !== pollId),
+        items: state.items.find((e) => e.id === item.id)
+          ? state.items.map((e) => (e.id === item.id ? { ...item } : e))
+          : [...state.items, item],
       })),
-    setEncuestas: (encuestas) => set({ encuestas: [...encuestas] }),
+
+    remove: (id) =>
+      set((state) => ({
+        items: state.items.filter((e) => e.id !== id),
+      })),
+
+    set: (items) => set({ items: [...items] }),
   }))
 )

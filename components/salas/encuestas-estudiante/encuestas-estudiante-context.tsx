@@ -11,7 +11,7 @@ import { PasaporteEstudiante } from '@/wss/validators/auth'
 
 /** Cose el socket con el state para estudiante */
 const useEncuestaEstudianteState = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
-  const { encuestas, addEncuesta, setEncuestas, updateEncuesta, deleteEncuesta } = useEncuestaStore()
+  const storeEncuestas = useEncuestaStore()
   const { setIngresado } = useEncuestaEstudianteLogin()
   const { socket, session, estado, error, WssDebugPanel } = useWss({
     ...auth,
@@ -42,11 +42,11 @@ const useEncuestaEstudianteState = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
       socket.emit('polls:list')
 
       // Conectamos el socket a sus handlers
-      socket.on('polls:list', setEncuestas)
+      socket.on('polls:list', storeEncuestas.set)
       socket.on('wss:error', showError)
-      socket.on('poll:updated', updateEncuesta)
-      socket.on('poll:created', addEncuesta)
-      socket.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+      socket.on('poll:updated', storeEncuestas.update)
+      socket.on('poll:created', storeEncuestas.add)
+      socket.on('poll:deleted', ({ pollId }) => storeEncuestas.remove(pollId))
       socket.on('sala:kick', ({ motivo }) => {
         toast.error(motivo)
         socket.disconnect()
@@ -67,7 +67,7 @@ const useEncuestaEstudianteState = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
     session,
     estado,
     error,
-    encuestas,
+    encuestas: storeEncuestas.items,
     votar,
     nombre: auth.nombre,
     WssDebugPanel,

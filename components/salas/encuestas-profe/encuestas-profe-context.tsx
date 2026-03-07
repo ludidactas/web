@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { useWss } from '@/components/hooks/use-wss'
@@ -9,7 +9,8 @@ import { Encuesta, RolEncuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 import { CrearEncuesta } from '@/wss/validators/polls'
 import { ConfigSala } from '@/wss/validators/salas'
-import { Estudiante, useEncuestaStore } from '../encuestas-store'
+import { useEncuestaStore } from '../encuestas-store'
+import { Estudiante, useEstudianteStore } from '../estudiantes-store'
 
 /** Cose el socket con el state para profe */
 const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
@@ -17,25 +18,13 @@ const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
   const [linkSala, setLinkSala] = useState<string | null>(null)
   const [configSala, setConfigSala] = useState<ConfigSala | null>(null)
 
-  // El profe se conecta con su email como idSala
-  const {
-    socket: socketWssCli,
-    estado: estadoWssCli,
-    error: errorWssCli,
-    WssDebugPanel,
-  } = useWss({ ...auth, rol: RolEncuesta.Profe })
+  const authMemo = useMemo(() => ({ ...auth, rol: RolEncuesta.Profe } as const), [auth])
 
-  const {
-    encuestas,
-    estudiantes,
-    addEncuesta,
-    setEncuestas,
-    updateEncuesta,
-    deleteEncuesta,
-    setEstudiantes,
-    addEstudiante,
-    estudianteDesconectado,
-  } = useEncuestaStore()
+  // El profe se conecta con su email como idSala
+  const { socket: socketWssCli, estado: estadoWssCli, error: errorWssCli, WssDebugPanel } = useWss(authMemo)
+
+  const storeEncuestas = useEncuestaStore()
+  const storeEstudiantes = useEstudianteStore()
 
   /** Postea al server la acción de crear */
   const enviarPregunta = (pregunta: string, respuestas: string[], admiteAportes = false) =>
@@ -105,10 +94,10 @@ const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
   // Conectamos el socket a sus handlers
   useEffect(() => {
     if (socketWssCli) {
-      socketWssCli.on('polls:list', setEncuestas)
-      socketWssCli.on('poll:updated', updateEncuesta)
-      socketWssCli.on('poll:created', addEncuesta)
-      socketWssCli.on('poll:deleted', ({ pollId }) => deleteEncuesta(pollId))
+      socketWssCli.on('polls:list', storeEncuestas.set)
+      socketWssCli.on('poll:updated', storeEncuestas.update)
+      socketWssCli.on('poll:created', storeEncuestas.add)
+      socketWssCli.on('poll:deleted', ({ pollId }) => storeEncuestas.remove(pollId))
 
       socketWssCli.on('wss:error', ({ message }: { message: string }) => {
         toast.error(message)
@@ -126,20 +115,20 @@ const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
           setLinkSala(`${process.env.NEXT_PUBLIC_HOST}/sala/${sala.id}/`)
 
           // Al abrir la sala, le pedimos al server la lista de encuestas y de estudiantes, por si la sala ya estaba activa
-          setEncuestas(polls)
-          setEstudiantes(estudiantes)
+          storeEncuestas.set(polls)
+          storeEstudiantes.set(estudiantes)
         }
       )
 
-      socketWssCli.on('sala:estudiantes', setEstudiantes)
+      socketWssCli.on('sala:estudiantes', storeEstudiantes.set)
 
       socketWssCli.on('sala:estudiante_conectado', (estudiante: Estudiante) => {
         toast.success(`Estudiante conectado: ${estudiante.nombre}`)
-        addEstudiante(estudiante)
+        storeEstudiantes.add(estudiante)
       })
 
       socketWssCli.on('sala:estudiante_desconectado', (estudiante: { id: string }) => {
-        estudianteDesconectado(estudiante.id)
+        storeEstudiantes.disconnect(estudiante.id)
       })
 
       socketWssCli.on('sala:config_actualizada', (config: ConfigSala) => {
@@ -169,10 +158,10 @@ const useEncuestaProfeState = (auth: Omit<PasaporteProfe, 'rol'>) => {
     socket: socketWssCli,
     estado: estadoWssCli,
     error: errorWssCli,
-    encuestas,
+    encuestas: storeEncuestas.items,
     linkSala,
     configSala,
-    estudiantes,
+    estudiantes: storeEstudiantes.items,
     enviarPregunta,
     borrarPregunta,
     cerrarPregunta,

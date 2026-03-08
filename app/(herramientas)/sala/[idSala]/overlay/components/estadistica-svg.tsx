@@ -1,5 +1,5 @@
 'use client'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
 import { Encuesta, Opcion } from '@/wss/tipos'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'

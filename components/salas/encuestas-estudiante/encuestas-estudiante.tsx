@@ -1,25 +1,25 @@
 'use client'
+import { LdSvg } from '@/components/custom/ld-svg'
+import useConfirmarConDelay from '@/components/hooks/use-delay'
+import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
+import { Input } from '@/components/ui/input'
+import { oscilar } from '@/lib/animaciones'
 import { cn } from '@/lib/utils'
+import IconEnc from '@/svg/EncuestaIconSVGO.svg'
+import { EncuestaHidratada } from '@/wss/tipos'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { LdSvg } from '@/components/custom/ld-svg'
+import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { useState } from 'react'
+import LoadingSala from '../loading-sala'
+import { storeConfig } from '../wss-cli/stores/config-store'
 import { useEncuestaEstudiante } from './encuestas-estudiante-context'
 import Cabeza from '/svg/cabezasvgo.svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
-import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { Input } from '@/components/ui/input'
-import { oscilar } from '@/lib/animaciones'
-import IconEnc from '@/svg/EncuestaIconSVGO.svg'
-import { EncuestaHidratada } from '@/wss/tipos'
-import { MessageCircleQuestionIcon, Send } from 'lucide-react'
-import LoadingSala from '../loading-sala'
-import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
-  const { configSala } = useEncuestaEstudianteLogin()
+  const { config } = storeConfig()
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
     () => StatusDeConexion.Conectado && encuestas.length === 0,
     1000
@@ -68,7 +68,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
               </span>
               de
             </p>
-            <p className="text-teal-500"> {configSala?.nombre_profe ?? idSala}</p>
+            <p className="text-teal-500"> {config?.nombre_profe ?? idSala}</p>
             <p className="text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
           </div>
         </div>

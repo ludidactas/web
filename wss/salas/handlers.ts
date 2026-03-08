@@ -64,12 +64,11 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 
   // Emitimos de inmediato la info inicial
   const emitir = safe(async () => {
-    socket.emit('sala:config_actualizada', await sala.config())
-
     socket.emit('sala:abierta', {
       sala: await sala.raw(),
       polls: await profe.listarEncuestas(),
       estudiantes: await sala.listarEstudiantes(),
+      config: await sala.config(),
     })
   })
 

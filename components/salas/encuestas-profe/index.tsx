@@ -1,22 +1,29 @@
 'use client'
 
-import useClipboard from '@/components/hooks/use-clipboard'
-import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import useClipboard from '@/components/hooks/use-clipboard'
+
 import LoadingSala from '../loading-sala'
 import { EncuestaSVG } from '../overlay/estadistica-svg'
 import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
-import { useEncuestaProfe } from './encuestas-profe-context'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
 
+import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
+import { storeConfig } from '../wss-cli/stores/config-store'
+
 export default function EncuestasProfe() {
-  const { linkSala, estado, encuestas, WssDebugPanel } = useEncuestaProfe()
+  const { estado, WssDebugPanel } = useConexionEncuestaProfe()
+  const { items: encuestas } = storeEncuestas()
+  const { config: configSala } = storeConfig()
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused) || encuestas[0]
 
@@ -29,7 +36,7 @@ export default function EncuestasProfe() {
     margin: 10,
   }
 
-  const linkOverlay = linkSala + 'overlay'
+  const linkOverlay = configSala.link + 'overlay'
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -68,23 +75,23 @@ export default function EncuestasProfe() {
                 <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
 
                 <div className="bg-white h-full rounded-b-xl">
-                  {linkSala && (
+                  {configSala.link && (
                     <div className="flex flex-col items-center justify-center gap-1 mb-8">
                       <div className="flex gap-2 text-xl">
                         <p className="leading-normal text-center text-sm">
                           Tu sala:{' '}
-                          <Link target="_blank" href={linkSala} className="text-blue-700 hover:underline">
-                            {linkSala}
+                          <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
+                            {configSala.link}
                           </Link>
                         </p>
-                        <button title="Copiar" onClick={handleCopy(linkSala)}>
+                        <button title="Copiar" onClick={handleCopy(configSala.link)}>
                           {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {!linkSala && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
+                  {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
 
                   {estado === StatusDeConexion.Conectado && (
                     <div className="flex flex-col gap-10">
@@ -124,23 +131,23 @@ export default function EncuestasProfe() {
             <h1 className="text-3xl md:text-4xl text-center text-[#8345FE]">¡Haz una pregunta!</h1>
           </div>
           <div className="bg-white h-full rounded-b-xl">
-            {linkSala && (
+            {configSala.link && (
               <div className="flex flex-col items-center justify-center gap-1 mb-8">
                 <div className="flex gap-2 text-xl">
                   <p className="leading-normal text-center text-sm md:text-lg">
                     Tu sala:{' '}
-                    <Link target="_blank" href={linkSala} className="text-blue-700 hover:underline">
-                      {linkSala}
+                    <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
+                      {configSala.link}
                     </Link>
                   </p>
-                  <button title="Copiar" onClick={handleCopy(linkSala)}>
+                  <button title="Copiar" onClick={handleCopy(configSala.link)}>
                     {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
                   </button>
                 </div>
               </div>
             )}
 
-            {!linkSala && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
+            {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
 
             {estado === StatusDeConexion.Conectado && (
               <div className="flex flex-col gap-10">

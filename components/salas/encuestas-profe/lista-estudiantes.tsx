@@ -5,11 +5,13 @@ import { cn, exportarPlanilla } from '@/lib/utils'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 import { Copy, Download, Eraser, SquareCheckBig, Users, X, Settings } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
-import { useEncuestaProfe } from './encuestas-profe-context'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
 import PanelConfigSala from './panel-config-sala'
+import { storeEstudiantes } from '../wss-cli/stores/estudiantes-store'
 
 export const ListaEstudiantes = () => {
-  const { estudiantes, limpiarEstudiantesSala } = useEncuestaProfe()
+  const { limpiarEstudiantes } = useConexionEncuestaProfe()
+  const { items: estudiantes } = storeEstudiantes()
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -43,7 +45,7 @@ export const ListaEstudiantes = () => {
             <HoverCardTrigger asChild>
               <button
                 className="flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110"
-                onClick={limpiarEstudiantesSala}
+                onClick={limpiarEstudiantes}
               >
                 <Eraser size={20} />
               </button>

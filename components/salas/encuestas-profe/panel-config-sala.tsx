@@ -9,10 +9,12 @@ import {
 } from '@/components/ui/dialog'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { PropsWithChildren } from 'react'
-import { useEncuestaProfe } from './encuestas-profe-context'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { storeConfig } from '../wss-cli/stores/config-store'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
-  const { configSala, actualizarConfig } = useEncuestaProfe()
+  const { actualizarConfig } = useConexionEncuestaProfe()
+  const { config } = storeConfig()
 
   return (
     <Dialog>
@@ -28,9 +30,9 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
           <SwitchCard
             title="DNI obligatorio"
             description="Los participantes tienen que ingresar DNI para participar"
-            checked={configSala?.pedir_dni}
+            checked={config?.pedir_dni}
             onCheckedChange={() => {
-              actualizarConfig({ pedir_dni: !configSala?.pedir_dni })
+              actualizarConfig({ pedir_dni: !config?.pedir_dni })
             }}
           />
         </div>

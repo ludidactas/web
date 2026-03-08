@@ -1,6 +1,6 @@
 import { LdSvg } from '@/components/custom/ld-svg'
 import useClipboard from '@/components/hooks/use-clipboard'
-import { StatusDeConexion, statusesDeCarga } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { Accordion, AccordionContent } from '@/components/ui/accordion'
 import { ScrollBar } from '@/components/ui/scroll-area'
@@ -14,10 +14,12 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { Acciones } from './acciones'
-import { useEncuestaProfe } from './encuestas-profe-context'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
 
 export function ListaEncuestas() {
-  const { encuestas, estado } = useEncuestaProfe()
+  const { estado } = useConexionEncuestaProfe()
+  const { items: encuestas } = storeEncuestas()
 
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
     () => estado === StatusDeConexion.Conectado && encuestas.length === 0,

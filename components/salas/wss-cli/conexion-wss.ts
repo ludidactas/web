@@ -4,7 +4,7 @@ import { WssServerSession } from '@/wss/validators/session'
 import { isNullish } from 'remeda'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
+import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from '../utils-socket-wss'
 
 // Máquina de estados finitos
 
@@ -55,7 +55,7 @@ type Estado = {
 }
 
 /** Lógica de conexión y máquina de estados finitos para conexión del cliente al WSS */
-export const useConexionWss = create<Estado>((set, get) => ({
+export const conexionWss = create<Estado>((set, get) => ({
   socket: null,
   status: StatusDeConexion.Quieto,
   error: null,

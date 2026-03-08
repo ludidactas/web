@@ -6,7 +6,7 @@ import { createContext, useContext, useState } from 'react'
 
 export default function useEncuestaEstudianteLoginState() {
   const [nombreSala, setNombreSala] = useState<string>()
-  const [configSala, setConfigSala] = useState<ConfigSala>()
+  // const [configSala, setConfigSala] = useState<ConfigSala>()
   const [nombre, setNombre] = useState<string | undefined>(undefined)
   const [dni, setDNI] = useState<string | undefined>(undefined)
   const [ingresado, setIngresado] = useState(false)
@@ -24,8 +24,8 @@ export default function useEncuestaEstudianteLoginState() {
     setIngresado,
     nombreSala,
     setNombreSala,
-    configSala,
-    setConfigSala,
+    // configSala,
+    // setConfigSala,
   }
 }
 

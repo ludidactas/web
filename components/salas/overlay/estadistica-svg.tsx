@@ -5,7 +5,7 @@ import { ReactNode, useEffect, useState } from 'react'
 
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
 import { useEncuestaEstudiante } from '../encuestas-estudiante/encuestas-estudiante-context'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {

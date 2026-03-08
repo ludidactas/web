@@ -1,6 +1,6 @@
 import { auth } from '@/app/auth'
 import EncuestasProfe from '@/components/salas/encuestas-profe'
-import { EncuestaProfeProvider } from '@/components/salas/encuestas-profe/encuestas-profe-context'
+import { EncuestaProfeProvider } from '@/components/salas/wss-cli/providers/encuestas-profe-context'
 import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'

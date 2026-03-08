@@ -18,6 +18,7 @@ export interface SalaData {
   config: ConfigSala
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
   export async function get(salaId: string) {
     async function getFromDb() {
@@ -220,7 +221,7 @@ export namespace Salas {
     const config_default: ConfigSala = {
       pedir_dni: false,
       permitir_anonimo: true,
-      // invitados: [],
+      link: '',
       nombre_profe: email,
     }
 
@@ -234,7 +235,7 @@ export namespace Salas {
     const salaData: SalaData = {
       id,
       profe: { email, nombre: config_sala.nombre_profe },
-      config: config_sala,
+      config: {...config_sala, link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/`}, // Le agregamos el link en la config
     }
 
     // Guardamos en DB
@@ -244,7 +245,7 @@ export namespace Salas {
 
     console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
 
-    return get(id)
+    return await get(id)
   }
 
   export async function existe(salaId: string) {

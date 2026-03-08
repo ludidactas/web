@@ -2,11 +2,11 @@ import { pollBase } from '@/wss/validators/polls'
 import { X, CirclePlus, Send } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useEncuestaProfe } from './encuestas-profe-context'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
 import { Checkbox } from '@/components/ui/checkbox'
 
 export function AgregarPregunta() {
-  const { enviarPregunta } = useEncuestaProfe()
+  const { crear } = useConexionEncuestaProfe()
 
   const [pregunta, setPregunta] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
@@ -33,7 +33,7 @@ export function AgregarPregunta() {
   const { success, error } = pollBase.safeParse({ pregunta, opciones, admiteAportes })
 
   const postearPregunta = () => {
-    enviarPregunta(pregunta, opciones, admiteAportes === 'indeterminate' ? false : admiteAportes)
+    crear(pregunta, opciones, admiteAportes === 'indeterminate' ? false : admiteAportes)
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')

@@ -1,9 +1,9 @@
 'use client'
 
 import { LdSvg } from '@/components/custom/ld-svg'
-import { StatusDeConexion } from '@/components/hooks/use-conexion-wss'
+import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { useWss } from '@/components/hooks/use-wss'
+import { useWss } from '@/components/salas/wss-cli/use-wss'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
@@ -18,10 +18,13 @@ import { toast } from 'sonner'
 import LoadingSala from '../loading-sala'
 import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
 import DibuEstudiante from '/svg/upssvgo.svg'
+import { storeConfig } from '../wss-cli/stores/config-store'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
-  const { setDNI, setNombre, setIngresado, nombre, dni, configSala, setConfigSala } = useEncuestaEstudianteLogin()
+  const { setDNI, setNombre, setIngresado, nombre, dni } = useEncuestaEstudianteLogin()
+
+  const { config: configSala, set: setConfigSala } = storeConfig()
 
   // Creamos una referencia estable al auth
   const authPublico = useMemo(

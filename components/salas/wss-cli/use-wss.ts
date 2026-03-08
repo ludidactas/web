@@ -1,14 +1,17 @@
 import { Pasaporte } from '@/wss/validators/auth'
 import { useEffect } from 'react'
-import DebugPanel from './conexion-wss-debug'
-import { StatusDeConexion, useConexionWss } from './use-conexion-wss'
+import DebugPanel from '../../hooks/debug-panel'
+import { StatusDeConexion, conexionWss } from './conexion-wss'
 import { useSession as useSessionNext } from 'next-auth/react'
 import { RolEncuesta } from '@/wss/tipos'
 
-/** Cose la sesión storeada con el server de WSS. @warning **PASARLE UN AUTH ESTABLE**. */
+/** 
+ * Cose la sesión de Google, si la hay, con el server de WSS.
+ * @param auth No hace falta memoizarlo, lo serializamos internamente.
+ */
 export function useWss(auth: Pasaporte) {
   const { status: statusSesionNext } = useSessionNext()
-  const { status, iniciarConexion, desconectar, socket, session, error } = useConexionWss()
+  const { status, iniciarConexion, desconectar, socket, session, error } = conexionWss()
 
   const sessionReady = statusSesionNext !== 'loading'
 

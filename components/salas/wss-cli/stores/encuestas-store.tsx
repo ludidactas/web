@@ -6,11 +6,11 @@ interface EncuestaState {
   items: Encuesta[]
   add: (item: Encuesta) => void
   update: (item: Encuesta) => void
-  remove: (id: string) => void
+  remove: (item: { id: string }) => void
   set: (items: Encuesta[]) => void
 }
 
-export const useEncuestaStore = create<EncuestaState>()(
+export const storeEncuestas = create<EncuestaState>()(
   subscribeWithSelector((set) => ({
     items: [],
 
@@ -23,9 +23,9 @@ export const useEncuestaStore = create<EncuestaState>()(
           : [...state.items, item],
       })),
 
-    remove: (id) =>
+    remove: (item) =>
       set((state) => ({
-        items: state.items.filter((e) => e.id !== id),
+        items: state.items.filter((e) => e.id !== item.id),
       })),
 
     set: (items) => set({ items: [...items] }),

@@ -1,7 +1,7 @@
 import { Pasaporte } from '@/wss/validators/auth'
 import { WssServerSession } from '@/wss/validators/session'
 import { io, Socket } from 'socket.io-client'
-import { RazonExpiracion } from './use-conexion-wss'
+import { RazonExpiracion } from './wss-cli/conexion-wss'
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')

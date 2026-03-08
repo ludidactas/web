@@ -17,7 +17,7 @@ interface EstudianteState {
   disconnect: (id: string) => void
 }
 
-export const useEstudianteStore = create<EstudianteState>()(
+export const storeEstudiantes = create<EstudianteState>()(
   subscribeWithSelector((set) => ({
     items: [],
 

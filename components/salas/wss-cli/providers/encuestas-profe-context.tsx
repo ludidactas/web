@@ -1,0 +1,70 @@
+'use client'
+
+import React, { createContext, useContext, useEffect, useMemo } from 'react'
+
+import { useWss } from '@/components/salas/wss-cli/use-wss'
+import { RolEncuesta } from '@/wss/tipos'
+import { PasaporteProfe } from '@/wss/validators/auth'
+import baseSalaHandlers from '../handlers/base-sala-handlers'
+import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
+import profeSalaHandlers from '../handlers/profe-sala-handlers'
+
+/** Cose el socket con el state para profe */
+const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
+  const { socket, estado, error, WssDebugPanel } = useWss({ ...auth, rol: RolEncuesta.Profe })
+
+  // Cuando cambia el socket, re-definimos los handlers con el nuevo socket
+  const handlers = useMemo(
+    () => ({
+      profe: profeSalaHandlers(socket),
+      base: baseSalaHandlers(socket),
+      encuestas: profeEncuestasHandlers(socket),
+    }),
+    [socket]
+  )
+
+  // Conectamos el socket a sus handlers
+  useEffect(() => {
+    handlers.profe.setupSocketListeners()
+    handlers.base.setupSocketListeners()
+    handlers.encuestas.setupSocketListeners()
+
+    return () => {
+      handlers.profe.clearSocketListeners()
+      handlers.base.clearSocketListeners()
+      handlers.encuestas.clearSocketListeners()
+    }
+  }, [handlers])
+
+  return {
+    socket,
+    estado,
+    error,
+    ...handlers.profe.acciones,
+    ...handlers.base.acciones,
+    ...handlers.encuestas.acciones,
+    WssDebugPanel,
+  }
+}
+
+// Context
+const EncuestaProfeContext = createContext<ReturnType<typeof useHandlersConexionSalaProfe> | undefined>(undefined)
+
+// Provider - El auth viene del server
+export const EncuestaProfeProvider: React.FC<{ auth: Omit<PasaporteProfe, 'rol'>; children: React.ReactNode }> = ({
+  auth,
+  children,
+}) => {
+  return (
+    <EncuestaProfeContext.Provider value={useHandlersConexionSalaProfe(auth)}>{children}</EncuestaProfeContext.Provider>
+  )
+}
+
+// Hook para usar el contexto de Encuesta
+export const useConexionEncuestaProfe = () => {
+  const context = useContext(EncuestaProfeContext)
+  if (!context) {
+    throw new Error('Intentando usar useEncuestaAdmin fuera del EncuestaAdminProvider')
+  }
+  return context
+}

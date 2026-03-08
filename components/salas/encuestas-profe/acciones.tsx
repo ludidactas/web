@@ -1,32 +1,21 @@
 import {
-  DialogHeader,
   Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
   DialogClose,
+  DialogContent,
   DialogDescription,
-  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog'
-import { Encuesta } from '@/wss/tipos'
-import { useEncuestaProfe } from './encuestas-profe-context'
 import { cn } from '@/lib/utils'
+import { Encuesta } from '@/wss/tipos'
 import { Icon } from '@iconify/react'
-import { ComponentProps } from 'react'
 import { Info } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ComponentProps } from 'react'
+import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
 
 export function Acciones({ encuesta }: { encuesta: Encuesta }) {
-  const {
-    cerrarPregunta,
-    borrarPregunta,
-    abrirPregunta,
-    publicarPregunta,
-    esconderPregunta,
-    enfocarPregunta,
-    revelarOpciones,
-    desrevelarOpciones,
-  } = useEncuestaProfe()
+  const { revelar, ocultar, enfocar, publicar, esconder, abrir, cerrar, borrar } = useConexionEncuestaProfe()
 
   return (
     <div className="flex flex-col my-4 gap-2">
@@ -36,7 +25,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {!encuesta.isRevealed && (
           <BotonEncuesta
             className="m-0 md:px-0 bg-cyan-100 text-cyan-600 border-2 border-cyan-500 py-2"
-            onClick={() => revelarOpciones(encuesta.id)}
+            onClick={() => revelar(encuesta.id)}
             texto="Revelar votos"
             icon=""
             title="Los estudiantes no pueden ver los votos. Haz click para revelarlos"
@@ -46,7 +35,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.isRevealed && (
           <BotonEncuesta
             className="m-0 bg-cyan-500 text-white py-2"
-            onClick={() => desrevelarOpciones(encuesta.id)}
+            onClick={() => ocultar(encuesta.id)}
             texto="Ocultar votos"
             icon=""
             title="Los estudiantes pueden ver los votos. Haz click para esconderlos"
@@ -57,7 +46,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {!encuesta.isFocused && (
           <BotonEncuesta
             className="bg-purple-500 text-white px-4 py-2 disabled:bg-slate-100 disabled:border-2 disabled:border-slate-500 disabled:text-slate-500"
-            onClick={() => enfocarPregunta(encuesta.id)}
+            onClick={() => enfocar(encuesta.id)}
             disabled={!encuesta.isPublished}
             texto="Enfocar"
             icon="material-symbols:center-focus-weak-rounded"
@@ -68,7 +57,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {!encuesta.isPublished && (
           <BotonEncuesta
             className="bg-emerald-500 text-white p-2"
-            onClick={() => publicarPregunta(encuesta.id)}
+            onClick={() => publicar(encuesta.id)}
             texto="Publicar"
             icon="mdi:show"
           />
@@ -76,7 +65,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.isPublished && (
           <BotonEncuesta
             className="bg-emerald-100 text-emerald-600 p-2 border-2 border-emerald-500"
-            onClick={() => esconderPregunta(encuesta.id)}
+            onClick={() => esconder(encuesta.id)}
             texto="Esconder"
             icon="mdi:hide"
           />
@@ -89,7 +78,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {!encuesta.isOpen && (
           <BotonEncuesta
             className="bg-indigo-500/90 text-white px-2 md:px-4 py-2"
-            onClick={() => abrirPregunta(encuesta.id)}
+            onClick={() => abrir(encuesta.id)}
             texto="Abrir"
             icon="mdi:hand-open"
           />
@@ -97,7 +86,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {encuesta.isOpen && (
           <BotonEncuesta
             className="bg-indigo-100 px-2 md:px-4 py-2 border-2 text-indigo-500 border-indigo-500"
-            onClick={() => cerrarPregunta(encuesta.id)}
+            onClick={() => cerrar(encuesta.id)}
             texto="Cerrar"
             icon="mdi:hand-back-left"
           />
@@ -124,7 +113,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
                 className="bg-rose-700 text-white px-4 py-2 rounded-full"
                 texto="Eliminar"
                 icon="mdi:trash-can"
-                onClick={() => borrarPregunta(encuesta.id)}
+                onClick={() => borrar(encuesta.id)}
               />
             </div>
           </DialogContent>

@@ -2,7 +2,9 @@ import { auth } from '@/app/auth'
 import jwt from 'jsonwebtoken'
 import { NextResponse } from 'next/server'
 
-// Devuelve un token JWT firmado con la información del usuario autenticado 
+// En desuso. Evaluar si conservarlo.
+
+// Devuelve un token JWT firmado con la información del usuario autenticado
 // (para autenticarlo en el servidor de websockets)
 export async function GET() {
   const session = await auth()
@@ -10,13 +12,13 @@ export async function GET() {
   if (!session || !session.user || !session.user.email) {
     return new NextResponse('No autorizado', { status: 401 })
   }
-  
+
   const token = jwt.sign(
     {
       email: session.user.email,
       name: session.user.name,
       image: session.user.image,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 horas
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 horas
     },
     process.env.JWT_SECRET!,
     { algorithm: 'HS256' }

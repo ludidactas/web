@@ -1,3 +1,5 @@
+import { PropsWithChildren } from 'react'
+
 import {
   Dialog,
   DialogClose,
@@ -8,9 +10,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { SwitchCard } from '@/components/ui/switch-card'
-import { PropsWithChildren } from 'react'
-import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
-import { storeConfig } from '../wss-cli/stores/config-store'
+
+import { storeConfig } from '@/wss-cli/stores/config-store'
+import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
   const { actualizarConfig } = useConexionProfe()

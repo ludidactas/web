@@ -5,13 +5,14 @@ import { Sparkles } from 'lucide-react'
 import { useSession as useGoogleSession } from 'next-auth/react'
 import { ReactNode, useMemo } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
-import { ConexionEstudianteProvider } from '../wss-cli/providers/wss-estudiante-context'
 
 import HeaderSala from '../header-sala'
 import LoadingSala from '../loading-sala'
 import LoginSalaEstudiante from './encuestas-estudiante-login'
-import { useLoginSalaEstudiante } from '../wss-cli/providers/wss-estudiante-login-context'
-import { ConexionPublicProvider } from '../wss-cli/providers/wss-public-context'
+
+import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
+import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-context'
+import { ConexionPublicProvider } from '@/wss-cli/providers/wss-public-context'
 
 export default function EncuestasEstudiantePage({
   idSala,

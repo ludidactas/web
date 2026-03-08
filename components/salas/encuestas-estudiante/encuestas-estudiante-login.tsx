@@ -1,7 +1,6 @@
 'use client'
 
 import { LdSvg } from '@/components/custom/ld-svg'
-import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
@@ -12,10 +11,12 @@ import Link from 'next/link'
 import { useRef } from 'react'
 import { toast } from 'sonner'
 import LoadingSala from '../loading-sala'
-import { useLoginSalaEstudiante } from '../wss-cli/providers/wss-estudiante-login-context'
-import { useConexionPublico } from '../wss-cli/providers/wss-public-context'
-import { storeConfig } from '../wss-cli/stores/config-store'
 import DibuEstudiante from '/svg/upssvgo.svg'
+
+import { StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
+import { useConexionPublico } from '@/wss-cli/providers/wss-public-context'
+import { storeConfig } from '@/wss-cli/stores/config-store'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 

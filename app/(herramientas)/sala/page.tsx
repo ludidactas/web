@@ -1,12 +1,12 @@
 import { auth } from '@/app/auth'
 import EncuestasProfe from '@/components/salas/encuestas-profe'
 import HeaderSala from '@/components/salas/header-sala'
-import { ConexionProfeProvider } from '@/components/salas/wss-cli/providers/wss-profe-context'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
 import { tokenWss } from '@/server/token_wss'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
+import { ConexionProfeProvider } from '@/wss-cli/providers/wss-profe-context'
 
 export default async function SalaPage() {
   const session = await auth()

@@ -2,13 +2,13 @@
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
 
-import { useWss } from '@/components/salas/wss-cli/use-wss'
 import { RolEncuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
 
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import profeSalaHandlers from '../handlers/profe-sala-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
+import { useWss } from '../use-wss'
 
 /** Cose el socket con el state para profe */
 const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {

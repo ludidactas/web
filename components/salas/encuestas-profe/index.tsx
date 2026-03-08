@@ -15,10 +15,10 @@ import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
 
-import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
-import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
-import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
-import { storeConfig } from '../wss-cli/stores/config-store'
+import { statusesDeCarga, StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasProfe() {
   const { estado, WssDebugPanel } = useConexionProfe()

@@ -1,6 +1,6 @@
 import { estadisticaSvgConfigValidator } from '@/components/salas/overlay/estadistica-svg-config'
 import TestEstadisticaApp from '@/components/salas/overlay/estadistica-svg'
-import { ConexionEstudianteProvider } from '@/components/salas/wss-cli/providers/wss-estudiante-context'
+import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-context'
 
 export default async function OverlayEncuestas({
   params,

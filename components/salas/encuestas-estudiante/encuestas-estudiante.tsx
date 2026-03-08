@@ -1,7 +1,6 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
 import { cn } from '@/lib/utils'
@@ -12,11 +11,13 @@ import { es } from 'date-fns/locale'
 import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { useState } from 'react'
 import LoadingSala from '../loading-sala'
-import { storeConfig } from '../wss-cli/stores/config-store'
-import { useConexionEstudiante } from '../wss-cli/providers/wss-estudiante-context'
 import Cabeza from '/svg/cabezasvgo.svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
-import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
+
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
+import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
+import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, error, WssDebugPanel } = useConexionEstudiante()

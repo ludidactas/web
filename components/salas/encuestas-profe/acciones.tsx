@@ -12,7 +12,8 @@ import { Encuesta } from '@/wss/tipos'
 import { Icon } from '@iconify/react'
 import { Info } from 'lucide-react'
 import { ComponentProps } from 'react'
-import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
+
+import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 
 export function Acciones({ encuesta }: { encuesta: Encuesta }) {
   const { revelar, ocultar, enfocar, publicar, esconder, abrir, cerrar, borrar } = useConexionProfe()

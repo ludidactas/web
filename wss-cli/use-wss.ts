@@ -1,9 +1,9 @@
 import { Pasaporte } from '@/wss/validators/auth'
 import { useEffect } from 'react'
-import DebugPanel from '../../hooks/debug-panel'
 import { StatusDeConexion, conexionWss } from './conexion-wss'
 import { useSession as useSessionNext } from 'next-auth/react'
 import { RolEncuesta } from '@/wss/tipos'
+import DebugPanel from '@/components/ui/debug-panel'
 
 /**
  * Cose la sesión de Google, si la hay, con el server de WSS.

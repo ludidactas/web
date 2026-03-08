@@ -1,6 +1,5 @@
 import { LdSvg } from '@/components/custom/ld-svg'
 import useClipboard from '@/components/hooks/use-clipboard'
-import { StatusDeConexion, statusesDeCarga } from '@/components/salas/wss-cli/conexion-wss'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { Accordion, AccordionContent } from '@/components/ui/accordion'
 import { ScrollBar } from '@/components/ui/scroll-area'
@@ -14,8 +13,10 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { Acciones } from './acciones'
-import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
-import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
+
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
+import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 
 export function ListaEncuestas() {
   const { estado } = useConexionProfe()

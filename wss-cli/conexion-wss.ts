@@ -3,7 +3,7 @@ import { Pasaporte } from '@/wss/validators/auth'
 import { isNullish } from 'remeda'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from '../utils-socket-wss'
+import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
 
 // Máquina de estados finitos para la conexión al WebSocket Server (WSS).
 

@@ -1,6 +1,6 @@
 import { Pasaporte } from '@/wss/validators/auth'
 import { io, Socket } from 'socket.io-client'
-import { RazonExpiracion } from './wss-cli/conexion-wss'
+import { RazonExpiracion } from './conexion-wss'
 
 if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
@@ -47,17 +47,6 @@ export async function configurarListeners({
   )
 
   return sock
-}
-
-/**
- * Le pide al server de next, que es el que autentica con Google,
- * un token JWT para conectarse al server de encuestas. Stateless.
- */
-export async function solicitarAuth() {
-  console.log(`Obteniendo token de auth del server de next...`)
-  const respuesta = await fetch('/api/auth/token', { credentials: 'include' })
-  const payload = await respuesta.json()
-  return payload.token as string
 }
 
 /** Limpia event listeners base y de sesión del socket */

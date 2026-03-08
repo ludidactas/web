@@ -5,13 +5,13 @@ import { StatusDeConexion, conexionWss } from './conexion-wss'
 import { useSession as useSessionNext } from 'next-auth/react'
 import { RolEncuesta } from '@/wss/tipos'
 
-/** 
+/**
  * Cose la sesión de Google, si la hay, con el server de WSS.
  * @param auth No hace falta memoizarlo, lo serializamos internamente.
  */
 export function useWss(auth: Pasaporte) {
   const { status: statusSesionNext } = useSessionNext()
-  const { status, iniciarConexion, desconectar, socket, session, error } = conexionWss()
+  const { status, iniciarConexion, desconectar, socket, error } = conexionWss()
 
   const sessionReady = statusSesionNext !== 'loading'
 
@@ -42,8 +42,7 @@ export function useWss(auth: Pasaporte) {
     estado: status,
     socket,
     iniciarConexion,
-    session,
     error,
-    WssDebugPanel: () => DebugPanel({ data: { status, session, error, socket: { id: socket?.id }, auth } }),
+    WssDebugPanel: () => DebugPanel({ data: { status, error, socket: { id: socket?.id }, auth } }),
   }
 }

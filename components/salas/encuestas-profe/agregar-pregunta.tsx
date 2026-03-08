@@ -2,11 +2,11 @@ import { pollBase } from '@/wss/validators/polls'
 import { X, CirclePlus, Send } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 import { Checkbox } from '@/components/ui/checkbox'
 
 export function AgregarPregunta() {
-  const { crear } = useConexionEncuestaProfe()
+  const { crear } = useConexionProfe()
 
   const [pregunta, setPregunta] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])

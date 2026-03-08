@@ -6,11 +6,13 @@ import { ReactNode, useEffect, useState } from 'react'
 
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
-import { useEncuestaEstudiante } from '@/components/salas/encuestas-estudiante/encuestas-estudiante-context'
+import { useConexionEstudiante } from '@/components/salas/wss-cli/providers/wss-estudiante-context'
+import { storeEncuestas } from '@/components/salas/wss-cli/stores/encuestas-store'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
-  const { estado, encuestas, error } = useEncuestaEstudiante()
+  const { estado, error } = useConexionEstudiante()
+  const { items: encuestas } = storeEncuestas()
   const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
 
   return (

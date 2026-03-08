@@ -14,11 +14,11 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { Acciones } from './acciones'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
 
 export function ListaEncuestas() {
-  const { estado } = useConexionEncuestaProfe()
+  const { estado } = useConexionProfe()
   const { items: encuestas } = storeEncuestas()
 
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(

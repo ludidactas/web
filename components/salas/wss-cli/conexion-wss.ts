@@ -1,12 +1,11 @@
 import { RolEncuesta } from '@/wss/tipos'
 import { Pasaporte } from '@/wss/validators/auth'
-import { WssServerSession } from '@/wss/validators/session'
 import { isNullish } from 'remeda'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from '../utils-socket-wss'
 
-// Máquina de estados finitos
+// Máquina de estados finitos para la conexión al WebSocket Server (WSS).
 
 export interface RazonExpiracion {
   type: string
@@ -18,10 +17,6 @@ export interface RazonExpiracion {
 export enum StatusDeConexion {
   /** Conexión quieta. O bien todavía no intentamos conectar o bien ya cerramos la conexión. */
   Quieto = 'idle',
-  /** @todo: poner en uso este estado. */
-  Autenticando = 'authenticating',
-  /** @todo: poner en uso este estado. */
-  CargandoDependencias = 'loading_deps',
   /** Estableciendo conexión con el WSS. */
   Conectando = 'connecting',
   /** Conexión establecida :) */
@@ -33,18 +28,12 @@ export enum StatusDeConexion {
 }
 
 /** Enumera los estados de la conexión para los que tenemos que mostrar la pantalla de loading */
-export const statusesDeCarga = [
-  StatusDeConexion.Quieto,
-  StatusDeConexion.Conectando,
-  StatusDeConexion.Autenticando,
-  StatusDeConexion.CargandoDependencias,
-]
+export const statusesDeCarga = [StatusDeConexion.Quieto, StatusDeConexion.Conectando]
 
 type Estado = {
   socket: SocketWssCli | null
   status: StatusDeConexion
   error: string | null
-  session: WssServerSession | null
   // Agregamos una función central para iniciar o re-intentar la conexión
   iniciarConexion: (auth: Pasaporte, sessionId?: string) => Promise<void>
   desconectar: () => void
@@ -105,7 +94,6 @@ export const conexionWss = create<Estado>((set, get) => ({
         listeners: {
           onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
           onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
-          onSession: (_, session) => set({ session }),
           onExpired: (_, _data) => get()._manejarExpiracion(),
           onError: (_, err) => get()._manejarError(err),
         },
@@ -148,7 +136,7 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     // Si no está en error (clave), vuelve a Quieto.
     const statusToSet = get().status === StatusDeConexion.Error ? StatusDeConexion.Error : StatusDeConexion.Quieto
-    set({ socket: null, status: statusToSet, session: null })
+    set({ socket: null, status: statusToSet })
   },
 
   // Se llama desde onExpired y desde manejarError si el error indica expiración
@@ -156,7 +144,7 @@ export const conexionWss = create<Estado>((set, get) => ({
     console.warn('⏳ Sesión expirada. Limpiando sesión local y reintentando...')
 
     // El hook se encarga de limpiar el localStorage a través de 'sessionReady'
-    set({ status: StatusDeConexion.Expirado, session: null })
+    set({ status: StatusDeConexion.Expirado })
 
     // Forzamos un reintento limpio
     if (autoreconectar) {

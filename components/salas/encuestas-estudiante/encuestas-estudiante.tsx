@@ -13,12 +13,16 @@ import { MessageCircleQuestionIcon, Send } from 'lucide-react'
 import { useState } from 'react'
 import LoadingSala from '../loading-sala'
 import { storeConfig } from '../wss-cli/stores/config-store'
-import { useEncuestaEstudiante } from './encuestas-estudiante-context'
+import { useConexionEstudiante } from '../wss-cli/providers/wss-estudiante-context'
 import Cabeza from '/svg/cabezasvgo.svg'
 import DibuEstudiante from '/svg/upssvgo.svg'
+import { storeEncuestas } from '../wss-cli/stores/encuestas-store'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
-  const { estado, encuestas, error, WssDebugPanel } = useEncuestaEstudiante()
+  const { estado, error, WssDebugPanel } = useConexionEstudiante()
+
+  const { items: encuestas } = storeEncuestas()
+
   const { config } = storeConfig()
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
     () => StatusDeConexion.Conectado && encuestas.length === 0,
@@ -103,7 +107,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
 }
 
 function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
-  const { votar } = useEncuestaEstudiante()
+  const { votar } = useConexionEstudiante()
   const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'] | undefined>(
     encuesta.votoEmitido
   )

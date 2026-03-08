@@ -5,9 +5,10 @@ import React, { createContext, useContext, useEffect, useMemo } from 'react'
 import { useWss } from '@/components/salas/wss-cli/use-wss'
 import { RolEncuesta } from '@/wss/tipos'
 import { PasaporteProfe } from '@/wss/validators/auth'
+
 import baseSalaHandlers from '../handlers/base-sala-handlers'
-import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import profeSalaHandlers from '../handlers/profe-sala-handlers'
+import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 
 /** Cose el socket con el state para profe */
 const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
@@ -25,14 +26,14 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
 
   // Conectamos el socket a sus handlers
   useEffect(() => {
-    handlers.profe.setupSocketListeners()
-    handlers.base.setupSocketListeners()
-    handlers.encuestas.setupSocketListeners()
+    handlers.profe.montar()
+    handlers.base.montar()
+    handlers.encuestas.montar()
 
     return () => {
-      handlers.profe.clearSocketListeners()
-      handlers.base.clearSocketListeners()
-      handlers.encuestas.clearSocketListeners()
+      handlers.profe.desmontar()
+      handlers.base.desmontar()
+      handlers.encuestas.desmontar()
     }
   }, [handlers])
 
@@ -48,21 +49,21 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
 }
 
 // Context
-const EncuestaProfeContext = createContext<ReturnType<typeof useHandlersConexionSalaProfe> | undefined>(undefined)
+const ConexionProfeContext = createContext<ReturnType<typeof useHandlersConexionSalaProfe> | undefined>(undefined)
 
 // Provider - El auth viene del server
-export const EncuestaProfeProvider: React.FC<{ auth: Omit<PasaporteProfe, 'rol'>; children: React.ReactNode }> = ({
+export const ConexionProfeProvider: React.FC<{ auth: Omit<PasaporteProfe, 'rol'>; children: React.ReactNode }> = ({
   auth,
   children,
 }) => {
   return (
-    <EncuestaProfeContext.Provider value={useHandlersConexionSalaProfe(auth)}>{children}</EncuestaProfeContext.Provider>
+    <ConexionProfeContext.Provider value={useHandlersConexionSalaProfe(auth)}>{children}</ConexionProfeContext.Provider>
   )
 }
 
 // Hook para usar el contexto de Encuesta
-export const useConexionEncuestaProfe = () => {
-  const context = useContext(EncuestaProfeContext)
+export const useConexionProfe = () => {
+  const context = useContext(ConexionProfeContext)
   if (!context) {
     throw new Error('Intentando usar useEncuestaAdmin fuera del EncuestaAdminProvider')
   }

@@ -1,12 +1,12 @@
 import { LdSvg } from '@/components/custom/ld-svg'
 import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 import EncuestasIcon from '@/svg/EncuestasTitulo.svg'
 import Conectado from '@/svg/ConectadoSVGO.svg'
 import SalaHeader from '@/svg/EncuestasEstIconSVGO.svg'
 
 export function Status() {
-  const { estado } = useConexionEncuestaProfe()
+  const { estado } = useConexionProfe()
   return (
     <>
       {/* Desktop */}

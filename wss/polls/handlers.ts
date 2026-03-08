@@ -77,9 +77,6 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
 
   const estudiante = await estudianteSala(idSala, socket.data.session.userId)
 
-  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
-  socket.emit('polls:list', await estudiante.listar())
-
   // Si las pide, se las enviamos también
   socket.on(
     'polls:list',
@@ -97,4 +94,10 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
       await broadcastPoll(sala, await estudiante.votar({ pollId, optionId, aporte }))
     })
   )
+
+  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
+  const emitir = safe(async () => {
+    socket.emit('polls:list', await estudiante.listar())
+  })
+  await emitir()
 }

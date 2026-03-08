@@ -1,7 +1,7 @@
 import { auth } from '@/app/auth'
 import { SignOut } from './components/botones'
 import Link from 'next/link'
-import Login, { Intent } from './components/login'
+import GoogleLogin, { Intent } from './components/login'
 import Image from 'next/image'
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
   }
 }
 
-export default async function LoginPage({ searchParams }: Props) {
+export default async function ProfeLoginPage({ searchParams }: Props) {
   const session = await auth()
 
   const { callbackUrl } = await searchParams
@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: Props) {
   if (!session?.user)
     return (
       <div className="flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 justify-center h-[100vh] w-[100vw]">
-        <Login className="animate-aparecer" intent={callbackUrl as Intent} />
+        <GoogleLogin className="animate-aparecer" intent={callbackUrl as Intent} />
       </div>
     )
 
@@ -46,4 +46,3 @@ export default async function LoginPage({ searchParams }: Props) {
     </div>
   )
 }
-

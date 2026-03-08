@@ -12,10 +12,10 @@ import { Encuesta } from '@/wss/tipos'
 import { Icon } from '@iconify/react'
 import { Info } from 'lucide-react'
 import { ComponentProps } from 'react'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 
 export function Acciones({ encuesta }: { encuesta: Encuesta }) {
-  const { revelar, ocultar, enfocar, publicar, esconder, abrir, cerrar, borrar } = useConexionEncuestaProfe()
+  const { revelar, ocultar, enfocar, publicar, esconder, abrir, cerrar, borrar } = useConexionProfe()
 
   return (
     <div className="flex flex-col my-4 gap-2">

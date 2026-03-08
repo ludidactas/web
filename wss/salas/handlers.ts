@@ -89,14 +89,6 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   const user = socket.data.session.nombre
   const sala = await Salas.get(idSala)
 
-  // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
-  const notificar = safe(async () => {
-    console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
-    await sala.marcarEstudiantePresente(socket.data.session.userId)
-    await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
-  })
-  await notificar()
-
   socket.on(
     'disconnect',
     safe(async (reason) => {
@@ -105,6 +97,14 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
       await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: socket.data.session.userId })
     })
   )
+
+  // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
+  const emitir = safe(async () => {
+    console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
+    await sala.marcarEstudiantePresente(socket.data.session.userId)
+    await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
+  })
+  await emitir()
 }
 
 /** Handlers para exponer info pública de la sala */

@@ -1,11 +1,10 @@
 import { auth } from '@/app/auth'
 import EncuestasProfe from '@/components/salas/encuestas-profe'
-import { EncuestaProfeProvider } from '@/components/salas/wss-cli/providers/encuestas-profe-context'
 import HeaderSala from '@/components/salas/header-sala'
+import { ConexionProfeProvider } from '@/components/salas/wss-cli/providers/wss-profe-context'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
 import { tokenWss } from '@/server/token_wss'
-import { RolEncuesta } from '@/wss/tipos'
 import { redirect } from 'next/navigation'
 import { SignOut } from '../login/components/botones'
 
@@ -18,7 +17,7 @@ export default async function SalaPage() {
   const token = await tokenWss()
 
   return (
-    <EncuestaProfeProvider auth={{ token }}>
+    <ConexionProfeProvider auth={{ token }}>
       <Toaster />
       <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
         <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
@@ -30,6 +29,6 @@ export default async function SalaPage() {
 
         <div className="w-full" />
       </div>
-    </EncuestaProfeProvider>
+    </ConexionProfeProvider>
   )
 }

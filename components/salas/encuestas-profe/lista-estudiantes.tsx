@@ -5,12 +5,12 @@ import { cn, exportarPlanilla } from '@/lib/utils'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 import { Copy, Download, Eraser, SquareCheckBig, Users, X, Settings } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 import PanelConfigSala from './panel-config-sala'
 import { storeEstudiantes } from '../wss-cli/stores/estudiantes-store'
 
 export const ListaEstudiantes = () => {
-  const { limpiarEstudiantes } = useConexionEncuestaProfe()
+  const { limpiarEstudiantes } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
 
   const { handleCopy, justCopied } = useClipboard()

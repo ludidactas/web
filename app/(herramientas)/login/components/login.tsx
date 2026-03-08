@@ -7,7 +7,7 @@ import Link from 'next/link'
 
 export type Intent = '/sala'
 
-export default function Login({ className, intent }: { className?: string; intent?: Intent }) {
+export default function GoogleLogin({ className, intent }: { className?: string; intent?: Intent }) {
   return (
     <div
       className={cn(
@@ -76,8 +76,10 @@ export default function Login({ className, intent }: { className?: string; inten
             </div>
           )}
 
-          <div className='w-full flex items-center justify-between'>
-            <LinkGradiente href="/" className="p-4">Volver</LinkGradiente>
+          <div className="w-full flex items-center justify-between">
+            <LinkGradiente href="/" className="p-4">
+              Volver
+            </LinkGradiente>
             <SignIn redirectTo="/sala" />
           </div>
         </div>

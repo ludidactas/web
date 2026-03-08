@@ -43,7 +43,14 @@ const WssPublicSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolEncuesta.Publico),
 }).transform((data) => ({ ...data, userId: `publico-${data.userIp ?? 'NOIP'}-${randomUUID().split('-')[0]}` }))
 
-/** Esquema de sesión válida. Requiere rol. Puede ser o bien de estudiantes, o bien de profe, o bien de admin. Profe y admin requieren email y nombre. */
+/**
+ * Esquema de sesión válida. Requiere rol.
+ * Puede ser o bien de estudiantes, o bien de profe, o bien de admin.
+ * Profe y admin requieren email y nombre.
+ *
+ * Existe solo attacheada al socket por el middleware de sesión,
+ * no storeamos sesiones en redis.
+ */
 export const WssServerSessionSchema = z.union([
   WssEstudianteSessionSchema,
   WssProfeSessionSchema,

@@ -1,13 +1,14 @@
-import { ConfigSala } from "@/wss/validators/salas"
-import { Socket } from "socket.io-client"
-import { toast } from "sonner"
-import { storeConfig } from "../stores/config-store"
+import { Socket } from 'socket.io-client'
+
+import { toast } from 'sonner'
+import { ConfigSala } from '@/wss/validators/salas'
+import { storeConfig } from '../stores/config-store'
 
 export default function baseSalaHandlers(socket: Socket | null) {
   const { set: setConfig } = storeConfig.getState()
-  
-  return ({
-    setupSocketListeners: () => {
+
+  return {
+    montar: () => {
       if (!socket) return
 
       // Al recibir la configuración actualizada, mostrar un toast y actualizar el state
@@ -22,13 +23,13 @@ export default function baseSalaHandlers(socket: Socket | null) {
       })
     },
 
-    acciones: {}, 
+    acciones: {},
 
-    clearSocketListeners: () => {
+    desmontar: () => {
       if (!socket) return
 
       socket.removeAllListeners('sala:config_actualizada')
       socket.removeAllListeners('wss:error')
-    }
-  })
+    },
+  }
 }

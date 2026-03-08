@@ -2,81 +2,36 @@
 
 import { LdSvg } from '@/components/custom/ld-svg'
 import { StatusDeConexion } from '@/components/salas/wss-cli/conexion-wss'
-import useConfirmarConDelay from '@/components/hooks/use-delay'
-import { useWss } from '@/components/salas/wss-cli/use-wss'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
 import LoginEst from '@/svg/loginEstSVGO2.svg'
-import { RolEncuesta } from '@/wss/tipos'
-import { PasaportePublico } from '@/wss/validators/auth'
 import { animate, spring, stagger } from 'animejs'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { toast } from 'sonner'
 import LoadingSala from '../loading-sala'
-import { useEncuestaEstudianteLogin } from './encuestas-estudiante-login-context'
-import DibuEstudiante from '/svg/upssvgo.svg'
+import { useLoginSalaEstudiante } from '../wss-cli/providers/wss-estudiante-login-context'
+import { useConexionPublico } from '../wss-cli/providers/wss-public-context'
 import { storeConfig } from '../wss-cli/stores/config-store'
+import DibuEstudiante from '/svg/upssvgo.svg'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
+
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
-  const { setDNI, setNombre, setIngresado, nombre, dni } = useEncuestaEstudianteLogin()
+  const { confirmadoNoExiste, confirmadoError, error, averiguandoEstado, averiguandoExistencia, estado } =
+    useConexionPublico()
 
-  const { config: configSala, set: setConfigSala } = storeConfig()
+  const { setDNI, setNombre, setIngresado, nombre, dni } = useLoginSalaEstudiante({ idSala })
 
-  // Creamos una referencia estable al auth
-  const authPublico = useMemo(
-    () =>
-      ({
-        rol: RolEncuesta.Publico,
-        idSala,
-      } as PasaportePublico),
-    [idSala]
-  )
-
-  // Nos conectamos al socket como rol publico para obtener el nombre de sala (y en el futuro, config)
-  // Ojo: esto captura el websocket!
-  // (es decir, si un children utiliza el mismo hook con otras credenciales, van a entrar en conflicto)
-  const { socket, estado, error } = useWss(authPublico)
-
-  // Aguantamos un segundo antes de confirmar que la sala no existe
-  const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(
-    () => estado === StatusDeConexion.Error && error === 'Invalid namespace',
-    1000
-  )
-
-  // Aguantamos un segundo antes de confirmar que la sala no existe
-  const { valor: posibleError, confirmado: confirmadoError } = useConfirmarConDelay(
-    () => estado === StatusDeConexion.Error,
-    1000
-  )
-
-  // Al obtener un socket suscribimos a sus señales
-  useEffect(() => {
-    if (socket) {
-      socket.on('sala:config_actualizada', setConfigSala)
-    }
-  }, [socket])
+  const { config: configSala } = storeConfig()
 
   const mensajeDeAuth = `Ingresá con tu nombre${configSala?.pedir_dni ? ' y DNI' : ''}`
   const nombreSala = configSala?.nombre_profe ? `de ${configSala.nombre_profe}` : idSala
 
   const inputNombreRef = useRef<HTMLInputElement>(null)
   const inputDNIRef = useRef<HTMLInputElement>(null)
-
-  // Cargamos lo que hubiera en el localStorage
-  useEffect(() => {
-    const storedName = localStorage.getItem(`encuestas-nombre-${idSala}`)
-    if (storedName) {
-      setNombre(storedName)
-    }
-    const storedDni = localStorage.getItem(`encuestas-dni-${idSala}`)
-    if (storedDni) {
-      setDNI(storedDni)
-    }
-  }, [idSala])
 
   // Al clickear en conectarse
   const handleConectarse = () => {
@@ -133,9 +88,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
       </div>
     )
 
-  if (posibleNoExiste && !confirmadoNoExiste)
-    return <LoadingSala overlay mensaje="Verificando existencia de la sala..." />
-  if (posibleError && !confirmadoError) return <LoadingSala overlay mensaje="Verificando estado..." />
+  if (averiguandoExistencia) return <LoadingSala overlay mensaje="Verificando existencia de la sala..." />
+
+  if (averiguandoEstado) return <LoadingSala overlay mensaje="Verificando estado..." />
 
   if (estado !== StatusDeConexion.Conectado || !configSala)
     return <LoadingSala overlay mensaje="Conectando con serivdor en vivo..." />

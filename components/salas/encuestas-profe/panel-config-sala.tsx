@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/dialog'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { PropsWithChildren } from 'react'
-import { useConexionEncuestaProfe } from '../wss-cli/providers/encuestas-profe-context'
+import { useConexionProfe } from '../wss-cli/providers/wss-profe-context'
 import { storeConfig } from '../wss-cli/stores/config-store'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
-  const { actualizarConfig } = useConexionEncuestaProfe()
+  const { actualizarConfig } = useConexionProfe()
   const { config } = storeConfig()
 
   return (

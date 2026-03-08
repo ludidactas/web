@@ -1,5 +1,4 @@
 import { Pasaporte } from '@/wss/validators/auth'
-import { WssServerSession } from '@/wss/validators/session'
 import { io, Socket } from 'socket.io-client'
 import { RazonExpiracion } from './wss-cli/conexion-wss'
 
@@ -34,23 +33,18 @@ export async function configurarListeners({
     onConnect: (socket: SocketWssCli) => void
     onError: (socket: SocketWssCli, error: Error) => void
     onDisconnect: (socket: SocketWssCli, reason: string) => void
-    onSession: (socket: SocketWssCli, session: WssServerSession) => void
     onExpired: (socket: SocketWssCli, data: RazonExpiracion) => void
   }
 }) {
-  const { onConnect, onError, onDisconnect: onDisconect, onSession, onExpired } = listeners
+  const { onConnect, onError, onDisconnect } = listeners
 
   // En cualquier caso, le suscribimos unos handlers básicos
   sock.on('connect_error', (error) => onError(sock, error))
-  sock.on('disconnect', (reason: string) => onDisconect(sock, reason))
+  sock.on('disconnect', (reason: string) => onDisconnect(sock, reason))
   sock.on('connect', () => onConnect(sock))
   sock.on('connect_timeout', (error) =>
     onError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
   )
-
-  // Suscribimos a la sesión abierta y la persistimos
-  sock.on('session:opened', (session) => onSession(sock, session))
-  sock.on('session:expired', (razon) => onExpired(sock, razon))
 
   return sock
 }

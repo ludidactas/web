@@ -7,13 +7,13 @@ import { Estudiante, storeEstudiantes } from '../stores/estudiantes-store'
 import { storeEncuestas } from '../stores/encuestas-store'
 import { storeConfig } from '../stores/config-store'
 
-export default function profeSalaHandlers(socket: Socket | null){
+export default function profeSalaHandlers(socket: Socket | null) {
   const almacenEncuestas = storeEncuestas.getState()
   const almacenEstudiantes = storeEstudiantes.getState()
   const almacenConfig = storeConfig.getState()
 
   return {
-    setupSocketListeners: () => {
+    montar: () => {
       if (!socket) return
 
       // Al recibir estudiantes los almacenamos en el store
@@ -32,7 +32,17 @@ export default function profeSalaHandlers(socket: Socket | null){
       // Al estar lista la sala -- esto manda el server ni bien abre
       socket.on(
         'sala:abierta',
-        ({ _sala, polls, estudiantes, config }: { _sala: SalaData; polls: Encuesta[]; estudiantes: Estudiante[], config: ConfigSala }) => {
+        ({
+          _sala,
+          polls,
+          estudiantes,
+          config,
+        }: {
+          _sala: SalaData
+          polls: Encuesta[]
+          estudiantes: Estudiante[]
+          config: ConfigSala
+        }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
@@ -43,13 +53,13 @@ export default function profeSalaHandlers(socket: Socket | null){
 
     acciones: {
       limpiarEstudiantes: () => socket?.emit('sala:limpar_estudiantes_sala'),
-  
+
       actualizarConfig: (config: Partial<ConfigSala>) => {
         socket?.emit('sala:actualizar_config', config)
       },
     },
 
-    clearSocketListeners: () => {
+    desmontar: () => {
       if (!socket) return
 
       socket.removeAllListeners('sala:abierta')

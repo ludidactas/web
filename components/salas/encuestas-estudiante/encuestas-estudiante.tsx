@@ -49,11 +49,11 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
             />
 
             <div className="flex flex-col text-center text-lg md:text-3xl">
-              <p className="flex gap-2 items-center">
-                Estás en la
-                <span className="flex items-center gap-2 text-lg md:text-4xl text-[#8345FE] rounded-full md:px-4">
+              <p>
+                Estás en la{' '}
+                <span className="text-lg md:text-4xl text-[#8345FE] rounded-full md:px-4 ">
                   Sala de Encuestas
-                  <LdSvg className="w-10 md:w-20" SvgComponent={IconEnc} />
+                  <LdSvg className="w-10 md:w-20 inline-block mx-1" SvgComponent={IconEnc} />
                 </span>
                 de
               </p>
@@ -63,7 +63,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
           </div>
 
           {encuestasVisibles.length > 0 && (
-            <div className="flex flex-col py-10 gap-2 items-center">
+            <div className="w-full flex flex-col py-10 gap-2 items-center">
               {encuestasVisibles.map((e) => (
                 <DisplayEncuesta key={e.id} encuesta={e} />
               ))}

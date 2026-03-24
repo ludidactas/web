@@ -94,7 +94,6 @@ export function AgregarPregunta() {
       </div>
 
       {/* Boton postear pregunta */}
-
       <Tooltip disableHoverableContent={!error}>
         <TooltipTrigger asChild>
           <button
@@ -106,11 +105,13 @@ export function AgregarPregunta() {
             <Send size={20} /> Enviar pregunta
           </button>
         </TooltipTrigger>
-        <TooltipContent>
-          <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
-            (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
-          </p>
-        </TooltipContent>
+        {error && (
+          <TooltipContent>
+            <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
+              (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
+            </p>
+          </TooltipContent>
+        )}
       </Tooltip>
     </div>
   )

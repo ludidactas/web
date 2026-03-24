@@ -57,7 +57,11 @@ export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   )
   socket.on(
     'poll:focus',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.focusPoll(pollId)))
+    safe(async ({ pollId }) => {
+      const [enfocada, previa] = await profe.focusPoll(pollId)
+      await broadcastPoll(sala, enfocada)
+      if (previa) await broadcastPoll(sala, previa)
+    })
   )
 
   socket.on(

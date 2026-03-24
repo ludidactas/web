@@ -21,7 +21,6 @@ export default function LoadingSala({ mensaje, overlay = false, error = false }:
   const errorIcon = (
     <div className="flex flex-col items-center gap-20">
       <p className="text-7xl">¡Ups 🤕!</p>
-      <Icon className="h-60 w-60" icon={'tdesign:crack-filled'} />
     </div>
   )
 

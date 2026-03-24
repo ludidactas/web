@@ -106,11 +106,18 @@ export async function profeSala(email: string) {
   async function focusPoll(pollId: string) {
     // Nos fijamos si ya hay una encuesta focuseada y en tal caso la desenfocamos
     const enfocada = await db.get(`sala:${salaId}:polls:focused`)
-    if (enfocada) await updatePoll(enfocada, { isFocused: false })
 
     // Enfocamos la nueva
     await db.set(`sala:${salaId}:polls:focused`, pollId)
-    return await updatePoll(pollId, { isFocused: true })
+
+    if (enfocada) console.log(`👀 Encuesta ${enfocada} desenfocada!`)
+
+    // Devolvemos la nueva y la anterior
+    if (enfocada)
+      return [await updatePoll(pollId, { isFocused: true }), await updatePoll(enfocada, { isFocused: false })] as const
+
+    // O solo la nueva
+    return [await updatePoll(pollId, { isFocused: true }), null] as const
   }
 
   async function consultarResultados(pollId: string) {

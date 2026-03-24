@@ -154,7 +154,7 @@ export function DialogAcciones() {
           <Info />
           <p>Ver info sobre acciones</p>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-h-[80vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="text-center">Acciones de encuesta</DialogTitle>
             <DialogDescription className="text-center">

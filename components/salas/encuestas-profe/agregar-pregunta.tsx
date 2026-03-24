@@ -1,10 +1,11 @@
 import { pollBase } from '@/wss/validators/polls'
-import { X, CirclePlus, Send } from 'lucide-react'
+import { X, CirclePlus, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
 
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { Icon } from '@iconify/react'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
@@ -68,11 +69,11 @@ export function AgregarPregunta() {
           />
           {opciones.length > 1 && (
             <button
-              className="flex items-center text-rose-600 border border-b-2 border-r-2 hover:border-b-4 hover:border-r-4 border-rose-700 p-1 rounded text-sm transition-all duration-100"
+              className="flex items-center text-rose-700  transition-all duration-100"
               onClick={() => eliminarRespuesta(index)}
               tabIndex={-1}
             >
-              <X size={15} absoluteStrokeWidth />
+              <Trash2 />
             </button>
           )}
         </div>

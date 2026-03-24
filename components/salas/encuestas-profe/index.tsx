@@ -55,7 +55,6 @@ export default function EncuestasProfe() {
 
       {/* VISTA MOBILE */}
       <div className="md:hidden animate-aparecer h-fit flex flex-col">
-
         {/* Menú de Navegación Mobile */}
         {estado === StatusDeConexion.Conectado && (
           <Tabs defaultValue="formulario">
@@ -71,7 +70,6 @@ export default function EncuestasProfe() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value={'formulario'}>
-
               {/* Vista Formulario - Haz una pregunta */}
               <div className="flex flex-col bg-white p-2" tabIndex={0}>
                 <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
@@ -89,7 +87,9 @@ export default function EncuestasProfe() {
                           {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
                         </button>
                       </div>
-                      <p className='text-center text-xs md:text-xl'>¡Comparte el link de la sala con tus estudiantes para que participen de las encuestas!</p>
+                      <p className="text-center text-xs md:text-xl">
+                        ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
+                      </p>
                     </div>
                   )}
 
@@ -128,7 +128,7 @@ export default function EncuestasProfe() {
       {/* VISTA DESKTOP (sin cambios) */}
       <div className="hidden md:flex animate-aparecer py-2 gap-2">
         {/* Preguntas Formulario */}
-        <div className="flex flex-col bg-white rounded-xl px-2" tabIndex={0}>
+        <div className="flex-1 min-w-0 flex flex-col bg-white rounded-xl px-2" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">
             <h1 className="text-3xl md:text-4xl text-center text-[#8345FE]">¡Haz una pregunta!</h1>
           </div>
@@ -146,8 +146,9 @@ export default function EncuestasProfe() {
                     {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
                   </button>
                 </div>
-                <p className='w-96 text-center text-xs text-slate-500'>(Comparte el link de la sala con tus estudiantes para que participen de las encuestas)</p>
-
+                <p className="w-96 text-center text-xs text-slate-500">
+                  (Comparte el link de la sala con tus estudiantes para que participen de las encuestas)
+                </p>
               </div>
             )}
 
@@ -163,7 +164,7 @@ export default function EncuestasProfe() {
 
         {/* Lista de preguntas */}
         {estado === StatusDeConexion.Conectado && (
-          <div className="flex flex-col grow bg-white gap-6 rounded-xl">
+          <div className="flex-1 min-w-0 flex flex-col bg-white gap-6 rounded-xl w-[33%] box-content">
             <div className="flex flex-col items-center p-6 h-24 rounded-t-xl">
               <h1 className="text-4xl text-center text-[#00B0D2]">Preguntas</h1>
               <DialogAcciones />
@@ -173,8 +174,8 @@ export default function EncuestasProfe() {
         )}
 
         {/* Lista de estudiantes y overlay desktop */}
-        <div className="flex flex-col gap-4">
-          <div className="h-[50%]">
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          <div className="h-[70%]">
             <div className="flex h-full flex-col gap-4 bg-white rounded-xl p-8">
               <ListaEstudiantes />
             </div>

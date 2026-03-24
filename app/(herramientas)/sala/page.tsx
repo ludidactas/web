@@ -23,7 +23,7 @@ export default async function SalaPage() {
         <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
           <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user.name)}!</p>
         </HeaderSala>
-        <div className="w-screen h-screen md:px-4">
+        <div className="w-screen min-h-screen md:px-4">
           <EncuestasProfe />
         </div>
 

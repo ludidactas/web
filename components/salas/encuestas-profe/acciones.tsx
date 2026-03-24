@@ -21,7 +21,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
   return (
     <div className="flex flex-col my-4 gap-2">
       {/* Primera fila de botones */}
-      <div className="flex gap-4 items-center justify-center">
+      <div className="flex gap-2 items-center justify-center">
         {/* Revelar y desrevelar votos */}
         {!encuesta.isRevealed && (
           <BotonEncuesta
@@ -74,7 +74,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
       </div>
 
       {/* Segunda fila de boones  */}
-      <div className="flex gap-4 items-center justify-center">
+      <div className="flex gap-2 items-center justify-center">
         {/* Abrir/Cerrar */}
         {!encuesta.isOpen && (
           <BotonEncuesta
@@ -96,7 +96,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {/* Eliminar */}
         <Dialog>
           <DialogTrigger>
-            <p className="bg-rose-700 text-white px-4 py-2 rounded-xl flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 border'">
+            <p className="bg-rose-700 text-white px-4 py-2 rounded-xl flex flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
               Eliminar
             </p>
           </DialogTrigger>
@@ -133,12 +133,12 @@ export const BotonEncuesta = ({
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
   <button
     className={cn(
-      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-40 rounded-xl border-2 border-white',
+      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-24 rounded-xl border-2 border-white',
       className
     )}
     {...props}
   >
-    <span className="hidden md:block">{texto}</span>
+    <span className="hidden md:block text-xs">{texto}</span>
     <span className="md:hidden w-full flex justify-center">
       <Icon icon={icon} />
     </span>

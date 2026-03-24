@@ -69,13 +69,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               'bg-[#00B0D2]/15 text-[#00B0D2] border-3 border-[#00B0D2]/30',
               'rounded-2xl p-4 md:px-8 cursor-pointer ',
               'hover:bg-[#00B0D2]/25 transition-colors',
-              'data-[state=open]:rounded-b-none',
-              
-
+              'data-[state=open]:rounded-b-none'
             )}
           >
-            <div className='flex gap-4 justify-between items-center '>
-              <div className='flex items-center gap-2'>
+            <div className="flex gap-4 justify-between items-center ">
+              <div className="flex items-center gap-2">
                 <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
                 <h3 className="text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
               </div>
@@ -112,23 +110,20 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                       )}
                     </p>
                   </div>
-
                 </div>
-
               </div>
             </div>
             {encuesta.admiteAportes && (
               <p className="flex gap-1 self-center text-xs text-teal-500">
                 Los estudiantes pueden agregar opciones
-                <Icon icon={'mingcute:check-fill'}/>
+                <Icon icon={'mingcute:check-fill'} />
               </p>
             )}
           </AccordionTrigger>
 
           {/* Contenido desplegado */}
           <AccordionContent>
-            <div className="rounded-xl border-4 max-w-[588px] border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
-
+            <div className="rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
               {/* Opciones */}
               {encuesta.opciones.length > 0 && (
                 <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">
@@ -142,8 +137,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                         <p className="w-64">{opcion.texto}</p>
                         <div className="w-24 flex items-center justify-end gap-2">
                           <p
-                            className={` font-bold  content-center ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'
-                              }`}
+                            className={` font-bold  content-center ${
+                              encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'
+                            }`}
                           >
                             {' '}
                             {opcion.votos}
@@ -162,7 +158,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                     <p> Total Participantes </p>
                     <p>{totalVotos}</p>{' '}
                   </div>
-                </ol>)}
+                </ol>
+              )}
 
               {/* Admite aportes y aún no hay opciones */}
               {encuesta.admiteAportes && encuesta.opciones.length === 0 && (

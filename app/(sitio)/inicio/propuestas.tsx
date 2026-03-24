@@ -12,7 +12,7 @@ export default function Propuestas() {
   return (
     <div className="propuestasini">
       <Pantalla
-        title={<LdSvg className='h-8 lg:h-20' SvgComponent={propuestas}/>}
+        title={<LdSvg className="h-8 lg:h-20" SvgComponent={propuestas} />}
         one={
           <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.4em] md:text-[1em]">
             <p>
@@ -41,10 +41,11 @@ export default function Propuestas() {
         }
         two={<Imagenes />}
         btn={
-          <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/propuestas">
-            {' '}
-            Ver propuestas{' '}
-          </BtnSketchyGif>
+          <></>
+          // <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/propuestas">
+          //   {' '}
+          //   Ver propuestas{' '}
+          // </BtnSketchyGif>
         }
         scroll={<ArrowDownLd to="recursosini" />}
         espejado={true}

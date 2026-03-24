@@ -20,7 +20,8 @@ import ShapeDividerWaves from '../custom/shape-divider'
 
 export default function ContenidoIdentidad() {
   const styletitle = 'drop-shadow-[2px_2px_2px_rgba(0,0,0)] h-10 md:h-20 '
-  const stylediv = 'w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4 flex flex-col items-center gap-8 mt-10 text-center'
+  const stylediv =
+    'w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4 flex flex-col items-center gap-8 mt-10 text-center'
   return (
     <WithAOS>
       <div className="w-screen flex flex-col items-center gap-4">
@@ -73,7 +74,7 @@ export default function ContenidoIdentidad() {
           <LdSvg className={`${styletitle}`} data-aos="fade-left" SvgComponent={equipo} />
           <div className="flex flex-col gap-8 items-center">
             <div className="relative items-center">
-              <div className='flex flex-col justify-center items-center float-left [shape-outside:circle(50%)] [shape-margin:0.05rem] mr-12'>
+              <div className="flex flex-col justify-center items-center float-left [shape-outside:circle(50%)] [shape-margin:0.05rem] mr-12">
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
@@ -84,16 +85,16 @@ export default function ContenidoIdentidad() {
                   alt=""
                 />
                 <LdSvg className={`md:w-80 -translate-y-7 ${styletitle}`} data-aos="fade-right" SvgComponent={vla} />
-
               </div>
               <p className={`text-justify leading-relaxed`}>
-                Desarrollador fullstack, educador y malabarista. Elaboró la propuesta de Ludidatcas en 2021 como una manera de poner sus
-                habilidades al servicio de la generación educativa, la cual considera necesaria para ver un mundo más integrado, justo y próspero.
+                Desarrollador fullstack, educador y malabarista. Elaboró la propuesta de Ludidatcas en 2021 como una
+                manera de poner sus habilidades al servicio de la regeneración educativa, la cual considera necesaria
+                para ver un mundo más integrado, justo y próspero.
               </p>
               <div className="clear-left"></div>
             </div>
             <div className="relative">
-              <div className='flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full ml-12 '>
+              <div className="flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full ml-12 ">
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
@@ -106,15 +107,16 @@ export default function ContenidoIdentidad() {
                 <LdSvg className={`md:w-80  -translate-y-7 ${styletitle}`} data-aos="fade-left" SvgComponent={ale} />
               </div>
               <p className="text-justify leading-relaxed">
-                Profesional en Filosofia, Ilustradora y Desarrolladora Front-End autodidacta. Es quien se encuentra detrás del diseño UX/UI de la página y 
-                asiste en el desarrollo de los talleres. Participa del proyecto desde el 2024.
+                Profesional en filosofia, ilustradora y desarrolladora front-end autodidacta. Es quien se encuentra
+                detrás del diseño UX/UI de la página y asiste en el desarrollo de los talleres. Participa del proyecto
+                desde el 2024.
               </p>
               <div className="clear-right"></div>
             </div>
           </div>
         </div>
       </div>
-      <ShapeDividerWaves bottom colorText='text-indigo-200/60' />
+      <ShapeDividerWaves bottom colorText="text-indigo-200/60" />
 
       {/* Nuestra vision*/}
       <div className="mt-10 lg:mt-20">
@@ -192,12 +194,11 @@ export default function ContenidoIdentidad() {
       </div>
       <ShapeDividerWaves bottom colorText="text-orange-200/60" />
 
-
       {/* Juego */}
       <LdSvg className={`mt-20  ${styletitle}`} data-aos="fade-left" SvgComponent={juego} />
       <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
-        <p>Ocupa un lugar central en nuestra propuesta.
-          Entendemos{' '}
+        <p>
+          Ocupa un lugar central en nuestra propuesta. Entendemos{' '}
           <span className="text-[#46BFD7] font-bold lg:text-2xl">
             el juego como germen de la educación y de la creatividad
           </span>
@@ -214,7 +215,7 @@ export default function ContenidoIdentidad() {
       </div>
 
       {/* Secciones con titulo + dibujo + texto */}
-      <ShapeDividerWaves top colorText={'text-violet-200/60'}/>
+      <ShapeDividerWaves top colorText={'text-violet-200/60'} />
       <div className="bg-violet-200/60 w-screen flex flex-col items-center gap-4">
         <TituloYDosColumnas titulo="Con motivación el aprendizaje se da de una forma orgánica.">
           <>
@@ -244,8 +245,7 @@ export default function ContenidoIdentidad() {
           </P>
         </TituloYDosColumnas>
       </div>
-        <ShapeDividerWaves bottom colorText={'text-violet-200/60'}/>
-
+      <ShapeDividerWaves bottom colorText={'text-violet-200/60'} />
 
       {/* Pie */}
       {/* <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4"> */}

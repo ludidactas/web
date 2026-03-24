@@ -30,14 +30,17 @@ const MenuMobile = () => {
         <DropdownMenuTrigger>
           <AlignJustify size={30} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="text-right font-bold bg-white/60 text-black  rounded-xl p-4 mr-4" onClick={handleItemClick}>
+        <DropdownMenuContent
+          className="text-right font-bold bg-white/60 text-black  rounded-xl p-4 mr-4"
+          onClick={handleItemClick}
+        >
           <DropdownMenuItem onSelect={handleItemClick}>
             <Link href="/identidad">Identidad</Link>
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
-          <DropdownMenuItem onSelect={handleItemClick}>
+          {/* <DropdownMenuItem onSelect={handleItemClick}>
             <Link href="/propuestas">Propuestas</Link>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
             <Link href="/sala">Sala</Link>
@@ -61,13 +64,12 @@ const MenuMobile = () => {
   )
 }
 
-
 const MenuDesktop = () => (
   <div className="flex gap-4 bg-white/50 items-center mr-10">
     {/* Implementacion version props */}
     <MenuLink href="/identidad"> Identidad </MenuLink>
-    <p className="text-2xl">|</p>
-    <MenuLink href="/propuestas"> Propuestas </MenuLink>
+    {/* <p className="text-2xl">|</p>
+    <MenuLink href="/propuestas"> Propuestas </MenuLink> */}
     <p className="text-2xl">|</p>
     <MenuLink href="/sala"> Sala </MenuLink>
     <p className="text-2xl">|</p>

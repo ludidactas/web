@@ -133,8 +133,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                   </div>
                   {encuesta.opciones.map((opcion) => (
                     <li key={opcion.id}>
-                      <div className="flex border-b-2 border-dashed justify-between pt-2 gap-4">
-                        <p className="w-64">{opcion.texto}</p>
+                      <div className="flex border-b-2 border-dashed justify-between items-end pt-2 gap-4">
+                        <p className="w-64 text-sm">{opcion.texto}</p>
                         <div className="w-24 flex items-center justify-end gap-2">
                           <p
                             className={` font-bold  content-center ${
@@ -154,8 +154,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                   ))}
 
                   {/* Total participantes */}
-                  <div className="flex mt-2 text-md mx-16 text-[#00B0D2] border-[#00B0D2] font-bold text-center justify-between gap-4 border-b-2 border-dotted">
-                    <p> Total Participantes </p>
+                  <div className="flex mt-2 text-md mx-16 text-[#00B0D2] border-[#00B0D2] font-bold text-center items-center justify-between gap-4 border-b-2 border-dotted">
+                    <p className="text-xs"> Total Participantes </p>
                     <p>{totalVotos}</p>{' '}
                   </div>
                 </ol>

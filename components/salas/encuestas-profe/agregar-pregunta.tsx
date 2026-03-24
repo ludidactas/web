@@ -1,11 +1,11 @@
+import { Checkbox } from '@/components/ui/checkbox'
 import { pollBase } from '@/wss/validators/polls'
-import { X, CirclePlus, Send, Trash2 } from 'lucide-react'
+import { CirclePlus, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Checkbox } from '@/components/ui/checkbox'
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { Icon } from '@iconify/react'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
@@ -27,9 +27,7 @@ export function AgregarPregunta() {
   }
 
   const eliminarRespuesta = (index: number) => {
-    if (opciones.length > 1) {
-      setOpciones((respuestas) => respuestas.filter((_, i) => i !== index))
-    }
+    setOpciones((respuestas) => respuestas.filter((_, i) => i !== index))
   }
 
   const { success, error } = pollBase.safeParse({ pregunta, opciones, admiteAportes })
@@ -57,17 +55,20 @@ export function AgregarPregunta() {
 
       <p className="text-2xl mt-4 text-[#8345FE]  font-bold">Opciones:</p>
 
-      {opciones.map((respuesta, index) => (
-        <div key={index} className="flex gap-4 items-center ml-4">
-          <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
-          <input
-            className="rounded w-full p-1"
-            type="text"
-            value={respuesta}
-            onChange={(e) => actualizarRespuesta(index, e.target.value)}
-            tabIndex={index + 2}
-          />
-          {opciones.length > 1 && (
+      {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
+
+      {opciones.length > 0 &&
+        opciones.map((respuesta, index) => (
+          <div key={index} className="flex gap-4 items-center ml-4">
+            <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
+            <input
+              className="rounded w-full p-1"
+              type="text"
+              value={respuesta}
+              onChange={(e) => actualizarRespuesta(index, e.target.value)}
+              tabIndex={index + 2}
+            />
+
             <button
               className="flex items-center text-rose-700  transition-all duration-100"
               onClick={() => eliminarRespuesta(index)}
@@ -75,9 +76,8 @@ export function AgregarPregunta() {
             >
               <Trash2 />
             </button>
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
       {/* Boton agregar respuesta */}
       <button
         className="flex items-center self-center w-fit font-semibold gap-2  text-white px-2 py-2 rounded-full"
@@ -88,27 +88,30 @@ export function AgregarPregunta() {
       </button>
 
       {/* Checkbox estudiantes pueden agregar respuestas */}
-      <div className="flex items-center gap-1 px-4">
+      <div className="flex items-center gap-2 px-4">
         <Checkbox className="bg-white" checked={admiteAportes} onCheckedChange={setAdmiteAportes} title="" />
         <p className="text-indigo-500 text-sm">Los estudiantes pueden agregar sus propias opciones</p>
       </div>
 
-      {error && (
-        <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
-          (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
-        </p>
-      )}
-
       {/* Boton postear pregunta */}
 
-      <button
-        disabled={!success}
-        className="flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500"
-        onClick={postearPregunta}
-        tabIndex={opciones.length + 2}
-      >
-        <Send size={20} /> Enviar pregunta
-      </button>
+      <Tooltip disableHoverableContent={!error}>
+        <TooltipTrigger asChild>
+          <button
+            disabled={!success}
+            className="flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500"
+            onClick={postearPregunta}
+            tabIndex={opciones.length + 2}
+          >
+            <Send size={20} /> Enviar pregunta
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
+            (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
+          </p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }

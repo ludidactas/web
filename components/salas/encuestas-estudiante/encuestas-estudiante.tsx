@@ -37,54 +37,37 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
 
   return (
     <div>
-      {/* Header */}
-      {/* <div className='flex justify-between items-center mx-2'>
-      <LdSvg className="w-16 md:w-[600px]"
-        SvgComponent={EncuestasIcon}
-      />
-
-      {estado === StatusDeConexion.Conectado ? (
-        <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl">
-          <LdSvg className="w-16 md:w-[150px]" SvgComponent={Conectado} />
-        </span>
-      ) : (
-        <span className="text-red-700 text-xs md:text-xl">Desconectado</span>
-      )}
-    </div> */}
-
-      <div className="flex flex-col px-20 md:mx-20  gap-4">
+      <div className="flex flex-col md:px-10 md:mx-10 gap-4">
         {process.env.NODE_ENV === 'development' && <WssDebugPanel />}
-        <div className="flex px-4 items-center justify-center gap-20 bg-white rounded-3xl  ">
-          <LdSvg
-            className="w-[100px] md:w-[200px]"
-            SvgComponent={Cabeza}
-            ids={['cabeza'] as const}
-            animation={oscilar(['cabeza'], 2, 1, 0.4)}
-          />
+        <div className="flex flex-col px-4 items-center justify-center md:gap-10 bg-white rounded-3xl md:p-10">
+          <div className="flex flex-col md:flex-row items-center md:gap-10">
+            <LdSvg
+              className="w-[100px] md:w-[200px]"
+              SvgComponent={Cabeza}
+              ids={['cabeza'] as const}
+              animation={oscilar(['cabeza'], 2, 1, 0.4)}
+            />
 
-          <div className="flex flex-col text-center text-3xl">
-            <p className="flex gap-2 items-center">
-              {' '}
-              Estás en la
-              <span className="flex items-center gap-2 text-4xl text-[#8345FE] rounded-full px-4  bg-[#8345FE]/5">
-                {' '}
-                Sala de Encuestas
-                <LdSvg className="w-20" SvgComponent={IconEnc} />
-              </span>
-              de
-            </p>
-            <p className="text-teal-500"> {config?.nombre_profe ?? idSala}</p>
-            <p className="text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
+            <div className="flex flex-col text-center text-lg md:text-3xl">
+              <p className="flex gap-2 items-center">
+                Estás en la
+                <span className="flex items-center gap-2 text-lg md:text-4xl text-[#8345FE] rounded-full md:px-4">
+                  Sala de Encuestas
+                  <LdSvg className="w-10 md:w-20" SvgComponent={IconEnc} />
+                </span>
+                de
+              </p>
+              <p className="text-teal-500"> {config?.nombre_profe ?? idSala}</p>
+              <p className="text-xs md:text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-3xl p-8 md:mx-10 ">
           {encuestasVisibles.length > 0 && (
-            <>
+            <div className="flex flex-col py-10 gap-2 items-center">
               {encuestasVisibles.map((e) => (
                 <DisplayEncuesta key={e.id} encuesta={e} />
               ))}
-            </>
+            </div>
           )}
 
           {confirmadoVacio && posibleVacio && (
@@ -118,15 +101,15 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const [aporte, setAporte] = useState('')
 
   return (
-    <div className="flex flex-col gap-4 mt-6 md:p-8 bg-indigo-50/90 shadow-indigo-200 rounded-xl">
+    <div
+      className={`flex flex-col w-full md:w-2/3 gap-4 md:p-8 border-indigo-500/70 border-2 p-4 md:border-4 rounded-xl ${
+        yaVotado ? 'border-slate-300' : ''
+      }`}
+    >
       {/* Titulo y opciones */}
-      <div className="flex md:gap-6 items-center justify-between rounded-xl">
-        <div
-          className={`flex items-start md:items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}
-        >
-          <MessageCircleQuestionIcon size={60} className="self-start shrink-0" />
-          {/* <LdSvg className='w-[10%]' SvgComponent={Polls}/> */}
-          {/* <Image className='md:w-10 md:h-10' src={'/img/iconpoll.png'} height={30} width={30} alt='' /> */}
+      <div className="flex gap-4 md:gap-6 items-start justify-between rounded-xl">
+        <div className={`flex items-center text-indigo-500  gap-2 md:gap-4 ${yaVotado ? 'grayscale' : ''}`}>
+          <MessageCircleQuestionIcon className="w-10 h-10 md:w-16 md:h-16 self-start shrink-0" />
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
         </div>
 
@@ -138,8 +121,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
           >
             {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
           </span>
-          <span className="text-[0.1em] md:text-xs text-slate-400 whitespace-nowrap">
-            {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
+          <span className="text-[0.07em] text-right md:text-xs text-slate-400">
+            {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: false, locale: es })}
           </span>
         </div>
       </div>
@@ -164,8 +147,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         ))}
         {encuesta.admiteAportes && (
           <Input
-            className={cn('mt-2', { 'bg-cyan-500/30': aportando })}
-            placeholder="Otra opción"
+            className={cn('mt-2 text-xs bg-slate-100', { 'bg-cyan-500/30': aportando })}
+            placeholder="Introduce tu respuesta"
             value={aporte}
             onClick={() => {
               setAportando(true)

@@ -195,7 +195,7 @@ const useLibreta = () => {
         ...req,
         pendiente: req.nivel
           ? !hojaDe(req.materia)?.nivelCompletado(req.nivel)
-          : libreta[`${req.materia}.${req.unidad}`] ?? true,
+          : (libreta[`${req.materia}.${req.unidad}`] ?? true),
       }))
     }
 

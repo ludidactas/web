@@ -22,7 +22,7 @@ export async function tokenWss() {
       algorithm: 'HS256',
       expiresIn: '24h',
       audience: 'wss-client',
-      subject: session.user.email
+      subject: session.user.email,
     }
   )
   return token

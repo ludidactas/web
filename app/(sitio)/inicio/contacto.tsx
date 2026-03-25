@@ -9,10 +9,11 @@ import contacto from '@/svg/titles/ContactoSVGO.svg'
 export default function Contacto() {
   return (
     <div className="contactoini">
-      <Pantalla classname='mb-0'
-        title={<LdSvg className='h-8 lg:h-20' SvgComponent={contacto}/>}
+      <Pantalla
+        classname="mb-0"
+        title={<LdSvg className="h-8 lg:h-20" SvgComponent={contacto} />}
         one={
-          <div className='flex flex-col max-w-[720px] text-center items-center p-8 text-[1.5em] md:text-3xl gap-4'>
+          <div className="flex flex-col max-w-[720px] text-center items-center p-8 text-[1.5em] md:text-3xl gap-4">
             <p className="text-[#46BFD7] font-bold mb-4">
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>
@@ -32,9 +33,7 @@ export default function Contacto() {
             ¡Contactanos!{' '}
           </BtnSketchyGif>
         }
-        scroll={
-         <ArrowUpLd to='portadaini'/>
-        }
+        scroll={<ArrowUpLd to="portadaini" />}
         espejado={true}
       />
     </div>

@@ -3,8 +3,6 @@
 @tailwind utilities;
 
 @layer components {
-
-
   /* Shape divider waves superior */
   .shape-divider-waves {
     @apply relative overflow-hidden;
@@ -65,7 +63,6 @@
     }
   }
 
-  
   /* Shape Divider Top */
   .shape-divider-top {
     @apply relative overflow-hidden;
@@ -122,7 +119,7 @@
     .shape-divider-bottom {
       height: calc(2vw + 113px);
     }
-}
+  }
 }
 
 body {
@@ -195,8 +192,6 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-
 
 @layer base {
   * {

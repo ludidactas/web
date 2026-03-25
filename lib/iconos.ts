@@ -7,8 +7,8 @@ export type IconosStreamlinePixel = `streamline-pixel:${StreamlinePixelIcons}`
 
 export type IconosDisponibles = IconosStreamlinePixel
 
-export const iconosDisponibles = Object.keys(streamlinePixel.icons).filter(i=>i.includes('pet'))
+export const iconosDisponibles = Object.keys(streamlinePixel.icons).filter((i) => i.includes('pet'))
 
 export const IconoRandom = () => {
-   return `streamline-pixel:${first(sample(iconosDisponibles, 1))}`
+  return `streamline-pixel:${first(sample(iconosDisponibles, 1))}`
 }

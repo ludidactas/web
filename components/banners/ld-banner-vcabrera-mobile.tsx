@@ -6,7 +6,7 @@ import BtnSketchySvg from '../custom/ld-btn-sketchy-svg'
 export default function LdBannerVCabreraMobile({ className }: { className?: string }) {
   const boton = (
     <div className="w-full h-full flex items-center justify-center">
-      <BtnSketchySvg href="https://www.instagram.com/ludidactas" className='h-4/5'>
+      <BtnSketchySvg href="https://www.instagram.com/ludidactas" className="h-4/5">
         <p className="text-center text-xl">Inscripción</p>
       </BtnSketchySvg>
     </div>

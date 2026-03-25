@@ -12,23 +12,27 @@ export default function Recursos() {
   return (
     <div className="recursosini bg-indigo-300/50">
       <Pantalla
-        title={<LdSvg className='h-8 lg:h-20' SvgComponent={salasRecursos}/>}
+        title={<LdSvg className="h-8 lg:h-20" SvgComponent={salasRecursos} />}
         one={
-          <div className='flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl'>
-             <p>El primer recurso que hemos desarrollado es una <Hl>sala de herramientas de para la gestión de interactividad en las clases online</Hl>.
-              Está disponible para que la utilices conectándote con tu cuenta de google. </p>
+          <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
+            <p>
+              El primer recurso que hemos desarrollado es una{' '}
+              <Hl>sala de herramientas de para la gestión de interactividad en las clases online</Hl>. Está disponible
+              para que la utilices conectándote con tu cuenta de google.{' '}
+            </p>
             <p>
               Estamos trabajando en hacer disponibles en el sitio los contenidos producidos en los talleres, cursos y
               seminarios de modo que este funcione como biblioteca de recursos y material de referencia, abierto y
               gratuito, para docentes y talleristas.
             </p>
-           
           </div>
         }
         two={<Imagenes />}
-        btn={<BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
-          Explorar sala
-        </BtnSketchyGif>}
+        btn={
+          <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
+            Explorar sala
+          </BtnSketchyGif>
+        }
         scroll={<ArrowDownLd to="contactoini" />}
       />
     </div>

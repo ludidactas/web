@@ -1,7 +1,5 @@
-
 import { Metadata } from 'next'
 import ContenidoPropuestas from './contenido'
-
 
 export const metadata: Metadata = {
   title: 'Propuestas',

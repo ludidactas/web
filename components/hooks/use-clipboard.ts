@@ -1,11 +1,11 @@
-import { useState } from "react"
-import { useCopyToClipboard } from "usehooks-ts"
+import { useState } from 'react'
+import { useCopyToClipboard } from 'usehooks-ts'
 
-export default function useClipboard() { 
+export default function useClipboard() {
   const [_copiedText, copy] = useCopyToClipboard()
   const [justCopied, setJustCopied] = useState(false)
 
-  const handleCopy = (text: string) => () => {  
+  const handleCopy = (text: string) => () => {
     copy(text)
       .then(() => {
         setJustCopied(true)

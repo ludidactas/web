@@ -3,8 +3,7 @@ import { Box, SVG, Element as SvgElement } from '@svgdotjs/svg.js'
 import { useRef, useState, useEffect, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { entries } from 'remeda'
-import { createScope, Scope, ScopeMethod } from 'animejs';
-
+import { createScope, Scope, ScopeMethod } from 'animejs'
 
 interface LdSvgProps<SvgIds extends string, SvgSlotIds extends string = ''> {
   SvgComponent: any
@@ -66,7 +65,7 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
       scope.current = createScope({ root: svgRef }).add(animate(nodosSVGRef.current))
       return () => scope.current?.revert()
     }
-  }, [animate]);
+  }, [animate])
 
   // Gather y setup de nodos PARA ANIMEJS
   useEffect(() => {
@@ -77,7 +76,6 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
 
       // Construimos el mapeo de id a nodos
       nodosSVGRef.current = Object.fromEntries(nodosSvg)
-
     }
   }, [svgRef])
 
@@ -138,11 +136,16 @@ export function LdSvg<SvgIds extends string, SvgSlotIds extends string = ''>({
 
   return (
     <>
-      <SvgComponent preserveAspectRatio="xMidYMid meet"
-        className={` ${show ? 'visible' : 'invisible'} ${className} `} ref={svgRef} />
+      <SvgComponent
+        preserveAspectRatio="xMidYMid meet"
+        className={` ${show ? 'visible' : 'invisible'} ${className} `}
+        ref={svgRef}
+      />
       {/* Le chantamos el contenido en los slots */}
       {slotsSVGDotJsRef.current &&
-        entries(slotsSVGDotJsRef.current).map(([slotId, container]) => createPortal(slots[slotId as SvgSlotIds], container, slotId))}
+        entries(slotsSVGDotJsRef.current).map(([slotId, container]) =>
+          createPortal(slots[slotId as SvgSlotIds], container, slotId)
+        )}
     </>
   )
 }
@@ -200,4 +203,4 @@ function getElem(svg: SVGElement, id: string) {
   return elem
 }
 
-class LdSvgError extends Error { }
+class LdSvgError extends Error {}

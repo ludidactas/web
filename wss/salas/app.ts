@@ -235,7 +235,7 @@ export namespace Salas {
     const salaData: SalaData = {
       id,
       profe: { email, nombre: config_sala.nombre_profe },
-      config: {...config_sala, link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/`}, // Le agregamos el link en la config
+      config: { ...config_sala, link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/` }, // Le agregamos el link en la config
     }
 
     // Guardamos en DB

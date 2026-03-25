@@ -1,5 +1,5 @@
-import { LdSvg } from "@/components/custom/ld-svg"
-import { ComponentProps } from "react"
+import { LdSvg } from '@/components/custom/ld-svg'
+import { ComponentProps } from 'react'
 
 /**
  * En el contexto de usar LdSvg, esta función se encarga de crear una animación que
@@ -45,5 +45,3 @@ export function oscilar(ids: string[], fr: number, a = 5, fase = 1): ComponentPr
     })
   }
 }
-
-

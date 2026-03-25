@@ -66,7 +66,6 @@ export default function Page() {
       <div className="bg-[url(/img/tincho.jpg)] bg-contain bg-center bg-no-repeat w-full h-[200px] md:h-[380px]" />
 
       <div className={`${titulo.className} flex flex-col items-center`}>
-
         {/* Mobile */}
         <CarouselConvocatoria className="block lg:hidden">
           {/* <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} /> */}

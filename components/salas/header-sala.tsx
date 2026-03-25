@@ -41,8 +41,8 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
         {children}
         <div className="flex justify-end">{btnLogout}</div>
       </div>
-
       {/* Shape divider justo después del header */}
-      <ShapeDividerWaves bottom colorText='text-white' />    </div>
+      <ShapeDividerWaves bottom colorText="text-white" />{' '}
+    </div>
   )
 }

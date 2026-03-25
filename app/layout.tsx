@@ -19,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <VercelAnalytics />
-        { children }
+        {children}
       </body>
     </html>
   )

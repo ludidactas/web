@@ -125,16 +125,16 @@ export default function DebugPanel({ data, title = 'Debug Panel' }: { data: { [k
         transform: 'none',
       }
     : isMinimized
-    ? {
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        width: size.width,
-        height: 42,
-      }
-    : {
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        width: size.width,
-        height: size.height,
-      }
+      ? {
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          width: size.width,
+          height: 42,
+        }
+      : {
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          width: size.width,
+          height: size.height,
+        }
 
   return (
     <div

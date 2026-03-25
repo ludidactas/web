@@ -36,7 +36,7 @@ export const ListaEstudiantes = () => {
       {/* Encabezado */}
       <div className="flex justify-between items-center rounded-xl gap-2 mb-4">
         <h1 className="flex gap-2 md:gap-4 text-xl md:text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
-          <Users className='w-8 h-8' />
+          <Users className="w-8 h-8" />
           Participantes
         </h1>
 

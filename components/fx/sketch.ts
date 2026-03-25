@@ -30,7 +30,11 @@ export default function sketch(s: p5) {
     private feedLock: boolean
     private luck_tresh: number
 
-    constructor(private dt: number, private tail: number, private col: string) {
+    constructor(
+      private dt: number,
+      private tail: number,
+      private col: string
+    ) {
       this.dt = dt
       this.t0 = 0
       this.tail = tail

@@ -1,8 +1,7 @@
 import ProgressBar from '@/svg/dist/progressbar.svg'
 import { LdSvg } from './ld-svg'
 
-export default function LdBarrita({ porcentaje }: {porcentaje: number}) {
-
+export default function LdBarrita({ porcentaje }: { porcentaje: number }) {
   return (
     <LdSvg
       SvgComponent={ProgressBar}

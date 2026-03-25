@@ -7,12 +7,9 @@ import { secuenciar } from '@/lib/animaciones'
 
 export default function BtnSketchySvg(props: ComponentProps<typeof Link> & { disabled?: boolean }) {
   return (
-    <Link
-      {...props}
-      className={`w-fit h-fit flex-0 md:scale-1.15 ${body.className} ${props.className}`}
-    >
-      <LdSvg 
-        className='w-full h-full' 
+    <Link {...props} className={`w-fit h-fit flex-0 md:scale-1.15 ${body.className} ${props.className}`}>
+      <LdSvg
+        className="w-full h-full"
         SvgComponent={BotonSvg}
         ids={['btnuno', 'btndos', 'btntres', 'slot'] as const}
         slots={{ slot: props.children } as const}

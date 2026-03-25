@@ -23,9 +23,7 @@ const Hero = () => {
       <div className="lg:hidden w-screen flex flex-col items-center">
         <HeroMobile />
       </div>
-      <div className="hidden lg:block">
-        {/* <LdBannerVCabrera className="w-[80vw]" /> */}
-      </div>
+      <div className="hidden lg:block">{/* <LdBannerVCabrera className="w-[80vw]" /> */}</div>
     </>
   )
 }

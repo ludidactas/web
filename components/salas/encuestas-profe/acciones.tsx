@@ -28,7 +28,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
             className="m-0 md:px-0 bg-cyan-100 text-cyan-600 border-cyan-500 py-2"
             onClick={() => revelar(encuesta.id)}
             texto="Revelar votos"
-            icon=""
+            icon="iconamoon:eye"
             title="Los estudiantes no pueden ver los votos. Haz click para revelarlos"
           />
         )}
@@ -38,7 +38,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
             className="m-0 bg-cyan-500 text-white py-2"
             onClick={() => ocultar(encuesta.id)}
             texto="Ocultar votos"
-            icon=""
+            icon="iconamoon:eye-off"
             title="Los estudiantes pueden ver los votos. Haz click para esconderlos"
           />
         )}
@@ -68,7 +68,7 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
             className="bg-emerald-100 text-emerald-600 p-2 border-emerald-500"
             onClick={() => esconder(encuesta.id)}
             texto="Esconder"
-            icon="mdi:hide"
+            icon="fluent:incognito-24-filled"
           />
         )}
       </div>
@@ -96,8 +96,11 @@ export function Acciones({ encuesta }: { encuesta: Encuesta }) {
         {/* Eliminar */}
         <Dialog>
           <DialogTrigger>
-            <p className="bg-rose-700 text-white px-4 py-2 rounded-xl flex flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
+            <p className="hidden sm:flex bg-rose-700 text-white px-4 py-2 rounded-xl flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
               Eliminar
+            </p>
+            <p className="flex sm:hidden bg-rose-700 text-white px-4 py-2 rounded-xl flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
+              <Icon icon={'lucide:trash-2'}/>
             </p>
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center">

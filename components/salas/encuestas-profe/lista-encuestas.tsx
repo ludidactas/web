@@ -17,6 +17,7 @@ import { Acciones } from './acciones'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
+import { AccionesToggle } from './accionesToggle'
 
 export function ListaEncuestas() {
   const { estado } = useConexionProfe()
@@ -128,8 +129,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               {encuesta.opciones.length > 0 && (
                 <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">
                   <div className="flex justify-end">
-                    {encuesta.isRevealed && <Eye size={30} className="text-cyan-500 " />}{' '}
-                    {!encuesta.isRevealed && <EyeOff size={30} className="text-slate-500 " />}
+                    {encuesta.isRevealed && <Icon icon={'iconamoon:eye'} className="text-cyan-500 w-8 h-8" />}{' '}
+                    {!encuesta.isRevealed && <Icon icon={'iconamoon:eye-off'} className="text-slate-500 w-8 h-8" />}
                   </div>
                   {encuesta.opciones.map((opcion) => (
                     <li key={opcion.id}>
@@ -168,7 +169,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                 </p>
               )}
 
-              <Acciones encuesta={encuesta} />
+              <AccionesToggle encuesta={encuesta} />
+            
+
             </div>
           </AccordionContent>
         </AccordionItem>

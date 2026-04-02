@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
@@ -74,7 +75,7 @@ export function AgregarPregunta() {
               onClick={() => eliminarRespuesta(index)}
               tabIndex={-1}
             >
-              <Trash2 />
+              <Icon icon={'lucide:trash-2'}/>
             </button>
           </div>
         ))}

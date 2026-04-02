@@ -16,6 +16,10 @@ export interface Encuesta {
   isRevealed: boolean
   /** Define si una encuesta puede recibir respuestas adicionales a las opciones dadas */
   admiteAportes: boolean
+  /** Define si se pueden seleccionar varias respuestas para esta pregunta */
+  admiteMultiplesVotos: boolean
+  /** Define el máximo de repuestas que se pueden elegir */
+  maxMultiplesVotos: number | null
 }
 
 export interface Opcion {
@@ -26,7 +30,7 @@ export interface Opcion {
 
 export interface EncuestaHidratada extends Encuesta {
   puedoVotar?: boolean
-  votoEmitido?: string
+  votosEmitidos?: string[]
 }
 
 export enum RolEncuesta {

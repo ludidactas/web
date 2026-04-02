@@ -4,7 +4,9 @@ export const pollBase = z
   .object({
     pregunta: z.string().min(1, 'La pregunta es obligatoria'),
     opciones: z.array(z.string()),
-    admiteAportes: z.boolean().optional().default(false),
+    admiteAportes: z.boolean().default(false),
+    admiteMultiplesVotos: z.boolean().default(false),
+    maxMultiplesVotos: z.number().nullable().default(null),
   })
   .refine((datos) => datos.admiteAportes || datos.opciones.filter((op) => op.trim().length > 0).length >= 2, {
     message: 'La pregunta debe tener al menos dos opciones o admitir aportes de los participantes',

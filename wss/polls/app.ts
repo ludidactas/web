@@ -4,7 +4,6 @@ import { z } from 'zod'
 import db from '../db'
 import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
-import { extractZodErrorMessages } from '../utils'
 import { pollBase, voteValidator } from '../validators/polls'
 
 /** Crea un closure para operar los componentes de una sala */
@@ -20,20 +19,26 @@ export async function profeSala(email: string) {
 
   async function crearPoll(pollDataUnknown: unknown) {
     // Parseamos con el validator
-    assertValidPoll(pollDataUnknown)
     const pollData = pollBase.parse(pollDataUnknown)
 
     // La creamos
     const poll: Encuesta = {
       id: Date.now().toString(),
+
       pregunta: pollData.pregunta,
       opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
       createdAt: new Date().toISOString(),
+
+      // Estado
       isOpen: true,
       isPublished: false,
       isFocused: false,
       isRevealed: false,
+
+      // Estas se configuran solo al crear la encuesta y no se pueden updatear después:
       admiteAportes: pollData.admiteAportes,
+      admiteMultiplesVotos: pollData.admiteMultiplesVotos,
+      maxMultiplesVotos: pollData.maxMultiplesVotos,
     }
 
     // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
@@ -47,20 +52,15 @@ export async function profeSala(email: string) {
   async function consultarVotantes({ pollId }: { pollId: string }) {
     await assertPollExists(salaId, pollId)
 
-    // Agarramos la encuesta
-    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
-    const poll: Encuesta = JSON.parse(pollStr!)
-
     // Agarramos los votantes y sus votos
-    const votosMap = await db.hgetall(`sala:${salaId}:poll:${pollId}:votos`)
+    const votantes = await db.smembers(`sala:${salaId}:poll:${pollId}:votantes`)
 
-    if (poll) {
-      const votantesList = Object.keys(votosMap).map((user) => ({
-        userId: user,
-        voto: votosMap[user],
+    return await Promise.all(
+      votantes.map(async (userId) => ({
+        userId,
+        votos: await db.smembers(`sala:${salaId}:poll:${pollId}:votos:${userId}`),
       }))
-      return votantesList
-    }
+    )
   }
 
   async function updatePoll(pollId: string, update: Partial<Encuesta>) {
@@ -78,6 +78,8 @@ export async function profeSala(email: string) {
     if (update.isFocused === true) assertPollIsUnfocused(poll)
     if (update.isRevealed === true) assertPollIsNotRevealed(poll)
     if (update.isRevealed === false) assertPollIsRevealed(poll)
+    if (update.admiteAportes === false && !poll.admiteAportes) throw new Error('La encuesta ya no admite aportes')
+    if (update.admiteAportes === true && poll.admiteAportes) throw new Error('La encuesta ya admite aportes')
 
     const nueva = merge(poll, update) as Encuesta
     await db.hset(`sala:${salaId}:polls`, pollId, JSON.stringify(nueva))
@@ -93,7 +95,11 @@ export async function profeSala(email: string) {
     // La borramos
     await db.hdel(`sala:${salaId}:polls`, pollId)
 
-    // Borramos sus votantes
+    // Borramos los votos por usuario y el set de votantes
+    const votantes = await db.smembers(`sala:${salaId}:poll:${pollId}:votantes`)
+    if (votantes.length > 0) {
+      await Promise.all(votantes.map((uid) => db.del(`sala:${salaId}:poll:${pollId}:votos:${uid}`)))
+    }
     await db.del(`sala:${salaId}:poll:${pollId}:votantes`)
 
     // Si estaba enfocada, desenfocamos
@@ -158,7 +164,16 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     // Validamos
     assertPollIsOpen(poll)
-    await assertElEstudianteNoVotoTodavia(poll, userId)
+
+    // Si no admite múltiples votos, validamos que el estudiante no haya votado todavía
+    if (!poll.admiteMultiplesVotos) await assertElEstudianteNoVotoTodavia(poll, userId)
+
+    // Si admite múltiples votos, validamos que no haya superado el máximo de votos permitidos (si es que tiene un máximo)
+    if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
+      const votosDelEstudiante = await db.scard(`sala:${idSala}:poll:${pollId}:votos:${userId}`)
+      if (votosDelEstudiante >= poll.maxMultiplesVotos)
+        throw new Error(`Ya emitiste el máximo de ${poll.maxMultiplesVotos} votos permitidos en esta encuesta`)
+    }
     if (aporte) assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
 
     // Guardamos el voto
@@ -168,7 +183,7 @@ export async function estudianteSala(idSala: string, userId: string) {
       poll.opciones.push({ id: nuevoId, texto: aporte, votos: 1 })
 
       // Guardamos
-      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, userId, nuevoId)
+      await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, nuevoId)
     } else {
       // Agarramos la opcion existente e incrementamos en 1 sus votos
       const opc = poll.opciones.find((opcion) => opcion.id === optionId)
@@ -178,7 +193,7 @@ export async function estudianteSala(idSala: string, userId: string) {
       poll.opciones[poll.opciones.indexOf(opc)].votos++
 
       // Guardamos
-      await db.hset(`sala:${idSala}:poll:${pollId}:votos`, userId, optionId)
+      await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, optionId)
     }
 
     // Updateamos la encuesta en la DB
@@ -212,17 +227,24 @@ export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>,
 
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
 export async function hidratar(idSala: string, poll: Encuesta, idVotante: string): Promise<EncuestaHidratada> {
-  const votoEmitido = await db.hget(`sala:${idSala}:poll:${poll.id}:votos`, idVotante)
+  const votosEmitidos = await db.smembers(`sala:${idSala}:poll:${poll.id}:votos:${idVotante}`)
 
   console.log(
     `🔎 Hidratando encuesta ${poll.id} para estudiante ${idVotante}:`,
-    votoEmitido ? `ya votó opción ${votoEmitido}` : 'no votó todavía'
+    votosEmitidos.length > 0 ? `ya votó opciones ${votosEmitidos.join(', ')}` : 'no votó todavía'
   )
+
+  let puedoVotar = true
+  if (!poll.admiteMultiplesVotos) {
+    puedoVotar = votosEmitidos.length === 0
+  } else if (poll.maxMultiplesVotos !== null) {
+    puedoVotar = !poll.maxMultiplesVotos || votosEmitidos.length < poll.maxMultiplesVotos
+  }
 
   return {
     ...poll,
-    puedoVotar: !votoEmitido,
-    votoEmitido: votoEmitido ?? undefined,
+    puedoVotar,
+    votosEmitidos,
   }
 }
 
@@ -238,11 +260,6 @@ export async function hidratadas(salaId: string, userId: string) {
 }
 
 // Assertions para validar los eventos
-
-export function assertValidPoll(pollData: unknown) {
-  const { error } = pollBase.safeParse(pollData)
-  if (error) throw new Error(`Encuesta inválida: ${extractZodErrorMessages(error)}`)
-}
 
 async function assertPollExists(idSala: string, idPoll: string) {
   const existe = await db.hexists(`sala:${idSala}:polls`, idPoll)

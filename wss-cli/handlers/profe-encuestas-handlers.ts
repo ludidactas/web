@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io-client'
 
 import { storeEncuestas } from '../stores/encuestas-store'
+import { CrearEncuesta } from '@/wss/validators/polls'
 
 /** Modela las acciones del server */
 const profeEncuestasHandlers = (socket: Socket | null) => {
@@ -16,24 +17,17 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
       socket.on('poll:deleted', store.remove)
     },
 
+    // pregunta: string, opciones: string[], admiteAportes = false
     acciones: {
-      crear: (pregunta: string, opciones: string[], admiteAportes = false) =>
+      crear: (encuesta: CrearEncuesta) =>
         new Promise<void>((resolve, reject) => {
           if (!socket) return reject('No hay socket conectado para enviar preguntas!')
 
           // Emitimos con callback, para esperar la respuesta del server.
-          socket.emit(
-            'poll:create',
-            {
-              pregunta,
-              opciones,
-              admiteAportes,
-            },
-            (error?: string) => {
-              if (error) reject(error)
-              else resolve()
-            }
-          )
+          socket.emit('poll:create', encuesta, (error?: string) => {
+            if (error) reject(error)
+            else resolve()
+          })
         }),
 
       borrar: (id: string) => socket?.emit('poll:delete', { pollId: id }),

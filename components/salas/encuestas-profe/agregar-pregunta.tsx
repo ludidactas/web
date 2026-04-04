@@ -1,11 +1,14 @@
 import { Checkbox } from '@/components/ui/checkbox'
+import { NumberInput } from '@/components/ui/number-input'
 import { pollBase } from '@/wss/validators/polls'
-import { CirclePlus, Send, Trash2 } from 'lucide-react'
+import { CirclePlus, Infinity, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { extractZodErrorMessages } from '@/wss/utils'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
@@ -13,6 +16,8 @@ export function AgregarPregunta() {
   const [pregunta, setPregunta] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
+  const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
+  const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
 
   const agregarRespuesta = () => {
     setOpciones((rs) => [...rs, ''])
@@ -30,14 +35,23 @@ export function AgregarPregunta() {
     setOpciones((respuestas) => respuestas.filter((_, i) => i !== index))
   }
 
-  const { success, error } = pollBase.safeParse({ pregunta, opciones, admiteAportes })
+  // Nos fijamos si la pregunta es valida para habilitar o no el boton de postear pregunta, y para mostrar un tooltip con el error
+  const {
+    data: encuesta,
+    success,
+    error,
+  } = pollBase.safeParse({ pregunta, opciones, admiteAportes, admiteMultiplesVotos, maxMultiplesVotos })
 
   const postearPregunta = () => {
-    crear(pregunta, opciones, admiteAportes === 'indeterminate' ? false : admiteAportes)
+    if (!success) return
+    crear(encuesta)
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
         setOpciones(['', ''])
+        setAdmiteAportes(false)
+        setAdmiteMultiplesVotos(false)
+        setMaxMultiplesVotos(null)
       })
       .catch((msg) => toast.error(msg))
   }
@@ -93,6 +107,37 @@ export function AgregarPregunta() {
         <p className="text-indigo-500 text-sm">Los estudiantes pueden agregar sus propias opciones</p>
       </div>
 
+      {/* Checkbox e input de multirespuestas */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 px-4">
+          <Checkbox
+            className="bg-white"
+            checked={admiteMultiplesVotos}
+            onCheckedChange={setAdmiteMultiplesVotos}
+            title=""
+          />
+          <p className="text-indigo-500 text-sm">Multiple choice</p>
+        </div>
+
+        {/* Cuántas? */}
+        <div className={cn('flex items-center gap-2 px-4 pl-9', !admiteMultiplesVotos && 'invisible')}>
+          <p className="text-indigo-500 text-xs">Máx. respuestas:</p>{' '}
+          <NumberInput
+            className="text-xs"
+            max={admiteAportes ? 99 : opciones.length}
+            value={maxMultiplesVotos}
+            onChange={setMaxMultiplesVotos}
+            nullDisplay={
+              admiteAportes ? (
+                <Infinity size={14} className="mx-auto text-indigo-400" />
+              ) : (
+                <span className="text-indigo-400">{opciones.length}</span>
+              )
+            }
+          />
+        </div>
+      </div>
+
       {/* Boton postear pregunta */}
       <Tooltip disableHoverableContent={!error}>
         <TooltipTrigger asChild>
@@ -107,8 +152,8 @@ export function AgregarPregunta() {
         </TooltipTrigger>
         {error && (
           <TooltipContent>
-            <p className="flex text-rose-500 md:w-96 self-center text-center text-xs">
-              (La pregunta debe tener al menos dos opciones o permitir que los estudiantes puedan agregarlas)
+            <p className="flex text-rose-500 md:max-w-96 self-center text-center text-xs">
+              ({extractZodErrorMessages(error)})
             </p>
           </TooltipContent>
         )}

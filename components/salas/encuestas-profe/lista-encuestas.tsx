@@ -124,6 +124,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
           {/* Contenido desplegado */}
           <AccordionContent>
             <div className="rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
+              {encuesta.admiteMultiplesVotos && <p>Admite multiples</p>}
               {/* Opciones */}
               {encuesta.opciones.length > 0 && (
                 <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">

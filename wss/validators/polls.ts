@@ -1,3 +1,4 @@
+import { isEmpty } from 'remeda'
 import z from 'zod'
 
 export const pollBase = z
@@ -10,6 +11,9 @@ export const pollBase = z
   })
   .refine((datos) => datos.admiteAportes || datos.opciones.filter((op) => op.trim().length > 0).length >= 2, {
     message: 'La pregunta debe tener al menos dos opciones o admitir aportes de los participantes',
+  })
+  .refine((datos) => !datos.opciones.some(isEmpty), {
+    message: 'Las opciones no pueden estar vacías',
   })
 
 export type CrearEncuesta = z.infer<typeof pollBase>

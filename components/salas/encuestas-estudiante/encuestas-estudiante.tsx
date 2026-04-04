@@ -113,6 +113,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
           <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
         </div>
 
+        {encuesta.admiteMultiplesVotos && <p>Admite multiples</p>}
+
         <div className="flex flex-col items-end">
           <span
             className={`text-xs md:text-sm ${
@@ -145,6 +147,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
             {opcion.texto} {((yaVotado && encuesta.isRevealed) || !encuesta.isOpen) && <>- {opcion.votos} votos</>}
           </li>
         ))}
+
         {encuesta.admiteAportes && (
           <Input
             className={cn('mt-2 text-xs bg-slate-100', { 'bg-cyan-500/30': aportando })}

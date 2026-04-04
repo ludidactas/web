@@ -6,7 +6,7 @@ interface EncuestaState {
   items: Encuesta[]
   add: (item: Encuesta) => void
   update: (item: Encuesta) => void
-  remove: (item: { id: string }) => void
+  remove: (item: { pollId: string }) => void
   set: (items: Encuesta[]) => void
 }
 
@@ -25,7 +25,7 @@ export const storeEncuestas = create<EncuestaState>()(
 
     remove: (item) =>
       set((state) => ({
-        items: state.items.filter((e) => e.id !== item.id),
+        items: state.items.filter((e) => e.id !== item.pollId),
       })),
 
     set: (items) => set({ items: [...items] }),

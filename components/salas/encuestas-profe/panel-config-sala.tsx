@@ -40,7 +40,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
         </div>
         <DialogFooter>
           <DialogClose>
-            <p className="px-4 py-2 min-w-40 text-xl rounded-full">Cerrar</p>
+            <p className="px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full">Cerrar</p>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

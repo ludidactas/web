@@ -18,8 +18,13 @@ export const pollBase = z
 
 export type CrearEncuesta = z.infer<typeof pollBase>
 
-export const voteValidator = z.object({
+const voteBase = z.object({
   pollId: z.string().min(1, 'El ID de la encuesta es obligatorio'),
-  optionId: z.string().min(1, 'El ID de la opción es obligatorio'),
-  aporte: z.string().optional(),
 })
+
+export const voteValidator = z.discriminatedUnion('tipo', [
+  voteBase.extend({ tipo: z.literal('opcion'), optionId: z.string().min(1) }),
+  voteBase.extend({ tipo: z.literal('aporte'), aporte: z.string().min(1) }),
+])
+
+export type VotarEncuesta = z.infer<typeof voteValidator>

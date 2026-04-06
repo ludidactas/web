@@ -1,6 +1,5 @@
 import { assert } from 'console'
-import { merge } from 'remeda'
-import { z } from 'zod'
+import { isEmpty, merge } from 'remeda'
 import db from '../db'
 import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
@@ -31,8 +30,8 @@ export async function profeSala(email: string) {
 
       // Estado
       isOpen: true,
-      isPublished: false,
-      isFocused: false,
+      isPublished: true,
+      isFocused: false /** @todo Enfocar por default al crear */,
       isRevealed: false,
 
       // Estas se configuran solo al crear la encuesta y no se pueden updatear después:
@@ -153,8 +152,9 @@ export async function estudianteSala(idSala: string, userId: string) {
       throw new Error('Ya votaste en esta encuesta')
   }
 
-  async function votar(voteData: z.infer<typeof voteValidator>) {
-    const { pollId, optionId, aporte } = voteData
+  async function votar(posibleVoto: unknown) {
+    const voto = voteValidator.parse(posibleVoto)
+    const { pollId, tipo } = voto
 
     await assertPollExists(idSala, pollId)
 
@@ -171,29 +171,38 @@ export async function estudianteSala(idSala: string, userId: string) {
     // Si admite múltiples votos, validamos que no haya superado el máximo de votos permitidos (si es que tiene un máximo)
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
       const votosDelEstudiante = await db.scard(`sala:${idSala}:poll:${pollId}:votos:${userId}`)
-      if (votosDelEstudiante >= poll.maxMultiplesVotos)
-        throw new Error(`Ya emitiste el máximo de ${poll.maxMultiplesVotos} votos permitidos en esta encuesta`)
+      assert(
+        votosDelEstudiante < poll.maxMultiplesVotos,
+        `Ya emitiste el máximo de ${poll.maxMultiplesVotos} votos permitidos en esta encuesta`
+      )
     }
-    if (aporte) assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
 
-    // Guardamos el voto
-    if (aporte) {
+    // Si el voto es un aporte...
+    if (tipo === 'aporte') {
+      // ...validamos que la encuesta lo permita
+      assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
+      assert(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
+
       // Creamos y guardamos una opción nueva
       const nuevoId = poll.opciones.length.toString()
-      poll.opciones.push({ id: nuevoId, texto: aporte, votos: 1 })
+      poll.opciones.push({ id: nuevoId, texto: voto.aporte, votos: 1 })
 
-      // Guardamos
+      // Registramos el voto de este usuario a esta opción
+      console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
       await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, nuevoId)
-    } else {
+    }
+
+    // Si es una opción preexistente...
+    if (tipo === 'opcion') {
       // Agarramos la opcion existente e incrementamos en 1 sus votos
-      const opc = poll.opciones.find((opcion) => opcion.id === optionId)
-      if (!opc) throw new Error('Opción inválida')
+      const opc = poll.opciones.find((opcion) => opcion.id === voto.optionId)
+      if (!opc) throw new Error('Opción no encontrada')
 
       // Incrementamos los votos
       poll.opciones[poll.opciones.indexOf(opc)].votos++
 
-      // Guardamos
-      await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, optionId)
+      // Registramos el voto de este usuario a esta opción
+      await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, voto.optionId)
     }
 
     // Updateamos la encuesta en la DB
@@ -219,7 +228,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
     if (socket.data.session && socket.data.session.rol === RolEncuesta.Estudiante) {
-      return await hidratar(sala.id, poll as Encuesta, socket.data.session.sessionId)
+      return await hidratar(sala.id, poll as Encuesta, socket.data.session.userId)
     }
     return poll
   })
@@ -237,8 +246,11 @@ export async function hidratar(idSala: string, poll: Encuesta, idVotante: string
   let puedoVotar = true
   if (!poll.admiteMultiplesVotos) {
     puedoVotar = votosEmitidos.length === 0
-  } else if (poll.maxMultiplesVotos !== null) {
-    puedoVotar = !poll.maxMultiplesVotos || votosEmitidos.length < poll.maxMultiplesVotos
+  } else {
+    // Si no hay max y no admite aportes, el max es el número de opciones, porque no tiene sentido votar más veces que las opciones que hay.
+    if (!poll.maxMultiplesVotos && !poll.admiteAportes) puedoVotar = votosEmitidos.length < poll.opciones.length
+    // Si hay max, lo respetamos aunque admita aportes, porque si no el estudiante podría votar infinitas veces aportando opciones nuevas.
+    else if (poll.maxMultiplesVotos) puedoVotar = votosEmitidos.length < poll.maxMultiplesVotos
   }
 
   return {

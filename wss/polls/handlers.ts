@@ -1,8 +1,8 @@
 import { ExtendedError } from 'socket.io'
 import { conErrorHandling } from '../middleware/error-handling'
-import { broadcastPoll, estudianteSala, profeSala } from './app'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
+import { broadcastPoll, estudianteSala, profeSala } from './app'
 
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
@@ -76,7 +76,6 @@ export const handlersEncuestasProfe = async (socket: SocketProfe) => {
 export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
-  const user = socket.data.session.nombre
   const sala = await Salas.get(idSala)
 
   const estudiante = await estudianteSala(idSala, socket.data.session.userId)
@@ -92,10 +91,8 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   // Estudiantes votan. Broadcasteamos la poll updateada.
   socket.on(
     'poll:vote',
-    safe(async ({ pollId, optionId, aporte }) => {
-      const votando_que = aporte ? `con aporte "${aporte}"` : `opción ${optionId}`
-      console.log(`🗳️  Estudiante ${user} votando en poll ${pollId}...`, votando_que)
-      await broadcastPoll(sala, await estudiante.votar({ pollId, optionId, aporte }))
+    safe(async (posibleVoto: unknown) => {
+      await broadcastPoll(sala, await estudiante.votar(posibleVoto))
     })
   )
 
@@ -103,5 +100,6 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   const emitir = safe(async () => {
     socket.emit('polls:list', await estudiante.listar())
   })
+
   await emitir()
 }

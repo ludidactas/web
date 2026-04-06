@@ -65,7 +65,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
         <AccordionItem value={'item-1'}>
           <AccordionTrigger
             className={cn(
-              'flex flex-col w-full gap-4',
+              'flex flex-col w-full gap-2',
               'bg-[#00B0D2]/15 text-[#00B0D2] border-3 border-[#00B0D2]/30',
               'rounded-2xl p-4 md:px-8 cursor-pointer ',
               'hover:bg-[#00B0D2]/25 transition-colors',
@@ -119,12 +119,18 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                 <Icon icon={'mingcute:check-fill'} />
               </p>
             )}
+            {encuesta.admiteMultiplesVotos && (
+              <p className="flex gap-1 self-center text-xs text-teal-500">
+                Los estudiantes pueden elegir{' '}
+                {encuesta.maxMultiplesVotos ? `hasta ${encuesta.maxMultiplesVotos}` : 'varias'} opciones
+                <Icon icon={'mingcute:check-fill'} />
+              </p>
+            )}
           </AccordionTrigger>
 
           {/* Contenido desplegado */}
           <AccordionContent>
             <div className="rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
-              {encuesta.admiteMultiplesVotos && <p>Admite multiples</p>}
               {/* Opciones */}
               {encuesta.opciones.length > 0 && (
                 <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">

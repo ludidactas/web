@@ -1,10 +1,9 @@
 import { Checkbox } from '@/components/ui/checkbox'
 import { NumberInput } from '@/components/ui/number-input'
 import { pollBase } from '@/wss/validators/polls'
-import { CirclePlus, Infinity, Send, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { CirclePlus, Infinity, Send } from 'lucide-react'
+import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
@@ -16,13 +15,19 @@ export function AgregarPregunta() {
 
   const [pregunta, setPregunta] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
 
   const agregarRespuesta = () => {
-    setOpciones((rs) => [...rs, ''])
+    setOpciones((rs) => {
+      const nuevas = [...rs, '']
+      setTimeout(() => inputRefs.current[nuevas.length - 1]?.focus(), 0)
+      return nuevas
+
+    })
   }
 
   const actualizarRespuesta = (index: number, valor: string) => {
@@ -83,6 +88,7 @@ export function AgregarPregunta() {
               value={respuesta}
               onChange={(e) => actualizarRespuesta(index, e.target.value)}
               tabIndex={index + 2}
+              ref={(el) => { inputRefs.current[index] = el }}
             />
 
             <button
@@ -90,11 +96,12 @@ export function AgregarPregunta() {
               onClick={() => eliminarRespuesta(index)}
               tabIndex={-1}
             >
-              <Icon icon={'lucide:trash-2'}/>
+              <Icon icon={'lucide:trash-2'} />
             </button>
           </div>
         ))}
-      {/* Boton agregar respuesta */}
+
+      {/* Boton agregar opcion */}
       <button
         className="flex items-center self-center w-fit font-semibold gap-2  text-white px-2 py-2 rounded-full"
         onClick={agregarRespuesta}

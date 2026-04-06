@@ -52,19 +52,21 @@ export function AccionesToggle({ encuesta }: { encuesta: Encuesta }) {
         <div className="flex justify-center my-2 gap-4">
             {/* Enfocar */}
 
-            <BotonEncuesta
-                className='bg-purple-500 text-white px-4 py-2 disabled:bg-slate-100 disabled:border-slate-500 disabled:text-slate-500'
+            <button
+                className='flex gap-2 w-20 md:min-w-28 rounded-xl items-center bg-purple-500 text-white px-4 disabled:bg-slate-100 disabled:border-slate-500 disabled:text-slate-500'
                 onClick={() => enfocar(encuesta.id)}
                 disabled={!encuesta.isPublished || encuesta.isFocused}
-                texto="Enfocar"
-                icon="material-symbols:center-focus-weak-rounded"
-            />
+            >
+                <Icon className="w-4 h-4" icon={"entypo:magnifying-glass"} />
+                Enfocar
+            </button>
 
 
             {/* Eliminar */}
             <Dialog>
                 <DialogTrigger>
-                    <p className="hidden sm:flex bg-rose-700 text-white px-4 py-2 rounded-xl flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
+                    <p className="hidden sm:flex gap-2 bg-rose-700 text-white px-4 py-2 rounded-xl items-center w-20  md:min-w-28 border'">
+                        <Icon icon={'lucide:trash-2'} />
                         Eliminar
                     </p>
                     <p className="flex sm:hidden bg-rose-700 text-white px-4 py-2 rounded-xl flex-col items-center gap-1 w-20 text-xs md:min-w-24 border'">
@@ -79,14 +81,18 @@ export function AccionesToggle({ encuesta }: { encuesta: Encuesta }) {
                     </DialogHeader>
                     <div className="flex gap-2">
                         <DialogClose className="flex gap-4">
-                            <p className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full">Cancelar</p>
+                            <p className="flex gap-2 items-center bg-emerald-700/90 text-white px-4 py-2 min-w-32 text-xl rounded-full">
+                                <Icon icon={"iconamoon:close-bold"} />
+                                Cancelar
+                            </p>
                             <p
-                            className="bg-rose-700 text-white px-4 py-2 min-w-40 text-xl rounded-full"
-                            onClick={() => borrar(encuesta.id)}>
+                                className="flex gap-2 items-center bg-rose-700 text-white px-4 py-2 min-w-32 text-xl rounded-full"
+                                onClick={() => borrar(encuesta.id)}>
+                                <Icon icon={'lucide:trash-2'} />
                                 Eliminar
                             </p>
                         </DialogClose>
-                        
+
                     </div>
                 </DialogContent>
             </Dialog>

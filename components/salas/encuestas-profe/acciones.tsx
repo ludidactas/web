@@ -136,7 +136,7 @@ export const BotonEncuesta = ({
 }: ComponentProps<'button'> & { texto: string; icon: string }) => (
   <button
     className={cn(
-      'flex flex-col items-center gap-1 w-20 text-xs md:text-xl md:min-w-24 rounded-xl border-2 border-white',
+      'flex items-center gap-1 w-20 text-xs md:text-xl md:min-w-24 rounded-xl border-2 border-white',
       className
     )}
     {...props}

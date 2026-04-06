@@ -1,7 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Minimize2, Maximize2, Eye, EyeOff, Copy, Move, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export default function DebugPanel({ data, title = 'Debug Panel' }: { data: { [key: string]: any }; title?: string }) {
+export default function DebugPanel({
+  data,
+  title = 'Debug Panel',
+  classNames,
+}: {
+  data: { [key: string]: any }
+  title?: string
+  classNames?: {
+    panel?: string
+    header?: string
+    content?: string
+    button?: string
+  }
+}) {
   const [position, setPosition] = useState({ x: 20, y: 20 })
   const [size, setSize] = useState({ width: 450, height: 350 })
   const [isVisible, setIsVisible] = useState(false)
@@ -108,7 +122,10 @@ export default function DebugPanel({ data, title = 'Debug Panel' }: { data: { [k
     return (
       <button
         onClick={() => setIsVisible(true)}
-        className="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50 transition-all hover:scale-110"
+        className={cn(
+          'fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg z-50 transition-all hover:scale-110',
+          classNames?.button
+        )}
         title="Show Debug Panel"
       >
         <Eye size={20} />
@@ -125,30 +142,36 @@ export default function DebugPanel({ data, title = 'Debug Panel' }: { data: { [k
         transform: 'none',
       }
     : isMinimized
-      ? {
-          transform: `translate(${position.x}px, ${position.y}px)`,
-          width: size.width,
-          height: 42,
-        }
-      : {
-          transform: `translate(${position.x}px, ${position.y}px)`,
-          width: size.width,
-          height: size.height,
-        }
+    ? {
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: size.width,
+        height: 42,
+      }
+    : {
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        width: size.width,
+        height: size.height,
+      }
 
   return (
     <div
       ref={panelRef}
-      className={`fixed top-0 left-0 bg-slate-900 border border-slate-700 shadow-2xl z-50 flex flex-col overflow-hidden ${
-        isMaximized ? 'rounded-none' : 'rounded-lg'
-      } ${isDragging ? 'select-none' : ''}`}
+      className={cn(
+        `fixed top-0 left-0 bg-slate-900 border border-slate-700 shadow-2xl z-50 flex flex-col overflow-hidden ${
+          isMaximized ? 'rounded-none' : 'rounded-lg'
+        } ${isDragging ? 'select-none' : ''}`,
+        classNames?.panel
+      )}
       style={panelStyle}
     >
       {/* Header Bar */}
       <div
-        className={`bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700 min-h-[42px] select-none ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        className={cn(
+          `bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700 min-h-[42px] select-none ${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          }`,
+          classNames?.header
+        )}
         onMouseDown={startDrag}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0 pointer-events-none">

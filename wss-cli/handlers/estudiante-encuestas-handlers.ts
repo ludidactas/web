@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io-client'
 
 import { storeEncuestas } from '../stores/encuestas-store'
+import { VotarEncuesta } from '@/wss/validators/polls'
 
 export default function estudianteEncuestasHandlers(socket: Socket | null) {
   const encuestas = storeEncuestas.getState()
@@ -17,10 +18,9 @@ export default function estudianteEncuestasHandlers(socket: Socket | null) {
 
     acciones: {
       /** Postea un voto */
-      votar: (pollId: string, optionId?: string, aporte?: string) => {
+      votar: (voto: VotarEncuesta) => {
         if (!socket) return
-        if (aporte) socket.emit('poll:vote', { pollId, aporte })
-        else socket.emit('poll:vote', { pollId, optionId })
+        socket.emit('poll:vote', voto)
       },
     },
 

@@ -10,10 +10,7 @@ export default function estudianteEncuestasHandlers(socket: Socket | null) {
     montar: () => {
       if (!socket) return
 
-      socket.on('polls:list', (encs) => {
-        encuestas.set(encs)
-        console.log('Recibidas encuestas', encs)
-      })
+      socket.on('polls:list', encuestas.set)
       socket.on('poll:updated', encuestas.update)
       socket.on('poll:created', encuestas.add)
       socket.on('poll:deleted', encuestas.remove)

@@ -1,5 +1,5 @@
 import { assert } from 'console'
-import { isEmpty, merge } from 'remeda'
+import { isEmpty, mapValues, merge } from 'remeda'
 import db from '../db'
 import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
@@ -12,8 +12,14 @@ export async function profeSala(email: string) {
   // Acciones de profe:
 
   async function listarEncuestas() {
-    const polls = await db.hgetall(`sala:${salaId}:polls`)
-    return Object.values(polls).map((pollStr) => JSON.parse(pollStr) as Encuesta)
+    const pollIds = await db.smembers(`sala:${salaId}:polls`)
+    const polls = await Promise.all(
+      pollIds.map(async (pollId) => {
+        const str = await db.get(`sala:${salaId}:polls:${pollId}`)
+        return JSON.parse(str!) as Encuesta
+      })
+    )
+    return await Promise.all(polls.map((p) => pollConVotos(salaId, p.id, p)))
   }
 
   async function crearPoll(pollDataUnknown: unknown) {
@@ -40,8 +46,9 @@ export async function profeSala(email: string) {
       maxMultiplesVotos: pollData.maxMultiplesVotos,
     }
 
-    // La agregamos a los polls activos y creamos el tracker de quién ya voto y qué
-    await db.hset(`sala:${salaId}:polls`, poll.id, JSON.stringify(poll))
+    // Guardamos la config y la registramos en el índice
+    await db.set(`sala:${salaId}:polls:${poll.id}`, JSON.stringify(poll))
+    await db.sadd(`sala:${salaId}:polls`, poll.id)
 
     console.log(`➕ Encuesta creada: ${poll.pregunta} (id ${poll.id})`)
 
@@ -66,7 +73,7 @@ export async function profeSala(email: string) {
     await assertPollExists(salaId, pollId)
 
     // Agarramos la encuesta
-    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
+    const pollStr = await db.get(`sala:${salaId}:polls:${pollId}`)
     const poll: Encuesta = JSON.parse(pollStr!)
 
     // Dependiendo de qué se actualice, validamos:
@@ -81,25 +88,27 @@ export async function profeSala(email: string) {
     if (update.admiteAportes === true && poll.admiteAportes) throw new Error('La encuesta ya admite aportes')
 
     const nueva = merge(poll, update) as Encuesta
-    await db.hset(`sala:${salaId}:polls`, pollId, JSON.stringify(nueva))
+    await db.set(`sala:${salaId}:polls:${pollId}`, JSON.stringify(nueva))
     console.log(`🔔 Encuesta ${poll.id} updateada:`, JSON.stringify(update))
 
-    return nueva
+    return await pollConVotos(salaId, pollId, nueva)
   }
 
   async function deletePoll({ pollId }: { pollId: string }) {
     // Validamos
     await assertPollExists(salaId, pollId)
 
-    // La borramos
-    await db.hdel(`sala:${salaId}:polls`, pollId)
+    // La borramos del índice y su clave propia
+    await db.srem(`sala:${salaId}:polls`, pollId)
+    await db.del(`sala:${salaId}:polls:${pollId}`)
 
-    // Borramos los votos por usuario y el set de votantes
+    // Borramos los votos por opción, por usuario y el set de votantes
     const votantes = await db.smembers(`sala:${salaId}:poll:${pollId}:votantes`)
     if (votantes.length > 0) {
       await Promise.all(votantes.map((uid) => db.del(`sala:${salaId}:poll:${pollId}:votos:${uid}`)))
     }
     await db.del(`sala:${salaId}:poll:${pollId}:votantes`)
+    await db.del(`sala:${salaId}:poll:${pollId}:votos`)
 
     // Si estaba enfocada, desenfocamos
     const enfocada = await db.get(`sala:${salaId}:polls:focused`)
@@ -126,11 +135,11 @@ export async function profeSala(email: string) {
   }
 
   async function consultarResultados(pollId: string) {
-    const pollStr = await db.hget(`sala:${salaId}:polls`, pollId)
+    const pollStr = await db.get(`sala:${salaId}:polls:${pollId}`)
     if (!pollStr) throw new Error('Encuesta no encontrada')
 
-    const poll: Encuesta = JSON.parse(pollStr!)
-    return poll
+    const poll: Encuesta = JSON.parse(pollStr)
+    return await pollConVotos(salaId, pollId, poll)
   }
 
   return {
@@ -158,8 +167,8 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     await assertPollExists(idSala, pollId)
 
-    // Agarramos la encuesta
-    const pollStr = await db.hget(`sala:${idSala}:polls`, pollId)
+    // Agarramos la config de la encuesta (sin votos — viven en su propio hash)
+    const pollStr = await db.get(`sala:${idSala}:polls:${pollId}`)
     const poll: Encuesta = JSON.parse(pollStr!)
 
     // Validamos
@@ -183,35 +192,33 @@ export async function estudianteSala(idSala: string, userId: string) {
       assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
       assert(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
 
-      // Creamos y guardamos una opción nueva
+      // Agregamos la nueva opción al JSON de config (solo texto, sin votos)
       const nuevoId = poll.opciones.length.toString()
-      poll.opciones.push({ id: nuevoId, texto: voto.aporte, votos: 1 })
+      poll.opciones.push({ id: nuevoId, texto: voto.aporte, votos: 0 })
 
-      // Registramos el voto de este usuario a esta opción
       console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
+      await db.set(`sala:${idSala}:polls:${pollId}`, JSON.stringify(poll))
+
+      // Voto inicial en el hash atómico
+      await db.hincrby(`sala:${idSala}:poll:${pollId}:votos`, nuevoId, 1)
       await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, nuevoId)
     }
 
     // Si es una opción preexistente...
     if (tipo === 'opcion') {
-      // Agarramos la opcion existente e incrementamos en 1 sus votos
-      const opc = poll.opciones.find((opcion) => opcion.id === voto.optionId)
-      if (!opc) throw new Error('Opción no encontrada')
+      if (!poll.opciones.find((opc) => opc.id === voto.optionId))
+        throw new Error('Opción no encontrada')
 
-      // Incrementamos los votos
-      poll.opciones[poll.opciones.indexOf(opc)].votos++
-
-      // Registramos el voto de este usuario a esta opción
+      // Incremento atómico — sin read-modify-write sobre el JSON de config
+      await db.hincrby(`sala:${idSala}:poll:${pollId}:votos`, voto.optionId, 1)
       await db.sadd(`sala:${idSala}:poll:${pollId}:votos:${userId}`, voto.optionId)
     }
 
-    // Updateamos la encuesta en la DB
-    await db.hset(`sala:${idSala}:polls`, poll.id, JSON.stringify(poll))
-
-    // Registramos el voto
+    // Registramos el votante
     await db.sadd(`sala:${idSala}:poll:${pollId}:votantes`, userId)
 
-    return poll
+    // Devolvemos la poll con votos frescos del hash dedicado
+    return await pollConVotos(idSala, pollId, poll)
   }
 
   async function listar() {
@@ -236,7 +243,10 @@ export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>,
 
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
 export async function hidratar(idSala: string, poll: Encuesta, idVotante: string): Promise<EncuestaHidratada> {
-  const votosEmitidos = await db.smembers(`sala:${idSala}:poll:${poll.id}:votos:${idVotante}`)
+  const [votosEmitidos, pollActual] = await Promise.all([
+    db.smembers(`sala:${idSala}:poll:${poll.id}:votos:${idVotante}`),
+    pollConVotos(idSala, poll.id, poll),
+  ])
 
   console.log(
     `🔎 Hidratando encuesta ${poll.id} para estudiante ${idVotante}:`,
@@ -244,17 +254,17 @@ export async function hidratar(idSala: string, poll: Encuesta, idVotante: string
   )
 
   let puedoVotar = true
-  if (!poll.admiteMultiplesVotos) {
+  if (!pollActual.admiteMultiplesVotos) {
     puedoVotar = votosEmitidos.length === 0
   } else {
     // Si no hay max y no admite aportes, el max es el número de opciones, porque no tiene sentido votar más veces que las opciones que hay.
-    if (!poll.maxMultiplesVotos && !poll.admiteAportes) puedoVotar = votosEmitidos.length < poll.opciones.length
+    if (!pollActual.maxMultiplesVotos && !pollActual.admiteAportes) puedoVotar = votosEmitidos.length < pollActual.opciones.length
     // Si hay max, lo respetamos aunque admita aportes, porque si no el estudiante podría votar infinitas veces aportando opciones nuevas.
-    else if (poll.maxMultiplesVotos) puedoVotar = votosEmitidos.length < poll.maxMultiplesVotos
+    else if (pollActual.maxMultiplesVotos) puedoVotar = votosEmitidos.length < pollActual.maxMultiplesVotos
   }
 
   return {
-    ...poll,
+    ...pollActual,
     puedoVotar,
     votosEmitidos,
   }
@@ -264,17 +274,33 @@ export async function hidratar(idSala: string, poll: Encuesta, idVotante: string
 export async function hidratadas(salaId: string, userId: string) {
   const sala = await Salas.get(salaId)
 
-  // Agarramos todas las encuestas de la sala de la db
-  const pollsSalaStr = await db.hgetall(`sala:${sala.id}:polls`)
-  const pollsSala = Object.values(pollsSalaStr).map((pollStr) => JSON.parse(pollStr) as Encuesta)
+  const pollIds = await db.smembers(`sala:${sala.id}:polls`)
+  const polls = await Promise.all(
+    pollIds.map(async (pollId) => {
+      const str = await db.get(`sala:${sala.id}:polls:${pollId}`)
+      return JSON.parse(str!) as Encuesta
+    })
+  )
 
-  return await Promise.all(pollsSala.filter((e) => e.isPublished).map((poll) => hidratar(sala.id, poll, userId)))
+  return await Promise.all(polls.filter((e) => e.isPublished).map((poll) => hidratar(sala.id, poll, userId)))
+}
+
+// Helpers
+
+/** Merge los votos del hash dedicado en el objeto poll. Siempre llamar antes de devolver un poll a un consumer externo. */
+async function pollConVotos(salaId: string, pollId: string, poll: Encuesta): Promise<Encuesta> {
+  const raw = await db.hgetall(`sala:${salaId}:poll:${pollId}:votos`)
+  const votos = raw ? mapValues(raw, (v) => parseInt(v)) : {}
+  return {
+    ...poll,
+    opciones: poll.opciones.map((opc) => ({ ...opc, votos: votos[opc.id] ?? 0 })),
+  }
 }
 
 // Assertions para validar los eventos
 
 async function assertPollExists(idSala: string, idPoll: string) {
-  const existe = await db.hexists(`sala:${idSala}:polls`, idPoll)
+  const existe = await db.exists(`sala:${idSala}:polls:${idPoll}`)
   if (!existe) throw new Error(`La encuesta ${idPoll} no existe!`)
 }
 

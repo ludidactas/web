@@ -18,6 +18,7 @@ export function AgregarPregunta() {
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
+  // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
 
   const agregarRespuesta = () => {
     setOpciones((rs) => [...rs, ''])
@@ -137,6 +138,12 @@ export function AgregarPregunta() {
           />
         </div>
       </div>
+
+      {/* Checkbox no publicar de inmediato */}
+      {/* <div className="flex items-center gap-2 px-4">
+        <Checkbox className="bg-white" checked={} onCheckedChange={} title="" />
+        <p className="text-indigo-500 text-sm">Crear sin publicar de inmediato</p>
+      </div> */}
 
       {/* Boton postear pregunta */}
       <Tooltip disableHoverableContent={!error}>

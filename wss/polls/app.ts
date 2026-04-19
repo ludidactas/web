@@ -1,4 +1,3 @@
-import { assert } from 'console'
 import { isEmpty, mapValues, merge } from 'remeda'
 import db from '../db'
 import { Salas } from '../salas/app'
@@ -77,15 +76,15 @@ export async function profeSala(email: string) {
     const poll: Encuesta = JSON.parse(pollStr!)
 
     // Dependiendo de qué se actualice, validamos:
-    if (update.isOpen === true) assertPollIsClosed(poll)
-    if (update.isOpen === false) assertPollIsOpen(poll)
-    if (update.isPublished === true) assertPollIsHidden(poll)
-    if (update.isPublished === false) assertPollIsPublished(poll)
-    if (update.isFocused === true) assertPollIsUnfocused(poll)
-    if (update.isRevealed === true) assertPollIsNotRevealed(poll)
-    if (update.isRevealed === false) assertPollIsRevealed(poll)
-    if (update.admiteAportes === false && !poll.admiteAportes) throw new Error('La encuesta ya no admite aportes')
-    if (update.admiteAportes === true && poll.admiteAportes) throw new Error('La encuesta ya admite aportes')
+    if (update.isOpen === true) enforce(!poll.isOpen, 'La encuesta ya está abierta!!')
+    if (update.isOpen === false) enforce(poll.isOpen, 'La encuesta ya cerró!')
+    if (update.isPublished === true) enforce(!poll.isPublished, 'La encuesta ya está oculta!')
+    if (update.isPublished === false) enforce(poll.isPublished, 'La encuesta no está publicada!')
+    if (update.isFocused === true) enforce(!poll.isFocused, 'La encuesta ya está focuseada!')
+    if (update.isRevealed === true) enforce(!poll.isRevealed, 'La encuesta ya está revelada!')
+    if (update.isRevealed === false) enforce(poll.isRevealed, 'La encuesta no está revelada!')
+    if (update.admiteAportes === false) enforce(poll.admiteAportes, 'La encuesta ya no admite aportes')
+    if (update.admiteAportes === true) enforce(!poll.admiteAportes, 'La encuesta ya admite aportes')
 
     const nueva = merge(poll, update) as Encuesta
     await db.set(`sala:${salaId}:polls:${pollId}`, JSON.stringify(nueva))
@@ -171,8 +170,8 @@ export async function estudianteSala(idSala: string, userId: string) {
     const pollStr = await db.get(`sala:${idSala}:polls:${pollId}`)
     const poll: Encuesta = JSON.parse(pollStr!)
 
-    // Validamos
-    assertPollIsOpen(poll)
+    // Validamos que esté abierta
+    enforce(poll.isOpen, 'La encuesta ya cerró!')
 
     // Si no admite múltiples votos, validamos que el estudiante no haya votado todavía
     if (!poll.admiteMultiplesVotos) await assertElEstudianteNoVotoTodavia(poll, userId)
@@ -180,7 +179,7 @@ export async function estudianteSala(idSala: string, userId: string) {
     // Si admite múltiples votos, validamos que no haya superado el máximo de votos permitidos (si es que tiene un máximo)
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
       const votosDelEstudiante = await db.scard(`sala:${idSala}:poll:${pollId}:votos:${userId}`)
-      assert(
+      enforce(
         votosDelEstudiante < poll.maxMultiplesVotos,
         `Ya emitiste el máximo de ${poll.maxMultiplesVotos} votos permitidos en esta encuesta`
       )
@@ -189,8 +188,12 @@ export async function estudianteSala(idSala: string, userId: string) {
     // Si el voto es un aporte...
     if (tipo === 'aporte') {
       // ...validamos que la encuesta lo permita
-      assert(poll.admiteAportes, 'Esta encuesta no admite aportes')
-      assert(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
+      enforce(poll.admiteAportes, 'Esta encuesta no admite aportes')
+      enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
+      enforce(
+        !poll.opciones.find((opc) => opc.texto.toLowerCase() === voto.aporte.toLowerCase()),
+        'Esa opción ya existe'
+      )
 
       // Agregamos la nueva opción al JSON de config (solo texto, sin votos)
       const nuevoId = poll.opciones.length.toString()
@@ -206,8 +209,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     // Si es una opción preexistente...
     if (tipo === 'opcion') {
-      if (!poll.opciones.find((opc) => opc.id === voto.optionId))
-        throw new Error('Opción no encontrada')
+      if (!poll.opciones.find((opc) => opc.id === voto.optionId)) throw new Error('Opción no encontrada')
 
       // Incremento atómico — sin read-modify-write sobre el JSON de config
       await db.hincrby(`sala:${idSala}:poll:${pollId}:votos`, voto.optionId, 1)
@@ -258,7 +260,8 @@ export async function hidratar(idSala: string, poll: Encuesta, idVotante: string
     puedoVotar = votosEmitidos.length === 0
   } else {
     // Si no hay max y no admite aportes, el max es el número de opciones, porque no tiene sentido votar más veces que las opciones que hay.
-    if (!pollActual.maxMultiplesVotos && !pollActual.admiteAportes) puedoVotar = votosEmitidos.length < pollActual.opciones.length
+    if (!pollActual.maxMultiplesVotos && !pollActual.admiteAportes)
+      puedoVotar = votosEmitidos.length < pollActual.opciones.length
     // Si hay max, lo respetamos aunque admita aportes, porque si no el estudiante podría votar infinitas veces aportando opciones nuevas.
     else if (pollActual.maxMultiplesVotos) puedoVotar = votosEmitidos.length < pollActual.maxMultiplesVotos
   }
@@ -304,30 +307,13 @@ async function assertPollExists(idSala: string, idPoll: string) {
   if (!existe) throw new Error(`La encuesta ${idPoll} no existe!`)
 }
 
-function assertPollIsOpen(poll: Encuesta) {
-  if (!poll.isOpen) throw new Error('La encuesta ya cerró!')
+export class ConsistencyError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ConsistencyError'
+  }
 }
 
-function assertPollIsClosed(poll: Encuesta) {
-  if (poll.isOpen) throw new Error('La encuesta ya está abierta!!')
-}
-
-function assertPollIsPublished(poll: Encuesta) {
-  if (!poll.isPublished) throw new Error('La encuesta no está publicada!')
-}
-
-function assertPollIsHidden(poll: Encuesta) {
-  if (poll.isPublished) throw new Error('La encuesta ya está oculta!')
-}
-
-function assertPollIsUnfocused(poll: Encuesta) {
-  if (poll.isFocused) throw new Error('La encuesta ya está focuseada!')
-}
-
-function assertPollIsNotRevealed(poll: Encuesta) {
-  if (poll.isRevealed) throw new Error('La encuesta ya está revelada!')
-}
-
-function assertPollIsRevealed(poll: Encuesta) {
-  if (!poll.isRevealed) throw new Error('La encuesta no está revelada!')
+function enforce(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new ConsistencyError(message)
 }

@@ -2,10 +2,51 @@
 
 import { Encuesta, Opcion } from '@/wss/tipos'
 import { motion } from 'framer-motion'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
+
+function useScrambleText(targetText: string) {
+  const [displayText, setDisplayText] = useState(targetText)
+  const prevRef = useRef(targetText)
+
+  useEffect(() => {
+    if (prevRef.current === targetText) return
+    prevRef.current = targetText
+
+    const CHARS = '?!#@%ABCDEFGHIJKLMNOPRSTUVWXYZ0123456789'
+    const STEPS = 18
+    const INTERVAL_MS = 45
+    let step = 0
+    let timer: ReturnType<typeof setTimeout>
+
+    const tick = () => {
+      step++
+      const settled = Math.floor((step / STEPS) * targetText.length)
+      setDisplayText(
+        targetText
+          .split('')
+          .map((char, i) => {
+            if (char === ' ') return ' '
+            if (i < settled) return char
+            return CHARS[Math.floor(Math.random() * CHARS.length)]
+          })
+          .join('')
+      )
+      if (step < STEPS) {
+        timer = setTimeout(tick, INTERVAL_MS)
+      } else {
+        setDisplayText(targetText)
+      }
+    }
+
+    timer = setTimeout(tick, INTERVAL_MS)
+    return () => clearTimeout(timer)
+  }, [targetText])
+
+  return displayText
+}
 
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
@@ -125,6 +166,7 @@ function BarraEstadistica({
   children?: ReactNode
 }) {
   const [animatedWidth, setAnimatedWidth] = useState(0)
+  const scrambledText = useScrambleText(opcion.texto)
 
   const p = maxPercentage ? percentage / maxPercentage : percentage
 
@@ -188,7 +230,7 @@ function BarraEstadistica({
           transition: 'font-weight 0.2s ease',
         }}
       >
-        {opcion.texto}
+        {scrambledText}
       </text>
 
       {/* Valor y porcentaje */}

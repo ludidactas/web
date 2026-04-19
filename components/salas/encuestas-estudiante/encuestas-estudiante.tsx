@@ -116,6 +116,27 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   const hayAporte = aporte.trim().length > 0
   const puedeEnviar = encuesta.isOpen && encuesta.puedoVotar && (cambioSeleccion || hayAporte)
 
+  function enviarVoto() {
+    if (!puedeEnviar) {
+      console.warn('Tratando de votar en encuestra donde no puede enviar!')
+      return
+    }
+
+    // Si hay un aporte textual...
+    if (aportando) {
+      votar({ pollId: encuesta.id, tipo: 'aporte', aporte })
+      setAporte('')
+      setAportando(false)
+    }
+
+    // Si hay una opción u opciones...
+    if (seleccion.length > 0) {
+      seleccion?.forEach((optionId) => {
+        if (!encuesta.votosEmitidos?.includes(optionId)) votar({ pollId: encuesta.id, tipo: 'opcion', optionId })
+      })
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -217,13 +238,19 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         {encuesta.admiteAportes && (
           <Input
             className={cn('mt-2 text-xs bg-slate-100', { 'bg-cyan-500/30': aportando })}
-            placeholder="Introduce tu respuesta"
+            placeholder="Otra respuesta..."
             value={aporte}
             onClick={() => {
               setAportando(true)
+              if (!encuesta.admiteMultiplesVotos) setSeleccion([]) // Si no admite múltiples, al hacer click en aportar se deseleccionan las opciones
             }}
             onChange={(e) => {
               setAporte(e.target.value)
+            }}
+            onKeyUp={(e) => {
+              if (e.key === 'Enter') {
+                enviarVoto()
+              }
             }}
             disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen}
           />
@@ -232,7 +259,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
 
       <span className="text-xs text-center text-slate-400">
         {/* Si no admite múltiples puede seleccionar una */}
-        {!encuesta.admiteMultiplesVotos && 'Seleccioná una opción.'}
+        {!encuesta.admiteMultiplesVotos && 'Podés eleccionar una sola opción.'}
 
         {/* Si admite múltiples y tiene max, es ese */}
         {encuesta.admiteMultiplesVotos &&
@@ -258,20 +285,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
               !puedeEnviar && 'grayscale cursor-not-allowed'
             )}
             disabled={!puedeEnviar}
-            onClick={() => {
-              // Si es un aporte...
-              if (aportando) {
-                votar({ pollId: encuesta.id, tipo: 'aporte', aporte })
-                setAporte('')
-              }
-              // Si es una opción u opciones...
-              else {
-                seleccion?.forEach((optionId) => {
-                  if (!encuesta.votosEmitidos?.includes(optionId))
-                    votar({ pollId: encuesta.id, tipo: 'opcion', optionId })
-                })
-              }
-            }}
+            onClick={enviarVoto}
           >
             <Send size={16} />
             Enviar

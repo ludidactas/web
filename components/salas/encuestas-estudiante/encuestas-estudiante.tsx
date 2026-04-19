@@ -257,7 +257,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         )}
       </ol>
 
+<span className="text-xs text-center text-slate-400">
+   {encuesta.admiteAportes && 'Podés añadir respuestas'}
+</span>
       <span className="text-xs text-center text-slate-400">
+       
         {/* Si no admite múltiples puede seleccionar una */}
         {!encuesta.admiteMultiplesVotos && 'Podés eleccionar una sola opción.'}
 

@@ -76,11 +76,24 @@ export default {
             height: '0',
           },
         },
+
+        'border-pulse': {
+          '0%, 100%': {
+            borderColor: '#6F41CB',
+            boxShadow: '0 0 0px 0px rgba(111, 65, 203, 0)',
+          },
+          '50%': {
+            borderColor: 'rgba(111, 65, 203, 0.4)',
+            boxShadow: '0 0 8px 2px rgba(111, 65, 203, 0.4)',
+          },
+        },
+
+
       },
       animation: {
         aparecer: 'fadeIn 0.5s ease-in-out',
         'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out', 'border-pulse': 'border-pulse 2s ease-in-out infinite',
       },
       borderRadius: {
         lg: 'var(--radius)',

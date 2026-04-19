@@ -19,6 +19,9 @@ import { statusesDeCarga, StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
+import { Icon } from '@iconify/react/dist/iconify.js'
+import enfocar from '@/svg/enfocar.svg'
+import { LdSvg } from '@/components/custom/ld-svg'
 
 export default function EncuestasProfe() {
   const { estado, WssDebugPanel } = useConexionProfe()
@@ -129,7 +132,7 @@ export default function EncuestasProfe() {
         )}
       </div>
 
-      {/* VISTA DESKTOP (sin cambios) */}
+      {/* VISTA DESKTOP */}
       <div className="hidden md:flex animate-aparecer py-2 gap-2">
         {/* Preguntas Formulario */}
         <div className="flex-1 min-w-0 flex flex-col bg-white rounded-xl px-2" tabIndex={0}>
@@ -179,36 +182,51 @@ export default function EncuestasProfe() {
 
         {/* Lista de estudiantes y overlay desktop */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {/* Lista de estudiantes */}
           <div className="h-[70%]">
             <div className="flex h-full flex-col gap-4 bg-white rounded-xl p-8">
               <ListaEstudiantes />
             </div>
           </div>
 
-          <div className="flex flex-col rounded-xl text-[#6F41CB] items-center bg-white h-[50%] overflow-y-auto">
+          {/* Overlay */}
+          <div className="relative flex-col rounded-xl text-[#6F41CB] items-center bg-white h-[50%]">
+            {!encuestaEnfocada && (
+              <p className="flex items-center justify-center h-full text-xl ">No hay encuestas enfocadas </p>
+            )}
+
             {encuestaEnfocada && (
-              <div className="flex flex-col p-6 gap-2 items-center">
-                <p className="flex gap-2 font-bold text-2xl items-center">
-                  Visualizador vista previa
-                  <CircleDot size={30} className="animate-pulse text-emerald-500" />
-                </p>
-                <div className="flex flex-col">
-                  <div className="flex gap-2">
-                    <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
-                      {linkOverlay}
-                    </Link>
-                    <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                      {justCopied ? (
-                        <SquareCheckBig className="text-emerald-700 w-4 h-4" />
-                      ) : (
-                        <Copy size={20} className="hover:cursor-pointer" />
-                      )}
-                    </button>
+              <>
+                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-0" SvgComponent={enfocar} />
+
+                <div className="border-4 border-[#6F41CB] animate-border-pulse w-full h-full rounded-xl overflow-y-auto">
+                  <div className=" flex flex-col gap-2 items-center h-full">
+                    <div className="flex flex-col p-8 mt-10 w-full">
+                      <div className="flex flex-col items-center">
+                        <p className=" flex items-center gap-4 font-bold text-2xl text-center">
+                          Visualizador vista previa
+                        </p>
+                        <div className="flex flex-col">
+                          <div className="flex gap-2">
+                            <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
+                              {linkOverlay}
+                            </Link>
+                            <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                              {justCopied ? (
+                                <SquareCheckBig className="text-emerald-700 w-4 h-4" />
+                              ) : (
+                                <Copy size={20} className="hover:cursor-pointer" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
-            <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
           </div>
         </div>
       </div>

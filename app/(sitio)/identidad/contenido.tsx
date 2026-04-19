@@ -59,7 +59,7 @@ export default function ContenidoIdentidad() {
           <Image
             className="text-center shadow-4xl rounded-xl "
             data-aos="zoom-in-down"
-            src={'/img/Identidad1.png'}
+            src={'/img/Identidad1.webp'}
             alt={'Grupo taller Ludidactas'}
             width={1000}
             height={1000}
@@ -79,7 +79,7 @@ export default function ContenidoIdentidad() {
                   data-aos="flip-left"
                   data-aos-duration="2000"
                   className="rounded-full bg-[#55B7D4] h-32 w-32 md:h-60 md:w-60 "
-                  src={'/img/Vlad.png'}
+                  src={'/img/Vlad.webp'}
                   height={200}
                   width={200}
                   alt=""
@@ -99,7 +99,7 @@ export default function ContenidoIdentidad() {
                   data-aos="flip-left"
                   data-aos-duration="2000"
                   className="mx-8 bg-[#55B7D4] rounded-full h-32 w-32 md:h-60 md:w-60"
-                  src={'/img/Aleja.png'}
+                  src={'/img/Aleja.webp'}
                   height={200}
                   width={200}
                   alt="Team member 2"

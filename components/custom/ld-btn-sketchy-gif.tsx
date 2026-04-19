@@ -17,7 +17,7 @@ export default function BtnSketchyGif({ disabled, texto, ...props }: BtnSketchyG
         'w-fit py-2 px-8 flex-0 md:scale-1.15 bg-center bg-no-repeat bg-contain hover:text-shadow-md',
         body.className,
         {
-          'bg-[url(/img/btndisabled.png)] text-slate-600 cursor-arrow pointer-events-none': disabled,
+          'bg-[url(/img/btndisabled.webp)] text-slate-600 cursor-arrow pointer-events-none': disabled,
           'bg-[url(/img/btnhover.gif)]': !disabled,
         },
         props.className

@@ -252,62 +252,62 @@ const Tecnologias = () => {
         <div className="grid grid-cols-3 gap-[40px] p-10 lg:p-20 place-items-center ">
           <LogoTec
             nombre="Python"
-            url="/img/tecnologias/python.png"
+            url="/img/tecnologias/python.webp"
             descripcion="El lenguaje preferido para aprender programación, incluyendo coding, algoritmos, paradigmas, patrones y prácticas de ingeniería de software."
           />
           <LogoTec
             nombre="Godot"
-            url="/img/tecnologias/godot.png"
+            url="/img/tecnologias/godot.webp"
             descripcion="Un simple pero poderoso motor de videojuegos opensource, con todo para aprender gamedev."
           />
           <LogoTec
             nombre="Scratch"
-            url="/img/tecnologias/scratch.png"
+            url="/img/tecnologias/scratch.webp"
             descripcion="Una plataforma del MIT para enseñar programación a niños y niñas. Más poderoso de lo que puede parecer a primera vista..."
           />
           <LogoTec
             nombre="HTML, CSS Y JS"
-            url="/img/tecnologias/web.png"
+            url="/img/tecnologias/web.webp"
             descripcion="Los lenguajes nativos de la web, y la base absolutamente fundamental para escribir páginas web."
           />
           <LogoTec
             nombre="Node"
-            url="/img/tecnologias/node.png"
+            url="/img/tecnologias/node.webp"
             descripcion="El entorno de javascript para servidores, y la pieza fundamental para escribir aplicaciones fullstack en js. Incluye tooling como buildpack y frameworks como express."
           />
           <LogoTec
             nombre="React"
-            url="/img/tecnologias/react.png"
+            url="/img/tecnologias/react.webp"
             descripcion="El framework web más popular de nuestros días. Tip: hacé una búsqueda de empleo de 'desarrollador react' "
           />
           <LogoTec
             nombre="Terminal"
-            url="/img/tecnologias/bash.png"
+            url="/img/tecnologias/bash.webp"
             descripcion="Vim, Ssh, tcpdump y otras yerbas del manejo de servidores old school. Orientado a linux."
           />
           <LogoTec
             nombre="Git"
-            url="/img/tecnologias/git.png"
+            url="/img/tecnologias/git.webp"
             descripcion="El sistema de repositorios de código que nos devuelve la cordura y nos permite trabajar en equipos. Un must si estás buscando laburo."
           />
           <LogoTec
             nombre="Matemática"
-            url="/img/tecnologias/pi.png"
+            url="/img/tecnologias/pi.webp"
             descripcion="La primer tecnología. No es secreto que muchas cosas en la programación se describen a través de matemática, en especial en el universo de gráficos y videojuegos. Un submundo aguarda."
           />
           <LogoTec
             nombre="Processing"
-            url="/img/tecnologias/processing.png"
+            url="/img/tecnologias/processing.webp"
             descripcion="Un entorno de programación de gráficos concebido para el encuentro entre la programación y la animación por código, eminentemente didáctico. Se programa en Python o Java y tiene un alter-ego web en javascript llamado p5js (el fondo interactivo de esta página está construido con esta tecnología)."
           />
           <LogoTec
             nombre="Piskel"
-            url="/img/tecnologias/piskelapp.png"
+            url="/img/tecnologias/piskelapp.webp"
             descripcion="Un app libre para animación de sprites cuadro por cuadro en Pixel art. Con esto animamos personajes."
           />
           <LogoTec
             nombre="Affinity Designer"
-            url="/img/tecnologias/affinity.png"
+            url="/img/tecnologias/affinity.webp"
             descripcion="Una poderosísima herramienta de ilustración que integra gráficos vectoriales y rastrer como si se tratara de manteca y miel."
           />
         </div>

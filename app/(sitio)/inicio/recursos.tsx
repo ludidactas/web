@@ -41,6 +41,6 @@ export default function Recursos() {
 
 const Imagenes = () => (
   <div>
-    <Image src="/img/PersoRecursos.png" alt="Personaje3" width={500} height={500} />
+    <Image src="/img/PersoRecursos.webp" alt="Personaje3" width={500} height={500} />
   </div>
 )

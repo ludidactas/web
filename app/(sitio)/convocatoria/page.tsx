@@ -12,29 +12,29 @@ const CarouselConvocatoria = ({ children, className }: ComponentProps<typeof Car
     <CarouselContent className="items-center">
       {children && <CarouselItem className="p-8">{children}</CarouselItem>}
       <CarouselItem className="p-8">
-        <Image className="w-full " src={'/img/slide1.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide1.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide2.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide2.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide3.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide3.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide4.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide4.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide5.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide5.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide6.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide6.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
 
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide7.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide7.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide8.png'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide8.webp'} alt={''} width={500} height={200}></Image>
       </CarouselItem>
     </CarouselContent>
     <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />
@@ -68,7 +68,7 @@ export default function Page() {
       <div className={`${titulo.className} flex flex-col items-center`}>
         {/* Mobile */}
         <CarouselConvocatoria className="block lg:hidden">
-          {/* <Image src={'/img/CONVOCATORIA.png'} alt={''} width={450} height={450} /> */}
+          {/* <Image src={'/img/CONVOCATORIA.webp'} alt={''} width={450} height={450} /> */}
         </CarouselConvocatoria>
 
         <InfoConv />

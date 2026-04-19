@@ -218,20 +218,26 @@ function BarraEstadistica({
       )}
 
       {/* Etiqueta del texto */}
-      <text
-        x="140"
-        y={barHeight / 2}
-        textAnchor="end"
-        dominantBaseline="middle"
-        className="fill-white"
-        style={{
-          fontSize: '14px',
-          fontWeight: '500',
-          transition: 'font-weight 0.2s ease',
-        }}
-      >
-        {scrambledText}
-      </text>
+      <foreignObject x="0" y="0" width="140" height={barHeight}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{
+              color: 'white',
+              fontSize: opcion.texto.length > 18 ? '11px' : '14px',
+              fontWeight: '500',
+              lineHeight: 1.3,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              wordBreak: 'break-word',
+              width: '100%',
+            }}
+          >
+            {scrambledText}
+          </div>
+        </div>
+      </foreignObject>
 
       {/* Valor y porcentaje */}
       <text

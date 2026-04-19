@@ -34,13 +34,16 @@ type Estado = {
   socket: SocketWssCli | null
   status: StatusDeConexion
   error: string | null
+  /** ID de la última llamada a `iniciarConexion`. Permite descartar handshakes que quedaron en vuelo
+   *  tras un cleanup (p.ej. React StrictMode desmonta/remonta en dev). */
+  _conexionActualId: string | null
   // Agregamos una función central para iniciar o re-intentar la conexión
   iniciarConexion: (auth: Pasaporte) => Promise<void>
   desconectar: () => void
   // Acciones internas para gestionar transiciones de estado
   _manejarError: (err: any) => void
   _manejarExpiracion: (autorreconectar?: boolean) => void
-  _limpiarSocket: (reason?: string) => void // Renombrado
+  _limpiarSocket: (reason?: string) => void
 }
 
 /** Lógica de conexión y máquina de estados finitos para conexión del cliente al WSS */
@@ -49,6 +52,7 @@ export const conexionWss = create<Estado>((set, get) => ({
   status: StatusDeConexion.Quieto,
   error: null,
   session: null,
+  _conexionActualId: null,
 
   // Creación/cierre del socket
   async iniciarConexion(auth) {
@@ -82,11 +86,20 @@ export const conexionWss = create<Estado>((set, get) => ({
     }
 
     console.log(`🔌 Iniciando conexión WSS... Rol: ${auth.rol}`)
-    set({ status: StatusDeConexion.Conectando, error: null })
+    const miId = crypto.randomUUID() // Usamos un id para trackear la conexión y no abrir otra encima
+    set({ status: StatusDeConexion.Conectando, error: null, _conexionActualId: miId })
 
     try {
       // Handshake (crea el socket y lo retorna)
       const sock = await handshake(auth)
+
+      // Si hubo un cleanup (StrictMode, desconexión manual) mientras el handshake estaba en vuelo,
+      // descartamos este socket sin adjuntarle listeners — evita conexiones zombie.
+      if (get()._conexionActualId !== miId) {
+        console.warn('⚠️ Descartando handshake obsoleto.')
+        sock.disconnect()
+        return
+      }
 
       // Asignamos los listeners del store *antes* de conectar
       configurarListeners({
@@ -142,7 +155,8 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     // Si no está en error (clave), vuelve a Quieto.
     const statusToSet = get().status === StatusDeConexion.Error ? StatusDeConexion.Error : StatusDeConexion.Quieto
-    set({ socket: null, status: statusToSet })
+    // Invalidamos el id para que cualquier handshake en vuelo se descarte al resolverse.
+    set({ socket: null, status: statusToSet, _conexionActualId: null })
   },
 
   // Se llama desde onExpired y desde manejarError si el error indica expiración

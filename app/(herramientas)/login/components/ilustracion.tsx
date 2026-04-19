@@ -9,7 +9,7 @@ export default function Ilustracion() {
       className="w-[500px] md:w-[600px] drop-shadow-xl"
       SvgComponent={ilustracionProfe}
       ids={['uno', 'dos', 'tres', 'cuatro'] as const}
-      animation={oscilar(['uno', 'dos', 'tres'], 2, 1, 0.4)}
+      animation={oscilar(['uno', 'cuatro', 'tres'], 2, 0.2, 0.2)}
     />
   )
 }

@@ -185,7 +185,7 @@ export default function EncuestasProfe() {
             </div>
           </div>
 
-          <div className="flex flex-col rounded-xl text-[#6F41CB] items-center bg-white h-[50%]">
+          <div className="flex flex-col rounded-xl text-[#6F41CB] items-center bg-white h-[50%] overflow-y-auto">
             {encuestaEnfocada && (
               <div className="flex flex-col p-6 gap-2 items-center">
                 <p className="flex gap-2 font-bold text-2xl items-center">

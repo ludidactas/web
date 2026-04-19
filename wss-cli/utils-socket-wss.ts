@@ -7,7 +7,7 @@ if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
 }
 
 /** Auth que espera el server de sockets */
-export type SocketServerAuth = { sessionId?: string } & Pasaporte
+export type SocketServerAuth = Pasaporte
 
 /**
  * Definición local del tipo de Socket con nuestro objeto 'auth' tipado.

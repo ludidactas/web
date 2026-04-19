@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { nombreDeFantasia } from '../salas/utils'
 
 const WssSessionBaseSchema = z.object({
-  sessionId: z.string(),
+  sessionId: z.string(), // Legacy
   userIp: z.string().optional(),
   agente: z.string().optional(),
 })

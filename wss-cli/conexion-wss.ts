@@ -35,7 +35,7 @@ type Estado = {
   status: StatusDeConexion
   error: string | null
   // Agregamos una función central para iniciar o re-intentar la conexión
-  iniciarConexion: (auth: Pasaporte, sessionId?: string) => Promise<void>
+  iniciarConexion: (auth: Pasaporte) => Promise<void>
   desconectar: () => void
   // Acciones internas para gestionar transiciones de estado
   _manejarError: (err: any) => void
@@ -51,7 +51,7 @@ export const conexionWss = create<Estado>((set, get) => ({
   session: null,
 
   // Creación/cierre del socket
-  async iniciarConexion(auth, sessionId) {
+  async iniciarConexion(auth) {
     const current = get()
 
     // Nos fijamos si hay un cambio de rol o sala en el socket para saber si es reconexión
@@ -86,7 +86,7 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     try {
       // Handshake (crea el socket y lo retorna)
-      const sock = await handshake({ ...auth, sessionId })
+      const sock = await handshake(auth)
 
       // Asignamos los listeners del store *antes* de conectar
       configurarListeners({

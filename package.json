@@ -12,7 +12,8 @@
     "expose": "npx next dev -H 0.0.0.0",
     "wss:start": "bun run wss/server.ts",
     "wss:dev": "nodemon --watch wss --exec bun run wss/server.ts",
-    "wss:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js"
+    "wss:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js",
+    "images:optimize": "bun run scripts/optimize-images.ts"
   },
   "dependencies": {
     "@iconify-json/streamline-pixel": "^1.2.0",
@@ -89,9 +90,11 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-scroll": "^1.8.10",
+    "@types/sharp": "^0.32.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

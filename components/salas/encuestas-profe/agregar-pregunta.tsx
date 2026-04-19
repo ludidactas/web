@@ -26,7 +26,6 @@ export function AgregarPregunta() {
       const nuevas = [...rs, '']
       setTimeout(() => inputRefs.current[nuevas.length - 1]?.focus(), 0)
       return nuevas
-
     })
   }
 
@@ -65,7 +64,6 @@ export function AgregarPregunta() {
 
   return (
     <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2 md:min-w-[450px] md:max-h-[570px]">
-
       {/* Pregunta */}
       <div>
         <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
@@ -80,8 +78,7 @@ export function AgregarPregunta() {
 
       {/* Opciones */}
       <p className="text-2xl mt-4 text-[#8345FE]  font-bold">Opciones:</p>
-      <div className='flex flex-col gap-1 overflow-y-auto'>
-
+      <div className="flex flex-col gap-1 overflow-y-auto">
         {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
 
         {opciones.length > 0 &&
@@ -94,7 +91,9 @@ export function AgregarPregunta() {
                 value={respuesta}
                 onChange={(e) => actualizarRespuesta(index, e.target.value)}
                 tabIndex={index + 2}
-                ref={(el) => { inputRefs.current[index] = el }}
+                ref={(el) => {
+                  inputRefs.current[index] = el
+                }}
               />
 
               <button
@@ -132,7 +131,7 @@ export function AgregarPregunta() {
             onCheckedChange={setAdmiteMultiplesVotos}
             title=""
           />
-          <p className="text-indigo-500 text-sm">Multiple choice</p>
+          <p className="text-indigo-500 text-sm w-max">Multiple choice</p>
         </div>
 
         {/* Cuántas? */}

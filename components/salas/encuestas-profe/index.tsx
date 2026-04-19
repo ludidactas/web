@@ -20,7 +20,7 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import enfocar from '@/svg/enfocar.svg'
+import enfocar from '@/svg/dist/ui/enfocar.svg'
 import { LdSvg } from '@/components/custom/ld-svg'
 
 export default function EncuestasProfe() {

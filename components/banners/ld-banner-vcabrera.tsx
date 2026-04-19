@@ -1,5 +1,5 @@
 'use client'
-import ConvocatoriaSvg from '@/svg/dist/bannervcabrera.svg'
+import ConvocatoriaSvg from '@/svg/dist/banners/bannervcabrera.svg'
 import BtnSketchySvg from '../custom/ld-btn-sketchy-svg'
 import { LdSvg } from '../custom/ld-svg'
 

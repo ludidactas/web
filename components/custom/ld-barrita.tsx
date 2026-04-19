@@ -1,4 +1,4 @@
-import ProgressBar from '@/svg/dist/progressbar.svg'
+import ProgressBar from '@/svg/dist/ui/progressbar.svg'
 import { LdSvg } from './ld-svg'
 
 export default function LdBarrita({ porcentaje }: { porcentaje: number }) {

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ComponentProps } from 'react'
 import { body } from '../fonts'
 import { LdSvg } from './ld-svg'
-import BotonSvg from '@/svg/dist/boton-2.svg'
+import BotonSvg from '@/svg/dist/ui/boton-2.svg'
 import { secuenciar } from '@/lib/animaciones'
 
 export default function BtnSketchySvg(props: ComponentProps<typeof Link> & { disabled?: boolean }) {

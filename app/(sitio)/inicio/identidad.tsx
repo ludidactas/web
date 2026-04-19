@@ -3,7 +3,7 @@
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
 import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import { LdSvg } from '@/components/custom/ld-svg'
-import QuienesSomos from '@/svg/titles/QuienesSomosSVGO.svg'
+import QuienesSomos from '@/svg/dist/titles/QuienesSomosSVGO.svg'
 import Image from 'next/image'
 import { Hl } from './highlight'
 import Pantalla from './pantalla'

@@ -1,5 +1,5 @@
 import { ComponentProps, useCallback, useState, useRef, memo } from 'react'
-import RoadmapDummy from '@/svg/dist/roadmap_dummy_2.svg'
+import RoadmapDummy from '@/svg/dist/roadmaps/roadmap_dummy_2.svg'
 import { LdSvg } from '../custom/ld-svg'
 
 /**

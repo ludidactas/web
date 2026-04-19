@@ -5,7 +5,7 @@ import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
 import { LdSvg } from '@/components/custom/ld-svg'
-import salasRecursos from '@/svg/titles/SalasRecursosSVGO.svg'
+import salasRecursos from '@/svg/dist/titles/SalasRecursosSVGO.svg'
 import { Hl } from './highlight'
 
 export default function Recursos() {

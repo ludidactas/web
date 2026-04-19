@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Pantalla from './pantalla'
 import ArrowUpLd from '@/components/custom/ld-arrow-up'
 import { LdSvg } from '@/components/custom/ld-svg'
-import contacto from '@/svg/titles/ContactoSVGO.svg'
+import contacto from '@/svg/dist/titles/ContactoSVGO.svg'
 
 export default function Contacto() {
   return (

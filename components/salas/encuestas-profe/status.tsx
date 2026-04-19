@@ -1,7 +1,7 @@
 import { LdSvg } from '@/components/custom/ld-svg'
-import EncuestasIcon from '@/svg/EncuestasTitulo.svg'
-import Conectado from '@/svg/ConectadoSVGO.svg'
-import SalaHeader from '@/svg/EncuestasEstIconSVGO.svg'
+import EncuestasIcon from '@/svg/dist/encuestas/EncuestasTitulo.svg'
+import Conectado from '@/svg/dist/ui/ConectadoSVGO.svg'
+import SalaHeader from '@/svg/dist/encuestas/EncuestasEstIconSVGO.svg'
 
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'

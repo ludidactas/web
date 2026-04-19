@@ -1,6 +1,6 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
-import ilustracionProfe from '@/svg/IlustracionProfe3.svg'
+import ilustracionProfe from '@/svg/dist/ilustraciones/IlustracionProfe3.svg'
 import { oscilar } from '@/lib/animaciones'
 
 export default function Ilustracion() {

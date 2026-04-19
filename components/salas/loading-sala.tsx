@@ -1,7 +1,7 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { cn } from '@/lib/utils'
-import loading from '@/svg/loadingSVGO.svg'
+import loading from '@/svg/dist/ui/loadingSVGO.svg'
 import { Icon } from '@iconify/react'
 
 export interface LoadingSalaProps {

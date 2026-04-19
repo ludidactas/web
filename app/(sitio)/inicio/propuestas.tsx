@@ -6,7 +6,7 @@ import Pantalla from './pantalla'
 import { Hl } from './highlight'
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
 import { LdSvg } from '@/components/custom/ld-svg'
-import propuestas from '@/svg/titles/PropuestasSVGO.svg'
+import propuestas from '@/svg/dist/titles/PropuestasSVGO.svg'
 
 export default function Propuestas() {
   return (

@@ -1,6 +1,6 @@
-import ClasesSVG from '@/svg/bannerclasesSVGO.svg'
+import ClasesSVG from '@/svg/dist/banners/bannerclasesSVGO.svg'
 import { LdSvg } from './ld-svg'
-import BtnNew from '@/svg/btnNuevoSVGO.svg'
+import BtnNew from '@/svg/dist/ui/btnNuevoSVGO.svg'
 import { secuenciar } from '@/lib/animaciones'
 
 export default function BannerClases({ className }: { className?: string }) {

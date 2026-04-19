@@ -187,9 +187,13 @@ export default function EncuestasProfe() {
 
           {/* Overlay */}
           <div className="relative flex-col rounded-xl text-[#6F41CB] items-center bg-white h-[50%]">
-          <LdSvg className='absolute -top-1 right-0 w-32 h-32 z-0' SvgComponent={enfocar} />
+            {!encuestaEnfocada &&(
+              <p className='flex items-center justify-center h-full text-xl '>No hay encuestas enfocadas </p>
+            )}
 
             {encuestaEnfocada && (<>
+                      <LdSvg className='absolute -top-1 right-0 w-32 h-32 z-0' SvgComponent={enfocar} />
+
               <div className='border-4 border-[#6F41CB] animate-border-pulse w-full h-full rounded-xl overflow-y-auto'>
                 <div className=" flex flex-col gap-2 items-center h-full">
                   <div className='flex flex-col p-8 mt-10 w-full'>

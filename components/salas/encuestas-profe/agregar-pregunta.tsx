@@ -64,42 +64,49 @@ export function AgregarPregunta() {
   }
 
   return (
-    <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2 md:min-w-[450px]">
-      <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
-      <textarea
-        className="w-full p-2 resize-none rounded"
-        placeholder="Haz tu pregunta..."
-        value={pregunta}
-        onChange={(e) => setPregunta(e.target.value)}
-        tabIndex={1}
-      />
+    <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2 md:min-w-[450px] md:max-h-[570px]">
 
+      {/* Pregunta */}
+      <div>
+        <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
+        <textarea
+          className="w-full p-2 resize-none rounded"
+          placeholder="Haz tu pregunta..."
+          value={pregunta}
+          onChange={(e) => setPregunta(e.target.value)}
+          tabIndex={1}
+        />
+      </div>
+
+      {/* Opciones */}
       <p className="text-2xl mt-4 text-[#8345FE]  font-bold">Opciones:</p>
+      <div className='flex flex-col gap-1 overflow-y-auto'>
 
-      {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
+        {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
 
-      {opciones.length > 0 &&
-        opciones.map((respuesta, index) => (
-          <div key={index} className="flex gap-4 items-center ml-4">
-            <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
-            <input
-              className="rounded w-full p-1"
-              type="text"
-              value={respuesta}
-              onChange={(e) => actualizarRespuesta(index, e.target.value)}
-              tabIndex={index + 2}
-              ref={(el) => { inputRefs.current[index] = el }}
-            />
+        {opciones.length > 0 &&
+          opciones.map((respuesta, index) => (
+            <div key={index} className="flex gap-2 items-center ml-4">
+              <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
+              <input
+                className="rounded w-full p-1"
+                type="text"
+                value={respuesta}
+                onChange={(e) => actualizarRespuesta(index, e.target.value)}
+                tabIndex={index + 2}
+                ref={(el) => { inputRefs.current[index] = el }}
+              />
 
-            <button
-              className="flex items-center text-rose-700  transition-all duration-100"
-              onClick={() => eliminarRespuesta(index)}
-              tabIndex={-1}
-            >
-              <Icon icon={'lucide:trash-2'} />
-            </button>
-          </div>
-        ))}
+              <button
+                className="flex items-center text-rose-700  transition-all duration-100"
+                onClick={() => eliminarRespuesta(index)}
+                tabIndex={-1}
+              >
+                <Icon icon={'lucide:trash-2'} />
+              </button>
+            </div>
+          ))}
+      </div>
 
       {/* Boton agregar opcion */}
       <button

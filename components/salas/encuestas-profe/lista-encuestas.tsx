@@ -11,9 +11,7 @@ import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, Eye, EyeOff, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
-import { Acciones } from './acciones'
-
+import { Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
@@ -70,7 +68,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               'bg-[#00B0D2]/15 text-[#00B0D2] border-3 border-[#00B0D2]/30',
               'rounded-2xl p-4 md:px-8 cursor-pointer ',
               'hover:bg-[#00B0D2]/25 transition-colors',
-              'data-[state=open]:rounded-b-none'
+              'data-[state=open]:rounded-b-none',
             )}
           >
             <div className="flex gap-4 justify-between items-center ">
@@ -80,15 +78,18 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
+                  <div className='flex items-center gap-2 text-indigo-500 '>
                   <span
-                    className={cn('text-sm', {
+                    className={cn(' text-sm', {
                       'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
                       'text-rose-800': estado === 'Cerrada',
-                      'text-violet-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
+                      'text-indigo-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
                     })}
                   >
                     {estado}
                   </span>
+                  {estado ==='Enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'}/>}
+                  </div>
                   <span className="text-[0.6rem]  text-slate-400 text-right">
                     {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
                   </span>

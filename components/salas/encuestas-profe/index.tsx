@@ -36,16 +36,20 @@ export default function EncuestasProfe() {
     margin: 10,
   }
 
-  const linkOverlay = configSala.link + 'overlay'
-
   const { handleCopy, justCopied } = useClipboard()
 
   if (statusesDeCarga.includes(estado)) {
     return <LoadingSala overlay />
   }
 
+  if (!configSala) {
+    return <LoadingSala overlay />
+  }
+
   if (estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado)
     return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
+
+  const linkOverlay = configSala.link + 'overlay'
 
   return (
     <>

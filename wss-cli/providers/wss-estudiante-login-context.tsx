@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { storeEstudianteLogin } from '../stores/estudiante-login-store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { storeConfig } from '../stores/config-store'
 
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
@@ -10,8 +10,20 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const { config } = storeConfig()
   const { data: session, status } = useSession()
 
+  const [ready, setReady] = useState(false)
+
+  // Al cambiar de sala, limpiamos la config stale para que el guard `!config` funcione
+  useEffect(() => {
+    storeConfig.getState().set(null)
+  }, [idSala])
+
   // Cargamos lo que hubiera en el localStorage
   useEffect(() => {
+    // Esperamos hasta recibir config de la sala y status de auth de google
+    if (!config || status === 'loading') return
+
+    // Levantamos los datos que pudiera tener en el storage
+    // (nombre y dni previamente usadosd esde este device)
     const storedName = localStorage.getItem(`encuestas-nombre-${idSala}`)
     if (storedName) {
       store.setNombre(storedName)
@@ -21,20 +33,24 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
       store.setDNI(storedDni)
     }
 
-    if (!config) return
+    const storeIngresado = localStorage.getItem(`encuestas-ingresado-${idSala}`) === '1'
 
+    // Si tiene todos los datos necesatios, lo ingresamos directo -- no está andando, hay que arreglar una race condition
     if (config.pedir_dni) {
-      store.setIngresado(!!storedDni && !!storedName)
+      store.setIngresado(storeIngresado && !!storedDni && !!storedName)
     } else {
-      store.setIngresado(!!storedName)
+      store.setIngresado(storeIngresado && !!storedName)
     }
-  }, [idSala, config])
 
-  // Derivamos el nombre cosiendo el provisto y el de la sesión de Google
+    setReady(true)
+  }, [idSala, config, status])
+
+  // Derivamos el nombre: si hay sesión de Google usamos ese, sino el que haya provisto
   const nombreFinal = status === 'authenticated' ? session?.user?.name || 'Usuario' : store.nombre
 
   return {
     ...store,
+    ready,
     nombre: nombreFinal,
   }
 }

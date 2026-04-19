@@ -98,9 +98,16 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     })
   )
 
-  // Notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
+  // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
+  socket.on('sala:pedir_config', safe(async () => {
+    socket.emit('sala:config_actualizada', await sala.config())
+  }))
+
+  // Al conectarse un estudiante...
   const emitir = safe(async () => {
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
+
+    // ...notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
     await sala.marcarEstudiantePresente(socket.data.session.userId)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
   })
@@ -115,13 +122,13 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   socket.join([`sala:${idSala}`, `sala:${idSala}:publico`])
 
   const safe = conErrorHandling(socket)
-  const emitir = safe(async () => {
+
+  // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
+  socket.on('sala:pedir_config', safe(async () => {
     const sala = await Salas.get(idSala)
     if (!sala) throw new Error(`Sala ${idSala} no existe!`)
     socket.emit('sala:config_actualizada', await sala.config())
-  })
-
-  await emitir()
+  }))
 }
 
 export const handlersAdmin = async (socket: SocketConSesion) => {

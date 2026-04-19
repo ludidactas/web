@@ -56,6 +56,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
     // Esto triggerea el ingreso (que se renderice el `EncuestaEstudianteProvider`)
     setIngresado(true)
+    localStorage.setItem(`encuestas-ingresado-${idSala}`, `1`)
   }
 
   // Pantalla de sala inválida - Si no estamos en un estado de conexión "sano" y no tenemos config de sala
@@ -93,8 +94,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
   if (averiguandoEstado) return <LoadingSala overlay mensaje="Verificando estado..." />
 
-  if (estado !== StatusDeConexion.Conectado || !configSala)
-    return <LoadingSala overlay mensaje="Conectando con serivdor en vivo..." />
+  if (estado !== StatusDeConexion.Conectado) return <LoadingSala overlay mensaje="Conectando con serivdor en vivo..." />
+
+  if (!configSala) return <LoadingSala overlay mensaje="Solicitando configuración de sala..." />
 
   return (
     <div className="flex flex-col md:flex-row  bg-white shadow-2xl rounded-xl  gap-2 items-center text-center w-fit p-10 m-10">

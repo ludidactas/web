@@ -11,7 +11,7 @@ export default function baseSalaHandlers(socket: Socket | null) {
     montar: () => {
       if (!socket) return
 
-      // Al recibir la configuración actualizada, mostrar un toast y actualizar el state
+      // Registramos el listener ANTES de pedirla para evitar race condition
       socket.on('sala:config_actualizada', (config: ConfigSala) => {
         toast.success(`Configuración actualizada!`)
         setConfig(config)
@@ -21,6 +21,9 @@ export default function baseSalaHandlers(socket: Socket | null) {
       socket.on('wss:error', ({ message }: { message: string }) => {
         toast.error(message)
       })
+
+      // Pedimos la config ahora que el listener ya está registrado
+      socket.emit('sala:pedir_config')
     },
 
     acciones: {},

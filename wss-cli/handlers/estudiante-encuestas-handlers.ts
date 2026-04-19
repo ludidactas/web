@@ -14,6 +14,8 @@ export default function estudianteEncuestasHandlers(socket: Socket | null) {
       socket.on('poll:updated', encuestas.update)
       socket.on('poll:created', encuestas.add)
       socket.on('poll:deleted', encuestas.remove)
+
+      socket.emit('polls:list')
     },
 
     acciones: {

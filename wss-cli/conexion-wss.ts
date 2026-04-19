@@ -109,10 +109,16 @@ export const conexionWss = create<Estado>((set, get) => ({
 
   // Función pública para desconectar (cleanup forzada)
   desconectar(razon = 'Desconexión manual') {
-    const sock = get().socket
+    const { socket: sock, status } = get()
 
     if (isNullish(sock)) {
-      console.warn('❗ No hay socket activo para desconectar.')
+      // Si hay un handshake en curso, cancelamos el estado para que el próximo provider pueda conectar
+      if (status === StatusDeConexion.Conectando) {
+        console.warn('❗ Cancelando conexión en progreso (socket aún no conectado).')
+        get()._limpiarSocket(razon)
+      } else {
+        console.warn('❗ No hay socket activo para desconectar.')
+      }
       return
     }
 

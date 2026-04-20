@@ -5,9 +5,9 @@ import GoogleLogin, { Intent } from './components/login'
 import Image from 'next/image'
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     callbackUrl?: string
-  }
+  }>
 }
 
 export default async function ProfeLoginPage({ searchParams }: Props) {

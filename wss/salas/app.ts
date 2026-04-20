@@ -9,6 +9,8 @@ import { RolEncuesta } from '../tipos'
 import { configSala, ConfigSala } from '../validators/salas'
 import { WssServerSession } from '../validators/session'
 
+console.log(`🏁 Inicializando app de salas... host es`, process.env.NEXT_PUBLIC_HOST)
+
 export interface SalaData {
   id: string
   profe: {

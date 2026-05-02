@@ -1,7 +1,6 @@
-/** Crea el socket y le registra los eventos base */
-
 import { Server } from 'socket.io'
 
+/** Crea el socket y le registra los eventos base */
 export const mount = (port: number) => {
   const io = new Server({
     cors: {

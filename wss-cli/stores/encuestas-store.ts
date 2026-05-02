@@ -1,4 +1,4 @@
-import { Encuesta } from '@/wss/tipos'
+import { Encuesta } from '@/wss/validators/polls'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 

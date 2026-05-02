@@ -1,5 +1,5 @@
 import { SalaData } from '@/wss/salas/app'
-import { Encuesta } from '@/wss/tipos'
+import { Encuesta } from '@/wss/validators/polls'
 import { ConfigSala } from '@/wss/validators/salas'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'

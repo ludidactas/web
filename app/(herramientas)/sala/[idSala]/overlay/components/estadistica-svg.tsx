@@ -1,5 +1,5 @@
 'use client'
-import { Encuesta, Opcion } from '@/wss/tipos'
+import { Encuesta, Opcion } from '@/wss/validators/polls'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
 

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
 
-import { RolEncuesta } from '@/wss/tipos'
+import { RolSala } from '@/wss/validators/auth'
 import { PasaporteEstudiante } from '@/wss/validators/auth'
 
 import baseSalaHandlers from '../handlers/base-sala-handlers'
@@ -15,7 +15,7 @@ import { useWss } from '../use-wss'
 const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
   const { socket, ...wss } = useWss({
     ...auth,
-    rol: RolEncuesta.Estudiante,
+    rol: RolSala.Estudiante,
   })
 
   // Computamos los handlers (que conectan el socket con el state)...

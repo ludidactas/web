@@ -1,4 +1,4 @@
-import { RolEncuesta } from '@/wss/tipos'
+import { RolSala } from '@/wss/validators/auth'
 import { Pasaporte } from '@/wss/validators/auth'
 import { isNullish } from 'remeda'
 import { toast } from 'sonner'
@@ -65,8 +65,8 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     const huboCambioDeSala =
       sockAuth &&
-      sockAuth.rol === RolEncuesta.Estudiante &&
-      auth.rol === RolEncuesta.Estudiante &&
+      sockAuth.rol === RolSala.Estudiante &&
+      auth.rol === RolSala.Estudiante &&
       sockAuth.idSala !== auth.idSala
 
     const huboCambioDeRol = sockAuth && sockAuth.rol !== auth.rol

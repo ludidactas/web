@@ -7,7 +7,7 @@ const redis = new Redis({
 })
 
 /** Keys de hasmaps que tenemos en redis (declaración) */
-type WssHashmaps =
+export type WssHashmaps =
   // Globales de sala
   | 'salas_owners'
   | 'owners_salas'
@@ -18,12 +18,12 @@ type WssHashmaps =
   | `sala:${string}:poll:${string}:votos`
 
 /** Keys globales que tenemos en redis */
-type WssKeys =
+export type WssKeys =
   | `sala:${string}:polls:focused`
   | `sala:${string}:polls:${string}`
 
 /** Keys de sets que tenemos en redis */
-type WssSets =
+export type WssSets =
   | `sala:${string}:polls`
   | `sala:${string}:poll:${string}:votantes`
   | `sala:${string}:poll:${string}:votos:${string}`

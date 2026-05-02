@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox'
 import { NumberInput } from '@/components/ui/number-input'
-import { pollBase } from '@/wss/validators/polls'
+import { crearEncuesta } from '@/wss/validators/polls'
 import { CirclePlus, Infinity, Send } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { toast } from 'sonner'
@@ -46,7 +46,7 @@ export function AgregarPregunta() {
     data: encuesta,
     success,
     error,
-  } = pollBase.safeParse({ pregunta, opciones, admiteAportes, admiteMultiplesVotos, maxMultiplesVotos })
+  } = crearEncuesta.safeParse({ pregunta, opciones, admiteAportes, admiteMultiplesVotos, maxMultiplesVotos })
 
   const postearPregunta = () => {
     if (!success) return

@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
-import db from '../db'
+import db from '../redis'
 import { RolSala } from '../validators/auth'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema } from '../validators/auth'

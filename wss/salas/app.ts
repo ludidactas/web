@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { entries, groupBy, mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
-import db from '../db'
+import db from '../redis'
 import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
 import { RolSala } from '../validators/auth'

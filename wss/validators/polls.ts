@@ -5,7 +5,7 @@ import z from 'zod'
  * La definimos como tipo para conservar los docstrings.
  * El serializador de zod `encuestaSchema` conforma a esta interfaz.
  */
-interface EncuestaConDocstrings {
+interface _Encuesta {
   /** Id estático generado por el server */
   id: string
   /** Texto de la pregunta */
@@ -60,7 +60,7 @@ const encuestaBase = z.object({
   maxMultiplesVotos: z.number().nullable().default(null),
 })
 
-export const encuestaSchema: z.ZodType<EncuestaConDocstrings, z.ZodTypeDef, unknown> = encuestaBase
+export const encuestaSchema: z.ZodType<_Encuesta, z.ZodTypeDef, unknown> = encuestaBase
 
 export const encuestaHidratadaSchema = encuestaBase.extend({
   puedoVotar: z.boolean().optional(),

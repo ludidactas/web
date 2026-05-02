@@ -1,5 +1,5 @@
 import { isEmpty, mapValues, merge } from 'remeda'
-import db from '../db'
+import db from '../redis'
 import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada } from '../validators/polls'
 import { RolSala } from '../validators/auth'

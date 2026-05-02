@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { ExtendedError } from 'socket.io'
-import db from '../db'
+import db from '../redis'
 import { SalaData } from '../salas/app'
 import { RolSala } from '../validators/auth'
 import { SocketConSesion } from './session'

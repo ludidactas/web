@@ -8,7 +8,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { Encuesta } from '@/wss/tipos'
+import { Encuesta } from '@/wss/validators/polls'
 import { Icon } from '@iconify/react'
 import { Info } from 'lucide-react'
 import { ComponentProps } from 'react'

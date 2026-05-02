@@ -1,8 +1,9 @@
 import { isEmpty, mapValues, merge } from 'remeda'
 import db from '../db'
 import { Salas } from '../salas/app'
-import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
-import { crearEncuesta, voteValidator } from '../validators/polls'
+import { Encuesta, EncuestaHidratada } from '../validators/polls'
+import { RolSala } from '../validators/auth'
+import { nuevaEncuesta, voteValidator } from '../validators/polls'
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(email: string) {
@@ -22,27 +23,12 @@ export async function profeSala(email: string) {
   }
 
   async function crearPoll(pollDataUnknown: unknown) {
-    // Parseamos con el validator
-    const pollData = crearEncuesta.parse(pollDataUnknown)
-
-    // La creamos
     const poll: Encuesta = {
+      // Estas dos son server state, no corresponden en el validator:
       id: Date.now().toString(),
-
-      pregunta: pollData.pregunta,
-      opciones: pollData.opciones.map((opc, i) => ({ id: i.toString(), texto: opc, votos: 0 })),
       createdAt: new Date().toISOString(),
-
-      // Estado
-      isOpen: true,
-      isPublished: true,
-      isFocused: false /** @todo Enfocar por default al crear */,
-      isRevealed: false,
-
-      // Estas se configuran solo al crear la encuesta y no se pueden updatear después:
-      admiteAportes: pollData.admiteAportes,
-      admiteMultiplesVotos: pollData.admiteMultiplesVotos,
-      maxMultiplesVotos: pollData.maxMultiplesVotos,
+      // Validamos el resto del input
+      ...nuevaEncuesta.parse(pollDataUnknown),
     }
 
     // Guardamos la config y la registramos en el índice
@@ -236,7 +222,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
-    if (socket.data.session && socket.data.session.rol === RolEncuesta.Estudiante) {
+    if (socket.data.session && socket.data.session.rol === RolSala.Estudiante) {
       return await hidratar(sala.id, poll as Encuesta, socket.data.session.userId)
     }
     return poll

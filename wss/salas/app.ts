@@ -5,7 +5,7 @@ import { RemoteSocket } from 'socket.io'
 import db from '../db'
 import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
-import { RolEncuesta } from '../tipos'
+import { RolSala } from '../validators/auth'
 import { configSala, ConfigSala } from '../validators/salas'
 import { WssServerSession } from '../validators/session'
 
@@ -103,7 +103,7 @@ export namespace Salas {
       if (sala.config.pedir_dni) {
         // Colectamos
         const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
-        const sinDni = sockets.filter((s) => s.data.session.rol === RolEncuesta.Estudiante && !s.data.session.dni)
+        const sinDni = sockets.filter((s) => s.data.session.rol === RolSala.Estudiante && !s.data.session.dni)
 
         // Si no hay ninguno, no hay nada más que hacer
         if (sinDni.length === 0) return

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { RolEncuesta } from '../tipos'
+import { RolSala } from './auth'
 import { randomUUID } from 'crypto'
 import { nombreDeFantasia } from '../salas/utils'
 
@@ -10,7 +10,7 @@ const WssSessionBaseSchema = z.object({
 })
 
 const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
-  rol: z.literal(RolEncuesta.Estudiante),
+  rol: z.literal(RolSala.Estudiante),
   idSala: z.string(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
@@ -26,21 +26,21 @@ const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
 }))
 
 const WssProfeSessionSchema = WssSessionBaseSchema.extend({
-  rol: z.literal(RolEncuesta.Profe),
+  rol: z.literal(RolSala.Profe),
   email: z.string().email(),
   nombre: z.string().min(1),
   avatar: z.string().optional(),
 }).transform((data) => ({ ...data, userId: data.email }))
 
 const WssAdminSessionSchema = WssSessionBaseSchema.extend({
-  rol: z.literal(RolEncuesta.Admin),
+  rol: z.literal(RolSala.Admin),
   email: z.string().email(),
   nombre: z.string().min(1),
   avatar: z.string().optional(),
 }).transform((data) => ({ ...data, userId: data.email }))
 
 const WssPublicSessionSchema = WssSessionBaseSchema.extend({
-  rol: z.literal(RolEncuesta.Publico),
+  rol: z.literal(RolSala.Publico),
 }).transform((data) => ({ ...data, userId: `publico-${data.userIp ?? 'NOIP'}-${randomUUID().split('-')[0]}` }))
 
 /**

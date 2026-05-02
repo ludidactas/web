@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Encuesta } from '@/wss/tipos'
+import { Encuesta } from '@/wss/validators/polls'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { cn } from "@/lib/utils"
 import { BotonEncuesta } from "./acciones"

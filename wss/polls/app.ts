@@ -2,7 +2,7 @@ import { isEmpty, mapValues, merge } from 'remeda'
 import db from '../db'
 import { Salas } from '../salas/app'
 import { Encuesta, EncuestaHidratada, RolEncuesta } from '../tipos'
-import { pollBase, voteValidator } from '../validators/polls'
+import { crearEncuesta, voteValidator } from '../validators/polls'
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(email: string) {
@@ -23,7 +23,7 @@ export async function profeSala(email: string) {
 
   async function crearPoll(pollDataUnknown: unknown) {
     // Parseamos con el validator
-    const pollData = pollBase.parse(pollDataUnknown)
+    const pollData = crearEncuesta.parse(pollDataUnknown)
 
     // La creamos
     const poll: Encuesta = {

@@ -1,7 +1,7 @@
 import { isEmpty } from 'remeda'
 import z from 'zod'
 
-export const pollBase = z
+export const crearEncuesta = z
   .object({
     pregunta: z.string().min(1, 'La pregunta es obligatoria'),
     opciones: z.array(z.string()),
@@ -16,7 +16,7 @@ export const pollBase = z
     message: 'Las opciones no pueden estar vacías',
   })
 
-export type CrearEncuesta = z.infer<typeof pollBase>
+export type CrearEncuesta = z.infer<typeof crearEncuesta>
 
 const voteBase = z.object({
   pollId: z.string().min(1, 'El ID de la encuesta es obligatorio'),

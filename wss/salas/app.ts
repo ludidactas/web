@@ -2,32 +2,22 @@ import { randomUUID } from 'crypto'
 import { entries, groupBy, mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
-import db from '../redis'
 import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
 import { RolSala } from '../validators/auth'
 import { configSala, ConfigSala } from '../validators/salas'
 import { WssServerSession } from '../validators/session'
+import * as db from './db'
 
-export interface SalaData {
-  id: string
-  profe: {
-    email: string
-    nombre?: string
-  }
-  config: ConfigSala
-}
+export type { SalaData } from './db'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
   export async function get(salaId: string) {
     async function getFromDb() {
-      const exists = await db.hexists('salas', salaId)
-      if (!exists) {
-        throw new Error(`La sala ${salaId} no existe`)
-      }
-      const salaDataStr = await db.hget('salas', salaId)
-      return JSON.parse(salaDataStr!) as SalaData
+      const sala = await db.getSala(salaId)
+      if (!sala) throw new Error(`La sala ${salaId} no existe`)
+      return sala
     }
 
     /**
@@ -53,7 +43,7 @@ export namespace Salas {
 
     /** Limpia las que según la sala existen pero que no están en redis (fueron revocadas) */
     async function limpiarEstudiantesSinSesion() {
-      const estudiantesData = await db.hgetall(`sala:${salaId}:estudiantes`)
+      const estudiantesData = await db.getEstudiantes(salaId)
       const userIdsState = Object.keys(estudiantesData)
 
       const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
@@ -65,12 +55,12 @@ export namespace Salas {
       // Las limpiamos de redis
       if (invalidas.length > 0) {
         // Logueamos
-        const emailProfe = await db.hget('salas_owners', salaId)
+        const emailProfe = await db.getEmailProfe(salaId)
         console.warn(`⚠️  Sesiones inválidas en sala ${salaId} de ${emailProfe}:`, invalidas, ` limpiando...`)
 
         // Invalidamos (las borramos de db y de la respuesta que vamos a dar)
         invalidas.forEach((sid) => {
-          db.hdel(`sala:${salaId}:estudiantes`, sid) // de la lista de estudiantes de la sala
+          db.borrarEstudiante(salaId, sid) // de la lista de estudiantes de la sala
         })
       }
 
@@ -129,25 +119,19 @@ export namespace Salas {
 
     /** Quita los inactivos de la lista de la sala */
     async function limpiarEstudiantes() {
-      const estudiantes = await db.hgetall(`sala:${salaId}:estudiantes`)
-
-      const pipeline = db.pipeline()
-
-      for (const [id, activo] of Object.entries(estudiantes)) {
-        if (activo === '0') {
-          pipeline.hdel(`sala:${salaId}:estudiantes`, id)
-        }
-      }
-
-      await pipeline.exec()
+      const estudiantes = await db.getEstudiantes(salaId)
+      const inactivos = Object.entries(estudiantes)
+        .filter(([_, activo]) => activo === '0')
+        .map(([id]) => id)
+      if (inactivos.length > 0) await db.borrarEstudiantes(salaId, inactivos)
     }
 
     async function marcarEstudiantePresente(userId: string) {
-      await db.hset(`sala:${salaId}:estudiantes`, userId, '1')
+      await db.marcarPresente(salaId, userId)
     }
 
     async function marcarEstudianteAusente(userId: string) {
-      await db.hset(`sala:${salaId}:estudiantes`, userId, '0')
+      await db.marcarAusente(salaId, userId)
     }
 
     async function actualizarConfig(payload: unknown) {
@@ -158,7 +142,7 @@ export namespace Salas {
       const nuevaConfig = mergeDeep(configActual, config) as ConfigSala
       sala.config = nuevaConfig
 
-      await db.hset('salas', sala.id, JSON.stringify(sala))
+      await db.guardarSala(sala)
     }
 
     return {
@@ -200,7 +184,7 @@ export namespace Salas {
     const email = socket.data.session.email
 
     // Averiguamos si ya tiene sala
-    const owner = await db.hget('owners_salas', email)
+    const owner = await db.getIdSalaDeProfe(email)
 
     // Si no tiene, le creamos una
     if (!owner) {
@@ -232,16 +216,15 @@ export namespace Salas {
 
     const config_sala = mergeDeep(config_default, config) as ConfigSala
 
-    const salaData: SalaData = {
+    const salaData = {
       id,
       profe: { email, nombre: config_sala.nombre_profe },
       config: { ...config_sala, link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/` }, // Le agregamos el link en la config
     }
 
     // Guardamos en DB
-    await db.hset('salas', id, JSON.stringify(salaData))
-    await db.hset('owners_salas', email, id)
-    await db.hset('salas_owners', id, email)
+    await db.guardarSala(salaData)
+    await db.registrarProfe(email, id)
 
     console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
 
@@ -249,14 +232,14 @@ export namespace Salas {
   }
 
   export async function existe(salaId: string) {
-    return (await db.hexists('salas', salaId)) === 1
+    return db.existeSala(salaId)
   }
 
   /** Funciones de relaciones: */
 
   /** Devuelve la sala dado el email del profe */
   export async function getByEmailProfe(email: string) {
-    const idSala = await db.hget('owners_salas', email)
+    const idSala = await db.getIdSalaDeProfe(email)
     if (!idSala) throw new Error(`El profe ${email} no tiene sala asignada!`)
     return get(idSala)
   }

@@ -3,11 +3,14 @@ import z from 'zod'
 
 /**
  * La definimos como tipo para conservar los docstrings.
- * El serializador de zod conforma a esta interfaz.
+ * El serializador de zod `encuestaSchema` conforma a esta interfaz.
  */
 interface EncuestaConDocstrings {
+  /** Id estático generado por el server */
   id: string
+  /** Texto de la pregunta */
   pregunta: string
+  /** Lista de opciones de respuesta para esta pregunta */
   opciones: Opcion[]
   /** Fecha y hora de creación */
   createdAt: string
@@ -27,11 +30,15 @@ interface EncuestaConDocstrings {
   maxMultiplesVotos: number | null
 }
 
-const textoOpcion = z
-  .string()
-  .trim()
-  .min(1, 'El texto de la opción no puede estar vacío')
-  .max(1400, 'El texto de la opción no puede superar los 1400 caracteres')
+const texto = (de_que: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `El texto de la ${de_que} no puede estar vacío`)
+    .max(1400, `El texto de la ${de_que} no puede superar los 1400 caracteres`)
+
+const textoOpcion = texto('opción')
+const textoPregunta = texto('pregunta')
 
 const opcionSchema = z.object({
   id: z.string(),
@@ -41,19 +48,19 @@ const opcionSchema = z.object({
 
 const encuestaBase = z.object({
   id: z.string(),
-  pregunta: z.string(),
+  pregunta: textoPregunta,
   opciones: z.array(opcionSchema),
   createdAt: z.string(),
-  isOpen: z.boolean(),
-  isPublished: z.boolean(),
-  isFocused: z.boolean(),
-  isRevealed: z.boolean(),
-  admiteAportes: z.boolean(),
-  admiteMultiplesVotos: z.boolean(),
-  maxMultiplesVotos: z.number().nullable(),
+  isOpen: z.boolean().default(true),
+  isPublished: z.boolean().default(true),
+  isFocused: z.boolean().default(false),
+  isRevealed: z.boolean().default(false),
+  admiteAportes: z.boolean().default(false),
+  admiteMultiplesVotos: z.boolean().default(false),
+  maxMultiplesVotos: z.number().nullable().default(null),
 })
 
-export const encuestaSchema: z.ZodType<EncuestaConDocstrings> = encuestaBase
+export const encuestaSchema: z.ZodType<EncuestaConDocstrings, z.ZodTypeDef, unknown> = encuestaBase
 
 export const encuestaHidratadaSchema = encuestaBase.extend({
   puedoVotar: z.boolean().optional(),
@@ -62,7 +69,7 @@ export const encuestaHidratadaSchema = encuestaBase.extend({
 
 export const crearEncuesta = z
   .object({
-    pregunta: z.string().min(1, 'La pregunta es obligatoria'),
+    pregunta: textoPregunta,
     opciones: z.array(textoOpcion),
     admiteAportes: z.boolean().default(false),
     admiteMultiplesVotos: z.boolean().default(false),

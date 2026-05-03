@@ -1,13 +1,13 @@
-import { Encuesta } from '@/wss/validators/polls'
+import { EncuestaConVotos } from '@/wss/validators/polls'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
 interface EncuestaState {
-  items: Encuesta[]
-  add: (item: Encuesta) => void
-  update: (item: Encuesta) => void
+  items: EncuestaConVotos[]
+  add: (item: EncuestaConVotos) => void
+  update: (item: EncuestaConVotos) => void
   remove: (item: { pollId: string }) => void
-  set: (items: Encuesta[]) => void
+  set: (items: EncuestaConVotos[]) => void
 }
 
 export const storeEncuestas = create<EncuestaState>()(

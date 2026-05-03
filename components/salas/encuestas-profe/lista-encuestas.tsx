@@ -5,7 +5,7 @@ import { Accordion, AccordionContent } from '@/components/ui/accordion'
 import { ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import profeUps from '@/svg/dist/ilustraciones/ProfeUpsSVGO.svg'
-import { Encuesta } from '@/wss/validators/polls'
+import { EncuestaConVotos } from '@/wss/validators/polls'
 import { Icon, Icon as Iconito } from '@iconify/react'
 import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
@@ -50,7 +50,7 @@ export function ListaEncuestas() {
   )
 }
 
-function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
+function DisplayEncuesta({ encuesta }: { encuesta: EncuestaConVotos }) {
   const { justCopied, handleCopy } = useClipboard()
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')

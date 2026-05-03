@@ -43,8 +43,9 @@ const textoPregunta = texto('pregunta')
 const opcionSchema = z.object({
   id: z.string(),
   texto: textoOpcion,
-  votos: z.number(),
 })
+
+const opcionConVotosSchema = opcionSchema.extend({ votos: z.number() })
 
 const encuestaBase = z.object({
   id: z.string(),
@@ -62,7 +63,11 @@ const encuestaBase = z.object({
 
 export const encuestaSchema: z.ZodType<_Encuesta, z.ZodTypeDef, unknown> = encuestaBase
 
-export const encuestaHidratadaSchema = encuestaBase.extend({
+const encuestaConVotosBase = encuestaBase.extend({
+  opciones: z.array(opcionConVotosSchema),
+})
+
+export const encuestaHidratadaSchema = encuestaConVotosBase.extend({
   puedoVotar: z.boolean().optional(),
   votosEmitidos: z.array(z.string()).optional(),
 })
@@ -93,15 +98,30 @@ export const voteValidator = z.discriminatedUnion('tipo', [
 
 export const nuevaEncuesta = crearEncuesta.transform((data) => ({
   ...data,
-  opciones: data.opciones.map((opc, i): Opcion => ({ id: i.toString(), texto: opc, votos: 0 })),
+  opciones: data.opciones.map((opc, i): Opcion => ({ id: i.toString(), texto: opc })),
   isOpen: true,
   isPublished: true,
   isFocused: false, // @todo Enfocar por default al crear
   isRevealed: false,
 }))
 
+/** Tipo Encuesta almacenado en el server: tiene los flags de config y las opciones pero no votos */
 export type Encuesta = z.infer<typeof encuestaSchema>
-export type CrearEncuesta = z.infer<typeof crearEncuesta>
-export type VotarEncuesta = z.infer<typeof voteValidator>
-export type Opcion = z.infer<typeof opcionSchema>
+
+/** Encuesta hidratada con votos para mostrarla en el frontend */
+export type EncuestaConVotos = z.infer<typeof encuestaConVotosBase>
+
+/** Encuesta hidratada con información de user (ya voté? qué opción? puedo serguir votando? etc) */
 export type EncuestaHidratada = z.infer<typeof encuestaHidratadaSchema>
+
+/** Form de creación de encuesta (y validador en el server) */
+export type CrearEncuesta = z.infer<typeof crearEncuesta>
+
+/** Info de un voto */
+export type VotarEncuesta = z.infer<typeof voteValidator>
+
+/** Opción dentro de la encuesta, solo info base */
+export type Opcion = z.infer<typeof opcionSchema>
+
+/** Opción con info de votos */
+export type OpcionConVotos = z.infer<typeof opcionConVotosSchema>

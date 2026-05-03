@@ -1,6 +1,6 @@
 'use client'
 
-import { Encuesta, Opcion } from '@/wss/validators/polls'
+import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 
@@ -77,7 +77,7 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 }
 
 // Componente para una encuesta individual
-export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
+export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; config: EstadisticaSvgConfig }) {
   if (isNullish(encuesta)) {
     return (
       <div className="bg-white w-full rounded-xl">
@@ -157,7 +157,7 @@ function BarraEstadistica({
   maxPercentage,
   barColor,
 }: {
-  opcion: Opcion
+  opcion: OpcionConVotos
   percentage: number
   maxPercentage?: number
   barHeight: number

@@ -1,6 +1,6 @@
 import { isEmpty, merge } from 'remeda'
 import { Salas } from '../salas/app'
-import { Encuesta, EncuestaHidratada } from '../validators/polls'
+import { Encuesta, EncuestaConVotos, EncuestaHidratada } from '../validators/polls'
 import { RolSala } from '../validators/auth'
 import { nuevaEncuesta, voteValidator } from '../validators/polls'
 import * as db from './db'
@@ -165,7 +165,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 
       // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
       const nuevoId = poll.opciones.length.toString()
-      poll.opciones.push({ id: nuevoId, texto: voto.aporte, votos: 0 })
+      poll.opciones.push({ id: nuevoId, texto: voto.aporte })
 
       console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
       await db.guardarEncuesta(idSala, poll)
@@ -254,7 +254,7 @@ export async function hidratadas(salaId: string, userId: string) {
 // Helpers
 
 /** Merge los votos del hash dedicado en el objeto poll. Siempre llamar antes de devolver un poll a un consumer externo. */
-async function pollConVotos(salaId: string, pollId: string, poll: Encuesta): Promise<Encuesta> {
+async function pollConVotos(salaId: string, pollId: string, poll: Encuesta): Promise<EncuestaConVotos> {
   const votos = await db.getVotos(salaId, pollId)
   return {
     ...poll,

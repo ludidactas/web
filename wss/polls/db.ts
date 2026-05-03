@@ -76,7 +76,7 @@ export async function limpiarEnfocada(salaId: string): Promise<void> {
 /** Devuelve los conteos de votos por ID de opción. */
 export async function getVotos(salaId: string, pollId: string): Promise<Record<string, number>> {
   const raw = await db.hgetall(k.votos(salaId, pollId))
-  return raw ? mapValues(raw, (v) => parseInt(v)) : {}
+  return raw ? mapValues(raw, (v) => parseInt(v)) : {} // hgetall devuelve strings
 }
 
 /** Incrementa atómicamente el contador de votos de una opción. */

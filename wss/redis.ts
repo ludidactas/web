@@ -26,6 +26,7 @@ export type WssKeys =
 export type WssSets =
   | `sala:${string}:polls`
   | `sala:${string}:poll:${string}:votantes`
+  | `sala:${string}:poll:${string}:opcion:${string}:votantes`
   | `sala:${string}:poll:${string}:votos:${string}`
 
 /** Sobreescribimos los tipos de redis para auto-ayudarnos con hints */

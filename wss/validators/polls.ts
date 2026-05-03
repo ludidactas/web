@@ -45,7 +45,11 @@ const opcionSchema = z.object({
   texto: textoOpcion,
 })
 
-const opcionConVotosSchema = opcionSchema.extend({ votos: z.number() })
+/** Opción con vantidad de votos */
+const opcionConCantidadVotos = opcionSchema.extend({ votos: z.number() })
+
+/** Opción con la lista de votantes */
+const opcionConVotantes = opcionConCantidadVotos.extend({ votantes: z.array(z.string()) })
 
 const encuestaBase = z.object({
   id: z.string(),
@@ -63,14 +67,22 @@ const encuestaBase = z.object({
 
 export const encuestaSchema: z.ZodType<_Encuesta, z.ZodTypeDef, unknown> = encuestaBase
 
-const encuestaConVotosBase = encuestaBase.extend({
-  opciones: z.array(opcionConVotosSchema),
+/** Encuesta con votos, es decir hidratada para el público general */
+const encuestaConVotos = encuestaBase.extend({
+  opciones: z.array(opcionConCantidadVotos),
 })
 
-export const encuestaHidratadaSchema = encuestaConVotosBase.extend({
+/** Encuesta con votantes, solo para el profe */
+const encuestaConVotantes = encuestaBase.extend({
+  opciones: z.array(opcionConVotantes),
+})
+
+export const encuestaHidratadaEstudiante = encuestaConVotos.extend({
   puedoVotar: z.boolean().optional(),
   votosEmitidos: z.array(z.string()).optional(),
 })
+
+export const encuestaHidratadaProfe = encuestaConVotantes
 
 export const crearEncuesta = z
   .object({
@@ -109,10 +121,13 @@ export const nuevaEncuesta = crearEncuesta.transform((data) => ({
 export type Encuesta = z.infer<typeof encuestaSchema>
 
 /** Encuesta hidratada con votos para mostrarla en el frontend */
-export type EncuestaConVotos = z.infer<typeof encuestaConVotosBase>
+export type EncuestaConVotos = z.infer<typeof encuestaConVotos>
 
 /** Encuesta hidratada con información de user (ya voté? qué opción? puedo serguir votando? etc) */
-export type EncuestaHidratada = z.infer<typeof encuestaHidratadaSchema>
+export type EncuestaHidratadaEstudiante = z.infer<typeof encuestaHidratadaEstudiante>
+
+/** Encuesta hidratada con información de profe (quién votó cada opción?) */
+export type EncuestaHidratadaProfe = z.infer<typeof encuestaHidratadaProfe>
 
 /** Form de creación de encuesta (y validador en el server) */
 export type CrearEncuesta = z.infer<typeof crearEncuesta>
@@ -124,4 +139,4 @@ export type VotarEncuesta = z.infer<typeof voteValidator>
 export type Opcion = z.infer<typeof opcionSchema>
 
 /** Opción con info de votos */
-export type OpcionConVotos = z.infer<typeof opcionConVotosSchema>
+export type OpcionConVotos = z.infer<typeof opcionConCantidadVotos>

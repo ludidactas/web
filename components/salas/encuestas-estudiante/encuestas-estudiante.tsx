@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
 import { cn } from '@/lib/utils'
 import IconEnc from '@/svg/dist/encuestas/EncuestaIconSVGO.svg'
-import { EncuestaHidratada } from '@/wss/validators/polls'
+import { EncuestaHidratadaEstudiante } from '@/wss/validators/polls'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Circle, CircleCheckBig, MessageCircleQuestionIcon, Send, Square, SquareCheckBig } from 'lucide-react'
@@ -93,12 +93,12 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   )
 }
 
-function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
+function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }) {
   const { votar } = useConexionEstudiante()
 
   const emitidos = encuesta.votosEmitidos ?? []
 
-  const [seleccion, setSeleccion] = useState<EncuestaHidratada['opciones'][number]['id'][]>(emitidos)
+  const [seleccion, setSeleccion] = useState<EncuestaHidratadaEstudiante['opciones'][number]['id'][]>(emitidos)
 
   useEffect(() => {
     // Si la encuesta cambia actualizamos las opciones seleccionadas a las que diga el server.
@@ -257,11 +257,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
         )}
       </ol>
 
-<span className="text-xs text-center text-slate-400">
-   {encuesta.admiteAportes && 'Podés añadir respuestas'}
-</span>
+      <span className="text-xs text-center text-slate-400">{encuesta.admiteAportes && 'Podés añadir respuestas'}</span>
       <span className="text-xs text-center text-slate-400">
-       
         {/* Si no admite múltiples puede seleccionar una */}
         {!encuesta.admiteMultiplesVotos && 'Podés eleccionar una sola opción.'}
 
@@ -300,7 +297,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratada }) {
   )
 }
 
-function HeaderEncuestaEstudiante({ encuesta }: { encuesta: EncuestaHidratada }) {
+function HeaderEncuestaEstudiante({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }) {
   return (
     <div className="flex gap-4 md:gap-6 items-start justify-between rounded-xl">
       {/* Icono */}

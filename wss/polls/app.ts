@@ -1,6 +1,6 @@
 import { isEmpty, merge } from 'remeda'
 import { Salas } from '../salas/app'
-import { Encuesta, EncuestaConVotos, EncuestaHidratada } from '../validators/polls'
+import { Encuesta, EncuestaConVotos, EncuestaHidratadaEstudiante, EncuestaHidratadaProfe } from '../validators/polls'
 import { RolSala } from '../validators/auth'
 import { nuevaEncuesta, voteValidator } from '../validators/polls'
 import * as db from './db'
@@ -209,14 +209,39 @@ export async function estudianteSala(idSala: string, userId: string) {
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
     if (socket.data.session && socket.data.session.rol === RolSala.Estudiante) {
-      return await hidratar(sala.id, poll as Encuesta, socket.data.session.userId)
+      return await hidratarParaEstudiante(sala.id, poll as Encuesta, socket.data.session.userId)
+    }
+    if (
+      socket.data.session &&
+      (socket.data.session.rol === RolSala.Profe || socket.data.session.rol === RolSala.Admin)
+    ) {
+      return await hidratarParaProfe(sala.id, poll as Encuesta)
     }
     return poll
   })
 }
 
+/** Hidrata una encuesta con la info para profe (quien votó cada opción) */
+export async function hidratarParaProfe(idSala: string, poll: Encuesta): Promise<EncuestaHidratadaProfe> {
+  const opcionesConVotantes = await Promise.all(
+    poll.opciones.map(async (opc) => {
+      const votantes = await db.getVotantesOpcion(idSala, poll.id, opc.id)
+      return { ...opc, votantes, votos: votantes.length } as const
+    })
+  )
+
+  return {
+    ...poll,
+    opciones: opcionesConVotantes,
+  }
+}
+
 /** Hidrata una encuesta con la info del estudiante (si ya votó y qué opción) */
-export async function hidratar(idSala: string, poll: Encuesta, idVotante: string): Promise<EncuestaHidratada> {
+export async function hidratarParaEstudiante(
+  idSala: string,
+  poll: Encuesta,
+  idVotante: string
+): Promise<EncuestaHidratadaEstudiante> {
   const [votosEmitidos, pollActual] = await Promise.all([
     db.getVotosUsuario(idSala, poll.id, idVotante),
     pollConVotos(idSala, poll.id, poll),
@@ -254,12 +279,14 @@ export async function hidratadas(salaId: string, userId: string) {
     (p): p is Encuesta => p !== null
   )
 
-  return await Promise.all(polls.filter((e) => e.isPublished).map((poll) => hidratar(sala.id, poll, userId)))
+  return await Promise.all(
+    polls.filter((e) => e.isPublished).map((poll) => hidratarParaEstudiante(sala.id, poll, userId))
+  )
 }
 
 // Helpers
 
-/** Merge los votos del hash dedicado en el objeto poll. Siempre llamar antes de devolver un poll a un consumer externo. */
+/** Devuelve la encuesta con cantidad de votos. */
 async function pollConVotos(salaId: string, pollId: string, poll: Encuesta): Promise<EncuestaConVotos> {
   const votos = await db.getVotos(salaId, pollId)
   return {

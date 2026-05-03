@@ -31,6 +31,14 @@ export const handlersEncuestasProfe = async (socket: SocketProfe) => {
     })
   )
 
+  // Pide todos los votos dentro de la sala de un usuario
+  socket.on(
+    'poll:votos:usuario',
+    safe(async ({ userId }) => {
+      socket.emit('poll:votos:usuario', { userId, votos: await profe.consultarVotosPorUsuario({ userId }) })
+    })
+  )
+
   socket.on(
     'poll:open',
     safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isOpen: true })))

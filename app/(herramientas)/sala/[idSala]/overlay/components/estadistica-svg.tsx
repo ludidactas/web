@@ -1,18 +1,18 @@
 'use client'
-import { Encuesta, Opcion } from '@/wss/validators/polls'
+import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
 
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 import { isNullish } from 'remeda'
 import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
-import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
   const { estado, error } = useConexionEstudiante()
-  const { items: encuestas } = storeEncuestas()
+  const { items: encuestas } = storeEncuestasEstudiante()
   const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
 
   return (
@@ -34,7 +34,7 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 }
 
 // Componente para una encuesta individual
-export function EncuestaSVG({ encuesta, config }: { encuesta: Encuesta; config: EstadisticaSvgConfig }) {
+export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; config: EstadisticaSvgConfig }) {
   if (isNullish(encuesta)) {
     return (
       <div className="bg-white w-full rounded-xl">
@@ -115,7 +115,7 @@ function BarraEstadistica({
   maxPercentage,
   barColor,
 }: {
-  opcion: Opcion
+  opcion: OpcionConVotos
   percentage: number
   maxPercentage?: number
   barHeight: number

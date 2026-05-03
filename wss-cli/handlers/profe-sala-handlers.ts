@@ -1,14 +1,14 @@
 import { SalaData } from '@/wss/salas/app'
-import { Encuesta } from '@/wss/validators/polls'
+import { EncuestaHidratadaProfe } from '@/wss/validators/polls'
 import { ConfigSala } from '@/wss/validators/salas'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
-import { Estudiante, storeEstudiantes } from '../stores/estudiantes-store'
-import { storeEncuestas } from '../stores/encuestas-store'
 import { storeConfig } from '../stores/config-store'
+import { storeEncuestasProfe } from '../stores/encuestas-store'
+import { Estudiante, storeEstudiantes } from '../stores/estudiantes-store'
 
 export default function profeSalaHandlers(socket: Socket | null) {
-  const almacenEncuestas = storeEncuestas.getState()
+  const almacenEncuestas = storeEncuestasProfe.getState()
   const almacenEstudiantes = storeEstudiantes.getState()
   const almacenConfig = storeConfig.getState()
 
@@ -39,7 +39,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
           config,
         }: {
           _sala: SalaData
-          polls: Encuesta[]
+          polls: EncuestaHidratadaProfe[]
           estudiantes: Estudiante[]
           config: ConfigSala
         }) => {

@@ -1,13 +1,21 @@
-import useClipboard from '@/components/hooks/use-clipboard'
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { CircleCheckBig, Copy, Download, Eraser, ListCollapse, Settings, SquareCheckBig, Users, X } from 'lucide-react'
+import { PropsWithChildren, useState } from 'react'
+import { isEmpty } from 'remeda'
+
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { cn, exportarPlanilla } from '@/lib/utils'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
-import { Copy, Download, Eraser, SquareCheckBig, Users, X, Settings } from 'lucide-react'
-import { PropsWithChildren, useState } from 'react'
+
 import PanelConfigSala from './panel-config-sala'
 
+import DebugPanel from '@/components/ui/debug-panel'
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+
+import useClipboard from '@/components/hooks/use-clipboard'
+
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 
 export const ListaEstudiantes = () => {
@@ -32,7 +40,9 @@ export const ListaEstudiantes = () => {
     .join('\n')
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="relative flex flex-col h-full">
+      <DebugPanel classNames={{ button: 'absolute ' }} data={estudiantes} title="Estudiantes en sala" />
+
       {/* Encabezado */}
       <div className="flex justify-between items-center rounded-xl gap-2 mb-4">
         <h1 className="flex gap-2 md:gap-4 text-xl md:text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
@@ -108,9 +118,9 @@ export const ListaEstudiantes = () => {
             {estudiantes.map((e) => (
               <li
                 key={e.userId}
-                className={cn({
-                  'text-black flex gap-2 ': e.conectado,
-                  'text-slate-400 flex gap-2 grayscale': !e.conectado,
+                className={cn('flex items-center gap-2', {
+                  'text-black ': e.conectado,
+                  'text-slate-400 grayscale': !e.conectado,
                 })}
               >
                 {/* Avatar */}
@@ -121,7 +131,6 @@ export const ListaEstudiantes = () => {
                     backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
                   }}
                 >
-                  {/* {e.icono && <Iconito icon={e.icono as IconosDisponibles}/>} */}
                   {!e.avatar && getInitials(e.nombre || 'Anonimo')}
                 </div>
                 {/* Nombre, email y DNI */}
@@ -130,6 +139,10 @@ export const ListaEstudiantes = () => {
                   {!e.es_anonimo && <span className="text-teal-500">{e.userId}</span>}
                   {e.es_anonimo && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
+
+                <TooltipVotosEstudiante userId={e.userId}>
+                  <ListCollapse className="ml-auto cursor-pointer text-gray-500 hover:text-cyan-500" />
+                </TooltipVotosEstudiante>
               </li>
             ))}
           </ul>
@@ -164,5 +177,68 @@ export const ListaMobile = ({ children }: PropsWithChildren) => {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function TooltipVotosEstudiante({ children, userId }: PropsWithChildren & { userId: string }) {
+  const { pedirVotosEstudiante } = useConexionProfe()
+  const { items: estudiantes } = storeEstudiantes()
+  const { items: encuestas } = storeEncuestasProfe()
+
+  const estudiante = estudiantes.find((e) => e.userId === userId)
+
+  if (!estudiante) return children
+
+  return (
+    <Tooltip>
+      <TooltipTrigger onMouseEnter={() => pedirVotosEstudiante(userId)} asChild>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent asChild>
+        <div className="text-sm rounded-md flex flex-col gap-2 max-h-[40vh] max-w-md overflow-y-auto pl-2 pr-4">
+          {!estudiante.votos && 'Cargando...'}
+          {estudiante.votos && isEmpty(estudiante.votos) && 'No votó todavía'}
+          {estudiante.votos &&
+            Object.entries(estudiante.votos).map(([idEncuesta, idsOpciones]) => {
+              // Buscamos la encuesta por id en el storage para renderizar el nombre
+              const encuesta = encuestas.find((e) => e.id === idEncuesta)
+
+              if (!encuesta) return <div className="text-gray-500">Encuesta {idEncuesta} no encontrada</div>
+
+              const textoPregunta =
+                encuesta.pregunta.length > 120 ? encuesta.pregunta.slice(0, 120) + '...' : encuesta.pregunta
+
+              return (
+                <div key={idEncuesta} className="hover:bg-[#d9f3f8] py-1 px-2 rounded">
+                  <strong>{textoPregunta}</strong>
+                  <div>
+                    {idsOpciones.map((idOpcion, i) => {
+                      // Buscamos la opción por id en la encuesta para renderizar el texto
+                      const opcion = encuesta.opciones.find((o) => o.id === idOpcion)
+
+                      if (!opcion)
+                        return (
+                          <p key={i} className="text-gray-500">
+                            Opción {idOpcion} no encontrada
+                          </p>
+                        )
+
+                      const textoOpcion = opcion.texto.length > 120 ? opcion.texto.slice(0, 120) + '...' : opcion.texto
+
+                      return (
+                        <p key={i} className="pl-1 flex gap-0.5 items-center text-xs">
+                          {encuesta.admiteMultiplesVotos && <SquareCheckBig className="w-3 h-3 shrink-0" />}
+                          {!encuesta.admiteMultiplesVotos && <CircleCheckBig className="w-3 h-3 shrink-0" />}
+                          {textoOpcion}
+                        </p>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   )
 }

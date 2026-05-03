@@ -72,6 +72,7 @@ export namespace Salas {
     async function listarEstudiantes() {
       await limpiarEstudiantesSinSesion()
 
+      // Targeteamos a las sesiones attacheadas a los sockets (agrupadas por userId)
       const socketsConectados = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
       const socketsPorUsuario = groupBy(socketsConectados, (s) => s.data.session.userId)
 

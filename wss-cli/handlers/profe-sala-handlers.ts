@@ -1,5 +1,5 @@
 import { SalaData } from '@/wss/salas/app'
-import { Encuesta } from '@/wss/validators/polls'
+import { EncuestaConVotos } from '@/wss/validators/polls'
 import { ConfigSala } from '@/wss/validators/salas'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
@@ -39,7 +39,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
           config,
         }: {
           _sala: SalaData
-          polls: Encuesta[]
+          polls: EncuestaConVotos[]
           estudiantes: Estudiante[]
           config: ConfigSala
         }) => {

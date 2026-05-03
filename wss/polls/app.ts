@@ -85,6 +85,10 @@ export async function profeSala(email: string) {
       await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
     }
     await db.borrarVotantes(salaId, pollId)
+
+    const votos = await db.getVotos(salaId, pollId)
+    await Promise.all(Object.keys(votos).map((optionId) => db.borrarVotantesOpcion(salaId, pollId, optionId)))
+
     await db.limpiarVotos(salaId, pollId)
 
     // Si estaba enfocada, desenfocamos
@@ -173,6 +177,7 @@ export async function estudianteSala(idSala: string, userId: string) {
       // Voto inicial
       await db.incrementarVoto(idSala, pollId, nuevoId)
       await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
+      await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
     }
 
     if (tipo === 'opcion') {
@@ -181,6 +186,7 @@ export async function estudianteSala(idSala: string, userId: string) {
       // Incremento atómico
       await db.incrementarVoto(idSala, pollId, voto.optionId)
       await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
+      await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
     }
 
     // Registramos al estudiante como votante

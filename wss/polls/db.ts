@@ -12,6 +12,8 @@ const k = {
   votosUsuario: (salaId: string, pollId: string, userId: string): WssSets =>
     `sala:${salaId}:poll:${pollId}:votos:${userId}`,
   votantes: (salaId: string, pollId: string): WssSets => `sala:${salaId}:poll:${pollId}:votantes`,
+  votantesOpcion: (salaId: string, pollId: string, optionId: string): WssSets =>
+    `sala:${salaId}:poll:${pollId}:opcion:${optionId}:votantes`,
 }
 
 // -- Encuestas --
@@ -129,4 +131,26 @@ export async function borrarVotantes(salaId: string, pollId: string): Promise<vo
 /** Verifica si un usuario ya votó en la encuesta. */
 export async function yaVoto(salaId: string, pollId: string, userId: string): Promise<boolean> {
   return !!(await db.sismember(k.votantes(salaId, pollId), userId))
+}
+
+// -- Votantes por opción --
+
+/** Devuelve los IDs de los usuarios que votaron una opción específica. */
+export async function getVotantesOpcion(salaId: string, pollId: string, optionId: string): Promise<string[]> {
+  return db.smembers(k.votantesOpcion(salaId, pollId, optionId))
+}
+
+/** Registra a un usuario como votante de una opción específica. */
+export async function addVotanteOpcion(
+  salaId: string,
+  pollId: string,
+  optionId: string,
+  userId: string
+): Promise<void> {
+  await db.sadd(k.votantesOpcion(salaId, pollId, optionId), userId)
+}
+
+/** Borra el set de votantes de una opción específica. */
+export async function borrarVotantesOpcion(salaId: string, pollId: string, optionId: string): Promise<void> {
+  await db.del(k.votantesOpcion(salaId, pollId, optionId))
 }

@@ -18,13 +18,13 @@ import DebugPanel from '@/components/ui/debug-panel'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
-import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
 import { intersection } from 'remeda'
+import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, error } = useConexionEstudiante()
 
-  const { items: encuestas } = storeEncuestas()
+  const { items: encuestas } = storeEncuestasEstudiante()
 
   const { config } = storeConfig()
 

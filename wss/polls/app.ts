@@ -13,10 +13,16 @@ export async function profeSala(email: string) {
 
   async function listarEncuestas() {
     const pollIds = await db.getIdsEncuestas(salaId)
-    const polls = (await Promise.all(pollIds.map((pollId) => db.getEncuesta(salaId, pollId)))).filter(
-      (p): p is Encuesta => p !== null
-    )
-    return await Promise.all(polls.map((p) => pollConVotos(salaId, p.id, p)))
+    const polls = (
+      await Promise.all(
+        pollIds.map(async (pollId) => {
+          const poll = await db.getEncuesta(salaId, pollId)
+          if (poll) return await hidratarParaProfe(salaId, poll)
+          return null
+        })
+      )
+    ).filter((p): p is EncuestaHidratadaProfe => p !== null)
+    return polls
   }
 
   async function crearPoll(pollDataUnknown: unknown) {
@@ -223,6 +229,7 @@ export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>,
 
 /** Hidrata una encuesta con la info para profe (quien votó cada opción) */
 export async function hidratarParaProfe(idSala: string, poll: Encuesta): Promise<EncuestaHidratadaProfe> {
+  /** @todo: esto podría moverse a la db para batchear un solo request para todos los polls y todas las opciones */
   const opcionesConVotantes = await Promise.all(
     poll.opciones.map(async (opc) => {
       const votantes = await db.getVotantesOpcion(idSala, poll.id, opc.id)

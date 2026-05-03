@@ -1,11 +1,11 @@
 import { Socket } from 'socket.io-client'
 
-import { storeEncuestas } from '../stores/encuestas-store'
 import { CrearEncuesta } from '@/wss/validators/polls'
+import { storeEncuestasProfe } from '../stores/encuestas-store'
 
 /** Modela las acciones del server */
 const profeEncuestasHandlers = (socket: Socket | null) => {
-  const store = storeEncuestas.getState()
+  const store = storeEncuestasProfe.getState()
 
   return {
     montar: () => {

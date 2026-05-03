@@ -13,7 +13,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   const sala = await Salas.obtenerOCrear(socket)
   const profe = await profeSala(sala.profe.email)
 
-  // // Rooms
+  // Rooms
   socket.join([`profe:${socket.data.session.email}`, `sala:${sala.id}`, `sala:${sala.id}:profe`])
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)

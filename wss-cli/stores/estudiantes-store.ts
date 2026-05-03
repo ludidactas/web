@@ -6,6 +6,7 @@ export interface Estudiante extends WssEstudianteSession {
   conectado: boolean
   email?: string
   avatar?: string
+  votos?: Record<string, string[]>
 }
 
 interface EstudianteState {
@@ -15,6 +16,7 @@ interface EstudianteState {
   set: (items: Estudiante[]) => void
   connect: (item: Estudiante) => void
   disconnect: (id: string) => void
+  cargarVotosEstudiante: (params: { userId: string; votos: Record<string, string[]> }) => void
 }
 
 export const storeEstudiantes = create<EstudianteState>()(
@@ -43,6 +45,11 @@ export const storeEstudiantes = create<EstudianteState>()(
     disconnect: (id) =>
       set((state) => ({
         items: state.items.map((e) => (e.userId === id ? { ...e, conectado: false } : e)),
+      })),
+
+    cargarVotosEstudiante: ({ userId, votos }: { userId: string; votos: Record<string, string[]> }) =>
+      set((state) => ({
+        items: state.items.map((e) => (e.userId === userId ? { ...e, votos: votos || {} } : e)),
       })),
   }))
 )

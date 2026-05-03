@@ -55,6 +55,24 @@ export async function profeSala(email: string) {
     )
   }
 
+  async function consultarVotosPorUsuario({ pollId, userId }: { pollId?: string; userId: string }) {
+    if (pollId) {
+      await assertPollExists(salaId, pollId)
+      return await db.getVotosUsuario(salaId, pollId, userId)
+    }
+    // Si no me pasan pollId, devuelvo un objeto con los votos de ese usuario en todas las encuestas
+    const pollIds = await db.getIdsEncuestas(salaId)
+    const votosPorEncuesta: Record<string, string[]> = {}
+    await Promise.all(
+      // Juntamos todas las opciones (votos = string[]) para cada poll
+      pollIds.map(async (pid) => {
+        const votos = await db.getVotosUsuario(salaId, pid, userId)
+        if (votos.length > 0) votosPorEncuesta[pid] = votos
+      })
+    )
+    return votosPorEncuesta
+  }
+
   async function updatePoll(pollId: string, update: Partial<Encuesta>) {
     await assertPollExists(salaId, pollId)
 
@@ -131,6 +149,7 @@ export async function profeSala(email: string) {
     listarEncuestas,
     consultarResultados,
     consultarVotantes,
+    consultarVotosPorUsuario,
     crearPoll,
     updatePoll,
     deletePoll,

@@ -10,7 +10,7 @@ import PanelConfigSala from './panel-config-sala'
 import DebugPanel from '@/components/ui/debug-panel'
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 
 import useClipboard from '@/components/hooks/use-clipboard'
 
@@ -125,7 +125,7 @@ export const ListaEstudiantes = () => {
               >
                 {/* Avatar */}
                 <div
-                  className={`w-10 h-10 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+                  className={`w-10 h-10 shrink-0 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
                   style={{
                     backgroundImage: `url(${e.avatar})`,
                     backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
@@ -181,6 +181,8 @@ export const ListaMobile = ({ children }: PropsWithChildren) => {
 }
 
 function TooltipVotosEstudiante({ children, userId }: PropsWithChildren & { userId: string }) {
+  const [open, setOpen] = useState(false)
+
   const { pedirVotosEstudiante } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { items: encuestas } = storeEncuestasProfe()
@@ -190,8 +192,8 @@ function TooltipVotosEstudiante({ children, userId }: PropsWithChildren & { user
   if (!estudiante) return children
 
   return (
-    <Tooltip>
-      <TooltipTrigger onMouseEnter={() => pedirVotosEstudiante(userId)} asChild>
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger onClick={() => setOpen(true)} onMouseEnter={() => pedirVotosEstudiante(userId)} asChild>
         {children}
       </TooltipTrigger>
       <TooltipContent asChild>

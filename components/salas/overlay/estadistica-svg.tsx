@@ -116,9 +116,9 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
       <svg className="w-full" viewBox={`0 0 800 ${svgHeight}`} style={{ height: 'auto' }}>
         {/* Título de la encuesta */}
         <text
-          x="400"
+          x="20"
           y="25"
-          textAnchor="middle"
+          textAnchor="left"
           className="text-lg font-semibold fill-white"
           style={{ fontSize: '18px', fontWeight: 'bold' }}
         >

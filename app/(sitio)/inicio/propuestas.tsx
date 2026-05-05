@@ -7,6 +7,7 @@ import { Hl } from './highlight'
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
 import { LdSvg } from '@/components/custom/ld-svg'
 import propuestas from '@/svg/dist/titles/PropuestasSVGO.svg'
+import { BotonLink } from '@/components/custom/ld-boton-svg'
 
 export default function Propuestas() {
   return (
@@ -40,8 +41,9 @@ export default function Propuestas() {
           </div>
         }
         two={<Imagenes />}
-        btn={
-          <></>
+        btn={<div className='self-center'>
+              <BotonLink titulo={'Proximamente...'} url={''}/></div>
+         
           // <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/propuestas">
           //   {' '}
           //   Ver propuestas{' '}

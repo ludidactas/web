@@ -7,6 +7,7 @@ import QuienesSomos from '@/svg/dist/titles/QuienesSomosSVGO.svg'
 import Image from 'next/image'
 import { Hl } from './highlight'
 import Pantalla from './pantalla'
+import { BotonLink } from '@/components/custom/ld-boton-svg'
 
 export default function Identidad() {
   return (
@@ -31,11 +32,12 @@ export default function Identidad() {
             </div>
           }
           two={<Imagenes />}
-          btn={
-            <BtnSketchyGif className="block text-[1.5em] md:text-[1em] mx-auto h-fit leading-[50px]" href="/identidad">
-              {' '}
-              Más sobre el proyecto{' '}
-            </BtnSketchyGif>
+          btn={<div className='self-center'>
+            <BotonLink  titulo={'Más sobre el proyecto'} url={'/identidad'}/></div>
+            // <BtnSketchyGif className="block text-[1.5em] md:text-[1em] mx-auto h-fit leading-[50px]" href="/identidad">
+            //   {' '}
+            //   Más sobre el proyecto{' '}
+            // </BtnSketchyGif>
           }
           scroll={<ArrowDownLd to="propuestasini" />}
         />

@@ -7,6 +7,7 @@ import Pantalla from './pantalla'
 import { LdSvg } from '@/components/custom/ld-svg'
 import salasRecursos from '@/svg/dist/titles/SalasRecursosSVGO.svg'
 import { Hl } from './highlight'
+import { BotonLink } from '@/components/custom/ld-boton-svg'
 
 export default function Recursos() {
   return (
@@ -29,9 +30,11 @@ export default function Recursos() {
         }
         two={<Imagenes />}
         btn={
-          <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
-            Explorar sala
-          </BtnSketchyGif>
+          <div className='self-center'>
+            <BotonLink titulo={'Explorar Sala'} url={'/sala'} /></div>
+          // <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
+          //   Explorar sala
+          // </BtnSketchyGif>
         }
         scroll={<ArrowDownLd to="contactoini" />}
       />

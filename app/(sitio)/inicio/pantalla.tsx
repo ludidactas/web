@@ -27,7 +27,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
 
           <div className={`flex items-center gap-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
             <div
-              className=" flex flex-col w-fit gap-8 text-left bg-white/60 p-10 rounded-xl"
+              className=" flex flex-col w-fit gap-8 text-left p-10 rounded-xl"
               data-aos={espejado ? 'fade-left' : 'fade-right'}
             >
               {one}
@@ -58,7 +58,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
             </div>
 
             <div
-              className="w-full self-center text-center p-2 rounded-xl bg-white/50"
+              className="w-full flex flex-col p-2 gap-4 rounded-xl bg-white/50"
               data-aos={espejado ? 'fade-left' : 'fade-right'}
             >
               {one}

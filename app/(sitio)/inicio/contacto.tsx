@@ -5,6 +5,7 @@ import Pantalla from './pantalla'
 import ArrowUpLd from '@/components/custom/ld-arrow-up'
 import { LdSvg } from '@/components/custom/ld-svg'
 import contacto from '@/svg/dist/titles/ContactoSVGO.svg'
+import { BotonLink } from '@/components/custom/ld-boton-svg'
 
 export default function Contacto() {
   return (
@@ -23,15 +24,16 @@ export default function Contacto() {
           </div>
         }
         two={<Imagenes />}
-        btn={
-          <BtnSketchyGif
-            className="block mx-auto h-[56px] leading-[36px]"
-            target="_blank"
-            href="http://www.instagram.com/ludidactas"
-          >
-            {' '}
-            ¡Contactanos!{' '}
-          </BtnSketchyGif>
+        btn={<div className='self-center'>
+          <BotonLink titulo={'¡Contactanos!'} url={"http://www.instagram.com/ludidactas"} /></div>
+          // <BtnSketchyGif
+          //   className="block mx-auto h-[56px] leading-[36px]"
+          //   target="_blank"
+          //   href="http://www.instagram.com/ludidactas"
+          // >
+          //   {' '}
+          //   ¡Contactanos!{' '}
+          // </BtnSketchyGif>
         }
         scroll={<ArrowUpLd to="portadaini" />}
         espejado={true}

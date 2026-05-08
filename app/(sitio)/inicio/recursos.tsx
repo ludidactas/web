@@ -1,19 +1,18 @@
 'use client'
 
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
-import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
-import { LdSvg } from '@/components/custom/ld-svg'
-import salasRecursos from '@/svg/dist/titles/SalasRecursosSVGO.svg'
 import { Hl } from './highlight'
 import { BotonLink } from '@/components/custom/ld-boton-svg'
+import { Title } from '@/components/custom/ld-title'
 
 export default function Recursos() {
   return (
     <div className="recursosini bg-indigo-300/50">
       <Pantalla
-        title={<LdSvg className="h-8 lg:h-20" SvgComponent={salasRecursos} />}
+        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#8345FD]'} size={'text-4xl md:text-7xl'}/>
+        }
         one={
           <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
             <p>
@@ -30,20 +29,18 @@ export default function Recursos() {
         }
         two={<Imagenes />}
         btn={
-          <div className='self-center'>
-            <BotonLink titulo={'Explorar Sala'} url={'/sala'} /></div>
-          // <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/sala">
-          //   Explorar sala
-          // </BtnSketchyGif>
+          <BotonLink titulo={'Explorar Sala'} url={'/sala'} />
         }
-        scroll={<ArrowDownLd to="contactoini" />}
+        scroll={
+          <ArrowDownLd to="contactoini" />
+        }
       />
     </div>
   )
 }
 
 const Imagenes = () => (
-  <div>
+  <div className='mt-10 md:mt-0'>
     <Image src="/img/PersoRecursos.webp" alt="Personaje3" width={500} height={500} />
   </div>
 )

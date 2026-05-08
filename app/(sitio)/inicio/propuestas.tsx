@@ -1,19 +1,18 @@
 'use client'
 
-import BtnSketchyGif from '@/components/custom/ld-btn-sketchy-gif'
 import Image from 'next/image'
 import Pantalla from './pantalla'
 import { Hl } from './highlight'
 import ArrowDownLd from '@/components/custom/ld-arrow-down'
-import { LdSvg } from '@/components/custom/ld-svg'
-import propuestas from '@/svg/dist/titles/PropuestasSVGO.svg'
 import { BotonLink } from '@/components/custom/ld-boton-svg'
+import { Title } from '@/components/custom/ld-title'
+
 
 export default function Propuestas() {
   return (
     <div className="propuestasini">
       <Pantalla
-        title={<LdSvg className="h-8 lg:h-20" SvgComponent={propuestas} />}
+        title={<Title radius={2} text={'Propuestas'} color={'text-[#00B0D2]'} size={'text-4xl md:text-7xl'}/>}
         one={
           <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-[1.4em] md:text-[1em]">
             <p>
@@ -41,13 +40,9 @@ export default function Propuestas() {
           </div>
         }
         two={<Imagenes />}
-        btn={<div className='self-center'>
-              <BotonLink titulo={'Proximamente...'} url={''}/></div>
-         
-          // <BtnSketchyGif className="block text-[1] mx-auto leading-[42px]" href="/propuestas">
-          //   {' '}
-          //   Ver propuestas{' '}
-          // </BtnSketchyGif>
+        btn={
+          <BotonLink titulo={'Proximamente...'} url={''} />
+
         }
         scroll={<ArrowDownLd to="recursosini" />}
         espejado={true}

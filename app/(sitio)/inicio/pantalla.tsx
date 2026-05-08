@@ -1,8 +1,6 @@
-// import { LdSvg } from '@/components/custom/ld-svg'
 import { titulo } from '@/components/fonts'
-import { cn } from '@/lib/utils'
-// import { secuenciar } from '@/lib/utils';
-// import CajaTexto from '@/svg/CajaPrueba3SVGO.svg'
+import ShapeDividerWaves from '../custom/shape-divider'
+
 
 export interface PantallaProps {
   title?: React.ReactNode
@@ -18,12 +16,14 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
   return (
     <>
       {/* Shape divider top */}
-      <div className={cn('shape-divider-waves h-[90px] w-full text-white')} />
+      <ShapeDividerWaves bottom colorText={'text-white'} />
 
-      <div className={`w-[100vw] min-h-[100vh] flex-col items-center place-content-center mb-20 ${classname}`}>
+      <div className={`w-screen max-h-screen flex-col items-center place-content-center mt-10 ${classname}`}>
         {/* DESKTOP */}
-        <div className="hidden lg:flex flex-col items-center my-10 ">
-          <h2 className={`${titulo.className} text-7xl mb-20 drop-shadow-[4px_4px_2px_rgba(20,20,20)]`}>{title}</h2>
+        <div className="hidden lg:flex flex-col items-center">
+          <h2 className={`${titulo.className} mb-12 drop-shadow-[4px_4px_2px_rgba(20,20,20)]`}>
+            {title}
+          </h2>
 
           <div className={`flex items-center gap-20 ${espejado ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
             <div
@@ -31,7 +31,9 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
               data-aos={espejado ? 'fade-left' : 'fade-right'}
             >
               {one}
-              {btn}
+              <div className='self-center'>
+                {btn}
+              </div>
             </div>
 
             <div className="w-[25vw]" data-aos={espejado ? 'fade-right' : 'fade-left'}>
@@ -41,37 +43,37 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
 
           <div className="mt-10 text-center">{scroll}</div>
         </div>
+      </div>
 
-        {/* MOBILE */}
 
-        <div className="flex lg:hidden flex-col place-content-center items-center w-full h-full my-20 pb-10">
-          <div className="flex flex-col mx-8 items-center text-[0.5em] text-center p-4">
-            <h2
-              data-aos="fade-down"
-              className={`${titulo.className} text-4xl drop-shadow-[2px_2px_2px_rgba(0,0,0)] bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text`}
-            >
-              {title}
-            </h2>
+      {/* MOBILE */}
+      <div className="flex flex-col lg:hidden items-center w-full h-full ">
+        <div className="flex flex-col mx-8 items-center text-[0.5em] text-center p-4">
 
-            <div className="w-[35vw] m-4" data-aos="fade-left">
-              {two}
-            </div>
+          {title}
 
-            <div
-              className="w-full flex flex-col p-2 gap-4 rounded-xl bg-white/50"
-              data-aos={espejado ? 'fade-left' : 'fade-right'}
-            >
-              {one}
+          <div className="w-[35vw] my-6" data-aos="fade-left">
+            {two}
+          </div>
+
+          <div
+            className="w-full flex flex-col p-4 gap-4 rounded-xl bg-white/50"
+            data-aos={espejado ? 'fade-left' : 'fade-right'}
+          >
+            {one}
+            <div className='flex justify-center'>
               {btn}
             </div>
           </div>
-
-          <div className="flex justify-center w-40 md:m-10 mb-10">{scroll}</div>
         </div>
+
+        <div className="flex justify-center w-40 md:m-10 mb-10">{scroll}</div>
       </div>
 
+
       {/* Shape divider bottom */}
-      <div className={cn('shape-divider-waves-bottom h-[90px] w-full text-white')} />
+      <ShapeDividerWaves top colorText={'text-white'} />
+
     </>
   )
 }

@@ -9,12 +9,11 @@ interface ArrowUpLdProps {
 }
 export default function ArrowUpLd({ to, classname }: ArrowUpLdProps) {
   return (
-    <div className={`w-11 lg:w-20 mt-20 hover:scale-125 ${classname}`}>
+    <div className={`w-11 lg:w-20 mt-10 hover:scale-125 ${classname}`}>
       <Link to={to} smooth={true} duration={500}>
         <LdSvg SvgComponent={ArrowUpNew}
           className="md:animate-[bounce_0.8s_infinite]"
         />
-
       </Link>
     </div>
   )

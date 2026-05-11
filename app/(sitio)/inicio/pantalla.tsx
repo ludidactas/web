@@ -21,7 +21,7 @@ const Pantalla = ({ title, one, two, btn, scroll, espejado = false, classname }:
       <div className={`w-screen max-h-screen flex-col items-center place-content-center mt-10 ${classname}`}>
         {/* DESKTOP */}
         <div className="hidden lg:flex flex-col items-center">
-          <h2 className={`${titulo.className} mb-12 drop-shadow-[4px_4px_2px_rgba(20,20,20)]`}>
+          <h2 className={`mb-12`}>
             {title}
           </h2>
 

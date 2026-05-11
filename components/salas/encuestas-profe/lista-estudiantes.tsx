@@ -125,9 +125,9 @@ export const ListaEstudiantes = () => {
               >
                 {/* Avatar */}
                 <div
-                  className={`w-10 h-10 shrink-0 mt-1 p-2 rounded-full flex items-center justify-center text-white font-semibold bg-center bg-cover`}
+                  className="w-10 h-10 shrink-0 mt-1 rounded-full flex items-center justify-center text-white text-sm font-semibold bg-center bg-cover"
                   style={{
-                    backgroundImage: `url(${e.avatar})`,
+                    backgroundImage: e.avatar ? `url(${e.avatar})` : undefined,
                     backgroundColor: getRandomColor(e.nombre || 'Anonimo'),
                   }}
                 >

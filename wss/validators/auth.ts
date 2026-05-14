@@ -1,11 +1,17 @@
 import { z } from 'zod'
-import { RolEncuesta } from '../tipos'
+
+export enum RolSala {
+  Admin = 'admin',
+  Profe = 'profe',
+  Estudiante = 'estudiante',
+  Publico = 'publico',
+}
 
 // Schemas para validar el pasaporte en el login:
 
 export const PasaporteEstudianteSchema = z
   .object({
-    rol: z.literal(RolEncuesta.Estudiante),
+    rol: z.literal(RolSala.Estudiante),
     idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
     nombre: z.string().optional(),
     icono: z.string().optional(),
@@ -17,21 +23,21 @@ export const PasaporteEstudianteSchema = z
 
 export const PasaporteProfeSchema = z
   .object({
-    rol: z.literal(RolEncuesta.Profe),
+    rol: z.literal(RolSala.Profe),
     token: z.string().min(1),
   })
   .strict()
 
 export const PasaporteAdminSchema = z
   .object({
-    rol: z.literal(RolEncuesta.Admin),
+    rol: z.literal(RolSala.Admin),
     token: z.string().min(1),
   })
   .strict()
 
 export const PasaportePublicoSchema = z
   .object({
-    rol: z.literal(RolEncuesta.Publico),
+    rol: z.literal(RolSala.Publico),
     idSala: z.string().min(1),
   })
   .strict()

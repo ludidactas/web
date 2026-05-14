@@ -1,10 +1,10 @@
 'use client'
 
-import { CircleDot, Copy, SquareCheckBig } from 'lucide-react'
+import { Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useClipboard from '@/components/hooks/use-clipboard'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import LoadingSala from '../loading-sala'
 import { EncuestaSVG } from '../overlay/estadistica-svg'
@@ -15,17 +15,16 @@ import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
 
-import { statusesDeCarga, StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { LdSvg } from '@/components/custom/ld-svg'
+import enfocar from '@/svg/dist/ui/enfocar.svg'
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
-import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
-import { Icon } from '@iconify/react/dist/iconify.js'
-import enfocar from '@/svg/dist/ui/enfocar.svg'
-import { LdSvg } from '@/components/custom/ld-svg'
+import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasProfe() {
   const { estado, WssDebugPanel } = useConexionProfe()
-  const { items: encuestas } = storeEncuestas()
+  const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused) || encuestas[0]

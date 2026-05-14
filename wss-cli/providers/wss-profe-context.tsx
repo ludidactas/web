@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo } from 'react'
 
-import { RolEncuesta } from '@/wss/tipos'
+import { RolSala } from '@/wss/validators/auth'
 import { PasaporteProfe } from '@/wss/validators/auth'
 
 import baseSalaHandlers from '../handlers/base-sala-handlers'
@@ -12,7 +12,7 @@ import { useWss } from '../use-wss'
 
 /** Cose el socket con el state para profe */
 const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
-  const { socket, estado, error, WssDebugPanel } = useWss({ ...auth, rol: RolEncuesta.Profe })
+  const { socket, estado, error, WssDebugPanel } = useWss({ ...auth, rol: RolSala.Profe })
 
   // Cuando cambia el socket, re-definimos los handlers con el nuevo socket
   const handlers = useMemo(

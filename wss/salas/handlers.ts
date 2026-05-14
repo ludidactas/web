@@ -13,7 +13,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   const sala = await Salas.obtenerOCrear(socket)
   const profe = await profeSala(sala.profe.email)
 
-  // // Rooms
+  // Rooms
   socket.join([`profe:${socket.data.session.email}`, `sala:${sala.id}`, `sala:${sala.id}:profe`])
 
   console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
@@ -50,34 +50,50 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
-  // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
-  socket.on(
-    'sala:abrir',
-    safe(async () => {
-      socket.emit('sala:abierta', {
-        sala: await sala.raw(),
-        polls: await profe.listarEncuestas(),
-        estudiantes: await sala.listarEstudiantes(),
-      })
-    })
-  )
-
-  // Emitimos de inmediato la info inicial
-  const emitir = safe(async () => {
+  const emitirApertura = safe(async () => {
     socket.emit('sala:abierta', {
       sala: await sala.raw(),
       polls: await profe.listarEncuestas(),
       estudiantes: await sala.listarEstudiantes(),
       config: await sala.config(),
+      listaPermitidos: await sala.listaPermitidos().obtener(),
     })
   })
 
-  await emitir()
+  setupPermitidosSockets()
+
+  // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
+  socket.on('sala:abrir', emitirApertura)
+
+  // Emitimos de inmediato la info inicial
+  await emitirApertura()
 
   // Console logueamos la desconexión del profe
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
+
+  function setupPermitidosSockets() {
+    socket.on('sala:permitidos_agregar',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().agregar(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_remover',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().remover(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_limpiar',
+      safe(async () => {
+        await sala.listaPermitidos().limpiar()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+  }
 }
 
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
@@ -99,9 +115,12 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   )
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
-  socket.on('sala:pedir_config', safe(async () => {
-    socket.emit('sala:config_actualizada', await sala.config())
-  }))
+  socket.on(
+    'sala:pedir_config',
+    safe(async () => {
+      socket.emit('sala:config_actualizada', await sala.config())
+    })
+  )
 
   // Al conectarse un estudiante...
   const emitir = safe(async () => {
@@ -124,11 +143,14 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   const safe = conErrorHandling(socket)
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
-  socket.on('sala:pedir_config', safe(async () => {
-    const sala = await Salas.get(idSala)
-    if (!sala) throw new Error(`Sala ${idSala} no existe!`)
-    socket.emit('sala:config_actualizada', await sala.config())
-  }))
+  socket.on(
+    'sala:pedir_config',
+    safe(async () => {
+      const sala = await Salas.get(idSala)
+      if (!sala) throw new Error(`Sala ${idSala} no existe!`)
+      socket.emit('sala:config_actualizada', await sala.config())
+    })
+  )
 }
 
 export const handlersAdmin = async (socket: SocketConSesion) => {

@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io-client'
 
-import { storeEncuestas } from '../stores/encuestas-store'
 import { VotarEncuesta } from '@/wss/validators/polls'
+import { storeEncuestasEstudiante } from '../stores/encuestas-store'
 
 export default function estudianteEncuestasHandlers(socket: Socket | null) {
-  const encuestas = storeEncuestas.getState()
+  const encuestas = storeEncuestasEstudiante.getState()
 
   return {
     montar: () => {

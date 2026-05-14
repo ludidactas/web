@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
-import db from '../db'
-import { RolEncuesta } from '../tipos'
+import db from '../redis'
+import { RolSala } from '../validators/auth'
 import { socketIp } from '../utils'
 import { Pasaporte, PasaporteSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
@@ -60,7 +60,7 @@ const login = async (socket: SocketConSesion) => {
     )
 
   // Sesión de estudiante
-  if (auth.rol === RolEncuesta.Estudiante) {
+  if (auth.rol === RolSala.Estudiante) {
     console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
 
     // Verificamos que la sala exista
@@ -80,16 +80,16 @@ const login = async (socket: SocketConSesion) => {
   }
 
   // Sesión de profe o admin
-  else if (auth.rol === RolEncuesta.Profe || auth.rol === RolEncuesta.Admin) {
+  else if (auth.rol === RolSala.Profe || auth.rol === RolSala.Admin) {
     // Si es profe o admin, necesitamos token
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
     const payload = decodearTokenNextAuth(auth.token)
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
-    if (registradoComoAdmin(payload.email) && auth.rol === RolEncuesta.Admin) {
-      await openSession(socket, { rol: RolEncuesta.Admin, ...payload, nombre: payload.name, avatar: payload.image })
+    if (registradoComoAdmin(payload.email) && auth.rol === RolSala.Admin) {
+      await openSession(socket, { rol: RolSala.Admin, ...payload, nombre: payload.name, avatar: payload.image })
     } else {
-      await openSession(socket, { rol: RolEncuesta.Profe, ...payload, nombre: payload.name, avatar: payload.image })
+      await openSession(socket, { rol: RolSala.Profe, ...payload, nombre: payload.name, avatar: payload.image })
     }
   }
 

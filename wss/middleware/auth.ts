@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken'
 import { ExtendedError } from 'socket.io'
-import db from '../db'
+import db from '../redis'
 import { SalaData } from '../salas/app'
-import { RolEncuesta } from '../tipos'
+import { RolSala } from '../validators/auth'
 import { SocketConSesion } from './session'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
@@ -47,7 +47,7 @@ export const registradoComoAdmin = (email: string) => {
 
 export const conPermisosDeSala = async (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
   const session = socket.data.session
-  if (session.rol === RolEncuesta.Estudiante) conPermisosDe(session.idSala)(socket, next)
+  if (session.rol === RolSala.Estudiante) conPermisosDe(session.idSala)(socket, next)
 }
 
 /** Autorización. Verifica la sesión del usuario contra las políticas de la sala. */
@@ -68,17 +68,17 @@ export const conPermisosDe =
     // Verificamos permisos
 
     // Si admin, puede entrar
-    if (socket.data.session.rol === RolEncuesta.Admin) return next()
+    if (socket.data.session.rol === RolSala.Admin) return next()
 
     // Si es profe, no puede entrar por acá (canal de estudiantes), precisa en cambio abrir una sesión de estudiante
-    if (socket.data.session.rol === RolEncuesta.Profe)
+    if (socket.data.session.rol === RolSala.Profe)
       return next(new Error(`Los profes no pueden entrar como estudiantes`))
 
     // Si la sala permite anónimos, cualquiera puede entrar
     if (configSala.permitir_anonimo) return next()
 
     // Si no permite anónimos, pero el usuario es profe o admin, puede entrar
-    if (configSala.pedir_dni && socket.data.session.rol === RolEncuesta.Estudiante && !socket.data.session.dni) {
+    if (configSala.pedir_dni && socket.data.session.rol === RolSala.Estudiante && !socket.data.session.dni) {
       return next(new Error(`Se requiere DNI para entrar a esta sala`))
     }
 

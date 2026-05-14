@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 import { body } from '@/components/fonts'
+import { FiltrosSvg } from '@/components/fx/filtros'
 
 export const metadata: Metadata = {
   title: 'Ludidactas',
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <VercelAnalytics />
+        <FiltrosSvg />
         {children}
       </body>
     </html>

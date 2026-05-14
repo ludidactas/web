@@ -2,7 +2,7 @@ import { Pasaporte } from '@/wss/validators/auth'
 import { useEffect } from 'react'
 import { StatusDeConexion, conexionWss } from './conexion-wss'
 import { useSession as useSessionNext } from 'next-auth/react'
-import { RolEncuesta } from '@/wss/tipos'
+import { RolSala } from '@/wss/validators/auth'
 import DebugPanel from '@/components/ui/debug-panel'
 
 /**
@@ -24,7 +24,7 @@ export function useWss(auth: Pasaporte) {
   // Trigger de conexión
   useEffect(() => {
     // 1. Si es admin o profe, esperar sesión de google
-    if ((auth.rol === RolEncuesta.Admin || auth.rol === RolEncuesta.Profe) && !sessionReady) return
+    if ((auth.rol === RolSala.Admin || auth.rol === RolSala.Profe) && !sessionReady) return
 
     // 2. Condición principal: Conectar SOLO si estamos en estado Quieto, Expirado (lo que forzó a Quieto), o Error
     const hayQueReconectar = status === StatusDeConexion.Quieto || status === StatusDeConexion.Expirado // Reintento automático tras error

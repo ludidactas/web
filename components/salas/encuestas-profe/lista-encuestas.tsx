@@ -2,24 +2,27 @@ import { LdSvg } from '@/components/custom/ld-svg'
 import useClipboard from '@/components/hooks/use-clipboard'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { Accordion, AccordionContent } from '@/components/ui/accordion'
+import DebugPanel from '@/components/ui/debug-panel'
 import { ScrollBar } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import profeUps from '@/svg/dist/ilustraciones/ProfeUpsSVGO.svg'
-import { Encuesta } from '@/wss/tipos'
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
+import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
+import { EncuestaHidratadaProfe } from '@/wss/validators/polls'
 import { Icon, Icon as Iconito } from '@iconify/react'
 import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
-import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
-import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { storeEncuestas } from '@/wss-cli/stores/encuestas-store'
+import { CircleUserRound, Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
+import { PropsWithChildren, useState } from 'react'
 import { AccionesToggle } from './accionesToggle'
 
 export function ListaEncuestas() {
   const { estado } = useConexionProfe()
-  const { items: encuestas } = storeEncuestas()
+  const { items: encuestas } = storeEncuestasProfe()
 
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
     () => estado === StatusDeConexion.Conectado && encuestas.length === 0,
@@ -50,7 +53,7 @@ export function ListaEncuestas() {
   )
 }
 
-function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
+function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
   const { justCopied, handleCopy } = useClipboard()
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
@@ -68,7 +71,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               'bg-[#00B0D2]/15 text-[#00B0D2] border-3 border-[#00B0D2]/30',
               'rounded-2xl p-4 md:px-8 cursor-pointer ',
               'hover:bg-[#00B0D2]/25 transition-colors',
-              'data-[state=open]:rounded-b-none',
+              'data-[state=open]:rounded-b-none'
             )}
           >
             <div className="flex gap-4 justify-between items-center ">
@@ -78,17 +81,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
-                  <div className='flex items-center gap-2 text-indigo-500 '>
-                  <span
-                    className={cn(' text-sm', {
-                      'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
-                      'text-rose-800': estado === 'Cerrada',
-                      'text-indigo-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
-                    })}
-                  >
-                    {estado}
-                  </span>
-                  {estado ==='Enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'}/>}
+                  <div className="flex items-center gap-2 text-indigo-500 ">
+                    <span
+                      className={cn(' text-sm', {
+                        'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
+                        'text-rose-800': estado === 'Cerrada',
+                        'text-indigo-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
+                      })}
+                    >
+                      {estado}
+                    </span>
+                    {estado === 'Enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'} />}
                   </div>
                   <span className="text-[0.6rem]  text-slate-400 text-right">
                     {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
@@ -132,7 +135,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
 
           {/* Contenido desplegado */}
           <AccordionContent>
-            <div className="rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
+            <div className="relative rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
               {/* Opciones */}
               {encuesta.opciones.length > 0 && (
                 <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">
@@ -144,20 +147,26 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
                     <li key={opcion.id}>
                       <div className="flex border-b-2 border-dashed justify-between items-end pt-2 gap-4">
                         <p className="w-64 text-sm">{opcion.texto}</p>
-                        <div className="w-24 flex items-center justify-end gap-2">
-                          <p
-                            className={` font-bold  content-center ${
-                              encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'
-                            }`}
-                          >
-                            {' '}
-                            {opcion.votos}
-                          </p>
-                          <Iconito
-                            className={`h-8 w-8 ${encuesta.isRevealed ? 'text-cyan-500' : 'text-gray-500'}`}
-                            icon={'streamline-freehand:camera-settings-hand-motion'}
-                          />
-                        </div>
+
+                        {/* Acá un tooltip */}
+                        <TooltipVotantes votantes={opcion.votantes}>
+                          <div className="w-24 flex items-center justify-end gap-2 cursor-pointer group">
+                            <p
+                              className={cn('font-bold  content-center text-gray-500 group-hover:text-cyan-500', {
+                                'text-cyan-500': encuesta.isRevealed,
+                              })}
+                            >
+                              {' '}
+                              {opcion.votos}
+                            </p>
+                            <Iconito
+                              className={cn('h-8 w-8 text-gray-500 group-hover:text-cyan-500', {
+                                'text-cyan-500': encuesta.isRevealed,
+                              })}
+                              icon={'streamline-freehand:camera-settings-hand-motion'}
+                            />
+                          </div>
+                        </TooltipVotantes>
                       </div>
                     </li>
                   ))}
@@ -178,12 +187,34 @@ function DisplayEncuesta({ encuesta }: { encuesta: Encuesta }) {
               )}
 
               <AccionesToggle encuesta={encuesta} />
-            
 
+              <DebugPanel classNames={{ button: 'absolute bottom-4 right-4' }} data={{ encuesta }} />
             </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
+  )
+}
+
+/** @todo: cambiar para recibir nombres con avatares como la lista de participantes? */
+function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes: string[] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger onClick={() => setOpen(true)}>{children}</TooltipTrigger>
+      <TooltipContent>
+        <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
+          {votantes.length === 0 && <p className="text-sm text-slate-400 bg-transparent">Nadie votó todavía</p>}
+          {votantes.length > 0 &&
+            votantes.map((nombre) => (
+              <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={nombre}>
+                <CircleUserRound className="w-4 h-4 text-[#4198AA]" />
+                <p className="text-sm text-[#4198AA]">{nombre}</p>
+              </div>
+            ))}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   )
 }

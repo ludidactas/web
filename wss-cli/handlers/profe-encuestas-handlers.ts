@@ -1,11 +1,14 @@
 import { Socket } from 'socket.io-client'
 
-import { storeEncuestas } from '../stores/encuestas-store'
 import { CrearEncuesta } from '@/wss/validators/polls'
+import { storeEncuestasProfe } from '../stores/encuestas-store'
+import { storeEstudiantes } from '../stores/estudiantes-store'
 
 /** Modela las acciones del server */
 const profeEncuestasHandlers = (socket: Socket | null) => {
-  const store = storeEncuestas.getState()
+  const store = storeEncuestasProfe.getState()
+
+  const estudiantes = storeEstudiantes.getState()
 
   return {
     montar: () => {
@@ -15,6 +18,8 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
       socket.on('poll:updated', store.update)
       socket.on('poll:created', store.add)
       socket.on('poll:deleted', store.remove)
+
+      socket.on('poll:votos:usuario', estudiantes.cargarVotosEstudiante)
     },
 
     // pregunta: string, opciones: string[], admiteAportes = false
@@ -45,6 +50,8 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
       revelar: (id: string) => socket?.emit('poll:reveal', { pollId: id }),
 
       ocultar: (id: string) => socket?.emit('poll:unreveal', { pollId: id }),
+
+      pedirVotosEstudiante: (userId: string) => socket?.emit('poll:votos:usuario', { userId }),
     },
 
     desmontar: () => {

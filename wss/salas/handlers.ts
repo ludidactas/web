@@ -56,8 +56,11 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       polls: await profe.listarEncuestas(),
       estudiantes: await sala.listarEstudiantes(),
       config: await sala.config(),
+      listaPermitidos: await sala.listaPermitidos().obtener(),
     })
   })
+
+  setupPermitidosSockets()
 
   // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
   socket.on('sala:abrir', emitirApertura)
@@ -69,6 +72,28 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
+
+  function setupPermitidosSockets() {
+    socket.on('sala:permitidos_agregar',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().agregar(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_remover',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().remover(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_limpiar',
+      safe(async () => {
+        await sala.listaPermitidos().limpiar()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+  }
 }
 
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {

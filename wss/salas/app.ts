@@ -7,6 +7,8 @@ import { io } from '../server'
 import { RolSala } from '../validators/auth'
 import { configSala, ConfigSala } from '../validators/salas'
 import { WssServerSession } from '../validators/session'
+import { ListaPermitidos } from '../invitados/app'
+
 import * as db from './db'
 
 export type { SalaData } from './db'
@@ -107,7 +109,6 @@ export namespace Salas {
 
         // Notificamos y desconectamos(kick)
         sinDni.forEach((s) => {
-          // Los desconectamos enviándoles un mensaje de error a su sala
           s.emit('sala:kick', {
             motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
           })
@@ -173,6 +174,9 @@ export namespace Salas {
       /** Valida lo que recibe y si pasa actualiza la config de la sala */
       actualizarConfig,
 
+      /** Gestión de la lista de usuarios permitidos */
+      listaPermitidos: () => ListaPermitidos.para(salaId),
+
       /** Devuelve solo la data serializable (sin funciones) */
       raw: getFromDb,
 
@@ -202,7 +206,6 @@ export namespace Salas {
     const id = randomUUID().split('-')[0]
     const email = socket.data.session.email
 
-    // Todavía no está en uso
     const config_default: ConfigSala = {
       pedir_dni: false,
       permitir_anonimo: true,

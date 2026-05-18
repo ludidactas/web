@@ -14,6 +14,9 @@ export const conErrorHandling =
       try {
         await handler(...args)
       } catch (err: unknown) {
+
+        console.log(`🎬 error-handling.ts: Handler: ${handler.name} ejecutándose con args:`, args, `y socket: `, socket.data, 'emitió error: ', err)
+
         // Si no es un Error, lo rethroweamos tal cual
         if (!(err instanceof Error)) {
           throw err

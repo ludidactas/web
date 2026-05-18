@@ -28,6 +28,11 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
       await sala.sanitizar()
 
+      // También revocamos las sesiones de los estudiantes que no estén en la lista de permitidos (si es que la sala tiene lista de permitidos)
+      if ((await sala.listaPermitidos().obtener()).length > 0) {
+        await sala.sanitizarPermitidos()
+      }
+      
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())
     })

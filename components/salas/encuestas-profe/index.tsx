@@ -196,34 +196,30 @@ export default function EncuestasProfe() {
 
             {encuestaEnfocada && (
               <>
-                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-0" SvgComponent={enfocar} />
-
-                <div className="border-4 border-[#6F41CB] animate-border-pulse w-full h-full rounded-xl overflow-y-auto">
-                  <div className=" flex flex-col gap-2 items-center h-full">
-                    <div className="flex flex-col p-8 mt-10 w-full">
-                      <div className="flex flex-col items-center">
-                        <p className=" flex items-center gap-4 font-bold text-2xl text-center">
-                          Visualizador vista previa
-                        </p>
-                        <div className="flex flex-col">
-                          <div className="flex gap-2">
-                            <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
-                              {linkOverlay}
-                            </Link>
-                            <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                              {justCopied ? (
-                                <SquareCheckBig className="text-emerald-700 w-4 h-4" />
-                              ) : (
-                                <Copy size={20} className="hover:cursor-pointer" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
+                <div className="w-full h-full rounded-xl overflow-y-auto">
+                  <p className="absolute border-2 border-[#6F41CB] animate-border-pulse font-bold text-[23px] mt-10 m-10 pr-20 pl-2 rounded-xl">
+                    Visualizador vista previa
+                  </p>
+                  <div className="flex flex-col items-center p-2 mt-24 w-full">
+                    <div className="flex flex-col items-center">
+                      <div className="flex">
+                        <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
+                          {linkOverlay}
+                        </Link>
+                        <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                          {justCopied ? (
+                            <SquareCheckBig className="text-emerald-700 w-4 h-4" />
+                          ) : (
+                            <Copy size={20} className="hover:cursor-pointer" />
+                          )}
+                        </button>
                       </div>
-                      <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                     </div>
+                    <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                   </div>
                 </div>
+
               </>
             )}
           </div>

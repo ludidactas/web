@@ -72,6 +72,14 @@ const login = async (socket: SocketConSesion) => {
     // Si la sala requiere dni y la sesión no lo tiene, bochamos
     if (config.pedir_dni && !auth.dni) throw new Error(`La sala ${auth.idSala} requiere dni!`)
 
+    // Si solo_invitados está activo, verificamos que el DNI esté en la lista
+    if (config.pedir_dni && config.solo_invitados && auth.dni) {
+      const permitidos = await sala.listaPermitidos().obtener()
+      if (permitidos.length > 0 && !permitidos.includes(auth.dni)) {
+        throw new Error('Tu DNI no está en la lista de participantes permitidos.')
+      }
+    }
+
     // Si no estamos pidiendo dni y el nombre ya está en uso, bochamos
     if (!config.pedir_dni) {
     }

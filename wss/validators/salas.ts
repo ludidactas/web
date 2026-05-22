@@ -5,6 +5,7 @@ export const configSala = z.object({
   permitir_anonimo: z.boolean(),
   nombre_profe: z.string(),
   link: z.string(),
+  solo_invitados: z.boolean(),
 })
 
 export type ConfigSala = z.infer<typeof configSala>

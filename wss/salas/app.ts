@@ -122,8 +122,8 @@ export namespace Salas {
     async function sanitizarPermitidos() {
       const sala = await getFromDb()
 
-      // Solo aplica cuando la sala pide DNI
-      if (!sala.config.pedir_dni) return
+      // Solo aplica cuando la restricción está activa
+      if (!sala.config.pedir_dni || !sala.config.solo_invitados) return
 
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
@@ -243,6 +243,7 @@ export namespace Salas {
       permitir_anonimo: true,
       link: '',
       nombre_profe: email,
+      solo_invitados: false,
     }
 
     const config = {

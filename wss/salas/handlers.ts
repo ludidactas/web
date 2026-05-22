@@ -25,8 +25,9 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       // `actualizarConfig` valida
       await sala.actualizarConfig(payload)
 
-      // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
+      // Kickear sesiones que quedan inválidas por el cambio de config
       await sala.sanitizar()
+      await sala.sanitizarPermitidos()
 
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())

@@ -9,6 +9,8 @@ import baseSalaHandlers from '../handlers/base-sala-handlers'
 import estudianteSalaHandlers from '../handlers/estudiante-sala-handlers'
 import estudianteEncuestasHandlers from '../handlers/estudiante-encuestas-handlers'
 
+import { StatusDeConexion } from '../conexion-wss'
+import { storeEstudianteLogin } from '../stores/estudiante-login-store'
 import { useWss } from '../use-wss'
 
 /** Cose el socket con el state para estudiante */
@@ -43,6 +45,14 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     }
   }, [socket])
 
+  // Si el servidor rechaza o expira la sesión, volvemos al login
+  useEffect(() => {
+    if (wss.estado === StatusDeConexion.Expirado || wss.estado === StatusDeConexion.Rechazado) {
+      localStorage.setItem(`encuestas-ingresado-${auth.idSala}`, '0')
+      storeEstudianteLogin.getState().setIngresado(false)
+    }
+  }, [wss.estado, auth.idSala])
+
   return {
     ...wss,
     ...handlers.base.acciones,
@@ -61,13 +71,11 @@ export const ConexionEstudianteContext = createContext<
 export const ConexionEstudianteProvider: React.FC<{
   auth: Omit<PasaporteEstudiante, 'rol'>
   children: React.ReactNode
-}> = ({ auth, children }) => {
-  return (
-    <ConexionEstudianteContext.Provider value={useHandlersConexionSalaEstudiante(auth)}>
-      {children}
-    </ConexionEstudianteContext.Provider>
-  )
-}
+}> = ({ auth, children }) => (
+  <ConexionEstudianteContext.Provider value={useHandlersConexionSalaEstudiante(auth)}>
+    {children}
+  </ConexionEstudianteContext.Provider>
+)
 
 // Hook para usar el contexto de Encuesta
 export const useConexionEstudiante = () => {

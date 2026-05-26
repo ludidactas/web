@@ -29,6 +29,11 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       await sala.sanitizar()
       await sala.sanitizarPermitidos()
 
+      // También revocamos las sesiones de los estudiantes que no estén en la lista de permitidos (si es que la sala tiene lista de permitidos)
+      if ((await sala.config()).solo_invitados) {
+        await sala.sanitizarPermitidos()
+      }
+      
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())
     })

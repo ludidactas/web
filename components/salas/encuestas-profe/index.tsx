@@ -6,9 +6,11 @@ import Link from 'next/link'
 import useClipboard from '@/components/hooks/use-clipboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
+import { EstadisticaSvgConfig } from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
-import { EncuestaSVG } from '../overlay/estadistica-svg'
-import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
+
+
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
 import { ListaEncuestas } from './lista-encuestas'
@@ -51,7 +53,7 @@ export default function EncuestasProfe() {
   if (estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado)
     return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
 
-  const linkOverlay = configSala.link + 'overlay'
+  const linkOverlay = configSala.link.replace(/\/$/, '') + '/overlay'
 
   return (
     <>
@@ -197,8 +199,8 @@ export default function EncuestasProfe() {
             {encuestaEnfocada && (
               <>
                 <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
-                <div className="w-full h-full rounded-xl overflow-y-auto">
-                  <p className="absolute border-2 border-[#6F41CB] animate-border-pulse font-bold text-[23px] mt-10 m-10 pr-20 pl-2 rounded-xl">
+                <div className="w-full border-4 border-[#6F41CB] animate-border-pulse  h-full rounded-xl overflow-y-auto">
+                  <p className="absolute flex bg-[#e1e2fb] font-bold text-[23px] py-1 m-10 pr-20 pl-12 rounded-xl">
                     Visualizador vista previa
                   </p>
                   <div className="flex flex-col items-center p-2 mt-24 w-full">

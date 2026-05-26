@@ -1,9 +1,7 @@
 'use client'
-
 import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useRef, useState } from 'react'
-
 import { isNullish } from 'remeda'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 
@@ -52,6 +50,7 @@ import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
 import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import LoadingSala from '../loading-sala'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
@@ -61,7 +60,7 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 
   return (
     <div className="w-full">
-      {estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
+      {estado !== StatusDeConexion.Conectado && <LoadingSala/>}
       {error && <p className="text-red-500">Error: {error}</p>}
       {estado === StatusDeConexion.Conectado && (
         <>

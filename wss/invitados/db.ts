@@ -3,7 +3,6 @@ import redis from "../redis"
 // -- Lista de participantes permitidos (excluyente) --
 
 export async function addAllowedParticipants(list: string[], roomID: string): Promise<void> {
-  console.log(`✅ Agregando ${list.length} DNI(s) a lista de sala ${roomID}:`, list)
   const pipeline = redis.pipeline()
   for (const dni of list) {
       pipeline.sadd(`sala:${roomID}:allowed_list`, dni)

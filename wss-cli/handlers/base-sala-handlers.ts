@@ -19,7 +19,7 @@ export default function baseSalaHandlers(socket: Socket | null) {
 
       // Al recibir un error, mostrarlo con un toast
       socket.on('wss:error', ({ message }: { message: string }) => {
-        console.log('wss error completo:', { message })
+        console.warn('wss error completo:', { message })
         toast.error(message)
       })
 

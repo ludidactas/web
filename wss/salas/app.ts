@@ -127,9 +127,6 @@ export namespace Salas {
 
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
-      // Lista vacía -> todos permitidos
-      if (permitidos.length === 0) return
-
       const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
       const noPermitidos = sockets.filter(
         (s) => s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.dni)

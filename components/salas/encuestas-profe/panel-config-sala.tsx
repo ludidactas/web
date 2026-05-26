@@ -18,11 +18,11 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="flex flex-col items-center" aria-description="Configuración de la sala">
+      <DialogContent className={cn("flex flex-col items-center")} aria-description="Configuración de la sala">
         <DialogHeader>
-          <DialogTitle className="text-center leading-6">Configuración de la sala</DialogTitle>
+          <DialogTitle className={cn("text-center leading-6")}>Configuración de la sala</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-2 w-full">
+        <div className={cn("flex flex-col gap-2 w-full")}>
           <SwitchCard
             title="DNI obligatorio"
             description="Los participantes tienen que ingresar DNI para participar"
@@ -40,7 +40,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
                 style={{ overflow: 'hidden', width: '100%' }}
-                className="flex flex-col gap-2"
+                className={cn("flex flex-col gap-2")}
               >
                 <SwitchCard
                   title="Lista de Invitadxs"
@@ -58,7 +58,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
                       style={{ overflow: 'hidden', width: '100%' }}
-                      className="flex flex-col gap-2 pt-2"
+                      className={cn("flex flex-col gap-2 pt-2")}
                     >
                       <SwitchCard
                         title="Permitir ingreso sólo a invitadxs"
@@ -68,9 +68,9 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
                       />
 
                       {/* Lista */}
-                      <div className="flex border rounded flex-col items-center gap-2 max-h-72 mt-2">
-                        <h1 className='font-bold my-2'>Lista de Invitadxs</h1>
-                        <div className="flex w-full">
+                      <div className={cn("flex border rounded flex-col items-center gap-2 max-h-72 mt-2")}>
+                        <h1 className={cn('font-bold my-2')}>Lista de Invitadxs</h1>
+                        <div className={cn("flex w-full")}>
                           {/* Ingresar invitadx */}
                           <ListaInvitados />
                           {/* Lista de permitidxs */}
@@ -87,7 +87,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
 
         <DialogFooter>
           <DialogClose>
-            <p className="px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full">Cerrar</p>
+            <p className={cn("px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full")}>Cerrar</p>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
@@ -126,24 +126,24 @@ const ListaInvitados = () => {
     e.target.value = ''
   }
   return (
-    <div className="flex flex-col gap-1 flex-1 rounded p-2 max-h-56">
-      <p className="text-sm">Nombre</p>
+    <div className={cn("flex flex-col gap-1 flex-1 rounded p-2 max-h-56")}>
+      <p className={cn("text-sm")}>Nombre</p>
       <input
-        className="border rounded p-2 text-sm w-full"
+        className={cn("border rounded p-2 text-sm w-full")}
         placeholder="Ingresar Nombre"
         value={inputNombre}
         onChange={(e) => setInputNombre(e.target.value)}
       />
-      <p className="text-sm">DNI <span className='text-red-500 text-xs align-top'>*</span></p>
+      <p className={cn("text-sm")}>DNI <span className={cn('text-red-500 text-xs align-top')}>*</span></p>
       <input
-        className="border rounded p-2 text-sm w-full"
+        className={cn("border rounded p-2 text-sm w-full")}
         placeholder="Ingresar DNI"
         value={inputDni}
         inputMode="numeric"
         onChange={(e) => setInputDni(e.target.value.replace(/\D/g, ''))}
         onKeyDown={(e) => e.key === 'Enter' && handleAgregar()}
       />
-      <div className="flex gap-2 mt-1 justify-center">
+      <div className={cn("flex gap-2 mt-1 justify-center")}>
         <button
           className={cn(
             'px-3 py-1 text-sm rounded-full transition-colors',
@@ -156,7 +156,7 @@ const ListaInvitados = () => {
         >
           Agregar
         </button>
-        <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCSV} />
+        <input ref={fileRef} type="file" accept=".csv,text/csv" className={cn("hidden")} onChange={handleCSV} />
       </div>
     </div>
   )
@@ -182,21 +182,21 @@ const ListaPermitidos = () => {
     e.target.value = ''
   }
 
-  return (<div className='flex flex-col rounded items-center max-h-50'>
-    <div className="flex m-2 overflow-y-auto bg-slate-50 h-40 w-60 rounded">
+  return (<div className={cn('flex flex-col rounded items-center max-h-50')}>
+    <div className={cn("flex m-2 overflow-y-auto bg-slate-50 h-40 w-60 rounded")}>
       {listaPermitidos.length > 0 ? (
-        <ul className="text-sm flex flex-col w-full p-2">
+        <ul className={cn("text-sm flex flex-col w-full p-2")}>
           {[...listaPermitidos]
             .sort((a, b) => a.localeCompare(b, 'es', { numeric: true }))
             .map((item) => (
               <div key={item}>
-                <li className="flex items-center justify-between gap-2 w-full py-1">
-                  <p className='flex flex-col'>
+                <li className={cn("flex items-center justify-between gap-2 w-full py-1")}>
+                  <p className={cn('flex flex-col')}>
                     <span>{`${nombres[item]}`}</span>
                     <span>{`${item}`}</span>
                   </p>
                   <button
-                    className="text-xs text-red-400 hover:text-red-600 shrink-0"
+                    className={cn("text-xs text-red-400 hover:text-red-600 shrink-0")}
                     onClick={() => removerPermitidos([item])}
                   >
                     <Icon icon={'streamline:delete-1-solid'} />
@@ -207,13 +207,13 @@ const ListaPermitidos = () => {
             ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground/50 italic p-2">No has agregado ningún invitado aún</p>
+        <p className={cn("text-sm text-muted-foreground/50 italic p-2")}>No has agregado ningún invitado aún</p>
       )}
     </div>
-    <div className='flex gap-2 my-2'>
-      <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCSV} />
+    <div className={cn('flex gap-2 my-2')}>
+      <input ref={fileRef} type="file" accept=".csv,text/csv" className={cn("hidden")} onChange={handleCSV} />
       <button
-        className="px-3 py-1 text-sm border rounded-full bg-indigo-500 text-white hover:bg-indigo-400"
+        className={cn("px-3 py-1 text-sm border rounded-full bg-indigo-500 text-white hover:bg-indigo-400")}
         onClick={() => fileRef.current?.click()}
         title='Importa una lista de excel en formato CSV'
       >

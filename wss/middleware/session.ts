@@ -86,11 +86,12 @@ const login = async (socket: SocketConSesion) => {
     }
 
     // Si el nombre ya está en uso, bochamos
-    const currentlyConnected = await sala.listarEstudiantes()
-    if (currentlyConnected.some(e => e.nombre.toLowerCase() === auth.nombre?.toLowerCase())) {
-      throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${auth.nombre}" ya está en uso.`)
+    if (!config.pedir_dni) {
+      const currentlyConnected = await sala.listarEstudiantes()
+      if (currentlyConnected.some(e => e.nombre.toLowerCase() === auth.nombre?.toLowerCase())) {
+        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${auth.nombre}" ya está en uso.`)
+      }
     }
-
     await openSession(socket, auth)
   }
 

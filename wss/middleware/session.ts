@@ -79,10 +79,12 @@ const login = async (socket: SocketConSesion) => {
 
       const dniNum = auth.dni
 
-      // Si hay lista de permitidos, verificamos que el DNI esté en ella
-      const permitidos = await sala.listaPermitidos().obtener()
-      if (permitidos.length > 0 && !permitidos.includes(dniNum))
-        throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${dniNum} no está en la lista de participantes permitidos.`)
+      // Si la configuración es excluyente, verificamos que el DNI esté en ella
+      if (config.solo_invitados) {
+        const permitidos = await sala.listaPermitidos().obtener()
+        if (permitidos.length > 0 && !permitidos.includes(dniNum))
+          throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${dniNum} no está en la lista de participantes permitidos.`)
+      }
     }
 
     // Si el nombre ya está en uso, bochamos

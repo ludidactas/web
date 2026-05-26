@@ -10,7 +10,6 @@ import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
 import { EstadisticaSvgConfig } from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
 
-
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
 import { ListaEncuestas } from './lista-encuestas'
@@ -25,7 +24,7 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasProfe() {
-  const { estado, WssDebugPanel } = useConexionProfe()
+  const { estado, WssDebugPanel, error } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
 
@@ -43,14 +42,18 @@ export default function EncuestasProfe() {
   const { handleCopy, justCopied } = useClipboard()
 
   if (statusesDeCarga.includes(estado)) {
-    return <LoadingSala overlay />
+    return <LoadingSala overlay mensaje="Conectando..." />
+  }
+
+  if (estado === StatusDeConexion.Error) {
+    return <LoadingSala overlay mensaje={error ?? undefined} error />
   }
 
   if (!configSala) {
-    return <LoadingSala overlay />
+    return <LoadingSala overlay mensaje="Esperando config de sala..." />
   }
 
-  if (estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado)
+  if (estado === StatusDeConexion.Expirado)
     return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
 
   const linkOverlay = configSala.link.replace(/\/$/, '') + '/overlay'
@@ -221,7 +224,6 @@ export default function EncuestasProfe() {
                     <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                   </div>
                 </div>
-
               </>
             )}
           </div>

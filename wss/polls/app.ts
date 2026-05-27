@@ -233,17 +233,28 @@ export async function estudianteSala(idSala: string, userId: string) {
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   await sala.broadcast('poll:updated', poll, async (poll, socket) => {
+    const encuesta = poll as Encuesta
     if (socket.data.session && socket.data.session.rol === RolSala.Estudiante) {
-      return await hidratarParaEstudiante(sala.id, poll as Encuesta, socket.data.session.userId)
+      return await hidratarParaEstudiante(sala.id, encuesta, socket.data.session.userId)
     }
     if (
       socket.data.session &&
       (socket.data.session.rol === RolSala.Profe || socket.data.session.rol === RolSala.Admin)
     ) {
-      return await hidratarParaProfe(sala.id, poll as Encuesta)
+      return await hidratarParaProfe(sala.id, encuesta)
     }
-    return poll
+    // Público/overlay: enviamos con conteo de votos
+    return await pollConVotos(sala.id, encuesta.id, encuesta)
   })
+}
+
+/** Devuelve la encuesta actualmente enfocada en la sala con conteo de votos, o null si no hay ninguna. */
+export async function getEncuestaEnfocada(salaId: string): Promise<EncuestaConVotos | null> {
+  const enfocadaId = await db.getEnfocada(salaId)
+  if (!enfocadaId) return null
+  const poll = await db.getEncuesta(salaId, enfocadaId)
+  if (!poll) return null
+  return await pollConVotos(salaId, enfocadaId, poll)
 }
 
 /** Hidrata una encuesta con la info para profe (quien votó cada opción) */

@@ -1,8 +1,8 @@
-import { ExtendedError } from 'socket.io'
+import { ExtendedError, Socket } from 'socket.io'
 import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
-import { broadcastPoll, estudianteSala, profeSala } from './app'
+import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from './app'
 
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
@@ -107,6 +107,22 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
   const emitir = safe(async () => {
     socket.emit('polls:list', await estudiante.listar())
+  })
+
+  await emitir()
+}
+
+export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {
+  const safe = conErrorHandling(socket)
+
+  socket.join(`sala:${idSala}:overlay`)
+
+  console.log(`📺 Overlay conectado para sala ${idSala} (socket ${socket.id})`)
+
+  // Al conectarse, enviamos la encuesta enfocada actual si la hay
+  const emitir = safe(async () => {
+    const encuesta = await getEncuestaEnfocada(idSala)
+    if (encuesta) socket.emit('poll:updated', encuesta)
   })
 
   await emitir()

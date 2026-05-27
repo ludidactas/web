@@ -47,20 +47,19 @@ function useScrambleText(targetText: string) {
 }
 
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
-import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
-import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
+import { useConexionOverlay } from '@/wss-cli/providers/wss-overlay-context'
+import { overlayEncuestaStore } from '@/wss-cli/stores/overlay-encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import LoadingSala from '../loading-sala'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
-  const { estado, error } = useConexionEstudiante()
-  const { items: encuestas } = storeEncuestasEstudiante()
-  const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
+  const { estado, error } = useConexionOverlay()
+  const { encuesta } = overlayEncuestaStore()
 
   return (
     <div className="w-full">
-      {estado !== StatusDeConexion.Conectado && <LoadingSala/>}
+      {estado !== StatusDeConexion.Conectado && <LoadingSala />}
       {error && <p className="text-red-500">Error: {error}</p>}
       {estado === StatusDeConexion.Conectado && (
         <>
@@ -113,7 +112,7 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
 
   return (
     <div className="w-auto rounded-xl p-6" style={{ backgroundColor: bg, margin: `${margin}px` }}>
-      <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`} >
+      <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`}>
         {/* Título de la encuesta */}
         <text
           x="20"
@@ -241,10 +240,10 @@ function BarraEstadistica({
 
       {/* Valor y porcentaje */}
       <foreignObject x={150 + maxBarWidth + 15} y={0} width="85" height={barHeight}>
-        <div className='flex items-center gap-4 ' style={{ width: '100%', height: '100%'}}>
-          <span className='text-white text-xl'>{percentage100s.toFixed(0)}%</span>
-          <span className='flex items-center gap-1 font-bold text-2xl text-emerald-400'>
-            {opcion.votos} <Icon icon={'pepicons-pop:hand-point'}/>
+        <div className="flex items-center gap-4 " style={{ width: '100%', height: '100%' }}>
+          <span className="text-white text-xl">{percentage100s.toFixed(0)}%</span>
+          <span className="flex items-center gap-1 font-bold text-2xl text-emerald-400">
+            {opcion.votos} <Icon icon={'pepicons-pop:hand-point'} />
           </span>
         </div>
       </foreignObject>

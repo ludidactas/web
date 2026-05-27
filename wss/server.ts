@@ -3,7 +3,7 @@ import { conErrorLogging } from './middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
-import { handlersEncuestasEstudiante, handlersEncuestasProfe } from './polls/handlers'
+import { handlersEncuestasEstudiante, handlersEncuestasOverlay, handlersEncuestasProfe } from './polls/handlers'
 import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from './salas/handlers'
 import { RolSala } from './validators/auth'
 
@@ -19,6 +19,7 @@ io.use(conErrorLogging)
     // Publico: no requiere sesión, pero sí el id de sala para validar que exista y enviar la config pública
     if (isNullish(socket.data) || isNullish(socket.data.session)) {
       await handlersSalaPublico(socket, socket.handshake.auth.idSala)
+      await handlersEncuestasOverlay(socket, socket.handshake.auth.idSala)
     }
 
     // Estudiante: requiere sesión de estudiante válida, y permisos para la sala (chequeados en `conSession`)

@@ -30,7 +30,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
 
   // Confirmamos con delay si no hay encuestas, para evitar mostrar el mensaje de "no hay encuestas" durante la carga inicial.
   const { valor: posibleVacio, confirmado: confirmadoVacio } = useConfirmarConDelay(
-    () => StatusDeConexion.Conectado && encuestas.length === 0,
+    () => estado === StatusDeConexion.Conectado && encuestas.length === 0,
     1000
   )
   const encuestasVisibles = encuestas.filter((e) => e.isPublished)

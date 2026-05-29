@@ -18,7 +18,7 @@ export interface SocketWssCli extends Socket {
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function handshake(auth: SocketServerAuth) {
-  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, { auth, autoConnect: false }) as SocketWssCli
+  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, { auth, autoConnect: false, reconnection: false }) as SocketWssCli
 }
 
 /**
@@ -31,19 +31,19 @@ export async function configurarListeners({
   sock: SocketWssCli
   listeners: {
     onConnect: (socket: SocketWssCli) => void
-    onError: (socket: SocketWssCli, error: Error) => void
+    onConnectionError: (socket: SocketWssCli, error: Error) => void
     onDisconnect: (socket: SocketWssCli, reason: string) => void
     onExpired: (socket: SocketWssCli, data: RazonExpiracion) => void
   }
 }) {
-  const { onConnect, onError, onDisconnect } = listeners
+  const { onConnect, onConnectionError, onDisconnect } = listeners
 
   // En cualquier caso, le suscribimos unos handlers básicos
-  sock.on('connect_error', (error) => onError(sock, error))
+  sock.on('connect_error', (error) => onConnectionError(sock, error))
   sock.on('disconnect', (reason: string) => onDisconnect(sock, reason))
   sock.on('connect', () => onConnect(sock))
   sock.on('connect_timeout', (error) =>
-    onError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
+    onConnectionError(sock, new Error(`Timeout al conectar con el servidor de encuestas: ${error.message}`))
   )
 
   return sock

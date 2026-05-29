@@ -14,6 +14,11 @@ Viene empezando como biblioteca de recursos, de los cuales la columna vertebral 
 - Correr un server redis. Puede ser standalone o con docker.
 - Correr `bun/npm i`
 - Correr el server con `bun/npm wss:dev`
+
+- Agregar las variables locales necesarias:
+    - NEXTAUTH_SECRET= $(`openssl rand -base64 32`)
+    - POLLS_ADMINS= $un_mail
+
 - Correr el proyecto next en otra terminal con `bun/npm dev`
 - Los tests se corren con `bun/npm e2e` (de end-to-end)
 

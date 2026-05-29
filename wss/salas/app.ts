@@ -6,7 +6,9 @@ import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
 import { RolSala } from '../validators/auth'
 import { configSala, ConfigSala } from '../validators/salas'
-import { WssServerSession } from '../validators/session'
+import { WssEstudianteSession } from '../validators/session'
+import { ListaPermitidos } from '../invitados/app'
+
 import * as db from './db'
 
 export type { SalaData } from './db'
@@ -82,7 +84,7 @@ export namespace Salas {
           ...sockets[0].data.session,
           conectado: true,
         }))
-        .filter((s): s is WssServerSession => s !== null)
+        .filter((s): s is WssEstudianteSession & { conectado : true} => s !== null)
 
       return conectados
     }
@@ -107,7 +109,6 @@ export namespace Salas {
 
         // Notificamos y desconectamos(kick)
         sinDni.forEach((s) => {
-          // Los desconectamos enviándoles un mensaje de error a su sala
           s.emit('sala:kick', {
             motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
           })
@@ -116,6 +117,32 @@ export namespace Salas {
 
         /** @todo: Marcar el drop para la lista de presentes */
       }
+    }
+
+    async function sanitizarPermitidos() {
+      const sala = await getFromDb()
+
+      // Solo aplica cuando la restricción está activa
+      if (!sala.config.pedir_dni || !sala.config.solo_invitados) return
+
+      const permitidos = await ListaPermitidos.para(salaId).obtener()
+
+      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const noPermitidos = sockets.filter(
+        (s) => s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.dni)
+      )
+
+      if (noPermitidos.length === 0) return
+
+      console.warn(
+        `⚠️  Kickeando estudiantes no permitidos en sala ${salaId}:`,
+        noPermitidos.map((s) => s.data.session.userId)
+      )
+
+      noPermitidos.forEach((s) => {
+        s.emit('sala:kick', { motivo: 'Tu DNI no está en la lista de participantes permitidos.' })
+        s.disconnect()
+      })
     }
 
     /** Quita los inactivos de la lista de la sala */
@@ -155,6 +182,9 @@ export namespace Salas {
       /** Lleva a cabo las acciones necesarias para que el estado respete la config (e.g. kickear a los estudiantes que no tengan DNI cuando es pedido) */
       sanitizar,
 
+      /** Kickea a los estudiantes cuyo DNI no esté en la lista de permitidos actualizada */
+      sanitizarPermitidos,
+
       /** Borra los estudiantes desconectados de la lista */
       limpiarEstudiantes,
 
@@ -172,6 +202,9 @@ export namespace Salas {
 
       /** Valida lo que recibe y si pasa actualiza la config de la sala */
       actualizarConfig,
+
+      /** Gestión de la lista de usuarios permitidos */
+      listaPermitidos: () => ListaPermitidos.para(salaId),
 
       /** Devuelve solo la data serializable (sin funciones) */
       raw: getFromDb,
@@ -202,12 +235,12 @@ export namespace Salas {
     const id = randomUUID().split('-')[0]
     const email = socket.data.session.email
 
-    // Todavía no está en uso
     const config_default: ConfigSala = {
       pedir_dni: false,
       permitir_anonimo: true,
       link: '',
       nombre_profe: email,
+      solo_invitados: false,
     }
 
     const config = {

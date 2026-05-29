@@ -25,9 +25,15 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       // `actualizarConfig` valida
       await sala.actualizarConfig(payload)
 
-      // Acá si cambia a `pedir_dni`, revocar sesiones inválidas actuales.
+      // Kickear sesiones que quedan inválidas por el cambio de config
       await sala.sanitizar()
+      await sala.sanitizarPermitidos()
 
+      // También revocamos las sesiones de los estudiantes que no estén en la lista de permitidos (si es que la sala tiene lista de permitidos)
+      if ((await sala.config()).solo_invitados) {
+        await sala.sanitizarPermitidos()
+      }
+      
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())
     })
@@ -56,8 +62,11 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       polls: await profe.listarEncuestas(),
       estudiantes: await sala.listarEstudiantes(),
       config: await sala.config(),
+      listaPermitidos: await sala.listaPermitidos().obtener(),
     })
   })
+
+  setupPermitidosSockets()
 
   // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
   socket.on('sala:abrir', emitirApertura)
@@ -69,6 +78,28 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
+
+  function setupPermitidosSockets() {
+    socket.on('sala:permitidos_agregar',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().agregar(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_remover',
+      safe(async (list: string[]) => {
+        await sala.listaPermitidos().remover(list)
+        await sala.sanitizarPermitidos()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+
+    socket.on('sala:permitidos_limpiar',
+      safe(async () => {
+        await sala.listaPermitidos().limpiar()
+        socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      }))
+  }
 }
 
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {

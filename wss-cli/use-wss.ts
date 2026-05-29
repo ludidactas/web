@@ -33,7 +33,7 @@ export function useWss(auth: Pasaporte) {
       console.log(`✅ Dependencias listas, estado es ${status}. Iniciando conexión...`)
 
       // El store maneja internamente la lógica de si hay un socket activo o si debe cerrarlo (Publico -> Estudiante)
-      iniciarConexion(auth)
+      setTimeout(() => iniciarConexion(auth), 1000)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Evitamos que se re-defina la función por cambios de estado que no produzcan cambios de valor en auth
   }, [sessionReady, authKey, status, iniciarConexion])

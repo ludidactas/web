@@ -1,9 +1,7 @@
 'use client'
-
 import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useRef, useState } from 'react'
-
 import { isNullish } from 'remeda'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 
@@ -49,18 +47,19 @@ function useScrambleText(targetText: string) {
 }
 
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
-import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-context'
-import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
+import { useConexionOverlay } from '@/wss-cli/providers/wss-overlay-context'
+import { overlayEncuestaStore } from '@/wss-cli/stores/overlay-encuestas-store'
+import { Icon } from '@iconify/react/dist/iconify.js'
+import LoadingSala from '../loading-sala'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante
-  const { estado, error } = useConexionEstudiante()
-  const { items: encuestas } = storeEncuestasEstudiante()
-  const encuesta = encuestas.find((e) => e.isFocused) || encuestas[0]
+  const { estado, error } = useConexionOverlay()
+  const { encuesta } = overlayEncuestaStore()
 
   return (
     <div className="w-full">
-      {estado !== StatusDeConexion.Conectado && <p>Conectando...</p>}
+      {estado !== StatusDeConexion.Conectado && <LoadingSala />}
       {error && <p className="text-red-500">Error: {error}</p>}
       {estado === StatusDeConexion.Conectado && (
         <>
@@ -113,14 +112,14 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
 
   return (
     <div className="w-auto rounded-xl p-6" style={{ backgroundColor: bg, margin: `${margin}px` }}>
-      <svg className="w-full" viewBox={`0 0 800 ${svgHeight}`} style={{ height: 'auto' }}>
+      <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`}>
         {/* Título de la encuesta */}
         <text
           x="20"
-          y="25"
+          y="32"
           textAnchor="left"
           className="text-lg font-semibold fill-white"
-          style={{ fontSize: '18px', fontWeight: 'bold' }}
+          style={{ fontSize: '28px', fontWeight: 'bold' }}
         >
           {encuesta.pregunta}
         </text>
@@ -170,8 +169,8 @@ function BarraEstadistica({
 
   const p = maxPercentage ? percentage / maxPercentage : percentage
 
-  // Calcular dimensiones
-  const maxBarWidth = 400
+  // Calcular dimensiones: etiqueta 0-150, barra 150-900, texto 915+
+  const maxBarWidth = 750
   const targetWidth = p > 0 ? p * maxBarWidth : 0
   const percentage100s = percentage * 100
 
@@ -240,25 +239,14 @@ function BarraEstadistica({
       </foreignObject>
 
       {/* Valor y porcentaje */}
-      <text
-        x={150 + maxBarWidth + 15}
-        y={barHeight / 2 - 6}
-        dominantBaseline="middle"
-        className="fill-emerald-500"
-        style={{ fontSize: '12px', fontWeight: '600' }}
-      >
-        {opcion.votos} ☝️
-      </text>
-
-      <text
-        x={150 + maxBarWidth + 15}
-        y={barHeight / 2 + 8}
-        dominantBaseline="middle"
-        className="fill-white"
-        style={{ fontSize: '11px' }}
-      >
-        {percentage100s.toFixed(1)}%
-      </text>
+      <foreignObject x={150 + maxBarWidth + 15} y={0} width="85" height={barHeight}>
+        <div className="flex items-center gap-4 " style={{ width: '100%', height: '100%' }}>
+          <span className="text-white text-xl">{percentage100s.toFixed(0)}%</span>
+          <span className="flex items-center gap-1 font-bold text-2xl text-emerald-400">
+            {opcion.votos} <Icon icon={'pepicons-pop:hand-point'} />
+          </span>
+        </div>
+      </foreignObject>
 
       {/* Gradientes para efectos */}
       <defs>

@@ -151,7 +151,7 @@ export const conexionWss = create<Estado>((set, get) => ({
     const sock = get().socket
     if (sock) limpiarListeners(sock)
 
-    // Reseteamos todo el estado a Quieto, los errores en este punto ya fueron manejados y notificados al usuario. 
+    // Reseteamos todo el estado a Quieto, los errores en este punto ya fueron manejados y notificados al usuario.
     // El socket ya fue desconectado y limpiado, así que no hay riesgo de que quede un socket zombie con listeners activos.
     set({ socket: null, status: StatusDeConexion.Quieto, error: null, _conexionActualId: null })
   },
@@ -177,12 +177,14 @@ export const conexionWss = create<Estado>((set, get) => ({
 
   _manejarDesconexion(reason: string) {
     return get()._limpiarSocket(`Desconectado: ${reason}`)
-    // etc 
+    // etc
   },
 
   _manejarError(err: any) {
+    let msg = err.data?.message ?? err.message ?? '⚠️ Error desconocido'
 
-    const msg = err.data?.message ?? err.message ?? '⚠️ Error desconocido'
+    // Si el mensaje es `xhr poll error`, no se está pudiendo conectar con el server (típicamente no lo corrimos).
+    if (msg === 'xhr poll error') msg = 'Parece que el servidor no está activo'
 
     console.log('❗ Error de conexión al WSS:', msg, 'Detalle del error:', err)
     toast.error(msg)

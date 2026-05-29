@@ -6,9 +6,10 @@ import Link from 'next/link'
 import useClipboard from '@/components/hooks/use-clipboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
+import { EstadisticaSvgConfig } from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
-import { EncuestaSVG } from '../overlay/estadistica-svg'
-import { EstadisticaSvgConfig } from '../overlay/estadistica-svg-config'
+
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
 import { ListaEncuestas } from './lista-encuestas'
@@ -23,7 +24,7 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasProfe() {
-  const { estado, WssDebugPanel } = useConexionProfe()
+  const { estado, WssDebugPanel, error } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
 
@@ -41,17 +42,21 @@ export default function EncuestasProfe() {
   const { handleCopy, justCopied } = useClipboard()
 
   if (statusesDeCarga.includes(estado)) {
-    return <LoadingSala overlay />
+    return <LoadingSala overlay mensaje="Conectando..." />
+  }
+
+  if (estado === StatusDeConexion.Error) {
+    return <LoadingSala overlay mensaje={error ?? undefined} error />
   }
 
   if (!configSala) {
-    return <LoadingSala overlay />
+    return <LoadingSala overlay mensaje="Esperando config de sala..." />
   }
 
-  if (estado === StatusDeConexion.Error || estado === StatusDeConexion.Expirado)
+  if (estado === StatusDeConexion.Expirado)
     return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
 
-  const linkOverlay = configSala.link + 'overlay'
+  const linkOverlay = configSala.link.replace(/\/$/, '') + '/overlay'
 
   return (
     <>
@@ -196,32 +201,27 @@ export default function EncuestasProfe() {
 
             {encuestaEnfocada && (
               <>
-                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-0" SvgComponent={enfocar} />
-
-                <div className="border-4 border-[#6F41CB] animate-border-pulse w-full h-full rounded-xl overflow-y-auto">
-                  <div className=" flex flex-col gap-2 items-center h-full">
-                    <div className="flex flex-col p-8 mt-10 w-full">
-                      <div className="flex flex-col items-center">
-                        <p className=" flex items-center gap-4 font-bold text-2xl text-center">
-                          Visualizador vista previa
-                        </p>
-                        <div className="flex flex-col">
-                          <div className="flex gap-2">
-                            <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
-                              {linkOverlay}
-                            </Link>
-                            <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                              {justCopied ? (
-                                <SquareCheckBig className="text-emerald-700 w-4 h-4" />
-                              ) : (
-                                <Copy size={20} className="hover:cursor-pointer" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
+                <div className="w-full border-4 border-[#6F41CB] animate-border-pulse  h-full rounded-xl overflow-y-auto">
+                  <p className="absolute flex bg-[#e1e2fb] font-bold text-[23px] py-1 m-10 pr-20 pl-12 rounded-xl">
+                    Visualizador vista previa
+                  </p>
+                  <div className="flex flex-col items-center p-2 mt-24 w-full">
+                    <div className="flex flex-col items-center">
+                      <div className="flex">
+                        <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
+                          {linkOverlay}
+                        </Link>
+                        <button title="Copiar" onClick={handleCopy(linkOverlay)}>
+                          {justCopied ? (
+                            <SquareCheckBig className="text-emerald-700 w-4 h-4" />
+                          ) : (
+                            <Copy size={20} className="hover:cursor-pointer" />
+                          )}
+                        </button>
                       </div>
-                      <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                     </div>
+                    <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                   </div>
                 </div>
               </>

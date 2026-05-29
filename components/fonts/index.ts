@@ -1,25 +1,18 @@
 import {
   Chelsea_Market,
-  Funnel_Sans,
   Inter,
   Jersey_10,
   Lexend,
   Nova_Flat,
   Pangolin,
   Pixelify_Sans,
-  Press_Start_2P,
+  Press_Start_2P
 } from 'next/font/google'
 import localFont from 'next/font/local'
 
 export const inter = Inter({ subsets: ['latin'] })
 
 export const novaF = Nova_Flat({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: '400',
-})
-
-export const funnelSans = Funnel_Sans({
   subsets: ['latin'],
   display: 'swap',
   weight: '400',

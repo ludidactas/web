@@ -181,8 +181,11 @@ export const conexionWss = create<Estado>((set, get) => ({
   _manejarError(err: any) {
     let msg = err.message ? err.message : '⚠️ Error desconocido'
 
-    // El server expiró la sesión
+    // Si el mensaje es `xhr poll error`, no se está pudiendo conectar con el server (típicamente no lo corrimos).
+    if (msg === 'xhr poll error') msg = 'Parece que el servidor no está activo'
+
     if (err.data) {
+      // El server expiró la sesión
       msg = err.data.message ?? '😵 Sesión expirada'
 
       // Mesaje

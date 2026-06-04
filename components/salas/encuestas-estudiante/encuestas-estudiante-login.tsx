@@ -52,6 +52,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     if (valueDNI) {
       setDNI(valueDNI)
       localStorage.setItem(`encuestas-dni-${idSala}`, valueDNI)
+    } else {
+      setDNI(undefined)
+      localStorage.removeItem(`encuestas-dni-${idSala}`)
     }
 
     // Esto triggerea el ingreso (que se renderice el `EncuestaEstudianteProvider`)

@@ -193,7 +193,11 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
                 if (establecida) return
 
                 // Si la opción no estaba seleccionada, y ya tengo el maximo de opciones seleccionadas, no se puede seleccionar más.
-                if (!seleccionada && seleccion.length >= maxEfectivo) return
+                // si el max es 1, se reemplaza automáticamente la opción seleccionada.
+                if (!seleccionada && seleccion.length >= maxEfectivo) {
+                  if (maxEfectivo === 1 && encuesta.isOpen && !yaVotado) setSeleccion([opcion.id])
+                  return
+                }
 
                 // Si la encuesta no está abierta o ya voté, no se puede seleccionar nada.
                 if (!encuesta.isOpen || yaVotado) return
@@ -267,8 +271,17 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
           encuesta.maxMultiplesVotos &&
           `Podés seleccionar hasta ${encuesta.maxMultiplesVotos} opciones.`}
 
-        {/* Si admite aportes y multiples y no tiene max, puede seleccionar infinito */}
-        {encuesta.admiteMultiplesVotos && !encuesta.maxMultiplesVotos && 'Podés seleccionar varias opciones.'}
+        {/* Si admite múltiples, no tiene max, y no admite aportes: puede seleccionar todas las opciones fijas */}
+        {encuesta.admiteMultiplesVotos &&
+          !encuesta.maxMultiplesVotos &&
+          !encuesta.admiteAportes &&
+          `Podés seleccionar hasta ${encuesta.opciones.length} opciones.`}
+
+        {/* Si admite múltiples, no tiene max, y admite aportes: puede seleccionar varias (sin límite fijo) */}
+        {encuesta.admiteMultiplesVotos &&
+          !encuesta.maxMultiplesVotos &&
+          encuesta.admiteAportes &&
+          'Podés seleccionar varias opciones.'}
       </span>
 
       {/* Acciones */}

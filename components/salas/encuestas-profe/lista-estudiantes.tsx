@@ -205,7 +205,7 @@ function TooltipVotosEstudiante({ children, userId }: PropsWithChildren & { user
               // Buscamos la encuesta por id en el storage para renderizar el nombre
               const encuesta = encuestas.find((e) => e.id === idEncuesta)
 
-              if (!encuesta) return <div className="text-gray-500">Encuesta {idEncuesta} no encontrada</div>
+              if (!encuesta) return <div key={idEncuesta} className="text-gray-500">Encuesta {idEncuesta} no encontrada</div>
 
               const textoPregunta =
                 encuesta.pregunta.length > 120 ? encuesta.pregunta.slice(0, 120) + '...' : encuesta.pregunta

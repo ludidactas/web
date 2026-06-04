@@ -137,7 +137,6 @@ export const ListaEstudiantes = () => {
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
                   {!e.es_anonimo && <span className="text-teal-500">{e.userId}</span>}
-                  {e.es_anonimo && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
 
                 <TooltipVotosEstudiante userId={e.userId}>

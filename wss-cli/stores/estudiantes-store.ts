@@ -26,7 +26,7 @@ export const storeEstudiantes = create<EstudianteState>()(
     add: (item) =>
       set((state) => ({
         items: state.items.find((e) => e.userId === item.userId)
-          ? state.items.map((e) => (e.userId === item.userId ? { ...e, conectado: true } : e))
+          ? state.items.map((e) => (e.userId === item.userId ? { ...e, ...item, conectado: true } : e))
           : [...state.items, { ...item, conectado: true }],
       })),
 

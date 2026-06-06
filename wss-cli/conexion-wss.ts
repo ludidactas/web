@@ -216,11 +216,6 @@ export const conexionWss = create<Estado>((set, get) => ({
         set({ status: StatusDeConexion.Rechazado, error: msg })
         break
 
-      case TipoErrorSesion.DniYaConectado:
-        get()._limpiarSocket(`Rechazado: ${msg}`)
-        set({ status: StatusDeConexion.Rechazado, error: msg })
-        break
-
       case TipoErrorSesion.SesionYaActiva:
         get()._limpiarSocket(`Rechazado: ${msg}`)
         set({ status: StatusDeConexion.Rechazado, error: msg })

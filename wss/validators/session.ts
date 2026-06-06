@@ -25,7 +25,6 @@ export const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   return {
     ...data,
     nombre,
-    es_anonimo: !data.dni && !data.email,
     userId: data.userId ?? (data.clientId ? `${data.clientId}:${nombre}` : `estudiante-${randomUUID().split('-')[0]}`),
   }
 })

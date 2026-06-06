@@ -28,11 +28,8 @@ export async function resolverIdentidad(
 
   let uuid: string | null = null
 
-  if (dni) {
-    uuid = await redis.hget(k.porDni, dni)
-  } else if (sesionId) {
-    uuid = await redis.hget(k.porSesion, sesionId)
-  }
+  if (dni) uuid = await redis.hget(k.porDni, dni)
+  if (!uuid && sesionId) uuid = await redis.hget(k.porSesion, sesionId)
 
   if (uuid) {
     const raw = await redis.hget(k.tabla, uuid)

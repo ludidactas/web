@@ -9,21 +9,26 @@ const WssSessionBaseSchema = z.object({
   agente: z.string().optional(),
 })
 
-const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
+export const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolSala.Estudiante),
   idSala: z.string(),
+  userId: z.string().optional(), // UUID pre-resuelto por el sistema de identidades
+  clientId: z.string().optional(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
   icono: z.string().optional(),
   // Estudiantes con sesión de Google:
   email: z.string().email().optional(),
   avatar: z.string().optional(),
-}).transform((data) => ({
-  ...data,
-  nombre: data.nombre || nombreDeFantasia(),
-  es_anonimo: !data.dni && !data.email,
-  userId: data.dni || data.email || data.nombre || `estudiante-${randomUUID().split('-')[0]}`,
-}))
+}).transform((data) => {
+  const nombre = data.nombre || nombreDeFantasia()
+  return {
+    ...data,
+    nombre,
+    es_anonimo: !data.dni && !data.email,
+    userId: data.userId ?? (data.clientId ? `${data.clientId}:${nombre}` : `estudiante-${randomUUID().split('-')[0]}`),
+  }
+})
 
 const WssProfeSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolSala.Profe),

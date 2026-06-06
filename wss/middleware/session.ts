@@ -7,6 +7,7 @@ import { Pasaporte, PasaporteSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 import { Salas } from '../salas/app'
+import { resolverIdentidad } from '../salas/identidades'
 import { io } from '../server'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 
@@ -71,36 +72,33 @@ const login = async (socket: SocketConSesion) => {
     const sala = await Salas.get(auth.idSala)
     const config = await sala.config()
 
+    // Resolvemos la identidad estable del estudiante
+    const identidad = await resolverIdentidad(auth.idSala, {
+      dni: auth.dni,
+      clientId: auth.clientId,
+      nombre: auth.nombre,
+    })
+
+    // Verificamos que no haya ya una sesión activa con este userId
+    const socketsActivos = await io.in(`sala:${auth.idSala}:estudiantes`).fetchSockets()
+    if (socketsActivos.some((s) => s.data.session?.userId === identidad.id))
+      throw new ErrorSesion(TipoErrorSesion.SesionYaActiva, `Ya existe una sesión activa para este usuario en esta sala.`)
+
     // La sala requiere DNI
     if (config.pedir_dni) {
-      // Si la sesión no tiene dni
       if (!auth.dni)
         throw new ErrorSesion(TipoErrorSesion.DniRequerido, `La sala ${auth.idSala} requiere DNI.`)
 
-      const dniNum = auth.dni
-
-      // Si la configuración es excluyente, verificamos que el DNI esté en ella
+      // Si la configuración es excluyente, verificamos que el DNI esté en la lista
       if (config.solo_invitados) {
         const permitidos = await sala.listaPermitidos().obtener()
-        if (!permitidos.includes(dniNum))
-          throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${dniNum} no está en la lista de participantes permitidos.`)
-      }
-
-      // Verificamos que el DNI no tenga ya una sesión activa en la sala
-      const socketsActivos = await io.in(`sala:${auth.idSala}:estudiantes`).fetchSockets()
-      const dniYaConectado = socketsActivos.some((s) => s.data.session?.dni === dniNum)
-      if (dniYaConectado)
-        throw new ErrorSesion(TipoErrorSesion.DniYaConectado, `El DNI ${dniNum} ya tiene una sesión activa en esta sala.`)
-    }
-
-    // Si el nombre ya está en uso, bochamos
-    if (!config.pedir_dni) {
-      const currentlyConnected = await sala.listarEstudiantes()
-      if (currentlyConnected.some(e => e.nombre.toLowerCase() === auth.nombre?.toLowerCase())) {
-        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${auth.nombre}" ya está en uso.`)
+        if (!permitidos.includes(auth.dni))
+          throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${auth.dni} no está en la lista de participantes permitidos.`)
       }
     }
-    await openSession(socket, auth)
+
+
+    await openSession(socket, { ...auth, userId: identidad.id })
   }
 
   // Sesión de profe o admin

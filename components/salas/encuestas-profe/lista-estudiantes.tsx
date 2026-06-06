@@ -136,7 +136,8 @@ export const ListaEstudiantes = () => {
                 {/* Nombre, email y DNI */}
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
-                  {!e.es_anonimo && <span className="text-teal-500">{e.userId}</span>}
+                  {e.dni && <span className="text-teal-500">{e.dni}</span>}
+                  {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
                 </div>
 
                 <TooltipVotosEstudiante userId={e.userId}>

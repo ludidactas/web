@@ -4,6 +4,7 @@ export enum TipoErrorSesion {
   DniRequerido   = 'dni_requerido',
   NombreEnUso    = 'nombre_en_uso',
   TokenInvalido  = 'token_invalido',
+  AuthInvalido   = 'auth_invalido',
 }
 
 export class ErrorSesion extends Error {

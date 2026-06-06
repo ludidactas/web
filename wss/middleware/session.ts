@@ -54,10 +54,9 @@ const login = async (socket: SocketConSesion) => {
   const { data: auth, error, success } = PasaporteSchema.safeParse(socket.handshake.auth)
 
   if (!success)
-    throw new Error(
-      `Auth inválido: ${
-        error ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') : 'error desconocido'
-      }`
+    throw new ErrorSesion(
+      TipoErrorSesion.AuthInvalido,
+      `Auth inválido: ${error ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') : 'error desconocido'}`
     )
 
   // Sesión de estudiante

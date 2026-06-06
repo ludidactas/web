@@ -7,6 +7,7 @@ import { Pasaporte, PasaporteSchema } from '../validators/auth'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
 import { Salas } from '../salas/app'
+import { io } from '../server'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
@@ -84,6 +85,12 @@ const login = async (socket: SocketConSesion) => {
         if (!permitidos.includes(dniNum))
           throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${dniNum} no está en la lista de participantes permitidos.`)
       }
+
+      // Verificamos que el DNI no tenga ya una sesión activa en la sala
+      const socketsActivos = await io.in(`sala:${auth.idSala}:estudiantes`).fetchSockets()
+      const dniYaConectado = socketsActivos.some((s) => s.data.session?.dni === dniNum)
+      if (dniYaConectado)
+        throw new ErrorSesion(TipoErrorSesion.DniYaConectado, `El DNI ${dniNum} ya tiene una sesión activa en esta sala.`)
     }
 
     // Si el nombre ya está en uso, bochamos

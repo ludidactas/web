@@ -1,12 +1,9 @@
 'use client'
 
-import { Copy, QrCode, School, SquareCheckBig } from 'lucide-react'
+import { Copy, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
-import { toast } from 'sonner'
 
 import useClipboard from '@/components/hooks/use-clipboard'
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import ManualQr from '@/components/ui/QR'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
@@ -19,7 +16,6 @@ import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
 
-import { cn } from '@/lib/utils'
 import { LdSvg } from '@/components/custom/ld-svg'
 import enfocar from '@/svg/dist/ui/enfocar.svg'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
@@ -89,45 +85,6 @@ export default function EncuestasProfe() {
               <div className="flex flex-col bg-white p-2" tabIndex={0}>
                 <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
                 <div className="bg-white h-full rounded-b-xl">
-                  {configSala.link && (
-                    <div className={cn("flex flex-col items-start gap-2 mb-8 px-2")}>
-                      <p className={cn("flex items-center gap-1.5 text-base font-semibold text-slate-800")}>
-                        <School size={18} /> Tu sala
-                      </p>
-                      <p className={cn("text-xs text-slate-500")}>
-                        ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
-                      </p>
-                      <div className={cn("flex gap-2 w-full justify-center pt-1")}>
-                        <button
-                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}
-                          onClick={() => { navigator.clipboard.writeText(configSala.link); toast.success('¡link copiado!') }}
-                        >
-                          <Copy size={14} /> Copiar link
-                        </button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}>
-                              <QrCode size={14} /> Mostrar QR
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent className={cn("flex flex-col items-center gap-2 w-fit p-2")} aria-description="QR de tu sala">
-                            <DialogHeader>
-                              <DialogTitle className="sr-only">QR de tu sala</DialogTitle>
-                            </DialogHeader>
-                            <ManualQr url={configSala.link} />
-                            <DialogFooter>
-                              <DialogClose>
-                                <p className={cn("px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full")}>Cerrar</p>
-                              </DialogClose>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                  )}
-
-                  {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
-
                   {estado === StatusDeConexion.Conectado && (
                     <div className="flex flex-col gap-10">
                       <AgregarPregunta />
@@ -166,45 +123,6 @@ export default function EncuestasProfe() {
             <h1 className="text-3xl md:text-4xl text-center text-[#8345FE]">¡Haz una pregunta!</h1>
           </div>
           <div className="bg-white h-full rounded-b-xl">
-            {configSala.link && (
-              <div className={cn("flex flex-col items-start gap-2 mb-8 px-4")}>
-                <p className={cn("flex items-center gap-1.5 text-base font-semibold text-slate-800")}>
-                  <School size={18} /> Tu sala
-                </p>
-                <p className={cn("text-xs text-slate-500")}>
-                  Compartí el link de la sala con tus estudiantes para que participen de las encuestas
-                </p>
-                <div className={cn("flex gap-2 w-full justify-center pt-1")}>
-                  <button
-                    className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}
-                    onClick={() => { navigator.clipboard.writeText(configSala.link); toast.success('¡link copiado!') }}
-                  >
-                    <Copy size={14} /> Copiar link
-                  </button>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}>
-                        <QrCode size={14} /> Mostrar QR
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className={cn("flex flex-col items-center gap-2 w-fit p-2")} aria-description="QR de tu sala">
-                      <DialogHeader>
-                        <DialogTitle className="sr-only">QR de tu sala</DialogTitle>
-                      </DialogHeader>
-                      <ManualQr url={configSala.link} />
-                      <DialogFooter>
-                        <DialogClose>
-                          <p className={cn("px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full")}>Cerrar</p>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            )}
-
-            {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
-
             {estado === StatusDeConexion.Conectado && (
               <div className="flex flex-col gap-10">
                 <AgregarPregunta />

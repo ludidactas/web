@@ -1,9 +1,12 @@
 'use client'
 
-import { Copy, SquareCheckBig } from 'lucide-react'
+import { Copy, QrCode, School, SquareCheckBig } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 import useClipboard from '@/components/hooks/use-clipboard'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import ManualQr from '@/components/ui/QR'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
@@ -16,6 +19,7 @@ import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
 
+import { cn } from '@/lib/utils'
 import { LdSvg } from '@/components/custom/ld-svg'
 import enfocar from '@/svg/dist/ui/enfocar.svg'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
@@ -86,21 +90,39 @@ export default function EncuestasProfe() {
                 <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
                 <div className="bg-white h-full rounded-b-xl">
                   {configSala.link && (
-                    <div className="flex flex-col items-center justify-center gap-1 mb-8">
-                      <div className="flex gap-2 text-xl">
-                        <p className="leading-normal text-center text-sm">
-                          Tu sala:{' '}
-                          <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
-                            {configSala.link}
-                          </Link>
-                        </p>
-                        <button title="Copiar" onClick={handleCopy(configSala.link)}>
-                          {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                        </button>
-                      </div>
-                      <p className="text-center text-xs md:text-xl">
+                    <div className={cn("flex flex-col items-start gap-2 mb-8 px-2")}>
+                      <p className={cn("flex items-center gap-1.5 text-base font-semibold text-slate-800")}>
+                        <School size={18} /> Tu sala
+                      </p>
+                      <p className={cn("text-xs text-slate-500")}>
                         ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
                       </p>
+                      <div className={cn("flex gap-2 w-full justify-center pt-1")}>
+                        <button
+                          className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}
+                          onClick={() => { navigator.clipboard.writeText(configSala.link); toast.success('¡link copiado!') }}
+                        >
+                          <Copy size={14} /> Copiar link
+                        </button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}>
+                              <QrCode size={14} /> Mostrar QR
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className={cn("flex flex-col items-center gap-2 w-fit p-2")} aria-description="QR de tu sala">
+                            <DialogHeader>
+                              <DialogTitle className="sr-only">QR de tu sala</DialogTitle>
+                            </DialogHeader>
+                            <ManualQr url={configSala.link} />
+                            <DialogFooter>
+                              <DialogClose>
+                                <p className={cn("px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full")}>Cerrar</p>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   )}
 
@@ -145,21 +167,39 @@ export default function EncuestasProfe() {
           </div>
           <div className="bg-white h-full rounded-b-xl">
             {configSala.link && (
-              <div className="flex flex-col items-center justify-center gap-1 mb-8">
-                <div className="flex gap-2 text-xl">
-                  <p className="leading-normal text-center text-sm md:text-lg">
-                    Tu sala:{' '}
-                    <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
-                      {configSala.link}
-                    </Link>
-                  </p>
-                  <button title="Copiar" onClick={handleCopy(configSala.link)}>
-                    {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                  </button>
-                </div>
-                <p className="w-96 text-center text-xs text-slate-500">
-                  (Comparte el link de la sala con tus estudiantes para que participen de las encuestas)
+              <div className={cn("flex flex-col items-start gap-2 mb-8 px-4")}>
+                <p className={cn("flex items-center gap-1.5 text-base font-semibold text-slate-800")}>
+                  <School size={18} /> Tu sala
                 </p>
+                <p className={cn("text-xs text-slate-500")}>
+                  Compartí el link de la sala con tus estudiantes para que participen de las encuestas
+                </p>
+                <div className={cn("flex gap-2 w-full justify-center pt-1")}>
+                  <button
+                    className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}
+                    onClick={() => { navigator.clipboard.writeText(configSala.link); toast.success('¡link copiado!') }}
+                  >
+                    <Copy size={14} /> Copiar link
+                  </button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50")}>
+                        <QrCode size={14} /> Mostrar QR
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className={cn("flex flex-col items-center gap-2 w-fit p-2")} aria-description="QR de tu sala">
+                      <DialogHeader>
+                        <DialogTitle className="sr-only">QR de tu sala</DialogTitle>
+                      </DialogHeader>
+                      <ManualQr url={configSala.link} />
+                      <DialogFooter>
+                        <DialogClose>
+                          <p className={cn("px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full")}>Cerrar</p>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             )}
 

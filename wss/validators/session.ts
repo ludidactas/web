@@ -4,7 +4,6 @@ import { randomUUID } from 'crypto'
 import { nombreDeFantasia } from '../salas/utils'
 
 const WssSessionBaseSchema = z.object({
-  sessionId: z.string(), // Legacy
   userIp: z.string().optional(),
   agente: z.string().optional(),
 })
@@ -12,7 +11,6 @@ const WssSessionBaseSchema = z.object({
 export const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolSala.Estudiante),
   idSala: z.string(),
-  userId: z.string().optional(), // UUID pre-resuelto por el sistema de identidades
   clientId: z.string().optional(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
@@ -25,7 +23,7 @@ export const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   return {
     ...data,
     nombre,
-    userId: data.userId ?? (data.clientId ? `${data.clientId}:${nombre}` : `estudiante-${randomUUID().split('-')[0]}`),
+    userId: data.dni || data.email || data.nombre || `estudiante-random`,
   }
 })
 

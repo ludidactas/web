@@ -52,7 +52,8 @@ export default function EncuestasEstudiantePage({
       auth={{ idSala, nombre, dni, email: data?.user?.email ?? undefined, avatar: data?.user?.image ?? undefined }}
     >
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
-        <HeaderSala className="gap-2" btnLogout={status === 'authenticated' ? btnLogoutGoogle : btnLogoutAnonimo}>
+        {/* Sacamos el boton de logout de google porque no lo estamos usando */}
+        <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo}>
           <p className="flex gap-2 justify-center items-center text-sm text-center sm:text-4xl">
             <Sparkles className=" w-4 md:w-10" />
             ¡Hola {nombreSplit(nombre)}!<Sparkles className="w-4 md:w-10" />

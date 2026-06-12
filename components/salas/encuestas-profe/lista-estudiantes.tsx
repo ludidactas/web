@@ -137,7 +137,6 @@ export const ListaEstudiantes = () => {
                 <div className="flex flex-col">
                   <span>{e.nombre}</span>
                   {!e.es_anonimo && <span className="text-teal-500">{e.userId}</span>}
-                  {e.es_anonimo && <span className="text-slate-400 italic">Anónimo</span>}
                 </div>
 
                 <TooltipVotosEstudiante userId={e.userId}>
@@ -205,7 +204,7 @@ function TooltipVotosEstudiante({ children, userId }: PropsWithChildren & { user
               // Buscamos la encuesta por id en el storage para renderizar el nombre
               const encuesta = encuestas.find((e) => e.id === idEncuesta)
 
-              if (!encuesta) return <div className="text-gray-500">Encuesta {idEncuesta} no encontrada</div>
+              if (!encuesta) return <div key={idEncuesta} className="text-gray-500">Encuesta {idEncuesta} no encontrada</div>
 
               const textoPregunta =
                 encuesta.pregunta.length > 120 ? encuesta.pregunta.slice(0, 120) + '...' : encuesta.pregunta

@@ -85,27 +85,6 @@ export default function EncuestasProfe() {
               <div className="flex flex-col bg-white p-2" tabIndex={0}>
                 <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Haz una pregunta!</h1>
                 <div className="bg-white h-full rounded-b-xl">
-                  {configSala.link && (
-                    <div className="flex flex-col items-center justify-center gap-1 mb-8">
-                      <div className="flex gap-2 text-xl">
-                        <p className="leading-normal text-center text-sm">
-                          Tu sala:{' '}
-                          <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
-                            {configSala.link}
-                          </Link>
-                        </p>
-                        <button title="Copiar" onClick={handleCopy(configSala.link)}>
-                          {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                        </button>
-                      </div>
-                      <p className="text-center text-xs md:text-xl">
-                        ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
-                      </p>
-                    </div>
-                  )}
-
-                  {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
-
                   {estado === StatusDeConexion.Conectado && (
                     <div className="flex flex-col gap-10">
                       <AgregarPregunta />
@@ -144,27 +123,6 @@ export default function EncuestasProfe() {
             <h1 className="text-3xl md:text-4xl text-center text-[#8345FE]">¡Haz una pregunta!</h1>
           </div>
           <div className="bg-white h-full rounded-b-xl">
-            {configSala.link && (
-              <div className="flex flex-col items-center justify-center gap-1 mb-8">
-                <div className="flex gap-2 text-xl">
-                  <p className="leading-normal text-center text-sm md:text-lg">
-                    Tu sala:{' '}
-                    <Link target="_blank" href={configSala.link} className="text-blue-700 hover:underline">
-                      {configSala.link}
-                    </Link>
-                  </p>
-                  <button title="Copiar" onClick={handleCopy(configSala.link)}>
-                    {justCopied ? <SquareCheckBig className="text-emerald-700" /> : <Copy />}
-                  </button>
-                </div>
-                <p className="w-96 text-center text-xs text-slate-500">
-                  (Comparte el link de la sala con tus estudiantes para que participen de las encuestas)
-                </p>
-              </div>
-            )}
-
-            {!configSala.link && <p className="text-center p-4 text-rose-500">Link de sala no recibido</p>}
-
             {estado === StatusDeConexion.Conectado && (
               <div className="flex flex-col gap-10">
                 <AgregarPregunta />

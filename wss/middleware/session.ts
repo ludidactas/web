@@ -1,10 +1,9 @@
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
-import db from '../redis'
 import { socketIp } from '../utils'
-import { autorizarAccesoASala, Pasaporte, PasaporteSchema, RolSala } from '../validators/auth'
+import { Pasaporte, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
-import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
+import { autorizarAccesoASala, decodearTokenNextAuth, registradoComoAdmin } from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -59,10 +58,6 @@ const login = async (socket: SocketConSesion) => {
 
   // Sesión de estudiante
   if (auth.rol === RolSala.Estudiante) {
-    // Verificamos que la sala exista
-    if (!(await db.hexists('salas', auth.idSala)))
-      throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${auth.idSala} no existe.`)
-
     await autorizarAccesoASala(auth)
 
     console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)

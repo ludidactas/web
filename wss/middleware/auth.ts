@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken'
 import { ExtendedError } from 'socket.io'
 import db from '../redis'
-import { SalaData } from '../salas/app'
-import { RolSala } from '../validators/auth'
+import { SalaData, Salas } from '../salas/app'
+import { PasaporteEstudiante, RolSala } from '../validators/auth'
 import { SocketConSesion } from './session'
+import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
 // Si no está seteada, tiramos un error para que no arranque el server.
@@ -84,3 +85,20 @@ export const conPermisosDe =
 
     next()
   }
+
+export async function autorizarAccesoASala(auth: PasaporteEstudiante) {
+  // Verificamos que la sala exista
+  if (!Salas.existe(auth.idSala))
+    throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${auth.idSala} no existe.`)
+
+  const sala = await Salas.get(auth.idSala)
+  const config = await sala.config()
+
+  // La sala requiere DNI
+  if (config.pedir_dni) {
+    if (!auth.dni) throw new ErrorSesion(TipoErrorSesion.DniRequerido, `La sala ${auth.idSala} requiere DNI.`)
+
+    // Si la configuración es excluyente, verificamos que el DNI esté en la lista
+    if (config.solo_invitados) await sala.listaPermitidos().autorizar(auth.dni)
+  }
+}

@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { Salas } from '../salas/app'
-import { ErrorSesion, TipoErrorSesion } from './errors'
 
 export enum RolSala {
   Admin = 'admin',
@@ -57,23 +55,3 @@ export type PasaporteEstudiante = z.infer<typeof PasaporteEstudianteSchema>
 export type PasaporteProfe = z.infer<typeof PasaporteProfeSchema>
 export type PasaportePublico = z.infer<typeof PasaportePublicoSchema>
 export type PasaporteAdmin = z.infer<typeof PasaporteAdminSchema>
-
-export async function autorizarAccesoASala(auth: PasaporteEstudiante) {
-  const sala = await Salas.get(auth.idSala)
-  const config = await sala.config()
-
-  // La sala requiere DNI
-  if (config.pedir_dni) {
-    if (!auth.dni) throw new ErrorSesion(TipoErrorSesion.DniRequerido, `La sala ${auth.idSala} requiere DNI.`)
-
-    // Si la configuración es excluyente, verificamos que el DNI esté en la lista
-    if (config.solo_invitados) {
-      const permitidos = await sala.listaPermitidos().obtener()
-      if (!permitidos.includes(auth.dni))
-        throw new ErrorSesion(
-          TipoErrorSesion.DniNoPermitido,
-          `El DNI ${auth.dni} no está en la lista de participantes permitidos.`
-        )
-    }
-  }
-}

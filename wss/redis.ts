@@ -7,6 +7,6 @@ const redis = new Redis({
 })
 
 redis.on('error', (err) => console.error('❌ Redis tiró error:', err))
-redis.on('ready', () => console.log('👍 Redis corrientdo y conectado'))
+redis.on('ready', () => console.log('👍 Redis corriendo y conectado'))
 
 export default redis

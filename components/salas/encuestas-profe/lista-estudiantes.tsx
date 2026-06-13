@@ -1,6 +1,7 @@
-import { CircleCheckBig, Copy, Download, Eraser, ListCollapse, Settings, SquareCheckBig, Users, X } from 'lucide-react'
+import { Check, CircleCheckBig, Copy, Download, Eraser, ListCollapse, QrCode, School, Settings, SquareCheckBig, Users, X } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
 import { isEmpty } from 'remeda'
+import { QRCodeSVG } from 'qrcode.react'
 
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { cn, exportarPlanilla } from '@/lib/utils'
@@ -8,7 +9,8 @@ import { cn, exportarPlanilla } from '@/lib/utils'
 import PanelConfigSala from './panel-config-sala'
 
 import DebugPanel from '@/components/ui/debug-panel'
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 
@@ -17,15 +19,17 @@ import useClipboard from '@/components/hooks/use-clipboard'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
+import { storeConfig } from '@/wss-cli/stores/config-store'
 
 export const ListaEstudiantes = () => {
   const { limpiarEstudiantes } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
+  const { config: configSala } = storeConfig()
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   const { handleCopy, justCopied } = useClipboard()
 
   const handleExportToExcel = () => {
-    // Prepara los datos para Excel
     const datosParaExcel = estudiantes.map((e) => ({
       Nombre: e.nombre || 'Sin nombre',
       Email: e.email || 'Sin email',
@@ -43,62 +47,22 @@ export const ListaEstudiantes = () => {
     <div className="relative flex flex-col h-full">
       <DebugPanel classNames={{ button: 'absolute ' }} data={estudiantes} title="Estudiantes en sala" />
 
-      {/* Encabezado */}
-      <div className="flex justify-between items-center rounded-xl gap-2 mb-4">
-        <h1 className="flex gap-2 md:gap-4 text-xl md:text-2xl sm:w-[250px] font-bold text-[#6F41CB]">
-          <Users className="w-8 h-8" />
-          Participantes
-        </h1>
-
-        {/* Botones para limpiar y copiar  */}
-        <div className="flex gap-1 ">
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button
-                className="flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110"
-                onClick={limpiarEstudiantes}
-              >
-                <Eraser size={20} />
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              {' '}
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Limpiar lista</p>
-            </HoverCardContent>
-          </HoverCard>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button
-                className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110"
-                onClick={handleCopy(datosEstudiantes)}
-              >
-                {justCopied ? <SquareCheckBig size={20} /> : <Copy size={20} />}
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              {' '}
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Copiar lista</p>
-            </HoverCardContent>
-          </HoverCard>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button
-                className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleExportToExcel}
-                disabled={estudiantes.length === 0}
-              >
-                <Download size={20} />
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Exportar a Excel</p>
-            </HoverCardContent>
-          </HoverCard>
+      <Tabs defaultValue="participantes" className="flex flex-col h-full">
+        {/* Header: tabs + settings gear */}
+        <div className={cn("flex items-center gap-2 mb-3")}>
+          <TabsList className={cn("flex-1 h-fit bg-slate-100")}>
+            <TabsTrigger value="tu-sala" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-[#6F41CB]")}>
+              <School size={18} /> Tu sala
+            </TabsTrigger>
+            <TabsTrigger value="participantes" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-[#00B0D2]")}>
+              <Users size={18} /> Participantes
+            </TabsTrigger>
+          </TabsList>
           <HoverCard>
             <PanelConfigSala>
               <HoverCardTrigger asChild>
-                <button className="items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <Settings size={20} />
+                <button className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}>
+                  <Settings size={16} />
                 </button>
               </HoverCardTrigger>
             </PanelConfigSala>
@@ -107,12 +71,73 @@ export const ListaEstudiantes = () => {
             </HoverCardContent>
           </HoverCard>
         </div>
-      </div>
-      <div className="flex-1 overflow-y-auto">
+
+        {/* Tab: Tu sala */}
+        <TabsContent value="tu-sala" className={cn("flex flex-col gap-4 pt-2")}>
+          <p className={cn("text-xs text-slate-500")}>
+            ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
+          </p>
+          {configSala?.link ? (
+            <div className={cn("flex gap-2 w-full justify-center")}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95",
+                      linkCopiado ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "hover:bg-slate-50"
+                    )}
+                    onClick={() => {
+                      navigator.clipboard.writeText(configSala.link)
+                      setLinkCopiado(true)
+                      setTimeout(() => setLinkCopiado(false), 2000)
+                    }}
+                  >
+                    {linkCopiado ? <Check size={14} /> : <Copy size={14} />}
+                    {linkCopiado ? '¡Copiado!' : 'Copiar link'}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Copiá el link para compartirlo con tus estudiantes</p>
+                </TooltipContent>
+              </Tooltip>
+              <Dialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                      <button className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform")}>
+                        <QrCode size={14} /> Mostrar QR
+                      </button>
+                    </DialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Mostrá el código QR para que tus estudiantes se unan escaneándolo</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DialogContent className={cn("flex flex-col items-center gap-2 w-fit p-2")} aria-description="QR de tu sala">
+                  <DialogHeader>
+                    <DialogTitle className="sr-only">QR de tu sala</DialogTitle>
+                  </DialogHeader>
+                  <QRCodeSVG value={configSala.link} size={256} />
+                  <DialogFooter>
+                    <DialogClose>
+                      <p className={cn("px-3 py-1 text-white text-sm border-2 bg-teal-500 rounded-full")}>Cerrar</p>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          ) : (
+            <p className={cn("text-center text-rose-500 text-sm")}>Link de sala no recibido</p>
+          )}
+        </TabsContent>
+
+        {/* Tab: Participantes */}
+        <TabsContent value="participantes" className={cn("flex flex-col flex-1 overflow-hidden")}>
+          <div className={cn("flex-1 overflow-y-auto")}>
         {estudiantes.length === 0 && (
           <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>
         )}
-
+      
         {estudiantes.length > 0 && (
           <ul className="flex flex-col gap-2 p-2 rounded-xl">
             {estudiantes.map((e) => (
@@ -147,7 +172,52 @@ export const ListaEstudiantes = () => {
             ))}
           </ul>
         )}
-      </div>
+        </div>
+                  <div className={cn("flex justify-end gap-1 mb-3")}>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <button
+                  className={cn("flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110")}
+                  onClick={limpiarEstudiantes}
+                >
+                  <Eraser size={16} />
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Limpiar lista</p>
+              </HoverCardContent>
+            </HoverCard>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <button
+                  className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}
+                  onClick={handleCopy(datosEstudiantes)}
+                >
+                  {justCopied ? <SquareCheckBig size={16} /> : <Copy size={16} />}
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Copiar lista</p>
+              </HoverCardContent>
+            </HoverCard>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <button
+                  className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed")}
+                  onClick={handleExportToExcel}
+                  disabled={estudiantes.length === 0}
+                >
+                  <Download size={16} />
+                </button>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Exportar a Excel</p>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

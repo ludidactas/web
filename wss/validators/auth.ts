@@ -13,6 +13,7 @@ export const PasaporteEstudianteSchema = z
   .object({
     rol: z.literal(RolSala.Estudiante),
     idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
+    clientId: z.string().optional(), // ID estable generado en el cliente, persiste en localStorage
     nombre: z.string().optional(),
     icono: z.string().optional(),
     email: z.string().email('El email debe tener un formato válido').optional(), // Pueden tener email si están conectados con Google

@@ -24,7 +24,7 @@ export default function EncuestasEstudiantePage({
 }) {
   const { status, data } = useGoogleSession()
 
-  const { dni, nombre, ingresado, setIngresado } = useLoginSalaEstudiante({ idSala })
+  const { dni, nombre, clientId, ingresado, setIngresado } = useLoginSalaEstudiante({ idSala })
 
   // Formulario de acceso
   if (!ingresado) {
@@ -49,7 +49,7 @@ export default function EncuestasEstudiantePage({
   // Devolvemos la página
   return (
     <ConexionEstudianteProvider
-      auth={{ idSala, nombre, dni, email: data?.user?.email ?? undefined, avatar: data?.user?.image ?? undefined }}
+      auth={{ idSala, nombre, dni, clientId, email: data?.user?.email ?? undefined, avatar: data?.user?.image ?? undefined }}
     >
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         {/* Sacamos el boton de logout de google porque no lo estamos usando */}

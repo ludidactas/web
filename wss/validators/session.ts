@@ -4,26 +4,28 @@ import { randomUUID } from 'crypto'
 import { nombreDeFantasia } from '../salas/utils'
 
 const WssSessionBaseSchema = z.object({
-  sessionId: z.string(), // Legacy
   userIp: z.string().optional(),
   agente: z.string().optional(),
 })
 
-const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
+export const WssEstudianteSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolSala.Estudiante),
   idSala: z.string(),
+  clientId: z.string().optional(),
   nombre: z.string().optional(),
   dni: z.string().optional(),
   icono: z.string().optional(),
   // Estudiantes con sesión de Google:
   email: z.string().email().optional(),
   avatar: z.string().optional(),
-}).transform((data) => ({
-  ...data,
-  nombre: data.nombre || nombreDeFantasia(),
-  es_anonimo: !data.dni && !data.email,
-  userId: data.dni || data.email || data.nombre || `estudiante-${randomUUID().split('-')[0]}`,
-}))
+}).transform((data) => {
+  const nombre = data.nombre || nombreDeFantasia()
+  return {
+    ...data,
+    nombre,
+    userId: data.dni || data.email || data.nombre || `estudiante-random`,
+  }
+})
 
 const WssProfeSessionSchema = WssSessionBaseSchema.extend({
   rol: z.literal(RolSala.Profe),

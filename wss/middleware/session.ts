@@ -1,13 +1,9 @@
-import { randomUUID } from 'crypto'
 import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
-import db from '../redis'
-import { RolSala } from '../validators/auth'
 import { socketIp } from '../utils'
-import { Pasaporte, PasaporteSchema } from '../validators/auth'
-import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
-import { decodearTokenNextAuth, registradoComoAdmin } from './auth'
-import { Salas } from '../salas/app'
+import { Pasaporte, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
+import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
+import { autorizarAccesoASala, decodearTokenNextAuth, registradoComoAdmin } from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -26,7 +22,6 @@ const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload
   // Creamos el objeto (y lo validamos)
   const sessionData = WssServerSessionSchema.parse({
     ...payload,
-    sessionId: randomUUID().split('-')[0],
     userIp: socketIp(socket),
     agente: socket.handshake.headers['user-agent'],
   }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
@@ -54,7 +49,8 @@ const login = async (socket: SocketConSesion) => {
   const { data: auth, error, success } = PasaporteSchema.safeParse(socket.handshake.auth)
 
   if (!success)
-    throw new Error(
+    throw new ErrorSesion(
+      TipoErrorSesion.AuthInvalido,
       `Auth inválido: ${
         error ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') : 'error desconocido'
       }`
@@ -62,38 +58,9 @@ const login = async (socket: SocketConSesion) => {
 
   // Sesión de estudiante
   if (auth.rol === RolSala.Estudiante) {
+    await autorizarAccesoASala(auth)
+
     console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
-
-    // Verificamos que la sala exista
-    if (!(await db.hexists('salas', auth.idSala)))
-      throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${auth.idSala} no existe.`)
-
-    const sala = await Salas.get(auth.idSala)
-    const config = await sala.config()
-
-    // La sala requiere DNI
-    if (config.pedir_dni) {
-      // Si la sesión no tiene dni
-      if (!auth.dni)
-        throw new ErrorSesion(TipoErrorSesion.DniRequerido, `La sala ${auth.idSala} requiere DNI.`)
-
-      const dniNum = auth.dni
-
-      // Si la configuración es excluyente, verificamos que el DNI esté en ella
-      if (config.solo_invitados) {
-        const permitidos = await sala.listaPermitidos().obtener()
-        if (!permitidos.includes(dniNum))
-          throw new ErrorSesion(TipoErrorSesion.DniNoPermitido, `El DNI ${dniNum} no está en la lista de participantes permitidos.`)
-      }
-    }
-
-    // Si el nombre ya está en uso, bochamos
-    if (!config.pedir_dni) {
-      const currentlyConnected = await sala.listarEstudiantes()
-      if (currentlyConnected.some(e => e.nombre.toLowerCase() === auth.nombre?.toLowerCase())) {
-        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${auth.nombre}" ya está en uso.`)
-      }
-    }
     await openSession(socket, auth)
   }
 

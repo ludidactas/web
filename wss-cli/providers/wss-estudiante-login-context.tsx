@@ -33,6 +33,14 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
       store.setDNI(storedDni)
     }
 
+    // clientId estable por sala: identifica al estudiante entre reconexiones
+    let clientId = localStorage.getItem(`encuestas-clientid-${idSala}`)
+    if (!clientId) {
+      clientId = crypto.randomUUID()
+      localStorage.setItem(`encuestas-clientid-${idSala}`, clientId)
+    }
+    store.setClientId(clientId)
+
     const storeIngresado = localStorage.getItem(`encuestas-ingresado-${idSala}`) === '1'
 
     // Si tiene todos los datos necesatios, lo ingresamos directo -- no está andando, hay que arreglar una race condition

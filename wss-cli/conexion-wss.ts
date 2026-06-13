@@ -211,6 +211,16 @@ export const conexionWss = create<Estado>((set, get) => ({
         set({ status: StatusDeConexion.Rechazado, error: msg })
         break
 
+      case TipoErrorSesion.AuthInvalido:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
+      case TipoErrorSesion.SesionYaActiva:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
       case TipoErrorSesion.TokenInvalido:
         console.log('🧹 El servidor indicó que limpiemos la sesión. Limpiando y reconectando...')
         get()._manejarExpiracion()

@@ -1,4 +1,5 @@
 import { ConfigCreacionSala, configCreacionSala, ConfigSala } from '@/wss/validators/salas'
+import { MetodosLogin } from '@/wss/validators/auth'
 import type { Browser, Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
 import { loginFake } from './auth'
@@ -71,7 +72,7 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
 
     // Llenamos el form de ingreso
     await alumnoPage.getByPlaceholder('Ingresá tu nombre').fill(nombre)
-    if (config.pedir_dni) await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
+    if (config.esquema === MetodosLogin.DNI) await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
     await alumnoPage.getByRole('button', { name: 'Conectarse' }).click()
 
     return alumnoPage

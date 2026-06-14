@@ -1,6 +1,5 @@
 'use client'
-import { PasaportePublico } from '@/wss/validators/auth'
-import { RolSala } from '@/wss/validators/auth'
+import { PasaportePublico, RolSala } from '@/wss/validators/auth'
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import overlayEncuestasHandlers from '../handlers/overlay-encuestas-handlers'

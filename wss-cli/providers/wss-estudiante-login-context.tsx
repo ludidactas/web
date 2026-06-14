@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { storeEstudianteLogin } from '../stores/estudiante-login-store'
 import { useEffect, useState } from 'react'
 import { storeConfig } from '../stores/config-store'
+import { MetodosLogin } from '@/wss/validators/auth'
 
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const store = storeEstudianteLogin()
@@ -44,7 +45,7 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     const storeIngresado = localStorage.getItem(`encuestas-ingresado-${idSala}`) === '1'
 
     // Si tiene todos los datos necesatios, lo ingresamos directo -- no está andando, hay que arreglar una race condition
-    if (config.pedir_dni) {
+    if (config.esquema === MetodosLogin.DNI) {
       store.setIngresado(storeIngresado && !!storedDni && !!storedName)
     } else {
       store.setIngresado(storeIngresado && !!storedName)

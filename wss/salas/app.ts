@@ -4,14 +4,17 @@ import { entries, groupBy, mergeDeep } from 'remeda'
 import { RemoteSocket } from 'socket.io'
 import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
-import { RolSala } from '../validators/auth'
+import { MetodosLogin, RolSala } from '../validators/auth'
 import { configSala, ConfigSala } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
+import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 
 export type { SalaData } from './db'
+
+export type Sala = Awaited<ReturnType<typeof Salas.get>>
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
@@ -84,7 +87,7 @@ export namespace Salas {
           ...sockets[0].data.session,
           conectado: true,
         }))
-        .filter((s): s is WssEstudianteSession & { conectado : true} => s !== null)
+        .filter((s): s is WssEstudianteSession & { conectado: true } => s !== null)
 
       return conectados
     }
@@ -92,18 +95,20 @@ export namespace Salas {
     async function sanitizar() {
       const sala = await getFromDb()
 
-      // Si pasamos a requerir dni, kickeamos a los estudiantes sin dni
-      if (sala.config.pedir_dni) {
+      // Si la sala pasó a autenticar por DNI, kickeamos a los estudiantes que no entraron con DNI
+      if (sala.config.esquema === MetodosLogin.DNI) {
         // Colectamos
         const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
-        const sinDni = sockets.filter((s) => s.data.session.rol === RolSala.Estudiante && !s.data.session.dni)
+        const sinDni = sockets.filter(
+          (s) => s.data.session.rol === RolSala.Estudiante && s.data.session.metodo !== MetodosLogin.DNI
+        )
 
         // Si no hay ninguno, no hay nada más que hacer
         if (sinDni.length === 0) return
 
         // Chiflamos al log!
         console.warn(
-          `⚠️  Estudiantes sin DNI en sala ${salaId} al activar pedir_dni:`,
+          `⚠️  Estudiantes sin DNI en sala ${salaId} al activar el esquema 'dni':`,
           sinDni.map((s) => s.data.session.userId)
         )
 
@@ -122,14 +127,17 @@ export namespace Salas {
     async function sanitizarPermitidos() {
       const sala = await getFromDb()
 
-      // Solo aplica cuando la restricción está activa
-      if (!sala.config.pedir_dni || !sala.config.solo_invitados) return
+      // Solo aplica cuando la sala autentica por DNI y restringe a la lista de invitados
+      if (sala.config.esquema !== MetodosLogin.DNI || !sala.config.solo_invitados) return
 
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
       const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
       const noPermitidos = sockets.filter(
-        (s) => s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.dni)
+        (s) =>
+          s.data.session.rol === RolSala.Estudiante &&
+          s.data.session.metodo === MetodosLogin.DNI &&
+          !permitidos.includes(s.data.session.dni)
       )
 
       if (noPermitidos.length === 0) return
@@ -140,7 +148,7 @@ export namespace Salas {
       )
 
       noPermitidos.forEach((s) => {
-        s.emit('sala:kick', { motivo: 'Tu DNI no está en la lista de participantes permitidos.' })
+        s.emit('sala:kick', { motivo: 'Tu DNI ya no está en la lista de participantes permitidos.' })
         s.disconnect()
       })
     }
@@ -236,8 +244,7 @@ export namespace Salas {
     const email = socket.data.session.email
 
     const config_default: ConfigSala = {
-      pedir_dni: false,
-      permitir_anonimo: true,
+      esquema: MetodosLogin.Nombre,
       link: '',
       nombre_profe: email,
       solo_invitados: false,
@@ -267,6 +274,11 @@ export namespace Salas {
 
   export async function existe(salaId: string) {
     return db.existeSala(salaId)
+  }
+
+  export async function assertExiste(salaId: string) {
+    // Verificamos que la sala exista
+    if (!(await existe(salaId))) throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe.`)
   }
 
   /** Funciones de relaciones: */

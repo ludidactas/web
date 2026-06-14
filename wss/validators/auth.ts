@@ -7,20 +7,46 @@ export enum RolSala {
   Publico = 'publico',
 }
 
-// Schemas para validar el pasaporte en el login:
+export enum MetodosLogin {
+  Nombre = 'nombre',
+  DNI = 'dni',
+  Google = 'google',
+}
 
-export const PasaporteEstudianteSchema = z
-  .object({
-    rol: z.literal(RolSala.Estudiante),
-    idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
-    clientId: z.string().optional(), // ID estable generado en el cliente, persiste en localStorage
-    nombre: z.string().optional(),
-    icono: z.string().optional(),
-    email: z.string().email('El email debe tener un formato válido').optional(), // Pueden tener email si están conectados con Google
-    dni: z.string().regex(/^\d+$/, 'El DNI debe contener solo dígitos').optional(),
-    avatar: z.string().optional(), // Pueden proveer avatar (el de Google por ej.)
-  })
-  .strict()
+// ════════════════════════════════════════════════════════════════════════════
+//  PASAPORTE — el auth que el FE presenta al conectar (la ENTRADA del proceso de login).
+//
+//  Sutileza clave del modelo: para estudiante, el `metodo` de auth (nombre/dni/google) NO lo decide
+//  ni lo manda el cliente — lo impone la SALA vía `config.esquema`. Por eso el pasaporte de estudiante
+//  es method-agnostic: una bolsa floja de campos de identidad opcionales, SIN `metodo`. El FE solo
+//  manda lo que la sala le pidió recolectar.
+//
+//  El `metodo` es un concepto de la SALIDA, no de la entrada: se inyecta recién al construir la
+//  `Session` (ver validators/session.ts), que es donde el server ya conoce el esquema, valida el
+//  campo de identidad correspondiente y resuelve el `userId`.
+//
+//  Profe/admin/publico no tienen esta sutileza (no llevan `metodo`).
+//
+//  La idea, en resumen, es: Pasaporte -> login -> Session
+// ════════════════════════════════════════════════════════════════════════════
+
+export const PasaporteEstudianteBase = z.object({
+  rol: z.literal(RolSala.Estudiante),
+  idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
+  clientId: z.string().optional(), // ID estable generado en el cliente, persiste en localStorage
+})
+
+/**
+ * Entrada de estudiante: bolsa floja de campos de identidad; la sala elige cuál usar (vía su esquema)
+ * y el server descarta el resto al construir la sesión.
+ */
+export const PasaporteEstudianteSchema = PasaporteEstudianteBase.extend({
+  nombre: z.string().optional(),
+  dni: z.string().optional(),
+  email: z.string().optional(),
+  avatar: z.string().optional(),
+  token: z.string().optional(),
+})
 
 export const PasaporteProfeSchema = z
   .object({
@@ -43,7 +69,7 @@ export const PasaportePublicoSchema = z
   })
   .strict()
 
-export const PasaporteSchema = z.discriminatedUnion('rol', [
+export const PasaporteSchema = z.union([
   PasaporteEstudianteSchema,
   PasaporteProfeSchema,
   PasaporteAdminSchema,

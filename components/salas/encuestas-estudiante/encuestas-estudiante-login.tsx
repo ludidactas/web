@@ -17,6 +17,7 @@ import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { useConexionPublico } from '@/wss-cli/providers/wss-public-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
+import { MetodosLogin } from '@/wss/validators/auth'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 
@@ -28,7 +29,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
   const { config: configSala } = storeConfig()
 
-  const mensajeDeAuth = `Ingresá con tu nombre${configSala?.pedir_dni ? ' y DNI' : ''}`
+  const pideDni = configSala?.esquema === MetodosLogin.DNI
+
+  const mensajeDeAuth = `Ingresá con tu nombre${pideDni ? ' y DNI' : ''}`
   const nombreSala = configSala?.nombre_profe ? `de ${configSala.nombre_profe}` : idSala
 
   const inputNombreRef = useRef<HTMLInputElement>(null)
@@ -39,7 +42,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
     const valueNombre = inputNombreRef.current?.value?.trim()
     const valueDNI = inputDNIRef.current?.value?.trim()
 
-    if (configSala?.pedir_dni && !valueDNI) {
+    if (pideDni && !valueDNI) {
       toast.warning(`Falta el DNI!`)
       return
     }
@@ -150,7 +153,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
             />
 
             {/* DNI -- configurable */}
-            {configSala.pedir_dni && (
+            {pideDni && (
               <Input
                 className=" bg-indigo-100/50"
                 placeholder="Ingresá tu DNI"
@@ -167,7 +170,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
             )}
           </div>
           <Button className=" bg-[#6F41CB] font-semibold" type="button" onClick={handleConectarse}>
-            Conectarse con nombre {configSala.pedir_dni ? 'y DNI' : ''}
+            Conectarse con nombre {pideDni ? 'y DNI' : ''}
           </Button>
 
           {/* Descomentar para volver a habilitar login de google */}

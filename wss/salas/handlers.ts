@@ -109,7 +109,8 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
-  // Rooms
+  // Rooms -- la última de estas tres es su 'personal room' para mensajes dirigidos a este cliente en particular (ej: kickeo, cambios que lo afectan, etc.)
+  // A esta altura el `userId` ya está resuelto dependiendo el esquema de auth de la sala (nombre/DNI/email).
   socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.userId}`])
 
   const user = socket.data.session.nombre

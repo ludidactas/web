@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken'
+import { isDefined } from 'remeda'
 import { ExtendedError } from 'socket.io'
 import db from '../redis'
-import { SalaData, Salas } from '../salas/app'
-import { PasaporteEstudiante, RolSala } from '../validators/auth'
-import { SocketConSesion } from './session'
+import { Sala, SalaData } from '../salas/app'
+import { MetodosLogin, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
+import { WssEstudianteSession } from '../validators/session'
+import { SocketConSesion } from './session'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
 // Si no está seteada, tiramos un error para que no arranque el server.
@@ -29,15 +31,20 @@ interface NextAuth {
  * @param token presentado por el frontend previamente obtenido desde next, que lo firma para que sepamos que es legítimo, y que contiene datos de usuario de google.
  * @returns { exp: number, email: string, name?: string } payload del token, con email y fecha de expiración y opcionalmente nombre e imagen (de google).
  */
-export const decodearTokenNextAuth = (token: string) => {
+export const decodearTokenNextAuth = (token?: string) => {
+  if (!isDefined(token)) throw new ErrorSesion(TipoErrorSesion.AuthInvalido, `Falta token de Google!`)
+
   // Verificar que el token no haya expirado
   const payload = jwt.verify(token, secret, { audience: 'wss-client', algorithms: ['HS256'] }) as NextAuth
 
-  if (!payload) throw new Error('Token de autenticación inválido')
-  if (!payload.email) throw new Error('Token de autenticación inválido. Falta email!')
+  if (!payload) throw new ErrorSesion(TipoErrorSesion.AuthInvalido, 'Token de autenticación inválido')
+  if (!payload.email)
+    throw new ErrorSesion(TipoErrorSesion.AuthInvalido, 'Token de autenticación inválido. Falta email!')
 
-  return payload
+  return { email: payload.email, nombre: payload.name, avatar: payload.image }
 }
+
+export type AuthGoogle = ReturnType<typeof decodearTokenNextAuth>
 
 /** Verifica si un email está registrado en la lista de admins del .env */
 export const registradoComoAdmin = (email: string) => {
@@ -51,22 +58,24 @@ export const conPermisosDeSala = async (socket: SocketConSesion, next: (err?: Ex
   if (session.rol === RolSala.Estudiante) conPermisosDe(session.idSala)(socket, next)
 }
 
-/** Autorización. Verifica la sesión del usuario contra las políticas de la sala. */
+/**
+ * Autorización del canal de estudiantes.
+ *
+ * La autenticación contra el esquema de la sala (dni en lista, nombre libre, etc.) ya ocurrió en
+ * `login` vía `verificarYAutorizar`. Acá solo guardamos el canal por rol.
+ */
 export const conPermisosDe =
   (salaId: string) => async (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
     // Si estamos acá, la existencia de la sala ya fue verificada en `login` o `validarSession`
     const sala = await db.hget('salas', salaId)
-    if (!sala) next(new Error(`La sala ${salaId} no existe!`))
+    if (!sala) return next(new Error(`La sala ${salaId} no existe!`))
 
-    // Parseamos la configuración de la sala
-    let configSala
+    // Parseamos la configuración de la sala (solo para validar que sea legible)
     try {
-      configSala = (JSON.parse(sala!) as SalaData).config
+      JSON.parse(sala) as SalaData
     } catch {
       return next(new Error(`No se pudo parsear la configuración de la sala ${salaId}`))
     }
-
-    // Verificamos permisos
 
     // Si admin, puede entrar
     if (socket.data.session.rol === RolSala.Admin) return next()
@@ -75,30 +84,36 @@ export const conPermisosDe =
     if (socket.data.session.rol === RolSala.Profe)
       return next(new Error(`Los profes no pueden entrar como estudiantes`))
 
-    // Si la sala permite anónimos, cualquiera puede entrar
-    if (configSala.permitir_anonimo) return next()
-
-    // Si no permite anónimos, pero el usuario es profe o admin, puede entrar
-    if (configSala.pedir_dni && socket.data.session.rol === RolSala.Estudiante && !socket.data.session.dni) {
-      return next(new Error(`Se requiere DNI para entrar a esta sala`))
-    }
-
+    // Los estudiantes ya fueron autenticados contra el esquema de la sala en el login
     next()
   }
 
-export async function autorizarAccesoASala(auth: PasaporteEstudiante) {
-  // Verificamos que la sala exista
-  if (!Salas.existe(auth.idSala))
-    throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${auth.idSala} no existe.`)
-
-  const sala = await Salas.get(auth.idSala)
+/**
+ * Verifica una sesión de estudiante ya construida contra las políticas de la sala.
+ * El `metodo` de la sesión coincide con `config.esquema` (lo inyectó el login), y el `userId` ya
+ * está resuelto al campo de identidad del esquema.
+ */
+export async function verificarYAutorizar(session: WssEstudianteSession, sala: Sala) {
   const config = await sala.config()
+  switch (session.metodo) {
+    case MetodosLogin.DNI:
+      // El schema ya garantiza que el dni viene; si es excluyente, debe estar en la lista
+      if (config.solo_invitados) await sala.listaPermitidos().autorizar(session.dni)
+      break
 
-  // La sala requiere DNI
-  if (config.pedir_dni) {
-    if (!auth.dni) throw new ErrorSesion(TipoErrorSesion.DniRequerido, `La sala ${auth.idSala} requiere DNI.`)
+    case MetodosLogin.Google:
+      // La identidad (userId) es el email; si es excluyente, debe estar en la lista
+      if (config.solo_invitados) await sala.listaPermitidos().autorizar(session.email)
+      break
 
-    // Si la configuración es excluyente, verificamos que el DNI esté en la lista
-    if (config.solo_invitados) await sala.listaPermitidos().autorizar(auth.dni)
+    case MetodosLogin.Nombre: {
+      // El nombre (identidad) no puede estar ya en uso por otro cliente en la sala
+      const enUso = (await sala.listarEstudiantes()).some(
+        (s) => s.userId === session.userId && s.clientId !== session.clientId
+      )
+      if (enUso)
+        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
+      break
+    }
   }
 }

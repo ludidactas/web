@@ -1,6 +1,5 @@
-import { PasaportePublico } from '@/wss/validators/auth'
 import { useWss } from '../use-wss'
-import { RolSala } from '@/wss/validators/auth'
+import { PasaportePublico, RolSala } from '@/wss/validators/auth'
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import useConfirmarConDelay from '@/components/hooks/use-delay'

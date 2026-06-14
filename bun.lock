@@ -49,6 +49,7 @@
         "next-themes": "^0.4.6",
         "nodemon": "^3.1.10",
         "p5": "^1.11.3",
+        "qrcode.react": "^4.2.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-resizable-panels": "^3.0.5",
@@ -1468,6 +1469,8 @@
     "pstree.remy": ["pstree.remy@1.1.8", "", {}, ""],
 
     "punycode": ["punycode@2.3.1", "", {}, ""],
+
+    "qrcode.react": ["qrcode.react@4.2.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA=="],
 
     "queue-microtask": ["queue-microtask@1.2.3", "", {}, ""],
 

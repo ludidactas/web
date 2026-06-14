@@ -6,19 +6,20 @@ if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
   throw new Error('Falta la dirección del host de websockets!')
 }
 
-/** Auth que espera el server de sockets */
-export type SocketServerAuth = Pasaporte
-
 /**
  * Definición local del tipo de Socket con nuestro objeto 'auth' tipado.
  */
 export interface SocketWssCli extends Socket {
-  auth: SocketServerAuth
+  auth: Pasaporte
 }
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
-export async function handshake(auth: SocketServerAuth) {
-  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, { auth, autoConnect: false, reconnection: false }) as SocketWssCli
+export async function handshake(auth: Pasaporte) {
+  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, {
+    auth,
+    autoConnect: false,
+    reconnection: false,
+  }) as SocketWssCli
 }
 
 /**

@@ -96,17 +96,19 @@ export const conPermisosDe =
 export async function verificarYAutorizar(session: WssEstudianteSession, sala: Sala) {
   const config = await sala.config()
   switch (session.metodo) {
-    case MetodosLogin.DNI:
-      // El schema ya garantiza que el dni viene; si es excluyente, debe estar en la lista
-      if (config.solo_invitados) await sala.listaPermitidos().autorizar(session.dni)
-      break
-
+    // Si es por DNI o Google, verificamos que el userId esté en la lista de permitidos si la sala es excluyente
     case MetodosLogin.Google:
-      // La identidad (userId) es el email; si es excluyente, debe estar en la lista
-      if (config.solo_invitados) await sala.listaPermitidos().autorizar(session.email)
+    case MetodosLogin.DNI:
+      if (config.solo_invitados && !(await sala.listaPermitidos().autorizar(session.userId)))
+        throw new ErrorSesion(
+          session.metodo === MetodosLogin.DNI ? TipoErrorSesion.DniNoPermitido : TipoErrorSesion.EmailNoPermitido,
+          `El ${session.metodo === MetodosLogin.DNI ? 'DNI' : 'email'} ${
+            session.userId
+          } no está en la lista de participantes permitidos.`
+        )
       break
 
-    case MetodosLogin.Nombre: {
+    case MetodosLogin.Nombre:
       // El nombre (identidad) no puede estar ya en uso por otro cliente en la sala
       const enUso = (await sala.listarEstudiantes()).some(
         (s) => s.userId === session.userId && s.clientId !== session.clientId
@@ -114,6 +116,5 @@ export async function verificarYAutorizar(session: WssEstudianteSession, sala: S
       if (enUso)
         throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
       break
-    }
   }
 }

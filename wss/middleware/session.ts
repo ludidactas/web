@@ -1,4 +1,4 @@
-import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
+import { DefaultEventsMap, ExtendedError, RemoteSocket, Socket } from 'socket.io'
 import { z } from 'zod'
 import { Salas } from '../salas/app'
 import { socketIp } from '../utils'
@@ -9,15 +9,20 @@ import { AuthGoogle, decodearTokenNextAuth, registradoComoAdmin, verificarYAutor
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
+/** Lo que vive en `socket.data` para una conexión autenticada. */
+export type DataConSesion = {
+  session: WssServerSession
+}
+
 /** Socket que ya pasó por autenticación y tiene una sesión válida, tiene .session */
-export type SocketConSesion = Socket<
-  DefaultEventsMap,
-  DefaultEventsMap,
-  DefaultEventsMap,
-  {
-    session: WssServerSession
-  }
->
+export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, DataConSesion>
+
+/**
+ * Equivalente a {@link SocketConSesion} pero para sockets remotos, devueltos por `fetchSockets()`.
+ * El adapter (Redis) sincroniza `socket.data` entre nodos, así que `.session` sigue disponible
+ * aunque el socket viva en otro nodo del cluster. Es un snapshot de solo lectura.
+ */
+export type RemoteSocketConSesion = RemoteSocket<DefaultEventsMap, DataConSesion>
 
 /** Lanza un ErrorSesion legible si el parseo de zod falla, sino devuelve la data tipada. */
 const parsearAuth = <S extends z.ZodTypeAny>(schema: S, raw: unknown): z.infer<S> => {

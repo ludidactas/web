@@ -25,14 +25,9 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       // `actualizarConfig` valida
       await sala.actualizarConfig(payload)
 
-      // Kickear sesiones que quedan inválidas por el cambio de config
-      await sala.sanitizar()
-      await sala.sanitizarPermitidos()
-
       // También revocamos las sesiones de los estudiantes que no estén en la lista de permitidos (si es que la sala tiene lista de permitidos)
-      if ((await sala.config()).solo_invitados) {
-        await sala.sanitizarPermitidos()
-      }
+
+      await sala.sanitizar()
 
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())
@@ -62,7 +57,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     'sala:permitidos_agregar',
     safe(async (list: string[]) => {
       await sala.listaPermitidos().agregar(list)
-      await sala.sanitizarPermitidos()
+      await sala.sanitizar()
       socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
     })
   )
@@ -71,7 +66,7 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     'sala:permitidos_remover',
     safe(async (list: string[]) => {
       await sala.listaPermitidos().remover(list)
-      await sala.sanitizarPermitidos()
+      await sala.sanitizar()
       socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
     })
   )

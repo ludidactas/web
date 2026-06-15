@@ -5,12 +5,13 @@ import { RemoteSocket } from 'socket.io'
 import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { configSala, ConfigSala } from '../validators/salas'
+import { configActualizable, ConfigSala } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
+import { RemoteSocketConSesion } from '../middleware/session'
 
 export type { SalaData } from './db'
 
@@ -18,7 +19,14 @@ export type Sala = Awaited<ReturnType<typeof Salas.get>>
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
+  /**
+   * Devuelve la sala con las funciones para operar sobre ella. Si la sala no existe, lanza un error.
+   *
+   * @param salaId el id de la sala a obtener. Es la única info capturada en scope (¡no hay que capturar nada mutable! por eso pasamos el id y no la sala en sí)
+   * @returns un objeto con funciones para operar sobre la sala, como `broadcast` para enviar mensajes a todos los clientes de la sala, o `listarEstudiantes` para obtener la lista de estudiantes conectados.
+   */
   export async function get(salaId: string) {
+    /** Devuelve una referencia fresca a la info más updateada en DB de la sala */
     async function getFromDb() {
       const sala = await db.getSala(salaId)
       if (!sala) throw new Error(`La sala ${salaId} no existe`)
@@ -53,6 +61,8 @@ export namespace Salas {
 
       const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
       const userIdsSockets = socketsEstudiantesSala.map((s) => s.data.session.userId)
+
+      // Esto es lista de estudiantes en DB vs sockets en el room... revisar.
 
       // Las inválidas son las que estén en estudiantesData pero no en sockets
       const invalidas = userIdsState.filter((id) => !userIdsSockets.includes(id))
@@ -92,52 +102,22 @@ export namespace Salas {
       return conectados
     }
 
+    /** Se ocupa de kickear a los estudiantes que queden fuera luego de un cambio de auth (lista de permitido) */
     async function sanitizar() {
       const sala = await getFromDb()
 
-      // Si la sala pasó a autenticar por DNI, kickeamos a los estudiantes que no entraron con DNI
-      if (sala.config.esquema === MetodosLogin.DNI) {
-        // Colectamos
-        const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
-        const sinDni = sockets.filter(
-          (s) => s.data.session.rol === RolSala.Estudiante && s.data.session.metodo !== MetodosLogin.DNI
-        )
+      // Solo aplica cuando la sala no autentica solo por nombre y restringe a la lista de invitados
+      if (sala.config.esquema === MetodosLogin.Nombre || !sala.config.solo_invitados) return
 
-        // Si no hay ninguno, no hay nada más que hacer
-        if (sinDni.length === 0) return
-
-        // Chiflamos al log!
-        console.warn(
-          `⚠️  Estudiantes sin DNI en sala ${salaId} al activar el esquema 'dni':`,
-          sinDni.map((s) => s.data.session.userId)
-        )
-
-        // Notificamos y desconectamos(kick)
-        sinDni.forEach((s) => {
-          s.emit('sala:kick', {
-            motivo: 'La sala ahora requiere DNI para conectarse. Por favor, volvé a conectarte :)',
-          })
-          s.disconnect()
-        })
-
-        /** @todo: Marcar el drop para la lista de presentes */
-      }
-    }
-
-    async function sanitizarPermitidos() {
-      const sala = await getFromDb()
-
-      // Solo aplica cuando la sala autentica por DNI y restringe a la lista de invitados
-      if (sala.config.esquema !== MetodosLogin.DNI || !sala.config.solo_invitados) return
-
+      // Pasado este punto estamos verificando si el userId de cada socket de estudiante está autorizado en la lista de permitidos
+      // (que a su vez se basa en el campo de identidad del esquema de la sala, que para DNI es el dni y para Google es el email)
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
+      // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
       const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
       const noPermitidos = sockets.filter(
-        (s) =>
-          s.data.session.rol === RolSala.Estudiante &&
-          s.data.session.metodo === MetodosLogin.DNI &&
-          !permitidos.includes(s.data.session.dni)
+        (s: RemoteSocketConSesion) =>
+          s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.userId)
       )
 
       if (noPermitidos.length === 0) return
@@ -147,13 +127,18 @@ export namespace Salas {
         noPermitidos.map((s) => s.data.session.userId)
       )
 
+      // Los kickeamos
       noPermitidos.forEach((s) => {
-        s.emit('sala:kick', { motivo: 'Tu DNI ya no está en la lista de participantes permitidos.' })
+        s.emit('sala:kick', {
+          motivo: `Tu ${
+            sala.config.esquema === MetodosLogin.DNI ? 'DNI' : 'email'
+          } ya no está en la lista de participantes permitidos.`,
+        })
         s.disconnect()
       })
     }
 
-    /** Quita los inactivos de la lista de la sala */
+    /** Quita los inactivos de la lista de la sala -- @todo: EXCEPTO LOS QUE ESTÉN EN LA LISTA DE DNI/MAIL!*/
     async function limpiarEstudiantes() {
       const estudiantes = await db.getEstudiantes(salaId)
       const inactivos = Object.entries(estudiantes)
@@ -172,8 +157,9 @@ export namespace Salas {
 
     async function actualizarConfig(payload: unknown) {
       const sala = await getFromDb()
-      // Validamos
-      const config = configSala.strict().partial().parse(payload)
+
+      // Validamos: solo se pueden tocar los campos mutables (hoy, `solo_invitados`).
+      const config = configActualizable.partial().parse(payload)
       const configActual = sala.config
       const nuevaConfig = mergeDeep(configActual, config) as ConfigSala
       sala.config = nuevaConfig
@@ -187,11 +173,8 @@ export namespace Salas {
       /** Devuelve la sala actualizada */
       config: () => getFromDb().then((sala) => sala.config),
 
-      /** Lleva a cabo las acciones necesarias para que el estado respete la config (e.g. kickear a los estudiantes que no tengan DNI cuando es pedido) */
+      /** Kickea a los estudiantes cuyo DNI/email no esté en la lista de permitidos actualizada */
       sanitizar,
-
-      /** Kickea a los estudiantes cuyo DNI no esté en la lista de permitidos actualizada */
-      sanitizarPermitidos,
 
       /** Borra los estudiantes desconectados de la lista */
       limpiarEstudiantes,

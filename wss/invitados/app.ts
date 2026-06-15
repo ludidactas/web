@@ -1,6 +1,5 @@
 import { SocketConSesion } from '../middleware/session'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import * as db from './db'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -20,13 +19,9 @@ export namespace ListaPermitidos {
     await db.limpiarListaPermitidosDe(salaId)
   }
 
-  async function autorizar(salaId: string, dni: string) {
+  async function autorizar(salaId: string, userId: string) {
     const lista = await obtener(salaId)
-    if (!lista.includes(dni))
-      throw new ErrorSesion(
-        TipoErrorSesion.DniNoPermitido,
-        `El DNI ${dni} no está en la lista de participantes permitidos.`
-      )
+    return lista.includes(userId)
   }
 
   async function purgarSockets(salaId: string, sockets: SocketConSesion[]) {
@@ -36,7 +31,7 @@ export namespace ListaPermitidos {
       (s) =>
         s.data.session.rol === RolSala.Estudiante &&
         s.data.session.metodo === MetodosLogin.DNI &&
-        !lista.includes(s.data.session.dni)
+        !lista.includes(s.data.session.userId)
     )
   }
 

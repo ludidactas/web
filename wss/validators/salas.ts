@@ -15,5 +15,13 @@ export const configSala = configCreacionSala.extend({
   link: z.string(),
 })
 
+/**
+ * Subconjunto de la config que se puede modificar una vez creada la sala.
+ * El `esquema` de auth es inmutable: se fija al crear la sala y no se cambia más.
+ * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
+ */
+export const configActualizable = configSala.pick({ solo_invitados: true }).strict()
+
 export type ConfigCreacionSala = z.input<typeof configCreacionSala>
 export type ConfigSala = z.infer<typeof configSala>
+export type ConfigActualizable = z.infer<typeof configActualizable>

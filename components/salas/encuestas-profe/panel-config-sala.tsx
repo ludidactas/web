@@ -35,12 +35,12 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
           <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
         </DialogHeader>
         <div className={cn('flex flex-col gap-2 w-full')}>
-          <SwitchCard
+          {/* <SwitchCard
             title="DNI obligatorio"
             description="Los participantes tienen que ingresar DNI para participar"
             checked={pideDni}
             onCheckedChange={() => actualizarConfig({ esquema: pideDni ? MetodosLogin.Nombre : MetodosLogin.DNI })}
-          />
+          /> */}
 
           {/* Wrapeando el dialog con AnimatePresence y motion.div para que colapse suavemente */}
           <AnimatePresence initial={false}>

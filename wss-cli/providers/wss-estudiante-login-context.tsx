@@ -9,7 +9,7 @@ import { MetodosLogin } from '@/wss/validators/auth'
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const store = storeEstudianteLogin()
   const { config } = storeConfig()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   const [ready, setReady] = useState(false)
 
@@ -54,12 +54,12 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     setReady(true)
   }, [idSala, config, status])
 
-  // Derivamos el nombre: si hay sesión de Google usamos ese, sino el que haya provisto
-  const nombreFinal = status === 'authenticated' ? session?.user?.name || 'Usuario' : store.nombre
-
+  // El login de estudiante por Google está deshabilitado, así que el nombre es siempre el que
+  // tipeó el estudiante. (NO derivarlo de la sesión de Google: en el navegador del profe esa
+  // sesión es la suya y terminaría secuestrando el nombre del estudiante.)
   return {
     ...store,
     ready,
-    nombre: nombreFinal,
+    nombre: store.nombre,
   }
 }

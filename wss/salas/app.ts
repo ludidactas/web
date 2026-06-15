@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { entries, groupBy, mergeDeep } from 'remeda'
+import { mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
 import { SocketProfe } from '../middleware/roles'
@@ -16,6 +16,34 @@ import { RemoteSocketConSesion } from '../middleware/session'
 export type { SalaData } from './db'
 
 export type Sala = Awaited<ReturnType<typeof Salas.get>>
+
+/**
+ * Reconstruye, por userId, los intervalos durante los que el estudiante estuvo conectado, a partir
+ * del log crudo de eventos. Usa un contador de profundidad (conexiones simultáneas): un intervalo va
+ * desde que la profundidad pasa de 0→1 hasta que vuelve a 0. Así multi-tab cuenta como un solo
+ * intervalo, y un 'desconexion' que nunca llegó (ej: crash) queda como intervalo abierto (`fin: null`).
+ */
+function reconstruirIntervalos(eventos: db.EventoAsistencia[]): Record<string, db.Intervalo[]> {
+  const ordenados = [...eventos].sort((a, b) => a.ts - b.ts)
+  const intervalos: Record<string, db.Intervalo[]> = {}
+  const profundidad: Record<string, number> = {}
+
+  for (const { userId, evento, ts } of ordenados) {
+    const lista = (intervalos[userId] ??= [])
+    const actual = profundidad[userId] ?? 0
+
+    if (evento === 'conexion') {
+      if (actual === 0) lista.push({ inicio: ts, fin: null })
+      profundidad[userId] = actual + 1
+    } else {
+      profundidad[userId] = Math.max(0, actual - 1)
+      const abierto = lista[lista.length - 1]
+      if (profundidad[userId] === 0 && abierto && abierto.fin === null) abierto.fin = ts
+    }
+  }
+
+  return intervalos
+}
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
@@ -54,52 +82,36 @@ export namespace Salas {
       await Promise.all(sockets.map(enviarMapeado))
     }
 
-    /** Limpia las que según la sala existen pero que no están en redis (fueron revocadas) */
-    async function limpiarEstudiantesSinSesion() {
-      const estudiantesData = await db.getEstudiantes(salaId)
-      const userIdsState = Object.keys(estudiantesData)
-
-      const socketsEstudiantesSala = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
-      const userIdsSockets = socketsEstudiantesSala.map((s) => s.data.session.userId)
-
-      // Esto es lista de estudiantes en DB vs sockets en el room... revisar.
-
-      // Las inválidas son las que estén en estudiantesData pero no en sockets
-      const invalidas = userIdsState.filter((id) => !userIdsSockets.includes(id))
-
-      // Las limpiamos de redis
-      if (invalidas.length > 0) {
-        // Logueamos
-        const emailProfe = await db.getEmailProfe(salaId)
-        console.warn(`⚠️  Sesiones inválidas en sala ${salaId} de ${emailProfe}:`, invalidas, ` limpiando...`)
-
-        // Invalidamos (las borramos de db y de la respuesta que vamos a dar)
-        invalidas.forEach((sid) => {
-          db.borrarEstudiante(salaId, sid) // de la lista de estudiantes de la sala
-        })
-      }
-
-      // Las válidas las devolvemos
-      return socketsEstudiantesSala.map((s) => s.data.session)
+    /** `userIds` de los estudiantes con un socket vivo ahora mismo (cluster-wide). */
+    async function userIdsConectados() {
+      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      return new Set(sockets.map((s) => s.data.session.userId))
     }
 
-    /** Devuelve la lista de estudiantes en la sala, limpiando previamente las sesiones revocadas. */
+    /**
+     * Indica si al `userId` le queda algún socket vivo, excluyendo `excluirSocketId`. Se usa al
+     * desconectar para no marcar al estudiante como desconectado si sigue presente en otra pestaña/
+     * clientId. Excluimos por id porque el socket que se desconecta puede seguir apareciendo en
+     * `fetchSockets` por un instante (propagación del adapter).
+     */
+    async function sigueConectado(userId: string, excluirSocketId?: string) {
+      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      return sockets.some((s) => s.data.session.userId === userId && s.id !== excluirSocketId)
+    }
+
+    /**
+     * Devuelve la planilla de estudiantes de la sala: todos los que pasaron por ella (incluye
+     * desconectados, con su sesión persistida), anotando `conectado` según tengan o no un socket
+     * vivo ahora mismo. La presencia se deduce de los sockets, no se almacena.
+     */
     async function listarEstudiantes() {
-      await limpiarEstudiantesSinSesion()
+      const planilla = await db.getEstudiantes(salaId)
+      const conectados = await userIdsConectados()
 
-      // Targeteamos a las sesiones attacheadas a los sockets (agrupadas por userId)
-      const socketsConectados = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
-      const socketsPorUsuario = groupBy(socketsConectados, (s) => s.data.session.userId)
-
-      // Nos quedamos con la primera sesión (socket) de cada usuario
-      const conectados = entries(socketsPorUsuario)
-        .map(([_, sockets]) => ({
-          ...sockets[0].data.session,
-          conectado: true,
-        }))
-        .filter((s): s is WssEstudianteSession & { conectado: true } => s !== null)
-
-      return conectados
+      return Object.values(planilla).map((session) => ({
+        ...session,
+        conectado: conectados.has(session.userId),
+      }))
     }
 
     /** Se ocupa de kickear a los estudiantes que queden fuera luego de un cambio de auth (lista de permitido) */
@@ -138,21 +150,37 @@ export namespace Salas {
       })
     }
 
-    /** Quita los inactivos de la lista de la sala -- @todo: EXCEPTO LOS QUE ESTÉN EN LA LISTA DE DNI/MAIL!*/
+    /**
+     * Purga de la planilla a los estudiantes desconectados, PERO conserva a los que están en la
+     * lista de invitados (queremos seguir viéndolos aunque no estén conectados).
+     */
     async function limpiarEstudiantes() {
-      const estudiantes = await db.getEstudiantes(salaId)
-      const inactivos = Object.entries(estudiantes)
-        .filter(([_, activo]) => activo === '0')
-        .map(([id]) => id)
-      if (inactivos.length > 0) await db.borrarEstudiantes(salaId, inactivos)
+      const planilla = await db.getEstudiantes(salaId)
+      const conectados = await userIdsConectados()
+      const invitados = await ListaPermitidos.para(salaId).obtener()
+
+      // Borramos los desconectados que _NO_ estén en la lista de invitados
+      const aBorrar = Object.keys(planilla).filter((userId) => !conectados.has(userId) && !invitados.includes(userId))
+      if (aBorrar.length > 0) await db.borrarEstudiantes(salaId, aBorrar)
     }
 
-    async function marcarEstudiantePresente(userId: string) {
-      await db.marcarPresente(salaId, userId)
+    /**
+     * Registra al estudiante en la planilla durable de la sala (persiste su sesión) y anota su
+     * conexión en el log de asistencia.
+     */
+    async function registrarEstudiante(session: WssEstudianteSession) {
+      await db.guardarEstudiante(salaId, session)
+      await db.registrarEventoAsistencia(salaId, session.userId, 'conexion', Date.now())
     }
 
-    async function marcarEstudianteAusente(userId: string) {
-      await db.marcarAusente(salaId, userId)
+    /** Anota la desconexión del estudiante en el log de asistencia. */
+    async function registrarDesconexion(userId: string) {
+      await db.registrarEventoAsistencia(salaId, userId, 'desconexion', Date.now())
+    }
+
+    /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia. */
+    async function asistencia() {
+      return reconstruirIntervalos(await db.getEventosAsistencia(salaId))
     }
 
     async function actualizarConfig(payload: unknown) {
@@ -185,11 +213,17 @@ export namespace Salas {
       /** Broadcastea un mensaje a todos los sockets en la sala */
       broadcast,
 
-      /** Marca un estudiante como presente en la sala */
-      marcarEstudiantePresente,
+      /** Registra al estudiante en la planilla durable de la sala (persiste su sesión) */
+      registrarEstudiante,
 
-      /** Marca un estudiante como ausente en la sala */
-      marcarEstudianteAusente,
+      /** Anota la desconexión del estudiante en el log de asistencia */
+      registrarDesconexion,
+
+      /** Indica si al estudiante le queda algún socket vivo (excluyendo el `socketId` dado) */
+      sigueConectado,
+
+      /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
+      asistencia,
 
       /** Valida lo que recibe y si pasa actualiza la config de la sala */
       actualizarConfig,

@@ -2,7 +2,6 @@
 
 import { nombreSplit } from '@/lib/utils'
 import { Sparkles } from 'lucide-react'
-import { useSession as useGoogleSession } from 'next-auth/react'
 import { ReactNode } from 'react'
 import EncuestasEstudiante from './encuestas-estudiante'
 
@@ -22,8 +21,6 @@ export default function EncuestasEstudiantePage({
   btnLoginGoogle: ReactNode
   btnLogoutGoogle: ReactNode
 }) {
-  const { status, data } = useGoogleSession()
-
   const { dni, nombre, clientId, ingresado, setIngresado } = useLoginSalaEstudiante({ idSala })
 
   // Formulario de acceso
@@ -48,9 +45,7 @@ export default function EncuestasEstudiantePage({
 
   // Devolvemos la página
   return (
-    <ConexionEstudianteProvider
-      auth={{ idSala, nombre, dni, clientId, email: data?.user?.email ?? undefined, avatar: data?.user?.image ?? undefined }}
-    >
+    <ConexionEstudianteProvider auth={{ idSala, nombre, dni, clientId }}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         {/* Sacamos el boton de logout de google porque no lo estamos usando */}
         <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo}>

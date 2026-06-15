@@ -22,11 +22,9 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   socket.on(
     'sala:actualizar_config',
     safe(async (payload: unknown) => {
-      // `actualizarConfig` valida
       await sala.actualizarConfig(payload)
 
-      // También revocamos las sesiones de los estudiantes que no estén en la lista de permitidos (si es que la sala tiene lista de permitidos)
-
+      // Revocamos las sesiones que haya que revocar después de cambiar la config
       await sala.sanitizar()
 
       // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
@@ -39,6 +37,14 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     'sala:listar_estudiantes',
     safe(async () => {
       socket.emit('sala:estudiantes', await sala.listarEstudiantes())
+    })
+  )
+
+  // Listener para que el profe pida la asistencia (intervalos de conexión por estudiante)
+  socket.on(
+    'sala:pedir_asistencia',
+    safe(async () => {
+      socket.emit('sala:asistencia', await sala.asistencia())
     })
   )
 
@@ -115,8 +121,16 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     'disconnect',
     safe(async (reason) => {
       console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-      await sala.marcarEstudianteAusente(socket.data.session.userId)
-      await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: socket.data.session.userId })
+      const { userId } = socket.data.session
+
+      // No tocamos la planilla: el estudiante sigue registrado, solo deja de tener socket vivo.
+      // La presencia se deduce de los sockets al listar; acá solo anotamos el evento de asistencia.
+      await sala.registrarDesconexion(userId)
+
+      // Solo le avisamos al profe que se desconectó si NO le queda ningún otro socket vivo (ej:
+      // sigue conectado desde otra pestaña/clientId). Excluimos el socket actual del chequeo.
+      if (!(await sala.sigueConectado(userId, socket.id)))
+        await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: userId })
     })
   )
 
@@ -132,8 +146,8 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   const emitir = safe(async () => {
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
 
-    // ...notificamos al profe que un estudiante se ha conectado, y lo guardamos en la lista de estudiantes de la sala
-    await sala.marcarEstudiantePresente(socket.data.session.userId)
+    // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
+    await sala.registrarEstudiante(socket.data.session)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
   })
   await emitir()

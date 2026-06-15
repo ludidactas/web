@@ -109,9 +109,10 @@ export async function verificarYAutorizar(session: WssEstudianteSession, sala: S
       break
 
     case MetodosLogin.Nombre:
-      // El nombre (identidad) no puede estar ya en uso por otro cliente en la sala
+      // El nombre (identidad) no puede estar ya en uso por otro cliente CONECTADO en la sala.
+      // (La planilla ahora incluye desconectados; un nombre liberado puede reutilizarse.)
       const enUso = (await sala.listarEstudiantes()).some(
-        (s) => s.userId === session.userId && s.clientId !== session.clientId
+        (s) => s.conectado && s.userId === session.userId && s.clientId !== session.clientId
       )
       if (enUso)
         throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)

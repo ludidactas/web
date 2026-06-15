@@ -12,7 +12,7 @@ export default async function SalaPage() {
   const session = await auth()
 
   // Esto no habría que hacerlo, hay que resolverlo con next-auth
-  if (!session || !session.user) redirect('/login?callbackUrl=/sala')
+  if (!session || !session.user) redirect('/login?callbackUrl=/salas')
 
   const token = await tokenWss()
 

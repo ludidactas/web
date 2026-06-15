@@ -6,7 +6,7 @@ test.describe('Sala de encuestas', () => {
     await page.goto('/')
     await expect(page.getByText('Entrená con profes')).toBeVisible()
 
-    await page.goto('/sala')
+    await page.goto('/salas')
     await expect(page.getByText('Conectate con tu cuenta de Google')).toBeVisible()
   })
 

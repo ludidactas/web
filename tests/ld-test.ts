@@ -50,7 +50,7 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   await loginFake(profePage, profe)
 
   // Vamos a la sala y agarramos el link
-  await profePage.goto('/sala')
+  await profePage.goto('/salas')
 
   /**
    * @todo: Acá configurar la sala en vez de asumir que de una entramos

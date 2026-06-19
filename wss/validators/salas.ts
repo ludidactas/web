@@ -3,9 +3,9 @@ import { MetodosLogin } from './auth'
 
 /** Data enviada al momento de crear la sala */
 export const configCreacionSala = z.object({
-  // Esquema de auth de la sala: la sala decide cómo se autentican los estudiantes.
-  esquema: z.nativeEnum(MetodosLogin).default(MetodosLogin.Nombre),
-  // Ortogonal al esquema: restringe el acceso a una lista de invitados (hoy solo con esquema 'dni').
+  // Método de login de la sala: la sala decide cómo se autentican los estudiantes.
+  metodo_login: z.nativeEnum(MetodosLogin).default(MetodosLogin.Nombre),
+  // Ortogonal al metodo_login: restringe el acceso a una lista de invitados (hoy solo con metodo_login 'dni').
   solo_invitados: z.boolean().default(false),
 })
 
@@ -17,7 +17,7 @@ export const configSala = configCreacionSala.extend({
 
 /**
  * Subconjunto de la config que se puede modificar una vez creada la sala.
- * El `esquema` de auth es inmutable: se fija al crear la sala y no se cambia más.
+ * El `metodo_login` es inmutable: se fija al crear la sala y no se cambia más.
  * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
  */
 export const configActualizable = configSala.pick({ solo_invitados: true }).strict()

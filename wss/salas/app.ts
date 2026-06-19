@@ -119,10 +119,10 @@ export namespace Salas {
       const sala = await getFromDb()
 
       // Solo aplica cuando la sala no autentica solo por nombre y restringe a la lista de invitados
-      if (sala.config.esquema === MetodosLogin.Nombre || !sala.config.solo_invitados) return
+      if (sala.config.metodo_login === MetodosLogin.Nombre || !sala.config.solo_invitados) return
 
       // Pasado este punto estamos verificando si el userId de cada socket de estudiante está autorizado en la lista de permitidos
-      // (que a su vez se basa en el campo de identidad del esquema de la sala, que para DNI es el dni y para Google es el email)
+      // (que a su vez se basa en el campo de identidad del metodo_login de la sala, que para DNI es el dni y para Google es el email)
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
       // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
@@ -143,7 +143,7 @@ export namespace Salas {
       noPermitidos.forEach((s) => {
         s.emit('sala:kick', {
           motivo: `Tu ${
-            sala.config.esquema === MetodosLogin.DNI ? 'DNI' : 'email'
+            sala.config.metodo_login === MetodosLogin.DNI ? 'DNI' : 'email'
           } ya no está en la lista de participantes permitidos.`,
         })
         s.disconnect()
@@ -261,7 +261,7 @@ export namespace Salas {
     const email = socket.data.session.email
 
     const config_default: ConfigSala = {
-      esquema: MetodosLogin.Nombre,
+      metodo_login: MetodosLogin.Nombre,
       link: '',
       nombre_profe: email,
       solo_invitados: false,

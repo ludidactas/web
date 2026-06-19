@@ -29,7 +29,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
   const { config: configSala } = storeConfig()
 
-  const pideDni = configSala?.esquema === MetodosLogin.DNI
+  const pideDni = configSala?.metodo_login === MetodosLogin.DNI
 
   const mensajeDeAuth = `Ingresá con tu nombre${pideDni ? ' y DNI' : ''}`
   const nombreSala = configSala?.nombre_profe ? `de ${configSala.nombre_profe}` : idSala

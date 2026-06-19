@@ -45,7 +45,7 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     const storeIngresado = localStorage.getItem(`encuestas-ingresado-${idSala}`) === '1'
 
     // Si tiene todos los datos necesatios, lo ingresamos directo -- no está andando, hay que arreglar una race condition
-    if (config.esquema === MetodosLogin.DNI) {
+    if (config.metodo_login === MetodosLogin.DNI) {
       store.setIngresado(storeIngresado && !!storedDni && !!storedName)
     } else {
       store.setIngresado(storeIngresado && !!storedName)

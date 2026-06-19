@@ -24,8 +24,8 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
   const { lista: listaPermitidos } = storePermitidos()
   const [listaActiva, setListaActiva] = useState(listaPermitidos.length > 0 || !!config?.solo_invitados)
 
-  // El esquema 'dni' autentica por DNI; 'nombre' es el ingreso libre por nombre.
-  const pideDni = config?.esquema === MetodosLogin.DNI
+  // El metodo de login 'dni' autentica por DNI; 'nombre' es el ingreso libre por nombre.
+  const pideDni = config?.metodo_login === MetodosLogin.DNI
 
   return (
     <Dialog>
@@ -35,11 +35,12 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
           <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
         </DialogHeader>
         <div className={cn('flex flex-col gap-2 w-full')}>
+          {/* @todo: esto pasa a la creación de la sala -- pendiente */}
           {/* <SwitchCard
             title="DNI obligatorio"
             description="Los participantes tienen que ingresar DNI para participar"
             checked={pideDni}
-            onCheckedChange={() => actualizarConfig({ esquema: pideDni ? MetodosLogin.Nombre : MetodosLogin.DNI })}
+            onCheckedChange={() => actualizarConfig({ metodo_login: pideDni ? MetodosLogin.Nombre : MetodosLogin.DNI })}
           /> */}
 
           {/* Wrapeando el dialog con AnimatePresence y motion.div para que colapse suavemente */}

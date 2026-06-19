@@ -29,7 +29,7 @@ test.describe('Sala de encuestas', () => {
   test.skip('crear una sala con DNI y acceder con varios', async ({ setupSala }) => {
     const { sala, estudiante } = await setupSala(
       { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { esquema: MetodosLogin.DNI }
+      { metodo_login: MetodosLogin.DNI }
     )
 
     const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
@@ -48,7 +48,7 @@ test.describe('Sala de encuestas', () => {
   test.skip('crear una sala con DNI y lista de permitidos', async ({ setupSala }) => {
     const { sala, estudiante } = await setupSala(
       { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { esquema: MetodosLogin.DNI, solo_invitados: true }
+      { metodo_login: MetodosLogin.DNI, solo_invitados: true }
     )
 
     const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })

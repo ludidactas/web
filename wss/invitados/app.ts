@@ -19,7 +19,7 @@ export namespace ListaPermitidos {
     await db.limpiarListaPermitidosDe(salaId)
   }
 
-  async function autorizar(salaId: string, userId: string) {
+  async function incluye(salaId: string, userId: string) {
     const lista = await obtener(salaId)
     return lista.includes(userId)
   }
@@ -41,7 +41,7 @@ export namespace ListaPermitidos {
       agregar: (list: string[]) => agregar(list, salaId),
       remover: (list: string[]) => remover(list, salaId),
       limpiar: () => limpiar(salaId),
-      autorizar: (dni: string) => autorizar(salaId, dni),
+      incluye: (dni: string) => incluye(salaId, dni),
       purgar: (sockets: SocketConSesion[]) => purgarSockets(salaId, sockets),
     }
   }

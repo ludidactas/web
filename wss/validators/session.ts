@@ -11,20 +11,20 @@ const camposServer = {
 
 // ════════════════════════════════════════════════════════════════════════════
 // Sesiones de estudiante. Acá es donde aparece el `metodo`: lo inyecta el server (desde
-// `config.esquema`) al construir la sesión. Cada esquema valida su propio campo de identidad
+// `config.metodo_login`) al construir la sesión. Cada método valida su propio campo de identidad
 // (que el pasaporte de entrada traía como opcional) y resuelve el `userId` sin adivinar.
 // El server parte del pasaporte (validators/auth.ts), le suma `metodo` + campos del server,
-// y parsea contra el schema del esquema correspondiente (ver `SESSION_ESTUDIANTE_POR_ESQUEMA`).
+// y parsea contra el schema del método correspondiente (ver `SESSION_ESTUDIANTE_POR_METODO_LOGIN`).
 // ════════════════════════════════════════════════════════════════════════════
 
-// Esquema 'nombre': el nombre ES la identidad, así que es obligatorio.
+// Método 'nombre': el nombre ES la identidad, así que es obligatorio.
 export const WssEstudianteNombreSessionSchema = PasaporteEstudianteBase.extend({
   ...camposServer,
   metodo: z.literal(MetodosLogin.Nombre),
   nombre: z.string().min(1),
 }).transform((data) => ({ ...data, userId: data.nombre }))
 
-// Esquema 'dni': la identidad es el dni; el nombre es solo display (con fallback de fantasía).
+// Método 'dni': la identidad es el dni; el nombre es solo display (con fallback de fantasía).
 export const WssEstudianteDniSessionSchema = PasaporteEstudianteBase.extend({
   ...camposServer,
   metodo: z.literal(MetodosLogin.DNI),
@@ -36,7 +36,7 @@ export const WssEstudianteDniSessionSchema = PasaporteEstudianteBase.extend({
   userId: data.dni,
 }))
 
-// Esquema 'google': el pasaporte trae `token`; el server lo decodea y agrega email/nombre/avatar
+// Método 'google': el pasaporte trae `token`; el server lo decodea y agrega email/nombre/avatar
 // antes de parsear esta sesión. La identidad es el email.
 export const WssEstudianteGoogleSessionSchema = PasaporteEstudianteBase.extend({
   ...camposServer,
@@ -52,8 +52,8 @@ export const WssEstudianteSessionSchema = z.union([
   WssEstudianteGoogleSessionSchema,
 ])
 
-/** Elige el schema de sesión de estudiante según el esquema de auth de la sala. */
-export const SESSION_ESTUDIANTE_POR_ESQUEMA = {
+/** Elige el schema de sesión de estudiante según el metodo_login de la sala. */
+export const SESSION_ESTUDIANTE_POR_METODO_LOGIN = {
   [MetodosLogin.Nombre]: WssEstudianteNombreSessionSchema,
   [MetodosLogin.DNI]: WssEstudianteDniSessionSchema,
   [MetodosLogin.Google]: WssEstudianteGoogleSessionSchema,

@@ -61,7 +61,7 @@ export const conPermisosDeSala = async (socket: SocketConSesion, next: (err?: Ex
 /**
  * Autorización del canal de estudiantes.
  *
- * La autenticación contra el esquema de la sala (dni en lista, nombre libre, etc.) ya ocurrió en
+ * La autenticación contra el metodo_login de la sala (dni en lista, nombre libre, etc.) ya ocurrió en
  * `login` vía `verificarYAutorizar`. Acá solo guardamos el canal por rol.
  */
 export const conPermisosDe =
@@ -84,14 +84,14 @@ export const conPermisosDe =
     if (socket.data.session.rol === RolSala.Profe)
       return next(new Error(`Los profes no pueden entrar como estudiantes`))
 
-    // Los estudiantes ya fueron autenticados contra el esquema de la sala en el login
+    // Los estudiantes ya fueron autenticados contra el metodo_login de la sala en el login
     next()
   }
 
 /**
  * Verifica una sesión de estudiante ya construida contra las políticas de la sala.
- * El `metodo` de la sesión coincide con `config.esquema` (lo inyectó el login), y el `userId` ya
- * está resuelto al campo de identidad del esquema.
+ * El `metodo` de la sesión coincide con `config.metodo_login` (lo inyectó el login), y el `userId` ya
+ * está resuelto al campo de identidad del metodo_login.
  */
 export async function verificarYAutorizar(session: WssEstudianteSession, sala: Sala) {
   const config = await sala.config()
@@ -99,7 +99,7 @@ export async function verificarYAutorizar(session: WssEstudianteSession, sala: S
     // Si es por DNI o Google, verificamos que el userId esté en la lista de permitidos si la sala es excluyente
     case MetodosLogin.Google:
     case MetodosLogin.DNI:
-      if (config.solo_invitados && !(await sala.listaPermitidos().autorizar(session.userId)))
+      if (config.solo_invitados && !(await sala.listaPermitidos().incluye(session.userId)))
         throw new ErrorSesion(
           session.metodo === MetodosLogin.DNI ? TipoErrorSesion.DniNoPermitido : TipoErrorSesion.EmailNoPermitido,
           `El ${session.metodo === MetodosLogin.DNI ? 'DNI' : 'email'} ${

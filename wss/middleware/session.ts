@@ -4,7 +4,7 @@ import { Salas } from '../salas/app'
 import { socketIp } from '../utils'
 import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { SESSION_ESTUDIANTE_POR_ESQUEMA, WssServerSession, WssServerSessionSchema } from '../validators/session'
+import { SESSION_ESTUDIANTE_POR_METODO_LOGIN, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import { AuthGoogle, decodearTokenNextAuth, registradoComoAdmin, verificarYAutorizar } from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
@@ -57,9 +57,9 @@ const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
 /**
  * Hace login al server de websockets.
  * - Determina el rol del pasaporte.
- * - Si es estudiante: la sala decide el esquema de auth. Construimos la sesión contra el schema de ese
- *   esquema (inyectando el `metodo`, que el FE no manda), la verificamos contra la config (dni en
- *   lista, nombre libre) y la abrimos. El `userId` lo resuelve el transform del schema, sin adivinar.
+ * - Si es estudiante: la sala decide el metodo de autenticación. Construimos la sesión contra el schema de ese
+ *   metodo_login (inyectando el `metodo`, que el FE no manda), la verificamos contra la config (dni en
+ *   lista, nombre libre) y la abrimos. El `userId` lo resuelve el transform del schema.
  * - Si es profe o admin: validamos el token de Next y usamos su info para abrir la sesión.
  * - Público no establece sesión.
  */
@@ -79,14 +79,14 @@ const login = async (socket: SocketConSesion) => {
     const config = await sala.config()
     // Para auth de google, decodeamos el token a datos de usuario (la identidad es el email).
     let datosGoogle: AuthGoogle | undefined
-    if (config.esquema === MetodosLogin.Google) {
+    if (config.metodo_login === MetodosLogin.Google) {
       datosGoogle = decodearTokenNextAuth(auth.token)
     }
 
-    const session = parsearSesion(socket, SESSION_ESTUDIANTE_POR_ESQUEMA[config.esquema], {
+    const session = parsearSesion(socket, SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
       ...auth,
       ...datosGoogle,
-      metodo: config.esquema,
+      metodo: config.metodo_login,
     })
 
     // Verificamos la sesión contra la config de la sala (dni en lista, nombre libre, etc.)

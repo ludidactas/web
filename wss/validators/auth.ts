@@ -17,12 +17,12 @@ export enum MetodosLogin {
 //  PASAPORTE — el auth que el FE presenta al conectar (la ENTRADA del proceso de login).
 //
 //  Sutileza clave del modelo: para estudiante, el `metodo` de auth (nombre/dni/google) NO lo decide
-//  ni lo manda el cliente — lo impone la SALA vía `config.esquema`. Por eso el pasaporte de estudiante
+//  ni lo manda el cliente — lo impone la SALA vía `config.metodo_login`. Por eso el pasaporte de estudiante
 //  es method-agnostic: una bolsa floja de campos de identidad opcionales, SIN `metodo`. El FE solo
 //  manda lo que la sala le pidió recolectar.
 //
 //  El `metodo` es un concepto de la SALIDA, no de la entrada: se inyecta recién al construir la
-//  `Session` (ver validators/session.ts), que es donde el server ya conoce el esquema, valida el
+//  `Session` (ver validators/session.ts), que es donde el server ya conoce el metodo_login, valida el
 //  campo de identidad correspondiente y resuelve el `userId`.
 //
 //  Profe/admin/publico no tienen esta sutileza (no llevan `metodo`).
@@ -37,7 +37,7 @@ export const PasaporteEstudianteBase = z.object({
 })
 
 /**
- * Entrada de estudiante: bolsa floja de campos de identidad; la sala elige cuál usar (vía su esquema)
+ * Entrada de estudiante: bolsa floja de campos de identidad; la sala elige cuál usar (vía su metodo_login)
  * y el server descarta el resto al construir la sesión.
  */
 export const PasaporteEstudianteSchema = PasaporteEstudianteBase.extend({

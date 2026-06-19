@@ -72,7 +72,7 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
 
     // Llenamos el form de ingreso
     await alumnoPage.getByPlaceholder('Ingresá tu nombre').fill(nombre)
-    if (config.esquema === MetodosLogin.DNI) await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
+    if (config.metodo_login === MetodosLogin.DNI) await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
     await alumnoPage.getByRole('button', { name: 'Conectarse' }).click()
 
     return alumnoPage

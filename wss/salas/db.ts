@@ -1,22 +1,15 @@
 import redis from '../redis'
-import { ConfigSala } from '../validators/salas'
+import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 
-export interface SalaData {
-  id: string
-  profe: {
-    email: string
-    nombre?: string
-  }
-  config: ConfigSala
-}
+export type { SalaData }
 
 // -- Salas --
 
 /** Devuelve la data de la sala, o `null` si no existe. */
 export async function getSala(salaId: string): Promise<SalaData | null> {
   const str = await redis.hget('salas', salaId)
-  return str ? (JSON.parse(str) as SalaData) : null
+  return str ? salaData.parse(JSON.parse(str)) : null
 }
 
 /** Persiste la data de la sala. */

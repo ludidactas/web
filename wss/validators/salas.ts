@@ -22,6 +22,17 @@ export const configSala = configCreacionSala.extend({
  */
 export const configActualizable = configSala.pick({ solo_invitados: true }).strict()
 
+/** La data completa de una sala tal como se persiste en redis. */
+export const salaData = z.object({
+  id: z.string(),
+  profe: z.object({
+    email: z.string(),
+    nombre: z.string().optional(),
+  }),
+  config: configSala,
+})
+
 export type ConfigCreacionSala = z.input<typeof configCreacionSala>
 export type ConfigSala = z.infer<typeof configSala>
 export type ConfigActualizable = z.infer<typeof configActualizable>
+export type SalaData = z.infer<typeof salaData>

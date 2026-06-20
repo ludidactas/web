@@ -1,8 +1,6 @@
-import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
-import { RolSala } from '../validators/auth'
+import { DefaultEventsMap, Socket } from 'socket.io'
 import { ConfigSala } from '../validators/salas'
 import { WssEstudianteSession, WssProfeSession } from '../validators/session'
-import { SocketConSesion } from './session'
 
 /** Scoket con sesión de profe. Además de .session puede tener .config_sala */
 export type SocketProfe = Socket<
@@ -25,16 +23,3 @@ export type SocketEstudiante = Socket<
     session: WssEstudianteSession
   }
 >
-
-/** Middleware para admitir solo admins */
-export const esAdmin = (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
-  if (socket.data.session.rol !== RolSala.Admin) next(new Error('Acción solo permitida para administradores'))
-  next()
-}
-
-/** Middleware para admitir solo profes y admins */
-export const esProfeOAdmin = (socket: SocketConSesion, next: (err?: ExtendedError) => void) => {
-  if (socket.data.session.rol !== RolSala.Profe && socket.data.session.rol !== RolSala.Admin)
-    next(new Error('Acción solo permitida para profes'))
-  next()
-}

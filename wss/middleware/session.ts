@@ -5,7 +5,12 @@ import { socketIp } from '../utils'
 import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import { SESSION_ESTUDIANTE_POR_METODO_LOGIN, WssServerSession, WssServerSessionSchema } from '../validators/session'
-import { AuthGoogle, decodearTokenNextAuth, registradoComoAdmin, verificarYAutorizar } from './auth'
+import {
+  AuthGoogle,
+  decodearTokenNextAuth,
+  registradoComoAdmin,
+  verificarYAutorizarAccesoEstudianteASala,
+} from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
@@ -90,7 +95,7 @@ const login = async (socket: SocketConSesion) => {
     })
 
     // Verificamos la sesión contra la config de la sala (dni en lista, nombre libre, etc.)
-    await verificarYAutorizar(session, sala)
+    await verificarYAutorizarAccesoEstudianteASala(session, sala)
 
     console.log(`👤 Iniciando sesión en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
     abrirSesion(socket, session)

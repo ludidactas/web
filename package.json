@@ -15,6 +15,7 @@
     "wss:dev": "nodemon --watch wss --exec bun run wss/server.ts",
     "wss:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js",
     "wss:reset-db": "redis-cli flushdb",
+    "wss:salas": "bun run wss/scripts/listar-salas.ts",
     "images:optimize": "bun run scripts/optimize-images.ts"
   },
   "dependencies": {

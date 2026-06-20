@@ -26,8 +26,8 @@ export function useWss(auth: Pasaporte) {
     // 1. Si es admin o profe, esperar sesión de google
     if ((auth.rol === RolSala.Admin || auth.rol === RolSala.Profe) && !sessionReady) return
 
-    // 2. Condición principal: Conectar SOLO si estamos en estado Quieto, Expirado (lo que forzó a Quieto), o Error
-    const hayQueReconectar = status === StatusDeConexion.Quieto || status === StatusDeConexion.Expirado // Reintento automático tras error
+    // 2. Condición principal: Conectar SOLO si estamos en estado Quieto
+    const hayQueReconectar = status === StatusDeConexion.Quieto
 
     if (hayQueReconectar) {
       console.log(`✅ Dependencias listas, estado es ${status}. Iniciando conexión...`)

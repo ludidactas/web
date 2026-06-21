@@ -5,7 +5,7 @@ import { SignIn } from './botones'
 import Ilustracion from './ilustracion'
 import Link from 'next/link'
 
-export type Intent = '/sala'
+export type Intent = '/salas'
 
 export default function GoogleLogin({ className, intent }: { className?: string; intent?: Intent }) {
   return (
@@ -39,7 +39,7 @@ export default function GoogleLogin({ className, intent }: { className?: string;
           </div>
 
           {/* Si estaba accediendo a salas */}
-          {intent === '/sala' && (
+          {intent === '/salas' && (
             <div className="flex flex-col gap-4 text-zinc-800 ">
               <p>
                 Las salas de profe ofrecen una interfaz en vivo de{' '}
@@ -80,7 +80,7 @@ export default function GoogleLogin({ className, intent }: { className?: string;
             <LinkGradiente href="/" className="p-4">
               Volver
             </LinkGradiente>
-            <SignIn redirectTo="/sala" />
+            <SignIn redirectTo="/salas" />
           </div>
         </div>
       </div>

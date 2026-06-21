@@ -2,8 +2,13 @@ import { WssEstudianteSession } from '@/wss/validators/session'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-export interface Estudiante extends WssEstudianteSession {
+// `WssEstudianteSession` es una unión discriminada por método (dni/nombre/google), donde `dni`,
+// `email` y `avatar` viven solo en su variante. Para la vista del profe necesitamos acceder a esos
+// campos sin discriminar, así que intersectamos la unión con ellos como opcionales (más los campos
+// de presentación). No re-enumeramos los campos comunes (userId, nombre, etc.): vienen de la unión.
+export type Estudiante = WssEstudianteSession & {
   conectado: boolean
+  dni?: string
   email?: string
   avatar?: string
   votos?: Record<string, string[]>

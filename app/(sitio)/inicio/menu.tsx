@@ -43,7 +43,7 @@ const MenuMobile = () => {
           </DropdownMenuItem> */}
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
-            <Link href="/sala">Sala</Link>
+            <Link href="/salas">Sala</Link>
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
@@ -71,7 +71,7 @@ const MenuDesktop = () => (
     {/* <p className="text-2xl">|</p>
     <MenuLink href="/propuestas"> Propuestas </MenuLink> */}
     <p className="text-2xl">|</p>
-    <MenuLink href="/sala"> Sala </MenuLink>
+    <MenuLink href="/salas"> Sala </MenuLink>
     <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/">

@@ -11,8 +11,7 @@ export default function Recursos() {
   return (
     <div className="recursosini bg-indigo-300/50">
       <Pantalla
-        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#8345FD]'} size={'text-4xl md:text-7xl'}/>
-        }
+        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#8345FD]'} size={'text-4xl md:text-7xl'} />}
         one={
           <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
             <p>
@@ -28,19 +27,15 @@ export default function Recursos() {
           </div>
         }
         two={<Imagenes />}
-        btn={
-          <BotonLink titulo={'Explorar Sala'} url={'/sala'} />
-        }
-        scroll={
-          <ArrowDownLd to="contactoini" />
-        }
+        btn={<BotonLink titulo={'Explorar Sala'} url={'/salas'} />}
+        scroll={<ArrowDownLd to="contactoini" />}
       />
     </div>
   )
 }
 
 const Imagenes = () => (
-  <div className='mt-10 md:mt-0'>
+  <div className="mt-10 md:mt-0">
     <Image src="/img/PersoRecursos.webp" alt="Personaje3" width={500} height={500} />
   </div>
 )

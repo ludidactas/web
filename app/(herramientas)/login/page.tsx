@@ -34,7 +34,7 @@ export default async function ProfeLoginPage({ searchParams }: Props) {
         </div>
         <p>Ya estás conectadx con </p>
         <span className="text-cyan-600">{session.user.email}</span>
-        <Link href="/sala">
+        <Link href="/salas">
           <div className="flex flex-col items-center my-4 justify-center p-8 gap-4 hover:bg-cyan-600/10 border-2 rounded-xl hover:cursor-pointer">
             <p className="font-bold">{session.user.name}</p>
             {session.user.image && <img className="rounded-full w-20" src={session.user.image} alt="User Avatar" />}

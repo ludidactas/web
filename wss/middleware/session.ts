@@ -1,81 +1,119 @@
-import { DefaultEventsMap, ExtendedError, Socket } from 'socket.io'
+import { DefaultEventsMap, ExtendedError, RemoteSocket, Socket } from 'socket.io'
+import { z } from 'zod'
+import { Salas } from '../salas/app'
 import { socketIp } from '../utils'
-import { Pasaporte, PasaporteSchema, RolSala } from '../validators/auth'
+import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { WssEstudianteSession, WssServerSession, WssServerSessionSchema } from '../validators/session'
-import { autorizarAccesoASala, decodearTokenNextAuth, registradoComoAdmin } from './auth'
+import { SESSION_ESTUDIANTE_POR_METODO_LOGIN, WssServerSession, WssServerSessionSchema } from '../validators/session'
+import {
+  AuthGoogle,
+  decodearTokenNextAuth,
+  registradoComoAdmin,
+  verificarYAutorizarAccesoEstudianteASala,
+} from './auth'
 
 // Acá tipamos el socket con la data de sesión, dependiendo del rol
 
-/** Socket que ya pasó por autenticación y tiene una sesión válida, tiene .session */
-export type SocketConSesion = Socket<
-  DefaultEventsMap,
-  DefaultEventsMap,
-  DefaultEventsMap,
-  {
-    session: WssServerSession
-  }
->
+/** Lo que vive en `socket.data` para una conexión autenticada. */
+export type DataConSesion = {
+  session: WssServerSession
+}
 
-/** Parsea (valida) y attachea la sesión al socket y la emite de inmediato al cliente */
-const openSession = async <T extends Partial<Pasaporte>>(socket: Socket, payload: T) => {
-  // Creamos el objeto (y lo validamos)
-  const sessionData = WssServerSessionSchema.parse({
+/** Socket que ya pasó por autenticación y tiene una sesión válida, tiene .session */
+export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, DataConSesion>
+
+/**
+ * Equivalente a {@link SocketConSesion} pero para sockets remotos, devueltos por `fetchSockets()`.
+ * El adapter (Redis) sincroniza `socket.data` entre nodos, así que `.session` sigue disponible
+ * aunque el socket viva en otro nodo del cluster. Es un snapshot de solo lectura.
+ */
+export type RemoteSocketConSesion = RemoteSocket<DefaultEventsMap, DataConSesion>
+
+/** Lanza un ErrorSesion legible si el parseo de zod falla, sino devuelve la data tipada. */
+const parsearAuth = <S extends z.ZodTypeAny>(schema: S, raw: unknown): z.infer<S> => {
+  const { data, error, success } = schema.safeParse(raw)
+  if (!success)
+    throw new ErrorSesion(
+      TipoErrorSesion.AuthInvalido,
+      `Auth inválido: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+    )
+  return data
+}
+
+/** Parsea un payload contra un schema de sesión, agregándole los campos del server (ip, agente). */
+const parsearSesion = <S extends z.ZodTypeAny>(
+  socket: Socket,
+  schema: S,
+  payload: Record<string, unknown>
+): z.infer<S> =>
+  parsearAuth(schema, {
     ...payload,
     userIp: socketIp(socket),
     agente: socket.handshake.headers['user-agent'],
-  }) as WssEstudianteSession // Workaround de TS para que entienda que puede tener campos de estudiante
+  })
 
-  // La adjuntamos al socket
+/** Attachea la sesión al socket y la emite de inmediato al cliente. */
+const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
   socket.data.session = sessionData
-
   console.log(`🤝 Abriendo sesión para ${sessionData.userId}`)
-
-  // La emitimos al cliente
   socket.emit('session:opened', sessionData)
 }
 
 /**
  * Hace login al server de websockets.
- * - Valida el auth del socket
- * - Abre una sesión acorde al rol
- *  - Si es estudiante, verifica que la sala exista y abre una sesión anónima.
- * - Si es profe o admin:
- *  - Valida el token, autentica que sea emitido por el servidor Next y usa su info para abrir una sesión.
- * - Adjunta la sesión al socket
+ * - Determina el rol del pasaporte.
+ * - Si es estudiante: la sala decide el metodo de autenticación. Construimos la sesión contra el schema de ese
+ *   metodo_login (inyectando el `metodo`, que el FE no manda), la verificamos contra la config (dni en
+ *   lista, nombre libre) y la abrimos. El `userId` lo resuelve el transform del schema.
+ * - Si es profe o admin: validamos el token de Next y usamos su info para abrir la sesión.
+ * - Público no establece sesión.
  */
 const login = async (socket: SocketConSesion) => {
-  // Extraemos el auth del socket y lo validamos
-  const { data: auth, error, success } = PasaporteSchema.safeParse(socket.handshake.auth)
+  // const { auth } = socket.handshake
 
-  if (!success)
-    throw new ErrorSesion(
-      TipoErrorSesion.AuthInvalido,
-      `Auth inválido: ${
-        error ? error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ') : 'error desconocido'
-      }`
-    )
+  // Determinamos el rol.
+  const auth = parsearAuth(PasaporteSchema, socket.handshake.auth)
 
-  // Sesión de estudiante
+  // Sesión de estudiante -- consultamos la config de la sala para autorizar.
   if (auth.rol === RolSala.Estudiante) {
-    await autorizarAccesoASala(auth)
+    // Verificamos que la sala exista -- si no existe tira un error:
+    await Salas.assertExiste(auth.idSala)
 
-    console.log(`👤 Iniciando sesión anónima en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
-    await openSession(socket, auth)
+    const sala = await Salas.get(auth.idSala)
+
+    const config = await sala.config()
+    // Para auth de google, decodeamos el token a datos de usuario (la identidad es el email).
+    let datosGoogle: AuthGoogle | undefined
+    if (config.metodo_login === MetodosLogin.Google) {
+      datosGoogle = decodearTokenNextAuth(auth.token)
+    }
+
+    const session = parsearSesion(socket, SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
+      ...auth,
+      ...datosGoogle,
+      metodo: config.metodo_login,
+    })
+
+    // Verificamos la sesión contra la config de la sala (dni en lista, nombre libre, etc.)
+    await verificarYAutorizarAccesoEstudianteASala(session, sala)
+
+    console.log(`👤 Iniciando sesión en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
+    abrirSesion(socket, session)
   }
 
   // Sesión de profe o admin
   else if (auth.rol === RolSala.Profe || auth.rol === RolSala.Admin) {
-    // Si es profe o admin, necesitamos token
-    console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
     const payload = decodearTokenNextAuth(auth.token)
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
-    if (registradoComoAdmin(payload.email) && auth.rol === RolSala.Admin) {
-      await openSession(socket, { rol: RolSala.Admin, ...payload, nombre: payload.name, avatar: payload.image })
-    } else {
-      await openSession(socket, { rol: RolSala.Profe, ...payload, nombre: payload.name, avatar: payload.image })
-    }
+    const rolFinal = registradoComoAdmin(payload.email) && auth.rol === RolSala.Admin ? RolSala.Admin : RolSala.Profe
+    const session = parsearSesion(socket, WssServerSessionSchema, {
+      rol: rolFinal,
+      ...payload,
+    })
+
+    console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
+    abrirSesion(socket, session)
   }
 
   // Publico y test no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket

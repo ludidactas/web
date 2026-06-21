@@ -45,9 +45,9 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     }
   }, [socket])
 
-  // Si el servidor rechaza o expira la sesión, volvemos al login
+  // Si el servidor rechaza la sesión, volvemos al login
   useEffect(() => {
-    if (wss.estado === StatusDeConexion.Expirado || wss.estado === StatusDeConexion.Rechazado) {
+    if (wss.estado === StatusDeConexion.Rechazado) {
       localStorage.setItem(`encuestas-ingresado-${auth.idSala}`, '0')
       storeEstudianteLogin.getState().setIngresado(false)
     }

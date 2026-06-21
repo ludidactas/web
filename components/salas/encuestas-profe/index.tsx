@@ -53,9 +53,6 @@ export default function EncuestasProfe() {
     return <LoadingSala overlay mensaje="Esperando config de sala..." />
   }
 
-  if (estado === StatusDeConexion.Expirado)
-    return <LoadingSala overlay mensaje="Error al conectar con el servidor de salas!" error />
-
   const linkOverlay = configSala.link.replace(/\/$/, '') + '/overlay'
 
   return (

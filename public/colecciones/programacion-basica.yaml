@@ -1,0 +1,28 @@
+version: 1
+nombre: Conceptos de programación
+preguntas:
+  - pregunta: ¿Qué es una variable?
+    opciones:
+      - Un espacio en memoria con un nombre que guarda un valor
+      - Una función que no recibe parámetros
+      - Un tipo de bucle
+      - Un mensaje de error
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Cuáles de estas son estructuras de control?
+    opciones:
+      - if / else
+      - for
+      - while
+      - print
+    admiteAportes: false
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: ¿Qué lenguajes de programación conocés o usaste alguna vez?
+    opciones:
+      - Python
+      - JavaScript
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: null

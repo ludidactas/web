@@ -1,0 +1,12 @@
+[
+  {
+    "nombre": "Conceptos de programación",
+    "descripcion": "Preguntas introductorias sobre fundamentos de programación.",
+    "archivo": "programacion-basica.yaml"
+  },
+  {
+    "nombre": "Romper el hielo",
+    "descripcion": "Preguntas livianas para arrancar una clase.",
+    "archivo": "romper-el-hielo.yaml"
+  }
+]

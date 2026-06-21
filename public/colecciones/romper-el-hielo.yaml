@@ -1,0 +1,21 @@
+version: 1
+nombre: Romper el hielo
+preguntas:
+  - pregunta: ¿Cómo te sentís hoy para arrancar la clase?
+    opciones:
+      - Con toda la energía
+      - Tranqui pero atento/a
+      - Medio dormido/a
+      - Necesito un café
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: Si pudieras tener un superpoder, ¿cuál elegirías?
+    opciones:
+      - Volar
+      - Invisibilidad
+      - Leer la mente
+      - Viajar en el tiempo
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null

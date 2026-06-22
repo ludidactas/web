@@ -110,19 +110,42 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
   // Calcular dimensiones
   const svgHeight = titleHeight + encuesta.opciones.length * barSpacing + 20
 
+  // El título no entra en una sola línea fija: encogemos la fuente y permitimos más
+  // líneas según el largo del texto, dejando que el foreignObject haga el wrap/elipsis.
+  const largoPregunta = encuesta.pregunta.length
+  const { fontSize: tituloFontSize, lineas: tituloLineas } =
+    largoPregunta > 140
+      ? { fontSize: 16, lineas: 3 }
+      : largoPregunta > 80
+        ? { fontSize: 20, lineas: 2 }
+        : largoPregunta > 40
+          ? { fontSize: 24, lineas: 2 }
+          : { fontSize: 28, lineas: 2 }
+
   return (
     <div className="w-auto rounded-xl p-6" style={{ backgroundColor: bg, margin: `${margin}px` }}>
       <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`}>
         {/* Título de la encuesta */}
-        <text
-          x="20"
-          y="32"
-          textAnchor="left"
-          className="text-lg font-semibold fill-white"
-          style={{ fontSize: '28px', fontWeight: 'bold' }}
-        >
-          {encuesta.pregunta}
-        </text>
+        <foreignObject x="20" y="0" width="960" height={titleHeight}>
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+            <div
+              style={{
+                color: 'white',
+                fontSize: `${tituloFontSize}px`,
+                fontWeight: 'bold',
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: tituloLineas,
+                WebkitBoxOrient: 'vertical',
+                wordBreak: 'break-word',
+                width: '100%',
+              }}
+            >
+              {encuesta.pregunta}
+            </div>
+          </div>
+        </foreignObject>
 
         {/* Barras */}
         {ops.map((op) => (

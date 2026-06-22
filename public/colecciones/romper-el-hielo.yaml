@@ -19,3 +19,39 @@ preguntas:
     admiteAportes: true
     admiteMultiplesVotos: false
     maxMultiplesVotos: null
+  - pregunta: Para arrancar el día, ¿de qué equipo sos?
+    opciones:
+      - Mate, siempre
+      - Café, sin negociar
+      - Té o alguna infusión
+      - Ninguno, arranco así nomás
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Sos más de la mañana o de la noche?
+    opciones:
+      - Madrugador/a, rindo temprano
+      - Me prende la tarde
+      - De noche es cuando funciono
+      - Depende del día
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué te recarga las pilas? (elegí las que quieras)
+    opciones:
+      - Estar con gente
+      - Estar un rato solo/a
+      - Salir a moverme o hacer algo al aire libre
+      - Dormir o no hacer nada
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: null
+  - pregunta: Si pudieras aprender algo al instante, ¿qué elegirías?
+    opciones:
+      - Un idioma nuevo
+      - Tocar un instrumento
+      - Cocinar bien
+      - Dibujar o algo artístico
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null

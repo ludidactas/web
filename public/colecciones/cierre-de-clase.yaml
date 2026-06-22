@@ -1,0 +1,71 @@
+version: 1
+nombre: Cierre de clase
+preguntas:
+  - pregunta: ¿Cómo te vas de la clase de hoy?
+    opciones:
+      - Con energía y ganas de más
+      - Tranqui, fue llevadero
+      - Un poco cansado/a
+      - Con la cabeza llena, necesito procesar
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué fue lo que más te gustó o más te sirvió?
+    opciones:
+      - Las explicaciones
+      - Los ejemplos y la práctica
+      - Charlar o trabajar con otros
+      - El tema en sí
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué te costó más?
+    opciones:
+      - Seguir el ritmo
+      - Entender algún concepto
+      - Concentrarme
+      - Animarme a participar o preguntar
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: Si algo quedó poco claro, ¿qué te gustaría que repasemos?
+    opciones:
+      - Algún concepto puntual (lo escribo abajo)
+      - Cómo se conecta con lo que vimos antes
+      - Para qué sirve en la práctica
+      - Nada puntual, quedó claro
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: El ritmo de la clase te pareció…
+    opciones:
+      - Muy rápido
+      - Bien, cómodo
+      - Un poco lento
+      - Por momentos rápido, por momentos lento
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué te gustaría que hagamos más seguido? (elegí las que quieras)
+    opciones:
+      - Más ejemplos y práctica
+      - Más debate y charla
+      - Más trabajo en grupo
+      - Más tiempo para preguntas
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: null
+  - pregunta: En una palabra, ¿cómo describirías la clase de hoy?
+    opciones:
+      - Interesante
+      - Intensa
+      - Tranquila
+      - Reveladora
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Algo más que quieras comentar, sugerir o agradecer? Va acá.
+    opciones: []
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null

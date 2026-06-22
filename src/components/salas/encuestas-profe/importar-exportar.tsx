@@ -21,11 +21,12 @@ import {
 
 /** UI para importar/exportar -- pendiente revisar/mejorar @comomaraleja */
 export function ImportarExportar() {
-  const { crear } = useConexionProfe()
+  const { crear, borrar } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
 
   const [abierto, setAbierto] = useState(false)
   const [exportarAbierto, setExportarAbierto] = useState(false)
+  const [borrarAbierto, setBorrarAbierto] = useState(false)
   const [nombre, setNombre] = useState('Colección de preguntas')
   const [presets, setPresets] = useState<PresetColeccion[]>([])
   const [url, setUrl] = useState('')
@@ -157,6 +158,14 @@ export function ImportarExportar() {
     if (url.trim()) importarDesdeArchivoRemoto(url.trim())
   }
 
+  /** Borra todas las preguntas de la sala (una por una vía la misma acción del botón Eliminar). */
+  const borrarTodo = () => {
+    const cantidad = encuestas.length
+    encuestas.forEach((encuesta) => borrar(encuesta.id))
+    toast.success(`${cantidad} pregunta${cantidad === 1 ? '' : 's'} eliminada${cantidad === 1 ? '' : 's'}`)
+    setBorrarAbierto(false)
+  }
+
   return (
     <div className="flex gap-3 items-center justify-center text-sm mt-1">
       <button
@@ -269,6 +278,40 @@ export function ImportarExportar() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <button
+        className="flex items-center gap-1 text-rose-600 hover:font-bold hover:underline disabled:text-slate-300 disabled:no-underline disabled:font-normal"
+        onClick={() => setBorrarAbierto(true)}
+        disabled={encuestas.length === 0}
+        title="Eliminar todas las preguntas de esta sala"
+      >
+        <Icon icon="mdi:trash-can" /> Borrar todo
+      </button>
+
+      <Dialog open={borrarAbierto} onOpenChange={setBorrarAbierto}>
+        <DialogContent className="flex flex-col items-center">
+          <DialogHeader>
+            <DialogTitle className="text-center leading-6">
+              ¿Eliminar las {encuestas.length} pregunta(s) de la sala?
+            </DialogTitle>
+            <DialogDescription className="text-center">Esta acción no se puede deshacer.</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <button
+              className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full"
+              onClick={() => setBorrarAbierto(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              className="flex items-center gap-1 bg-rose-700 text-white px-4 py-2 rounded-full"
+              onClick={borrarTodo}
+            >
+              <Icon icon="mdi:trash-can" /> Borrar todo
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -11,10 +11,8 @@ interface HeaderProps extends PropsWithChildren {
   btnLogout?: ReactNode
 }
 
-export default function HeaderSala({ className, children, btnLogout }: HeaderProps) {
-  return (
-    <div>
-      <div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
+export function Header ({ className, children, btnLogout }: HeaderProps){
+  return(<div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
         <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
           <Link href="/" className="flex items-center gap-4">
             <Image
@@ -41,6 +39,13 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
         {children}
         <div className="flex justify-end">{btnLogout}</div>
       </div>
+      )
+}
+
+export default function HeaderSala(props: HeaderProps) {
+  return (
+    <div>
+      <Header {...props} />
       {/* Shape divider justo después del header */}
       <ShapeDividerWaves bottom colorText="text-white" />{' '}
     </div>

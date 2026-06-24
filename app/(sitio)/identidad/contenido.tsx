@@ -87,9 +87,10 @@ export default function ContenidoIdentidad() {
                 <LdSvg className={`md:w-80 -translate-y-7 ${styletitle}`} data-aos="fade-right" SvgComponent={vla} />
               </div>
               <p className={`text-justify leading-relaxed`}>
-                Desarrollador fullstack, educador y malabarista. Elaboró la propuesta de Ludidatcas en 2021 como una
-                manera de poner sus habilidades al servicio de la regeneración educativa, la cual considera necesaria
-                para ver un mundo más integrado, justo y próspero.
+                Desarrollador y educador. Comenzó Ludidactas en 2021 buscando una forma propia y grupal de educación,
+                luego de haber trabajado en la educación formal y en la no formal. Quiere seguir jugando, programando y
+                enseñando sin tener que alimentar la maquinaria de inhumanidad. Hoy encuentra en este proyecto su manera
+                de servir, expresar y crecer.
               </p>
               <div className="clear-left"></div>
             </div>

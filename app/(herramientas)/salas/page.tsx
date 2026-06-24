@@ -175,7 +175,7 @@ function VerSalas() {
 
 // Pagina principal
 export default function SalasPage() {
-  const [activo, setActivo] = useState<'crear' | 'ver'>('crear')
+  const [activo, setActivo] = useState<'crear' | 'ver'>('ver')
   const { data: session } = useSession()
 
   return (
@@ -184,17 +184,17 @@ export default function SalasPage() {
         <p className="text-md md:text-4xl text-center">¡Hola {nombreSplit(session?.user?.name)}!</p>
       </Header>
       <SidebarProvider className="flex-1 px-20 py-10 rounded-xl" style={{ minHeight: 0 }}>
-        <Sidebar className='rounded-l p-4' collapsible="none">
+        <Sidebar className='rounded-l p-4 bg-indigo-500 text-white' collapsible="none">
           <SidebarHeader />
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activo === 'ver'} onClick={() => setActivo('ver')}>
+                <SidebarMenuButton isActive={activo === 'ver'} onClick={() => setActivo('ver')} className={activo === 'ver' ? 'bg-white/40 font-semibold' : ''}>
                   Ver Salas
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activo === 'crear'} onClick={() => setActivo('crear')}>
+                <SidebarMenuButton isActive={activo === 'crear'} onClick={() => setActivo('crear')} className={activo === 'crear' ? 'bg-white/40 font-semibold' : ''}>
                   Crear sala
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -204,8 +204,8 @@ export default function SalasPage() {
         </Sidebar>
 
         <SidebarInset className='rounded-r'>
-          <div className={activo !== 'crear' ? 'hidden' : ''}><FormCrearSala /></div>
           {activo === 'ver' && <VerSalas />}
+          <div className={activo !== 'crear' ? 'hidden' : ''}><FormCrearSala /></div>
         </SidebarInset>
       </SidebarProvider>
     </div>

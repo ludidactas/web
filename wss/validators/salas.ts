@@ -11,6 +11,7 @@ export const configCreacionSala = z.object({
 
 /** Data derivada o generada en el server */
 export const configSala = configCreacionSala.extend({
+  nombre: z.string().optional(),
   nombre_profe: z.string(),
   link: z.string(),
 })
@@ -20,7 +21,7 @@ export const configSala = configCreacionSala.extend({
  * El `metodo_login` es inmutable: se fija al crear la sala y no se cambia más.
  * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
  */
-export const configActualizable = configSala.pick({ solo_invitados: true }).strict()
+export const configActualizable = configSala.pick({ solo_invitados: true, nombre: true }).strict()
 
 /** La data completa de una sala tal como se persiste en redis. */
 export const salaData = z.object({

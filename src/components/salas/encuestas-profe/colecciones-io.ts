@@ -12,15 +12,6 @@ export interface PresetColeccion {
   archivo: string
 }
 
-/**
- * Huella de una pregunta para deduplicar al importar: su texto normalizado
- * (sin espacios al borde, en minúsculas y con espacios internos colapsados).
- * Dos preguntas con la misma huella se consideran "la misma".
- */
-export function huellaPregunta(pregunta: string): string {
-  return pregunta.trim().toLowerCase().replace(/\s+/g, ' ')
-}
-
 /** Reduce una encuesta viva (con votos, status de publicación, etc.) a su forma exportable/importable. */
 export function encuestaAPregunta(encuesta: EncuestaHidratadaProfe): PreguntaColeccion {
   return {

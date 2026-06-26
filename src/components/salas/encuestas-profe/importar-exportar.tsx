@@ -12,12 +12,12 @@ import { crearEncuesta } from '@/wss/validators/polls'
 
 import {
   descargarColeccion,
-  huellaPregunta,
   obtenerColeccionDesdeUrl,
   obtenerPresets,
   parsearColeccion,
   PresetColeccion,
 } from './colecciones-io'
+import { aSlug } from '@/lib/utils'
 
 /** UI para importar/exportar -- pendiente revisar/mejorar @comomaraleja */
 export function ImportarExportar() {
@@ -61,7 +61,7 @@ export function ImportarExportar() {
 
     // Derivamos "huellas", tipo extractos que permiten identificar preguntas iguales aunque no sean idénticas (ej: diferencias de mayúsculas o espacios).
     // Esto nos permite evitar crear preguntas duplicadas si ya existe una igual en la sala.
-    const huellas = new Set(encuestas.map((e) => huellaPregunta(e.pregunta)))
+    const huellas = new Set(encuestas.map((e) => aSlug(e.pregunta)))
 
     let creadas = 0
     let omitidas = 0
@@ -78,7 +78,7 @@ export function ImportarExportar() {
         continue
       }
 
-      const huella = huellaPregunta(parseada.data.pregunta)
+      const huella = aSlug(parseada.data.pregunta)
       if (huellas.has(huella)) {
         omitidas++
         continue
@@ -93,17 +93,21 @@ export function ImportarExportar() {
       }
     }
 
-    // Mostramos resultados
-    const unaCreada = creadas === 1
-    const variasCreadas = creadas > 1
-
-    const unaOmitida = omitidas === 1
-    const variasOmitidas = omitidas > 1
-
-    if (unaCreada) toast.success(`Una pregunta importada de ${preguntas.length}`)
-    if (variasCreadas) toast.success(`${creadas} preguntas importadas de ${preguntas.length}`)
-    if (unaOmitida) toast.info(`Una pregunta ya existía en la sala y no se duplicó`)
-    if (variasOmitidas) toast.info(`${omitidas} ya existían en la sala y no se duplicaron`)
+    // Mostramos resultados en un solo toast
+    const partes: string[] = []
+    if (creadas > 0)
+      partes.push(
+        `${creadas} pregunta${creadas === 1 ? '' : 's'} importada${creadas === 1 ? '' : 's'} de ${preguntas.length}`
+      )
+    if (omitidas > 0)
+      partes.push(
+        `${omitidas} ya ${omitidas === 1 ? 'existía' : 'existían'} en la sala y no se ${
+          omitidas === 1 ? 'duplicó' : 'duplicaron'
+        }`
+      )
+    if (partes.length > 0) {
+      toast.info(partes.join('. '))
+    }
 
     // Mostramos errores
     errores.forEach((mensaje) => toast.error(mensaje))

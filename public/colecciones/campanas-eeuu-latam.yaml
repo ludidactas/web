@@ -1,0 +1,167 @@
+version: 1
+nombre: Campañas de Estados Unidos en América Latina
+preguntas:
+  - pregunta: 'La Doctrina Monroe (1823) se resumió como "América para los americanos". Mirándola hoy, ¿qué dirías que expresó sobre todo?'
+    opciones:
+      - Que Estados Unidos se reservaba la influencia sobre el continente frente a Europa
+      - Que la región quedaba, de hecho, bajo la tutela de una nueva potencia
+      - Que se frenaban nuevas colonizaciones europeas, aunque a cambio de otra dependencia
+      - Que cada país americano debía resolver su destino sin Europa ni Estados Unidos
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'A comienzos del siglo XX, la "política del garrote" (big stick) consistió sobre todo en…'
+    opciones:
+      - Negociar tratados de libre comercio con cada país de la región
+      - Impulsar una unión aduanera entre las repúblicas americanas
+      - Mediar de forma neutral en los conflictos entre vecinos
+      - Intervenir militarmente en el Caribe y Centroamérica para proteger intereses estadounidenses
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En 1954, el gobierno de Jacobo Árbenz en Guatemala fue derrocado por un golpe apoyado por la CIA. ¿Qué pesó sobre todo?'
+    opciones:
+      - Un conflicto de límites con los países vecinos
+      - Una reforma agraria que afectó tierras ociosas de la United Fruit Company
+      - La nacionalización del petróleo y de las minas del país
+      - Un acercamiento diplomático con potencias de Asia
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La expresión "repúblicas bananeras" se usa para países cuya economía y política quedaron en manos de empresas extranjeras. ¿Qué te parece que muestra esa idea?'
+    opciones:
+      - Que la soberanía puede vaciarse aunque el país sea formalmente independiente
+      - Que una sola empresa podía pesar más que un gobierno
+      - Que el destino de un país podía decidirse fuera de sus fronteras
+      - Que detrás de un nombre burlón hay una historia de despojo
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En 1970, ante el triunfo electoral de Salvador Allende en Chile, la orden de Nixon y Kissinger a la CIA fue…'
+    opciones:
+      - Respetar el resultado y observar desde lejos
+      - Acompañar las reformas con créditos y asistencia técnica
+      - Hacer "gritar" a la economía para forzar la caída del gobierno
+      - Negociar con Allende un programa de gobierno más moderado
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El golpe de Estado que derrocó a Salvador Allende ocurrió…'
+    opciones:
+      - En 1989, junto con el fin de la Guerra Fría
+      - En 2001, tras una crisis económica regional
+      - En 1964, al mismo tiempo que el golpe en Brasil
+      - El 11 de septiembre de 1973, encabezado por Augusto Pinochet
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Durante la Guerra Fría, la "Doctrina de Seguridad Nacional" enseñó a los militares de la región que el enemigo principal ya no estaba afuera, sino adentro del propio país. ¿Qué abre una idea así?'
+    opciones:
+      - Que cualquier opositor podía pasar a ser tratado como un enemigo de guerra
+      - Que las fuerzas armadas se volvían contra su propia población
+      - Que la frontera entre política y guerra se borraba peligrosamente
+      - Que el miedo servía para justificar la represión
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Tras el golpe, la economía chilena fue rediseñada por los "Chicago Boys", que aplicaron…'
+    opciones:
+      - Un programa neoliberal de privatizaciones y apertura, pionero en la región
+      - Una fuerte estatización de las grandes empresas
+      - Un reparto de tierras entre las familias campesinas
+      - Un cierre casi total de la economía al comercio exterior
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El Plan Cóndor fue…'
+    opciones:
+      - Un plan de integración económica y aduanera entre países sudamericanos
+      - La coordinación entre dictaduras del Cono Sur para perseguir opositores a través de las fronteras
+      - Un programa conjunto de obras de infraestructura regional
+      - Un acuerdo de intercambio cultural y estudiantil entre vecinos
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La Escuela de las Américas, financiada por Estados Unidos, formó a militares latinoamericanos; sus manuales y varios egresados quedaron ligados a prácticas de tortura y desaparición. ¿Qué te moviliza de esto?'
+    opciones:
+      - Que la represión también se enseñó y se exportó como una técnica
+      - Que muchos responsables se formaron lejos de los países donde actuaron
+      - Que reconocerlo es parte de hacer justicia con las víctimas
+      - Que conviene preguntarse quién entrena y arma a quién, también hoy
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Buena parte de lo que sabemos del Plan Cóndor salió a la luz en 1992 con…'
+    opciones:
+      - La apertura de archivos secretos de una potencia europea
+      - La publicación de las memorias de un ex dictador
+      - El hallazgo de los "Archivos del Terror" en una comisaría de Paraguay
+      - La declaración de un organismo internacional de derechos humanos
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En las décadas de 1960 y 1970, varios países de la región cayeron bajo dictaduras militares. ¿Cuáles de estos casos son reales? (elegí todas las que correspondan)'
+    opciones:
+      - Brasil, en 1964
+      - Uruguay, en 1973
+      - Chile, en 1973
+      - Argentina, en 1976
+      - Costa Rica, en 1973
+      - México, en 1968
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4
+  - pregunta: 'A veces se llamó a América Latina el "patio trasero" de Estados Unidos. ¿Qué expresa esa imagen?'
+    opciones:
+      - Una relación de subordinación, donde la región queda bajo intereses ajenos
+      - Que las decisiones importantes podían tomarse en otra capital
+      - Que se trataba a países enteros como un espacio de servicio
+      - Que reconocerlo es un primer paso para pensar otra relación
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En los años 80, Estados Unidos financió a los "Contras" en Nicaragua para…'
+    opciones:
+      - Presionar al gobierno para que adelantara elecciones
+      - Frenar la influencia de otra potencia en Centroamérica
+      - Proteger a la población civil de la zona de conflicto
+      - Derrocar al gobierno sandinista, incluso con fondos obtenidos de forma ilegal
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En la Argentina de la dictadura, el plan de Martínez de Hoz se hizo famoso por la "bicicleta financiera", que consistía en…'
+    opciones:
+      - Ganar dinero con la especulación financiera en vez de la producción
+      - Fomentar la industria nacional y el pleno empleo
+      - Repartir entre los trabajadores la riqueza generada
+      - Cerrar el ingreso de capitales financieros extranjeros
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Si pensás juntas la Doctrina Monroe, la Escuela de las Américas y el Plan Cóndor, ¿qué hilo en común ves?'
+    opciones:
+      - Una larga injerencia que puso los intereses de una potencia por encima de los pueblos
+      - Que la soberanía de la región fue muchas veces más formal que real
+      - Que la violencia y los intereses económicos solían ir de la mano
+      - Que entender el pasado ayuda a leer las dependencias del presente
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Para qué puede servirnos hoy conocer esta historia de intervenciones? (elegí hasta tres)'
+    opciones:
+      - Para entender desigualdades y dependencias que siguen vigentes
+      - Para reconocer el valor de la soberanía y la autodeterminación
+      - Para defender la memoria de las víctimas y que no se repita
+      - Para mirar con ojo crítico también las relaciones de poder de hoy
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'Después de pensar todo esto, ¿qué te gustaría hacer distinto?'
+    opciones:
+      - Informarme más allá de los relatos oficiales
+      - Conocer las luchas de los pueblos de la región
+      - Valorar las decisiones soberanas de mi país
+      - Compartir esta mirada con otras personas
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4

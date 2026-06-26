@@ -21,7 +21,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/wss/*": ["./wss/*"],
+      "@/wss-cli/*": ["./wss-cli/*"],
+      "@/svg/*": ["./svg/*"],
+      "@/md/*": ["./md/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "**/*.mdx", "svgo.config.js"],

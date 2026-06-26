@@ -1,0 +1,176 @@
+version: 1
+nombre: Ciencia árabe e islámica, los aportes en las sombras
+preguntas:
+  - pregunta: 'La historia tradicional europea solió saltar de la antigua Grecia directo al Renacimiento, llamando "Edad Oscura" a los siglos intermedios. ¿Qué deja afuera, sobre todo, ese relato?'
+    opciones:
+      - El florecimiento científico del mundo islámico, que conservó y amplió el saber griego
+      - La continuidad del Imperio bizantino, que siguió leyendo a los griegos en su lengua
+      - El papel de los monasterios europeos, que también copiaron textos de la Antigüedad
+      - Los saberes de China y la India, que circulaban por las rutas comerciales de la época
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '"Álgebra" viene del árabe "al-yabr" y "algoritmo", del nombre del matemático persa al-Juarismi (siglo IX). Dos pilares de la matemática y la informática llevan esa huella. ¿Qué te sugiere?'
+    opciones:
+      - Que llamamos "neutrales" o "europeas" a ideas que vinieron de otra parte
+      - Que las palabras guardan memoria de quiénes construyeron cada saber
+      - Que la ciencia fue siempre una conversación entre muchas culturas
+      - Que en lo cotidiano hay historias que nadie se molestó en contarnos
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Todas estas palabras del español vienen del árabe. ¿Cuáles te sorprenden, o cuáles habrías jurado que tenían otro origen? (elegí las que quieras)'
+    opciones:
+      - Que "ojalá" viene del árabe "law sha Allah", "si Dios quiere"
+      - Que "azúcar", "naranja" y "aceite" nombran cosas cotidianas en árabe
+      - Que "almohada", "alfombra" y "alcoba" llenan la casa de palabras árabes
+      - Que el árabe es la segunda fuente de palabras del español, después del latín
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: null
+  - pregunta: 'Ibn al-Haytham (Alhacén), hacia el año 1000, defendía comprobar las ideas con experimentos y observación, siglos antes de que en Europa se hablara de "método científico". ¿Qué te llama más la atención?'
+    opciones:
+      - Que algo que creíamos "moderno" y europeo ya se practicaba mil años atrás
+      - Que la idea de poner a prueba las cosas surgió en más de un lugar
+      - Que conocemos a Galileo o Copérnico, pero rara vez a quienes los precedieron
+      - Que tal vez haya muchos otros pioneros borrados del relato
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El "Canon de Medicina" de Ibn Sina (Avicena)…'
+    opciones:
+      - Fue sobre todo un tratado de astronomía y cálculo de calendarios
+      - Circuló solo en el mundo islámico y nunca llegó a Europa
+      - Fue libro de texto en las universidades europeas durante casi 600 años
+      - Resumía la medicina griega sin aportar nada nuevo
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El médico al-Razi (Rhazes), hacia los siglos IX y X, es recordado por…'
+    opciones:
+      - Distinguir clínicamente la viruela del sarampión, en un tratado pionero
+      - Describir por primera vez la circulación de la sangre por el cuerpo
+      - Realizar las primeras operaciones de cataratas con instrumental propio
+      - Trazar un mapa detallado del sistema nervioso humano
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Muchos nombres de estrellas que usamos hoy vienen del árabe. ¿Cuáles de estos lo son? (elegí todas las que correspondan)'
+    opciones:
+      - Aldebarán
+      - Rigel
+      - Betelgeuse
+      - Altair
+      - Sirio
+      - Antares
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4
+  - pregunta: 'Palabras como "alcohol", "álcali" y "alquimia" comparten un rasgo: …'
+    opciones:
+      - Fueron acuñadas por los alquimistas europeos del Renacimiento
+      - Las heredamos del latín de los antiguos boticarios romanos
+      - Las tomamos del griego, lengua de la ciencia antigua
+      - Son de origen árabe y vienen de los trabajos de química de ese mundo
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La "Casa de la Sabiduría" (Bayt al-Hikma) de Bagdad fue, sobre todo…'
+    opciones:
+      - La principal academia militar del califato abasí
+      - Un gran centro de traducción y producción de saber de su época
+      - El mayor archivo de registros fiscales y comerciales del imperio
+      - Un observatorio dedicado en exclusiva a la astronomía
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Buena parte de la filosofía y la ciencia de la antigua Grecia llegó a la Europa medieval…'
+    opciones:
+      - Conservada intacta en los monasterios europeos durante toda la Edad Media
+      - Traída por los eruditos bizantinos recién tras la caída de Constantinopla en 1453
+      - Traducida y conservada antes por el mundo islámico, que la devolvió a Europa
+      - Redescubierta de manuscritos griegos hallados en la Italia renacentista
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La universidad en funcionamiento más antigua del mundo, en Fez (Marruecos), fundada en el año 859, fue creada…'
+    opciones:
+      - Por un califa abasí, como muchas instituciones de saber de la época
+      - Por una mujer, Fátima al-Fihrí, con la herencia de su padre comerciante
+      - Por una orden de eruditos sufíes dedicada a la enseñanza
+      - Por el sultán local, para formar a los funcionarios del reino
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El astrónomo al-Sufi, en el siglo X, dejó registrada por primera vez…'
+    opciones:
+      - Un catálogo corregido de la posición y el brillo de las estrellas
+      - El primer registro de un eclipse total de Sol observado en Oriente
+      - La medición de la inclinación del eje de la Tierra
+      - La observación de lo que hoy llamamos la galaxia de Andrómeda
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La fabricación de papel llegó a Europa…'
+    opciones:
+      - A través del mundo islámico, que lo había aprendido de China
+      - Como un invento europeo, perfeccionado en los talleres italianos
+      - Desde Bizancio, junto con otros saberes de la Antigüedad
+      - De la mano de los mercaderes venecianos que comerciaban con Oriente
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Las palabras "cifra" y "cero" provienen del árabe "sifr", que a su vez…'
+    opciones:
+      - Designaba en árabe el ábaco que se usaba para contar
+      - Provenía del griego, lengua de los primeros matemáticos
+      - Traducía al árabe el concepto del cero, llegado de la India
+      - Era el término persa para los números del comercio
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Al-Zahrawi (Abulcasis), en la España andalusí, es recordado por…'
+    opciones:
+      - Fundar el primer hospital con enseñanza de la península ibérica
+      - Compilar el primer recetario de remedios vegetales de al-Ándalus
+      - Establecer las reglas de dieta e higiene en la corte de Córdoba
+      - Escribir una enciclopedia médica e idear instrumentos quirúrgicos aún reconocibles
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Por qué buena parte de estos aportes quedó "en las sombras" en la historia que se enseñó?'
+    opciones:
+      - Por un relato eurocéntrico que presentó a Europa como única cuna del saber
+      - Porque muchos textos se perdieron o quedaron sin traducir del árabe
+      - Porque las tensiones entre cristiandad e islam tiñeron la memoria histórica
+      - Porque la historia se escribió desde los centros de poder, que callaron a los demás
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Qué muestran juntos el álgebra, la óptica de Alhacén y la Casa de la Sabiduría?'
+    opciones:
+      - Que el saber viaja y se transforma al pasar de una cultura a otra
+      - Que toda gran civilización tuvo su momento de esplendor científico
+      - Que el conocimiento es una construcción colectiva de muchos pueblos, no de uno solo
+      - Que el "atraso" de un pueblo suele ser una construcción de quien cuenta la historia
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Para qué puede servirnos reconocer estos aportes hoy? (elegí hasta tres)'
+    opciones:
+      - Para entender que la ciencia es herencia compartida de la humanidad
+      - Para valorar culturas que la historia oficial dejó en segundo plano
+      - Para revisar con ojo crítico lo que nos contaron como "universal"
+      - Para reconocer estos aportes sin idealizar ni endiosar a ninguna cultura
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'Después de pensar todo esto, ¿qué te gustaría hacer distinto?'
+    opciones:
+      - Buscar el origen real de ideas que doy por europeas
+      - Conocer a científicos y científicas de otras culturas
+      - Cuestionar la idea de una única "cuna de la civilización"
+      - Compartir esta mirada con otras personas
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4

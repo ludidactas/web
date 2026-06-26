@@ -1,0 +1,102 @@
+version: 1
+nombre: Conceptos de programación
+preguntas:
+  - pregunta: ¿Qué es una variable?
+    opciones:
+      - Un espacio en memoria con un nombre que guarda un valor
+      - Una función que no recibe parámetros
+      - Un tipo de bucle
+      - Un mensaje de error
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué es un algoritmo?
+    opciones:
+      - Un programa ya terminado y listo para descargar
+      - Un mensaje de error frecuente
+      - Un lenguaje de programación muy nuevo
+      - Una serie de pasos ordenados para resolver un problema o hacer una tarea
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Para qué sirve un bucle (for, while)?
+    opciones:
+      - Para guardar un valor con un nombre
+      - Para repetir una acción varias veces sin reescribirla
+      - Para mostrar un mensaje de error
+      - Para conectar el programa a internet
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué hace una condición (if)?
+    opciones:
+      - Decide si una parte del código se ejecuta o no, según se cumpla algo
+      - Repite siempre la misma acción
+      - Guarda una lista de valores
+      - Ordena los datos de menor a mayor
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué es una función?
+    opciones:
+      - Un mensaje que aparece cuando algo falla
+      - Un tipo de número con decimales
+      - Un bloque de código con nombre que podés reutilizar cuando lo necesites
+      - El nombre del archivo principal del programa
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué es un bug?
+    opciones:
+      - Una función muy avanzada
+      - Un error en el programa que hace que no funcione como esperábamos
+      - Un lenguaje de programación
+      - Un tipo de variable
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Cuáles de estas son estructuras de control?
+    opciones:
+      - if / else
+      - for
+      - while
+      - print
+    admiteAportes: false
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: ¿Cuáles de estos son tipos de datos?
+    opciones:
+      - Número (entero o decimal)
+      - Texto (string)
+      - Verdadero o falso (booleano)
+      - Un bucle for
+    admiteAportes: false
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: ¿Qué es lo que más te cuesta al programar?
+    opciones:
+      - Saber por dónde empezar
+      - Entender los mensajes de error
+      - Lograr que el código haga lo que quiero
+      - Ponerle nombre a las variables y funciones
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: ¿Qué lenguajes de programación conocés o usaste alguna vez?
+    opciones:
+      - Python
+      - JavaScript
+      - Scratch u otro de bloques
+      - Ninguno todavía, recién empiezo
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: null
+  - pregunta: Si pudieras programar algo, ¿qué te gustaría crear?
+    opciones:
+      - Un juego
+      - Una app o una página web
+      - Algo que automatice una tarea aburrida
+      - Algo con dibujos, música o arte
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null

@@ -12,6 +12,7 @@ import LoadingSala from '../loading-sala'
 
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
+import { ImportarExportar } from './importar-exportar'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
@@ -96,6 +97,7 @@ export default function EncuestasProfe() {
                 <div className="flex flex-col items-center justify-center p-4 h-24">
                   <h1 className="text-3xl text-center text-[#00B0D2]">Lista de Preguntas</h1>
                   <DialogAcciones />
+                  <ImportarExportar />
                 </div>
                 <ListaEncuestas />
               </div>
@@ -134,6 +136,7 @@ export default function EncuestasProfe() {
             <div className="flex flex-col items-center p-6 h-24 rounded-t-xl">
               <h1 className="text-4xl text-center text-[#00B0D2]">Preguntas</h1>
               <DialogAcciones />
+              <ImportarExportar />
             </div>
             <ListaEncuestas />
           </div>

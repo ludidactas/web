@@ -1,0 +1,185 @@
+version: 1
+nombre: Historia decolonial
+preguntas:
+  - pregunta: 'Según distintas miradas, ¿qué acontecimiento marca el comienzo de la modernidad?'
+    opciones:
+      - El Renacimiento italiano y la recuperación de los clásicos
+      - La conquista de América en 1492
+      - La Ilustración y la Revolución Francesa
+      - La imprenta de Gutenberg
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 2
+  - pregunta: 'Hacia 1600, la ciudad minera de Potosí (hoy Bolivia) era…'
+    opciones:
+      - Un pequeño campamento de unos pocos cientos de personas
+      - Una de las ciudades más grandes y pobladas del mundo, a la par de Londres o Sevilla
+      - Una aldea que recién empezaba a crecer
+      - Un fuerte de frontera levantado para defender la región
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En el comercio transatlántico, ¿cuántas personas africanas fueron esclavizadas y deportadas a América?'
+    opciones:
+      - Alrededor de 500 mil
+      - Unas 50 mil
+      - Cerca de 12 millones
+      - Cerca de 2 millones
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La acumulación de riqueza que financió el ascenso de Europa, ¿de dónde provino sobre todo?'
+    opciones:
+      - Del trabajo esclavizado en los ingenios azucareros del Caribe y Brasil
+      - De la ética del trabajo y el ahorro, como suele contarse
+      - De la plata de Potosí y el oro extraídos de América
+      - De una supuesta superioridad tecnológica europea
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'En la Junta de Valladolid (1550-1551), teólogos y juristas de la corona española debatieron…'
+    opciones:
+      - Si la conquista era justa y si los indígenas eran libres y racionales o "esclavos por naturaleza" que debían ser sometidos
+      - Las mejores rutas comerciales hacia las Indias
+      - El reparto de tierras y encomiendas entre los conquistadores
+      - El precio al que debía venderse el oro y la plata de América
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En el siglo posterior a 1492, la población originaria de América…'
+    opciones:
+      - Se mantuvo más o menos estable
+      - Creció gracias al contacto con Europa
+      - Disminuyó apenas un poco
+      - Se desplomó drásticamente, hasta cerca del 90% en muchas regiones, por guerra, trabajo forzado y enfermedades
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Qué fue realmente decisivo para la Revolución Industrial inglesa?'
+    opciones:
+      - El genio de inventores como James Watt
+      - El algodón cultivado por personas esclavizadas en América
+      - Los capitales amasados en el comercio colonial y de esclavos
+      - El carbón disponible en suelo británico
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'Haití, en 1804, pasó a la historia por ser…'
+    opciones:
+      - La primera nación nacida de una revolución de personas esclavizadas, que abolió la esclavitud
+      - La primera colonia francesa en independizarse de forma pacífica
+      - Una isla que se mantuvo al margen de las disputas coloniales
+      - La última colonia europea en liberarse
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Tras reconocer su independencia, Francia obligó a Haití a…'
+    opciones:
+      - Recibir ayuda económica para reconstruirse
+      - Firmar un tratado comercial que lo favorecía
+      - Pagar una indemnización a los antiguos amos por los esclavos y tierras "perdidos"
+      - Nada: aceptó su libertad sin condiciones
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La idea moderna de raza, que jerarquiza a las personas, ¿de dónde viene?'
+    opciones:
+      - Existió siempre, en todas las culturas
+      - Se construyó con la conquista de América para justificar quién manda y quién obedece
+      - La inventó la ciencia recién en el siglo XX
+      - Es una categoría natural y objetiva
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Durante casi todo el siglo XVII existió en Brasil el Quilombo de Palmares, que fue…'
+    opciones:
+      - Un gran ingenio azucarero de la corona portuguesa
+      - Una comunidad libre y autogobernada de personas que habían escapado de la esclavitud
+      - Una misión religiosa jesuita
+      - Un puerto del comercio de personas esclavizadas
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La universidad más antigua del mundo todavía en funcionamiento está en…'
+    opciones:
+      - Bolonia, Italia
+      - Oxford, Inglaterra
+      - París, Francia
+      - Fez, Marruecos
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Muchos alimentos que hoy parecen de toda la vida europeos son en realidad americanos. ¿Cuáles lo son? (elegí todas las que correspondan)'
+    opciones:
+      - El tomate, base de la cocina italiana
+      - La papa, clave en Irlanda y Europa del Este
+      - El maíz
+      - El cacao, origen del chocolate
+      - El café, que llegó de Etiopía y el mundo árabe
+      - El trigo, base del pan europeo
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4
+  - pregunta: 'Los números arábigos que usamos todos los días en realidad…'
+    opciones:
+      - Son una invención europea de la Edad Media
+      - Nacieron en la India y llegaron a Europa a través del mundo islámico
+      - Fueron creados en la antigua Roma
+      - Surgieron con la Revolución Científica del siglo XVII
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Los pueblos mayas desarrollaron por su cuenta un concepto matemático que en Europa tardó siglos en adoptarse plenamente: …'
+    opciones:
+      - El número cero
+      - El número negativo
+      - La raíz cuadrada
+      - El sistema binario
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El nombre América proviene de…'
+    opciones:
+      - Una antigua palabra indígena
+      - El apellido de Cristóbal Colón
+      - Un navegante europeo
+      - Una ciudad del sur de España
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Para Enrique Dussel, el mito de la modernidad consiste en…'
+    opciones:
+      - Creer que Europa se desarrolló sola y por mérito propio, ocultando lo que costó a otros
+      - Pensar que la modernidad fue enteramente negativa
+      - Negar que haya existido el Renacimiento
+      - Afirmar que América no existía antes de 1492
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Si tuvieras que rebautizar el "descubrimiento" de América, ¿cómo lo llamarías?'
+    opciones:
+      - Encuentro de dos mundos
+      - Invasión y conquista
+      - Encubrimiento del Otro
+      - Lo dejaría como descubrimiento
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Para qué puede servirnos hoy revisar críticamente esta historia? (elegí hasta tres)'
+    opciones:
+      - Para entender desigualdades del presente que vienen de hace siglos
+      - Para reconocer y dignificar voces que fueron silenciadas
+      - Para no repetir la lógica de descartar al que es diferente
+      - Para imaginar un mundo que se cuente a sí mismo de otra manera
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'Después de pensar todo esto, ¿qué te gustaría hacer distinto?'
+    opciones:
+      - Cuestionar relatos que doy por obvios
+      - Buscar las voces que la historia oficial calló
+      - Conocer a los pueblos originarios de mi región
+      - Compartir esta mirada con otras personas
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4

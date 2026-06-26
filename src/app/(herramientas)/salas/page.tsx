@@ -1,10 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession} from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import {Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider} from '@/components/ui/sidebar'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+} from '@/components/ui/sidebar'
 import { Header } from '@/components/salas/header-sala'
 import { cn, nombreSplit } from '@/lib/utils'
 import { SwitchCard } from '@/components/ui/switch-card'
@@ -157,8 +167,7 @@ function VerSalas() {
 
   if (idSala === undefined) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
 
-  if (idSala === null)
-    return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
+  if (idSala === null) return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
 
   return (
     <div className={cn('p-10 flex flex-col gap-2')}>
@@ -184,17 +193,25 @@ export default function SalasPage() {
         <p className="text-md md:text-4xl text-center">¡Hola {nombreSplit(session?.user?.name)}!</p>
       </Header>
       <SidebarProvider className="flex-1 px-20 py-10 rounded-xl" style={{ minHeight: 0 }}>
-        <Sidebar className='rounded-l p-4 bg-indigo-500 text-white' collapsible="none">
+        <Sidebar className="rounded-l p-4 bg-indigo-500 text-white" collapsible="none">
           <SidebarHeader />
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activo === 'ver'} onClick={() => setActivo('ver')} className={activo === 'ver' ? 'bg-white/40 font-semibold' : ''}>
+                <SidebarMenuButton
+                  isActive={activo === 'ver'}
+                  onClick={() => setActivo('ver')}
+                  className={activo === 'ver' ? 'bg-white/40 font-semibold' : ''}
+                >
                   Ver Salas
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activo === 'crear'} onClick={() => setActivo('crear')} className={activo === 'crear' ? 'bg-white/40 font-semibold' : ''}>
+                <SidebarMenuButton
+                  isActive={activo === 'crear'}
+                  onClick={() => setActivo('crear')}
+                  className={activo === 'crear' ? 'bg-white/40 font-semibold' : ''}
+                >
                   Crear sala
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -203,9 +220,11 @@ export default function SalasPage() {
           <SidebarFooter />
         </Sidebar>
 
-        <SidebarInset className='rounded-r'>
+        <SidebarInset className="rounded-r">
           {activo === 'ver' && <VerSalas />}
-          <div className={activo !== 'crear' ? 'hidden' : ''}><FormCrearSala /></div>
+          <div className={activo !== 'crear' ? 'hidden' : ''}>
+            <FormCrearSala />
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </div>

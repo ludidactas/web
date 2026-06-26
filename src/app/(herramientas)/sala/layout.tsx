@@ -6,9 +6,7 @@ export default async function SalaLayout({ children }: Readonly<{ children: Reac
   const session = await auth()
   return (
     <SessionProvider session={session}>
-      <TooltipProvider>
-        {children}
-      </TooltipProvider>
+      <TooltipProvider>{children}</TooltipProvider>
     </SessionProvider>
   )
 }

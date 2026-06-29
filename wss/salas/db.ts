@@ -43,10 +43,20 @@ export async function borrarSala(salaId: string): Promise<void> {
 
 // El índice directo es un Set por profe (`profe:<email>:salas`), que admite varias salas.
 // El índice inverso (`salas_owners`, sala → email) lo usamos para chequear propiedad.
+//
+// RETROCOMPAT (migración expand/contract): el modelo viejo guardaba la única sala del profe en el
+// hash `owners_salas` (email → idSala). NO migramos ni borramos ese hash: lo leemos en paralelo
+// para que los profes creados antes de multisala sigan viendo y operando su sala. Cuando todas las
+// instancias corran este código y querramos cerrar la migración ("contract"), se elimina el bloque
+// marcado abajo y, recién ahí, el hash `owners_salas`. (Las salas viejas ya tienen `salas_owners`,
+// así que propiedad y operación funcionan sin tocar nada.)
 
-/** Devuelve los IDs de las salas de un profe (puede ser vacío). */
+/** Devuelve los IDs de las salas de un profe (puede ser vacío). Une el Set nuevo con el legacy. */
 export async function getIdsSalasDeProfe(email: string): Promise<string[]> {
-  return redis.smembers(`profe:${email}:salas`)
+  const nuevas = await redis.smembers(`profe:${email}:salas`)
+  // RETROCOMPAT owners_salas (1:1): incluimos la sala del modelo viejo si todavía existe.
+  const vieja = await redis.hget('owners_salas', email)
+  return vieja ? Array.from(new Set([...nuevas, vieja])) : nuevas
 }
 
 /** Devuelve el email del profe dueño de la sala, o `null`. */
@@ -62,6 +72,9 @@ export async function agregarSalaAProfe(email: string, salaId: string): Promise<
 /** Quita la relación bidireccional entre un profe y una de sus salas. */
 export async function eliminarSalaDeProfe(email: string, salaId: string): Promise<void> {
   await Promise.all([redis.srem(`profe:${email}:salas`, salaId), redis.hdel('salas_owners', salaId)])
+  // RETROCOMPAT owners_salas (1:1): si la sala borrada era la del modelo viejo, limpiamos el legacy
+  // para que no quede colgada en el listado (que une ambas formas).
+  if ((await redis.hget('owners_salas', email)) === salaId) await redis.hdel('owners_salas', email)
 }
 
 // -- Estudiantes --

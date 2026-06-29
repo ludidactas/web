@@ -12,3 +12,18 @@ export class ErrorSesion extends Error {
     this.name = 'ErrorSesion'
   }
 }
+
+/**
+ * El profe alcanzó el límite de salas de su plan. Es un error de negocio (no de sesión): el front
+ * lo usa para mostrar el upsell de suscripción en vez de un error genérico.
+ */
+export class LimiteSalasAlcanzado extends Error {
+  readonly tipo = 'limite_salas' as const
+  constructor(
+    public readonly maxSalas: number,
+    message = `Alcanzaste el límite de ${maxSalas} sala(s) de tu plan. Suscribite para crear más.`
+  ) {
+    super(message)
+    this.name = 'LimiteSalasAlcanzado'
+  }
+}

@@ -52,6 +52,8 @@ export const PasaporteProfeSchema = z
   .object({
     rol: z.literal(RolSala.Profe),
     token: z.string().min(1),
+    // La sala que el profe va a operar. El server valida que exista y que sea suya antes de abrir sesión.
+    idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
   })
   .strict()
 

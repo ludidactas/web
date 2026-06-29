@@ -68,6 +68,8 @@ const WssProfeSessionSchema = z
     email: z.string().email(),
     nombre: z.string().min(1),
     avatar: z.string().optional(),
+    // Sala que el profe está operando en esta conexión (validada como suya en el login).
+    idSala: z.string().min(1),
   })
   .transform((data) => ({ ...data, userId: data.email }))
 

@@ -1,16 +1,13 @@
 import { DefaultEventsMap, Socket } from 'socket.io'
-import { ConfigSala } from '../validators/salas'
 import { WssEstudianteSession, WssProfeSession } from '../validators/session'
 
-/** Scoket con sesión de profe. Además de .session puede tener .config_sala */
+/** Socket con sesión de profe. `session.idSala` lleva la sala que está operando. */
 export type SocketProfe = Socket<
   DefaultEventsMap,
   DefaultEventsMap,
   DefaultEventsMap,
   {
     session: WssProfeSession
-    /** _Puede_ venir la config de la sala al momento de crearla */
-    config_sala?: Partial<ConfigSala>
   }
 >
 

@@ -2,7 +2,7 @@ import { DefaultEventsMap, ExtendedError, RemoteSocket, Socket } from 'socket.io
 import { z } from 'zod'
 import { Salas } from '../salas/app'
 import { socketIp } from '../utils'
-import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
+import { MetodosLogin, PasaporteProfe, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import { SESSION_ESTUDIANTE_POR_METODO_LOGIN, WssServerSession, WssServerSessionSchema } from '../validators/session'
 import {
@@ -107,9 +107,20 @@ const login = async (socket: SocketConSesion) => {
 
     // Si está en la lista de admins, lo tratamos como admin, sino como profe
     const rolFinal = registradoComoAdmin(payload.email) && auth.rol === RolSala.Admin ? RolSala.Admin : RolSala.Profe
+
+    // El profe opera una sala puntual: validamos que exista y que sea suya antes de abrir sesión.
+    // (El id llega en el pasaporte; el token solo dice quién es, no qué puede operar.)
+    let idSala: string | undefined
+    if (rolFinal === RolSala.Profe) {
+      idSala = (auth as PasaporteProfe).idSala
+      await Salas.assertExiste(idSala)
+      await Salas.assertEsDueño(payload.email, idSala)
+    }
+
     const session = parsearSesion(socket, WssServerSessionSchema, {
       rol: rolFinal,
       ...payload,
+      ...(idSala ? { idSala } : {}),
     })
 
     console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)

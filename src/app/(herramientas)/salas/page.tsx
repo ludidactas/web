@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -21,12 +21,14 @@ import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
 import Link from 'next/link'
 import { crearSala } from '@/server/crear-sala'
-import { obtenerIdSala } from '@/server/obtener-sala'
+// LÍMITE SUSCRIPCIÓN (desactivado): re-agregar `obtenerLimiteSalas` al import para reactivar el gating.
+import { eliminarSala, listarSalas, renombrarSala, type SalaResumen } from '@/server/listar-salas'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
 import { SignOut } from '@/app/(herramientas)/login/components/botones'
 
 // Crear sala desde salas general
 type FormState = {
+  nombre: string
   metodoLogin: MetodosLogin
   listaActiva: boolean
   soloInvitados: boolean
@@ -37,6 +39,7 @@ type FormState = {
 function FormCrearSala() {
   const router = useRouter()
   const [form, setForm] = useState<FormState>({
+    nombre: '',
     metodoLogin: MetodosLogin.Nombre,
     listaActiva: false,
     soloInvitados: false,
@@ -44,16 +47,24 @@ function FormCrearSala() {
     nombres: {},
   })
   const [creando, setCreando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const pideDni = form.metodoLogin === MetodosLogin.DNI
 
   const handleCrear = async () => {
     setCreando(true)
+    setError(null)
     try {
-      const id = await crearSala({ metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, form.lista)
+      const id = await crearSala(
+        { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados },
+        form.lista,
+        form.nombre.trim() || undefined
+      )
+      // Al crear, entramos directo a operar la sala nueva.
       router.push(`/salas/${id}`)
     } catch (e) {
       console.error(e)
+      setError('No se pudo crear la sala.')
       setCreando(false)
     }
   }
@@ -70,6 +81,14 @@ function FormCrearSala() {
   return (
     <div className={cn('flex flex-col justify-center gap-2 my-4 w-full px-20')}>
       <h2 className={cn('text-xl font-bold text-center leading-6 my-6')}>Configuración de la sala</h2>
+
+      <input
+        type="text"
+        value={form.nombre}
+        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+        placeholder="Nombre de la sala (opcional)"
+        className={cn('border rounded-lg px-3 py-2 w-full')}
+      />
 
       <SwitchCard
         title="DNI obligatorio"
@@ -143,6 +162,8 @@ function FormCrearSala() {
         )}
       </AnimatePresence>
 
+      {error && <p className={cn('text-center text-red-600 text-sm mt-2')}>{error}</p>}
+
       <button
         className={cn(
           'mt-4 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
@@ -157,27 +178,77 @@ function FormCrearSala() {
   )
 }
 
-// Ver salas (aun no esta configurado que un profe pueda ver/crear varias salas?)
-function VerSalas() {
-  const [idSala, setIdSala] = useState<string | null | undefined>(undefined)
+// LÍMITE SUSCRIPCIÓN (desactivado): mensaje de upsell cuando se alcanzó el límite del plan.
+// function LimiteAlcanzado() {
+//   return (
+//     <div className={cn('p-10 flex flex-col gap-2 items-center text-center')}>
+//       <p className={cn('text-2xl font-bold')}>Llegaste al límite de tu plan</p>
+//       <p className={cn('text-muted-foreground max-w-md')}>
+//         Tu plan actual permite una sola sala. Para crear más, vas a poder suscribirte (próximamente).
+//       </p>
+//     </div>
+//   )
+// }
 
-  useEffect(() => {
-    obtenerIdSala().then(setIdSala)
-  }, [])
+// Lista de salas del profe, con acciones de operar, renombrar y eliminar.
+function VerSalas({
+  salas,
+  onRefrescar,
+}: {
+  salas: SalaResumen[] | undefined
+  onRefrescar: () => void
+}) {
+  const handleRenombrar = async (sala: SalaResumen) => {
+    const nuevo = window.prompt('Nuevo nombre de la sala:', sala.nombre ?? '')
+    if (nuevo === null) return
+    await renombrarSala(sala.id, nuevo)
+    onRefrescar()
+  }
 
-  if (idSala === undefined) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
+  const handleEliminar = async (sala: SalaResumen) => {
+    if (!window.confirm(`¿Eliminar la sala "${sala.nombre ?? sala.id}"? Esta acción no se puede deshacer.`)) return
+    await eliminarSala(sala.id)
+    onRefrescar()
+  }
 
-  if (idSala === null) return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
+  if (salas === undefined) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
+
+  if (salas.length === 0)
+    return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
 
   return (
-    <div className={cn('p-10 flex flex-col gap-2')}>
-      <p className={cn('text-2xl')}>Tus salas activas:</p>
-      <Link
-        href={`/salas/${idSala}`}
-        className={cn('px-4 py-2 border rounded-full text-center hover:bg-slate-50 transition-colors w-fit')}
-      >
-        Ir a la sala {idSala}
-      </Link>
+    <div className={cn('p-10 flex flex-col gap-3')}>
+      <p className={cn('text-2xl')}>Tus salas:</p>
+      <ul className={cn('flex flex-col gap-2')}>
+        {salas.map((sala) => (
+          <li
+            key={sala.id}
+            className={cn('flex items-center justify-between gap-2 px-4 py-3 border rounded-xl bg-white/60')}
+          >
+            <span className={cn('font-medium')}>{sala.nombre || `Sala ${sala.id}`}</span>
+            <div className={cn('flex items-center gap-2')}>
+              <Link
+                href={`/salas/${sala.id}`}
+                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
+              >
+                Ingresar
+              </Link>
+              <button
+                onClick={() => handleRenombrar(sala)}
+                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
+              >
+                Renombrar
+              </button>
+              <button
+                onClick={() => handleEliminar(sala)}
+                className={cn('px-3 py-1 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors')}
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -185,7 +256,20 @@ function VerSalas() {
 // Pagina principal
 export default function SalasPage() {
   const [activo, setActivo] = useState<'crear' | 'ver'>('ver')
+  const [salas, setSalas] = useState<SalaResumen[] | undefined>(undefined)
+  // LÍMITE SUSCRIPCIÓN (desactivado): const [limite, setLimite] = useState<number>(1)
   const { data: session } = useSession()
+
+  const cargar = useCallback(async () => {
+    // LÍMITE SUSCRIPCIÓN (desactivado): cargar también `obtenerLimiteSalas()` y `setLimite(max)`.
+    setSalas(await listarSalas())
+  }, [])
+
+  useEffect(() => {
+    cargar()
+  }, [cargar])
+
+  // LÍMITE SUSCRIPCIÓN (desactivado): const alLimite = salas !== undefined && salas.length >= limite
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-r from-cyan-500/70 to-indigo-500/70">
@@ -212,7 +296,7 @@ export default function SalasPage() {
                   onClick={() => setActivo('crear')}
                   className={activo === 'crear' ? 'bg-white/40 font-semibold' : ''}
                 >
-                  Crear sala
+                  Agregar sala
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -221,8 +305,9 @@ export default function SalasPage() {
         </Sidebar>
 
         <SidebarInset className="rounded-r">
-          {activo === 'ver' && <VerSalas />}
+          {activo === 'ver' && <VerSalas salas={salas} onRefrescar={cargar} />}
           <div className={activo !== 'crear' ? 'hidden' : ''}>
+            {/* LÍMITE SUSCRIPCIÓN (desactivado): {alLimite ? <LimiteAlcanzado /> : <FormCrearSala />} */}
             <FormCrearSala />
           </div>
         </SidebarInset>

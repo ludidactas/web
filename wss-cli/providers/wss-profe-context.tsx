@@ -13,6 +13,7 @@ import { useWss } from '../use-wss'
 /** Cose el socket con el state para profe */
 const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
   const { socket, estado, error, WssDebugPanel } = useWss({ ...auth, rol: RolSala.Profe })
+  // `auth` ya incluye `token` e `idSala` (la sala a operar); el server valida que sea suya.
 
   // Cuando cambia el socket, re-definimos los handlers con el nuevo socket
   const handlers = useMemo(

@@ -7,8 +7,8 @@ import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from '.
 export const handlersEncuestasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  const sala = await Salas.getByEmailProfe(socket.data.session.email)
-  const profe = await profeSala(sala.profe.email)
+  const sala = await Salas.get(socket.data.session.idSala)
+  const profe = await profeSala(sala.id)
 
   socket.on(
     'poll:create',

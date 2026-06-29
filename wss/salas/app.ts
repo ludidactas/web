@@ -1,8 +1,6 @@
-import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
-import { SocketProfe } from '../middleware/roles'
 import { io } from '../server'
 import { MetodosLogin, RolSala } from '../validators/auth'
 import { configActualizable, ConfigSala } from '../validators/salas'
@@ -238,57 +236,6 @@ export namespace Salas {
     }
   }
 
-  /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-  export async function obtenerOCrear(socket: SocketProfe): Promise<ReturnType<typeof get>> {
-    const email = socket.data.session.email
-
-    // Averiguamos si ya tiene sala
-    const owner = await db.getIdSalaDeProfe(email)
-
-    // Si no tiene, le creamos una
-    if (!owner) {
-      const sala = await crear(socket)
-      console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
-    }
-
-    // Recuperamos la sala
-    return getByEmailProfe(email)
-  }
-
-  /** Crea una sala nueva en memoria y la asigna a un profe */
-  export async function crear(socket: SocketProfe) {
-    const id = randomUUID().split('-')[0]
-    const email = socket.data.session.email
-
-    const config_default: ConfigSala = {
-      metodo_login: MetodosLogin.Nombre,
-      link: '',
-      nombre_profe: email,
-      solo_invitados: false,
-    }
-
-    const config = {
-      nombre_profe: socket.data.session.nombre || email,
-      ...(socket.data.config_sala ?? {}),
-    } as Partial<ConfigSala>
-
-    const config_sala = mergeDeep(config_default, config) as ConfigSala
-
-    const salaData = {
-      id,
-      profe: { email, nombre: config_sala.nombre_profe },
-      config: { ...config_sala, link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/` }, // Le agregamos el link en la config
-    }
-
-    // Guardamos en DB
-    await db.guardarSala(salaData)
-    await db.registrarProfe(email, id)
-
-    console.log(`🏠 Creando sala ${id} en memoria para profe ${email}`)
-
-    return await get(id)
-  }
-
   export async function existe(salaId: string) {
     return db.existeSala(salaId)
   }
@@ -300,10 +247,13 @@ export namespace Salas {
 
   /** Funciones de relaciones: */
 
-  /** Devuelve la sala dado el email del profe */
-  export async function getByEmailProfe(email: string) {
-    const idSala = await db.getIdSalaDeProfe(email)
-    if (!idSala) throw new Error(`El profe ${email} no tiene sala asignada!`)
-    return get(idSala)
+  /**
+   * Verifica que `email` sea el dueño de la sala. Si no lo es (o la sala no existe) lanza
+   * `SalaNoExiste` — tratamos "no es tuya" como "no existe" para no filtrar salas ajenas.
+   */
+  export async function assertEsDueño(email: string, salaId: string) {
+    const dueño = await db.getEmailProfe(salaId)
+    if (dueño !== email)
+      throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe o no te pertenece.`)
   }
 }

@@ -35,13 +35,12 @@ export default function profeSalaHandlers(socket: Socket | null) {
       socket.on(
         'sala:abierta',
         ({
-          _sala,
           polls,
           estudiantes,
           config,
           listaPermitidos,
         }: {
-          _sala: SalaData
+          sala: SalaData
           polls: EncuestaHidratadaProfe[]
           estudiantes: Estudiante[]
           config: ConfigSala

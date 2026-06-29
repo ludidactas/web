@@ -9,9 +9,9 @@ import { Salas } from './app'
 export const handlersSalaProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
 
-  // Se conectó un profe, le armamos una sala:
-  const sala = await Salas.obtenerOCrear(socket)
-  const profe = await profeSala(sala.profe.email)
+  // Se conectó un profe a operar una sala puntual (validada como suya en el login).
+  const sala = await Salas.get(socket.data.session.idSala)
+  const profe = await profeSala(sala.id)
 
   // Rooms
   socket.join([`profe:${socket.data.session.email}`, `sala:${sala.id}`, `sala:${sala.id}:profe`])

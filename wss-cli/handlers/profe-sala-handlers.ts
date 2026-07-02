@@ -1,6 +1,6 @@
 import { SalaData } from '@/wss/salas/app'
 import { EncuestaHidratadaProfe } from '@/wss/validators/polls'
-import { ConfigSala } from '@/wss/validators/salas'
+import { ConfigCreacionSala, ConfigSala } from '@/wss/validators/salas'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { storeConfig } from '../stores/config-store'
@@ -35,19 +35,20 @@ export default function profeSalaHandlers(socket: Socket | null) {
       socket.on(
         'sala:abierta',
         ({
-          _sala,
+          sala,
           polls,
           estudiantes,
           config,
           listaPermitidos,
         }: {
-          _sala: SalaData
+          sala: SalaData
           polls: EncuestaHidratadaProfe[]
           estudiantes: Estudiante[]
           config: ConfigSala
           listaPermitidos: string[]
         }) => {
           toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
+          almacenConfig.setIdSala(sala.id)
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
           almacenEstudiantes.set(estudiantes)
@@ -65,6 +66,10 @@ export default function profeSalaHandlers(socket: Socket | null) {
         socket?.emit('sala:actualizar_config', config)
       },
 
+      crearSala: (payload: { config?: Partial<ConfigCreacionSala>; listaPermitidos?: string[] }) => {
+        socket?.emit('sala:crear', payload)
+      },
+
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
       borrarListaPermitidos: () => socket?.emit('sala:permitidos_limpiar'),
@@ -74,6 +79,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
       if (!socket) return
 
       socket.removeAllListeners('sala:abierta')
+      socket.removeAllListeners('sala:sin_sala')
       socket.removeAllListeners('sala:lista_permitidos')
       socket.removeAllListeners('sala:estudiantes')
       socket.removeAllListeners('sala:estudiante_conectado')

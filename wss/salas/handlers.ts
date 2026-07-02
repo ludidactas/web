@@ -3,14 +3,17 @@ import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
+import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
 import { Salas } from './app'
+import { configCreacionSala } from '../validators/salas'
 
-export const handlersSalaProfe = async (socket: SocketProfe) => {
-  const safe = conErrorHandling(socket)
-
-  // Se conectó un profe, le armamos una sala:
-  const sala = await Salas.obtenerOCrear(socket)
+/** Registra todos los handlers de la sala una vez que sabemos que la sala existe. */
+async function configurarHandlersProfe(
+  socket: SocketProfe,
+  sala: Awaited<ReturnType<typeof Salas.get>>,
+  safe: ReturnType<typeof conErrorHandling>
+) {
   const profe = await profeSala(sala.profe.email)
 
   // Rooms
@@ -105,6 +108,42 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
   })
+}
+
+export const handlersSalaProfe = async (socket: SocketProfe) => {
+  const safe = conErrorHandling(socket)
+
+  const sala = await Salas.obtener(socket)
+
+  if (sala) {
+    // El profe ya tiene sala: la cargamos y emitimos sala:abierta
+    await configurarHandlersProfe(socket, sala, safe)
+  } else {
+    // El profe no tiene sala aún: le avisamos y esperamos que la cree
+    socket.emit('sala:sin_sala')
+
+    socket.on(
+      'sala:crear',
+      safe(async (payload: unknown) => {
+        const config = configCreacionSala.partial().parse((payload as any)?.config ?? {})
+        const lista: string[] = Array.isArray((payload as any)?.listaPermitidos) ? (payload as any).listaPermitidos : []
+
+        const nuevaSala = await Salas.crear(socket, config)
+        console.log(`✅ Sala creada por profe ${socket.data.session.email}: ${nuevaSala.id}`)
+
+        if (lista.length > 0) {
+          await nuevaSala.listaPermitidos().agregar(lista)
+        }
+
+        await configurarHandlersProfe(socket, nuevaSala, safe)
+        await handlersEncuestasProfe(socket)
+      })
+    )
+
+    socket.on('disconnect', (reason) => {
+      console.log(`❌ Profe sin sala desconectado: ${reason}`)
+    })
+  }
 }
 
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {

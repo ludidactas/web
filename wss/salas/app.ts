@@ -255,8 +255,15 @@ export namespace Salas {
     return getByEmailProfe(email)
   }
 
-  /** Crea una sala nueva en memoria y la asigna a un profe */
-  export async function crear(socket: SocketProfe) {
+  //Obtiene la sala del profe si existe, o null si no tiene ninguna. */
+  export async function obtener(socket: SocketProfe): Promise<Awaited<ReturnType<typeof get>> | null> {
+    const idSala = await db.getIdSalaDeProfe(socket.data.session.email)
+    if (!idSala) return null
+    return get(idSala)
+  }
+
+  //Crea una sala nueva en memoria y la asigna a un profe */
+  export async function crear(socket: SocketProfe, configExtra?: Partial<ConfigSala>) {
     const id = randomUUID().split('-')[0]
     const email = socket.data.session.email
 
@@ -269,7 +276,7 @@ export namespace Salas {
 
     const config = {
       nombre_profe: socket.data.session.nombre || email,
-      ...(socket.data.config_sala ?? {}),
+      ...(configExtra ?? socket.data.config_sala ?? {}),
     } as Partial<ConfigSala>
 
     const config_sala = mergeDeep(config_default, config) as ConfigSala

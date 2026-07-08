@@ -131,13 +131,12 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
   socket.on(
     'sala:crear',
-    safe(async (payload: { config?: unknown; nombre?: unknown; listaPermitidos?: unknown }) => {
+    safe(async (payload: { config?: unknown; listaPermitidos?: unknown }) => {
       // LÍMITE SUSCRIPCIÓN (desactivado): await assertPuedeCrearSala(email)
       const config = configCreacionSala.parse(payload?.config ?? {})
-      const nombre = typeof payload?.nombre === 'string' ? payload.nombre.trim() : undefined
       const lista = Array.isArray(payload?.listaPermitidos) ? (payload.listaPermitidos as string[]) : []
 
-      const sala = await Salas.crear(socket, { ...config, ...(nombre ? { nombre } : {}) })
+      const sala = await Salas.crear(socket, config)
       if (lista.length > 0) await sala.listaPermitidos().agregar(lista)
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)

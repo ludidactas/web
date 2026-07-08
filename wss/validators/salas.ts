@@ -3,6 +3,8 @@ import { MetodosLogin } from './auth'
 
 /** Data enviada al momento de crear la sala */
 export const configCreacionSala = z.object({
+  // Nombre de la sala (opcional). Editable después con `sala:renombrar` (ver `configActualizable`).
+  nombre: z.string().optional(),
   // Método de login de la sala: la sala decide cómo se autentican los estudiantes.
   metodo_login: z.nativeEnum(MetodosLogin).default(MetodosLogin.Nombre),
   // Ortogonal al metodo_login: restringe el acceso a una lista de invitados (hoy solo con metodo_login 'dni').
@@ -11,7 +13,6 @@ export const configCreacionSala = z.object({
 
 /** Data derivada o generada en el server */
 export const configSala = configCreacionSala.extend({
-  nombre: z.string().optional(),
   nombre_profe: z.string(),
   link: z.string(),
 })

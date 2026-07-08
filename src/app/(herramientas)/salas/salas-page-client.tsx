@@ -62,9 +62,8 @@ function FormCrearSala() {
     storeConfig.getState().setIdSala(null)
     setCreando(true)
     crearSala({
-      config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados },
+      config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados, nombre: form.nombre.trim() || undefined },
       listaPermitidos: form.lista,
-      nombre: form.nombre.trim() || undefined,
     })
   }
 

@@ -3,8 +3,8 @@ import { conErrorLogging } from './middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
-import { handlersEncuestasEstudiante, handlersEncuestasOverlay, handlersEncuestasProfe } from './polls/handlers'
-import { handlersAdmin, handlersSalaEstudiante, handlersSalaProfe, handlersSalaPublico } from './salas/handlers'
+import { handlersEncuestasEstudiante, handlersEncuestasOverlay } from './polls/handlers'
+import { handlersAdmin, handlersGestionSalasProfe, handlersSalaEstudiante, handlersSalaPublico } from './salas/handlers'
 import { RolSala } from './validators/auth'
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
@@ -28,10 +28,10 @@ io.use(conErrorLogging)
       await handlersEncuestasEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
     }
 
-    // Profe: requiere sesión de profe válida
+    // Profe: requiere sesión de profe válida. Los handlers de operación (incluidas encuestas) se
+    // cablean recién al abrir una sala, dentro de `handlersGestionSalasProfe` → `handlersSalaActivaProfe`.
     else if (socket.data.session.rol === RolSala.Profe) {
-      await handlersSalaProfe(socket as SocketProfe)
-      await handlersEncuestasProfe(socket as SocketProfe)
+      await handlersGestionSalasProfe(socket as SocketProfe)
     }
 
     // Admin: requiere sesión de admin válida

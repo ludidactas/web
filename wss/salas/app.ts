@@ -1,9 +1,11 @@
+import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
 import { io } from '../server'
+import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { configActualizable, ConfigSala } from '../validators/salas'
+import { configActualizable, ConfigSala, SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
@@ -245,7 +247,55 @@ export namespace Salas {
     if (!(await existe(salaId))) throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe.`)
   }
 
+  /** Crea una sala nueva y la asigna al profe del socket. Devuelve la sala lista para operar. */
+  export async function crear(socket: SocketProfe, config: Omit<ConfigSala, 'nombre_profe' | 'link'>) {
+    const id = randomUUID().split('-')[0]
+    const email = socket.data.session.email
+
+    // Los defaults de creación (metodo_login, solo_invitados) los aplica `configCreacionSala` en el
+    // caller; acá solo sumamos los campos que genera el server.
+    const configCompleta: ConfigSala = {
+      ...config,
+      nombre_profe: socket.data.session.nombre || email,
+      link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/`,
+    }
+
+    const salaData: SalaData = {
+      id,
+      profe: { email, nombre: configCompleta.nombre_profe },
+      config: configCompleta,
+    }
+
+    await db.guardarSala(salaData)
+    await db.agregarSalaAProfe(email, id)
+
+    console.log(`🏠 Sala ${id} creada para profe ${email}`)
+    return await get(id)
+  }
+
+  /**
+   * Elimina una sala: kickea a los clientes conectados, borra su data y sus claves derivadas, y
+   * quita la relación con el profe. Se asume que el caller ya validó propiedad (`assertEsDueño`).
+   */
+  export async function eliminar(email: string, salaId: string) {
+    const sockets = await io.in(`sala:${salaId}`).fetchSockets()
+    sockets.forEach((s) => {
+      s.emit('sala:kick', { motivo: 'La sala fue eliminada.' })
+      s.disconnect()
+    })
+    await db.borrarSala(salaId)
+    await db.eliminarSalaDeProfe(email, salaId)
+    console.log(`🗑️  Sala ${salaId} eliminada por ${email}`)
+  }
+
   /** Funciones de relaciones: */
+
+  /** Devuelve todas las salas (data cruda) de un profe. Puede ser una lista vacía. */
+  export async function getSalasDeProfe(email: string): Promise<SalaData[]> {
+    const ids = await db.getIdsSalasDeProfe(email)
+    const salas = await Promise.all(ids.map((id) => db.getSala(id)))
+    return salas.filter((s): s is SalaData => s !== null)
+  }
 
   /**
    * Verifica que `email` sea el dueño de la sala. Si no lo es (o la sala no existe) lanza

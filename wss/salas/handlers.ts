@@ -133,7 +133,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     'sala:crear',
     safe(async (payload: { config?: unknown; nombre?: unknown; listaPermitidos?: unknown }) => {
       // LÍMITE SUSCRIPCIÓN (desactivado): await assertPuedeCrearSala(email)
-      const config = configCreacionSala.partial().parse(payload?.config ?? {})
+      const config = configCreacionSala.parse(payload?.config ?? {})
       const nombre = typeof payload?.nombre === 'string' ? payload.nombre.trim() : undefined
       const lista = Array.isArray(payload?.listaPermitidos) ? (payload.listaPermitidos as string[]) : []
 

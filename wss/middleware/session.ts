@@ -2,9 +2,14 @@ import { DefaultEventsMap, ExtendedError, RemoteSocket, Socket } from 'socket.io
 import { z } from 'zod'
 import { Salas } from '../salas/app'
 import { socketIp } from '../utils'
-import { MetodosLogin, PasaporteProfe, PasaporteSchema, RolSala } from '../validators/auth'
+import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { SESSION_ESTUDIANTE_POR_METODO_LOGIN, WssServerSession, WssServerSessionSchema } from '../validators/session'
+import {
+  SESSION_ESTUDIANTE_POR_METODO_LOGIN,
+  WssAdminSessionSchema,
+  WssProfeSessionSchema,
+  WssServerSession,
+} from '../validators/session'
 import {
   AuthGoogle,
   decodearTokenNextAuth,
@@ -101,29 +106,25 @@ const login = async (socket: SocketConSesion) => {
     abrirSesion(socket, session)
   }
 
-  // Sesión de profe o admin
-  else if (auth.rol === RolSala.Profe || auth.rol === RolSala.Admin) {
+  // Sesión de profe -- identidad pura. Qué sala opera NO se decide acá: se elige después con
+  // `sala:abrir` (y ahí se valida propiedad). El token solo dice quién es.
+  else if (auth.rol === RolSala.Profe) {
     const payload = decodearTokenNextAuth(auth.token)
+    const session = parsearSesion(socket, WssProfeSessionSchema, { rol: RolSala.Profe, ...payload })
 
-    // Si está en la lista de admins, lo tratamos como admin, sino como profe
-    const rolFinal = registradoComoAdmin(payload.email) && auth.rol === RolSala.Admin ? RolSala.Admin : RolSala.Profe
+    console.log(`🪪  Profe autenticado desde IP ${socketIp(socket)}...`)
+    abrirSesion(socket, session)
+  }
 
-    // El profe opera una sala puntual: validamos que exista y que sea suya antes de abrir sesión.
-    // (El id llega en el pasaporte; el token solo dice quién es, no qué puede operar.)
-    let idSala: string | undefined
-    if (rolFinal === RolSala.Profe) {
-      idSala = (auth as PasaporteProfe).idSala
-      await Salas.assertExiste(idSala)
-      await Salas.assertEsDueño(payload.email, idSala)
-    }
+  // Sesión de admin -- requiere estar en la lista de admins; si no, se rechaza (no se degrada a profe).
+  else if (auth.rol === RolSala.Admin) {
+    const payload = decodearTokenNextAuth(auth.token)
+    if (!registradoComoAdmin(payload.email))
+      throw new ErrorSesion(TipoErrorSesion.AuthInvalido, 'No estás autorizado como admin.')
 
-    const session = parsearSesion(socket, WssServerSessionSchema, {
-      rol: rolFinal,
-      ...payload,
-      ...(idSala ? { idSala } : {}),
-    })
+    const session = parsearSesion(socket, WssAdminSessionSchema, { rol: RolSala.Admin, ...payload })
 
-    console.log(`🪪  Iniciando sesión autenticada con usuario de google desde IP ${socketIp(socket)}...`)
+    console.log(`🪪  Admin autenticado desde IP ${socketIp(socket)}...`)
     abrirSesion(socket, session)
   }
 

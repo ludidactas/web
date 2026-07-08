@@ -61,19 +61,17 @@ export const SESSION_ESTUDIANTE_POR_METODO_LOGIN = {
 
 // ------------------------------------------------------------------------------
 
-const WssProfeSessionSchema = z
+export const WssProfeSessionSchema = z
   .object({
     ...camposServer,
     rol: z.literal(RolSala.Profe),
     email: z.string().email(),
     nombre: z.string().min(1),
     avatar: z.string().optional(),
-    // Sala que el profe está operando en esta conexión (validada como suya en el login).
-    idSala: z.string().min(1),
   })
   .transform((data) => ({ ...data, userId: data.email }))
 
-const WssAdminSessionSchema = z
+export const WssAdminSessionSchema = z
   .object({
     ...camposServer,
     rol: z.literal(RolSala.Admin),

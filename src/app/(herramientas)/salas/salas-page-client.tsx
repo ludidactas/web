@@ -52,11 +52,18 @@ function FormCrearSala() {
     nombres: {},
   })
   const [creando, setCreando] = useState(false)
+  const [ingresar, setIngresar] = useState(true)
 
-  // Cuando el server abre la sala recién creada (llega `sala:abierta` → setIdSala), navegamos a operarla.
+  // Al llegar `sala:abierta` (idSala seteado) la creación terminó: entramos o nos quedamos.
   useEffect(() => {
-    if (creando && idSala) router.push(`/salas/${idSala}`)
-  }, [creando, idSala, router])
+    if (!creando || !idSala) return
+    if (ingresar) {
+      router.push(`/salas/${idSala}`)
+    } else {
+      setCreando(false)
+      setForm((f) => ({ ...f, nombre: '' }))
+    }
+  }, [creando, idSala, ingresar, router])
 
   const conectando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
@@ -67,8 +74,12 @@ function FormCrearSala() {
     storeConfig.getState().setIdSala(null)
     setCreando(true)
     crearSala({
-      config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados, nombre: form.nombre.trim() || undefined },
-      listaPermitidos: form.lista,
+      config: {
+        metodo_login: form.metodoLogin,
+        solo_invitados: form.soloInvitados,
+        nombre: form.nombre.trim() || undefined,
+        listaPermitidos: form.lista,
+      },
     })
   }
 
@@ -165,15 +176,25 @@ function FormCrearSala() {
         )}
       </AnimatePresence>
 
+      <label className={cn('flex items-center justify-center gap-2 mt-4 cursor-pointer select-none')}>
+        <input
+          type="checkbox"
+          checked={ingresar}
+          onChange={(e) => setIngresar(e.target.checked)}
+          className={cn('h-4 w-4 accent-teal-500')}
+        />
+        <span>Ir a la sala</span>
+      </label>
+
       <button
         className={cn(
-          'mt-4 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
+          'mt-2 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
           (conectando || creando) && 'opacity-50 cursor-not-allowed'
         )}
         onClick={handleCrear}
         disabled={conectando || creando}
       >
-        {creando ? 'Creando...' : conectando ? 'Conectando...' : 'Crear'}
+        {creando ? 'Creando...' : conectando ? 'Conectando...' : ingresar ? 'Crear e ingresar' : 'Crear'}
       </button>
     </div>
   )

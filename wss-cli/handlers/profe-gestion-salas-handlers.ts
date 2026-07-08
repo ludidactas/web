@@ -19,8 +19,7 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
 
     acciones: {
       listarSalas: () => socket?.emit('salas:listar'),
-      crearSala: (payload: { config?: Partial<ConfigCreacionSala>; listaPermitidos?: string[] }) =>
-        socket?.emit('sala:crear', payload),
+      crearSala: (payload: { config?: ConfigCreacionSala }) => socket?.emit('sala:crear', payload),
       renombrarSala: (idSala: string, nombre: string) => socket?.emit('sala:renombrar', { idSala, nombre }),
       eliminarSala: (idSala: string) => socket?.emit('sala:eliminar', { idSala }),
       abrirSala: (idSala: string) => socket?.emit('sala:abrir', { idSala }),

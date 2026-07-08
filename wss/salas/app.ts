@@ -5,7 +5,7 @@ import { RemoteSocket } from 'socket.io'
 import { io } from '../server'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { configActualizable, ConfigSala, SalaData } from '../validators/salas'
+import { configActualizable, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
@@ -189,7 +189,7 @@ export namespace Salas {
       // Validamos: solo se pueden tocar los campos mutables (hoy, `solo_invitados`).
       const config = configActualizable.partial().parse(payload)
       const configActual = sala.config
-      const nuevaConfig = mergeDeep(configActual, config) as ConfigSala
+      const nuevaConfig = configSala.parse(mergeDeep(configActual, config))
       sala.config = nuevaConfig
 
       await db.guardarSala(sala)

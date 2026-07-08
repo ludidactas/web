@@ -6,7 +6,8 @@ import { RolSala } from '@/wss/validators/auth'
 import { PasaporteProfe } from '@/wss/validators/auth'
 
 import baseSalaHandlers from '../handlers/base-sala-handlers'
-import profeSalaHandlers from '../handlers/profe-sala-handlers'
+import profeGestionSalasHandlers from '../handlers/profe-gestion-salas-handlers'
+import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import { useWss } from '../use-wss'
 
@@ -18,7 +19,8 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
   // Cuando cambia el socket, re-definimos los handlers con el nuevo socket
   const handlers = useMemo(
     () => ({
-      profe: profeSalaHandlers(socket),
+      gestion: profeGestionSalasHandlers(socket),
+      salaActiva: profeSalaActivaHandlers(socket),
       base: baseSalaHandlers(socket),
       encuestas: profeEncuestasHandlers(socket),
     }),
@@ -27,12 +29,14 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
 
   // Conectamos el socket a sus handlers
   useEffect(() => {
-    handlers.profe.montar()
+    handlers.gestion.montar()
+    handlers.salaActiva.montar()
     handlers.base.montar()
     handlers.encuestas.montar()
 
     return () => {
-      handlers.profe.desmontar()
+      handlers.gestion.desmontar()
+      handlers.salaActiva.desmontar()
       handlers.base.desmontar()
       handlers.encuestas.desmontar()
     }
@@ -42,7 +46,8 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>) => {
     socket,
     estado,
     error,
-    ...handlers.profe.acciones,
+    ...handlers.gestion.acciones,
+    ...handlers.salaActiva.acciones,
     ...handlers.base.acciones,
     ...handlers.encuestas.acciones,
     WssDebugPanel,

@@ -8,7 +8,12 @@ import { storeEncuestasProfe } from '../stores/encuestas-store'
 import { Estudiante, storeEstudiantes } from '../stores/estudiantes-store'
 import { storePermitidos } from '../stores/permitidos-store'
 
-export default function profeSalaHandlers(socket: Socket | null) {
+/**
+ * OPERACIÓN de la sala activa — espejo cliente de `handlersSalaActivaProfe`. Hidrata el estado de la
+ * sala al abrirla (`sala:abierta`) y expone las acciones que operan sobre ella (config, estudiantes,
+ * permitidos).
+ */
+export default function profeSalaActivaHandlers(socket: Socket | null) {
   const almacenEncuestas = storeEncuestasProfe.getState()
   const almacenEstudiantes = storeEstudiantes.getState()
   const almacenConfig = storeConfig.getState()
@@ -31,10 +36,11 @@ export default function profeSalaHandlers(socket: Socket | null) {
         almacenEstudiantes.disconnect(estudiante.id)
       })
 
-      // Al estar lista la sala -- esto manda el server ni bien abre
+      // Al abrir una sala -- el server lo manda tras `sala:abrir` o `sala:crear`
       socket.on(
         'sala:abierta',
         ({
+          sala,
           polls,
           estudiantes,
           config,
@@ -46,7 +52,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
           config: ConfigSala
           listaPermitidos: string[]
         }) => {
-          toast.info(`Sala abierta, podés compartirla con tus estudiantes!`)
+          almacenConfig.setIdSala(sala.id)
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
           almacenEstudiantes.set(estudiantes)
@@ -59,11 +65,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
 
     acciones: {
       limpiarEstudiantes: () => socket?.emit('sala:limpar_estudiantes_sala'),
-
-      actualizarConfig: (config: Partial<ConfigSala>) => {
-        socket?.emit('sala:actualizar_config', config)
-      },
-
+      actualizarConfig: (config: Partial<ConfigSala>) => socket?.emit('sala:actualizar_config', config),
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
       borrarListaPermitidos: () => socket?.emit('sala:permitidos_limpiar'),

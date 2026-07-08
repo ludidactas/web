@@ -16,7 +16,7 @@ export default async function SalasPage() {
     <ConexionProfeProvider auth={{ token }}>
       <Toaster />
       <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-r from-cyan-500/70 to-indigo-500/70">
-        <HeaderSala btnLogout={<SignOut />}>
+        <HeaderSala btnLogout={<SignOut />} waveHeight="h-[20px] md:h-[50px]">
           <p className="text-md md:text-4xl text-center">¡Hola {nombreSplit(session?.user?.name)}!</p>
         </HeaderSala>
         <SalasPageClient />

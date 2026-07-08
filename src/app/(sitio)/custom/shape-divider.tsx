@@ -5,23 +5,21 @@ interface DividerProp {
   top?: boolean
   bottom?: boolean
   classname?: string
+  height?: string
 }
 
-export default function ShapeDividerWaves({ colorText, top, bottom, classname }: DividerProp) {
+export default function ShapeDividerWaves({ colorText, top, bottom, classname, height = 'h-[20px] md:h-[90px]' }: DividerProp) {
   if (top) {
-    return <div className={cn('shape-divider-waves-bottom h-[20] md:h-[90px] w-full', colorText)} />
+    return <div className={cn('shape-divider-waves-bottom w-full', height, colorText, classname)} />
   }
 
   if (bottom) {
-    return <div className={cn('shape-divider-waves h-[20] md:h-[90px] w-full', colorText)} />
+    return <div className={cn('shape-divider-waves w-full', height, colorText, classname)} />
   }
   return (
     <>
-      {/* Shape divider bottom */}
-      <div className={cn('shape-divider-waves-bottom h-[20] md:h-[90px] w-full', colorText, classname)} />
-
-      {/* Shape divider top */}
-      <div className={cn('shape-divider-waves h-[20] md:h-[90px] w-full', colorText, classname)} />
+      <div className={cn('shape-divider-waves-bottom w-full', height, colorText, classname)} />
+      <div className={cn('shape-divider-waves w-full', height, colorText, classname)} />
     </>
   )
 }

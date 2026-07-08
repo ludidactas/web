@@ -48,7 +48,7 @@ export default function EncuestasEstudiantePage({
     <ConexionEstudianteProvider auth={{ idSala, nombre, dni, clientId }}>
       <div className="min-h-screen w-screen mx-auto flex flex-col gap-8 items-center">
         {/* Sacamos el boton de logout de google porque no lo estamos usando */}
-        <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo}>
+        <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo} waveHeight="h-[20px] md:h-[90px]">
           <p className="flex gap-2 justify-center items-center text-sm text-center sm:text-4xl">
             <Sparkles className=" w-4 md:w-10" />
             ¡Hola {nombreSplit(nombre)}!<Sparkles className="w-4 md:w-10" />

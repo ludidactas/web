@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useSession } from 'next-auth/react'
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +25,9 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { LdSvg } from '@/components/custom/ld-svg'
+import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
+import { Outlined } from '@/components/fx/filtros'
 
 type FormState = {
   nombre: string
@@ -174,6 +179,33 @@ function FormCrearSala() {
   )
 }
 
+function Cuenta() {
+  const { data: session } = useSession()
+  const user = session?.user
+
+  return (
+    <div className="p-10">
+      <h2 className="text-2xl font-bold">Tu cuenta</h2>
+      <p>
+        Haz ingresado a <span className="font-bold">Salas </span>con los siguientes datos
+      </p>
+      {user ? (
+        <div className="flex flex-col m-10 gap-4 bg-slate-100 w-fit p-4 rounded">
+          <div className="flex items-center gap-4">
+            {user.image && <Image className="rounded-full" src={user.image} alt="Avatar" width={64} height={64} />}
+            <div className="flex flex-col gap-1">
+              <p className="font-semibold">{user.name}</p>
+              <p className="text-muted-foreground text-sm">{user.email}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No hay sesión activa.</p>
+      )}
+    </div>
+  )
+}
+
 function VerSalas() {
   const { estado, renombrarSala, eliminarSala } = useConexionProfe()
   const salas = storeSalas((s) => s.salas)
@@ -236,7 +268,7 @@ function VerSalas() {
 }
 
 export default function SalasPageClient() {
-  const [activo, setActivo] = useState<'crear' | 'ver'>('ver')
+  const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
   const { estado, listarSalas } = useConexionProfe()
 
   // Al conectar, pedimos la lista de salas (evita depender del emit inicial del server).
@@ -245,10 +277,17 @@ export default function SalasPageClient() {
   }, [estado, listarSalas])
 
   return (
-    <SidebarProvider className="flex-1 px-20 py-10 rounded-xl" style={{ minHeight: 0 }}>
-      <Sidebar className="rounded-l p-4 bg-indigo-500 text-white" collapsible="none">
-        <SidebarHeader />
+    <SidebarProvider className="flex-1 px-20 my-6 rounded-xl" style={{ minHeight: 0 }}>
+      <Sidebar className="rounded-l p-4 w-fit bg-indigo-500 text-white" collapsible="none">
         <SidebarContent>
+          <SidebarHeader>
+            <Outlined outlineColor="white" className="text-cyan-500 text-7xl">
+              Salas
+            </Outlined>
+            <Outlined outlineColor="white" radius={2} className="text-black font-bold text-xl">
+              Crea una sala y compartela con otrxs
+            </Outlined>
+          </SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -265,16 +304,28 @@ export default function SalasPageClient() {
                 onClick={() => setActivo('crear')}
                 className={activo === 'crear' ? 'bg-white/40 font-semibold' : ''}
               >
-                Agregar sala
+                Crear sala
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activo === 'cuenta'}
+                onClick={() => setActivo('cuenta')}
+                className={activo === 'cuenta' ? 'bg-white/40 font-semibold' : ''}
+              >
+                Cuenta
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter />
+        <SidebarFooter className="">
+          <LdSvg className="w-52" SvgComponent={IlustSalas} />
+        </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="rounded-r">
+      <SidebarInset className="rounded">
         {activo === 'ver' && <VerSalas />}
+        {activo === 'cuenta' && <Cuenta />}
         <div className={activo !== 'crear' ? 'hidden' : ''}>
           <FormCrearSala />
         </div>

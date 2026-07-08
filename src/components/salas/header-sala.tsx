@@ -6,13 +6,16 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import ShapeDividerWaves from '@/app/(sitio)/custom/shape-divider'
 
-interface HeaderProps extends PropsWithChildren {
+interface HeaderSalaProps extends PropsWithChildren {
   className?: string
   btnLogout?: ReactNode
+  waveHeight?: string
 }
 
-export function Header ({ className, children, btnLogout }: HeaderProps){
-  return(<div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
+export default function HeaderSala({ className, children, btnLogout, waveHeight }: HeaderSalaProps) {
+  return (
+    <div>
+      <div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
         <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
           <Link href="/" className="flex items-center gap-4">
             <Image
@@ -22,7 +25,6 @@ export function Header ({ className, children, btnLogout }: HeaderProps){
               width={100}
               height={100}
             />
-
             <div className="hidden md:flex sm:flex-col font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
               <Image
                 unoptimized
@@ -39,15 +41,7 @@ export function Header ({ className, children, btnLogout }: HeaderProps){
         {children}
         <div className="flex justify-end">{btnLogout}</div>
       </div>
-      )
-}
-
-export default function HeaderSala(props: HeaderProps) {
-  return (
-    <div>
-      <Header {...props} />
-      {/* Shape divider justo después del header */}
-      <ShapeDividerWaves bottom colorText="text-white" />{' '}
+      <ShapeDividerWaves bottom colorText="text-white" height={waveHeight} />
     </div>
   )
 }

@@ -243,7 +243,6 @@ export namespace Salas {
   }
 
   export async function assertExiste(salaId: string) {
-    // Verificamos que la sala exista
     if (!(await existe(salaId))) throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe.`)
   }
 

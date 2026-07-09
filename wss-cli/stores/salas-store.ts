@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 
-/** Resumen de una sala del profe, para el listado de gestión. */
 export type SalaResumen = { id: string; nombre?: string }
 
 interface SalasState {

@@ -53,7 +53,6 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   await profePage.goto('/salas')
   await profePage.getByRole('button', { name: 'Agregar sala' }).click()
 
-  // Configuramos el método de login si la sala pide DNI
   if (config.metodo_login === MetodosLogin.DNI) {
     await profePage.getByText('DNI obligatorio').click()
     if (config.solo_invitados) {
@@ -62,7 +61,6 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
     }
   }
 
-  // Creamos la sala: al crear entra directo a operarla (/salas/<id>)
   await profePage.getByRole('button', { name: 'Crear' }).click()
   await profePage.waitForURL(/\/salas\/.+/)
 

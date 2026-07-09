@@ -54,12 +54,10 @@ export async function getEmailProfe(salaId: string): Promise<string | null> {
   return redis.hget('salas_owners', salaId)
 }
 
-/** Registra la relación bidireccional entre un profe y una de sus salas. */
 export async function agregarSalaAProfe(email: string, salaId: string): Promise<void> {
   await Promise.all([redis.sadd(`profe:${email}:salas`, salaId), redis.hset('salas_owners', salaId, email)])
 }
 
-/** Quita la relación bidireccional entre un profe y una de sus salas. */
 export async function eliminarSalaDeProfe(email: string, salaId: string): Promise<void> {
   await Promise.all([redis.srem(`profe:${email}:salas`, salaId), redis.hdel('salas_owners', salaId)])
 }

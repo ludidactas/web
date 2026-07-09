@@ -7,7 +7,6 @@ import { nombreSplit } from '@/lib/utils'
 import { SignOut } from '@/app/(herramientas)/login/components/botones'
 import SalasPageClient from './salas-page-client'
 
-// Gestión de salas (token-only): el ABM se hace por eventos del WSS, no por server actions.
 export default async function SalasPage() {
   const session = await auth()
   const token = await tokenWss()

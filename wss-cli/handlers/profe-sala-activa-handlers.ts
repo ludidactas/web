@@ -8,11 +8,7 @@ import { storeEncuestasProfe } from '../stores/encuestas-store'
 import { Estudiante, storeEstudiantes } from '../stores/estudiantes-store'
 import { storePermitidos } from '../stores/permitidos-store'
 
-/**
- * OPERACIÓN de la sala activa — espejo cliente de `handlersSalaActivaProfe`. Hidrata el estado de la
- * sala al abrirla (`sala:abierta`) y expone las acciones que operan sobre ella (config, estudiantes,
- * permitidos).
- */
+/** OPERACIÓN — espejo cliente de `handlersSalaActivaProfe`. */
 export default function profeSalaActivaHandlers(socket: Socket | null) {
   const almacenEncuestas = storeEncuestasProfe.getState()
   const almacenEstudiantes = storeEstudiantes.getState()
@@ -36,7 +32,6 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
         almacenEstudiantes.disconnect(estudiante.id)
       })
 
-      // Al abrir una sala -- el server lo manda tras `sala:abrir` o `sala:crear`
       socket.on(
         'sala:abierta',
         ({

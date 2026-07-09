@@ -3,7 +3,6 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
 interface ConfigSalaState {
-  /** Id de la sala actualmente abierta (operándose), o `null`. */
   idSala: string | null
   config: ConfigSala | null
   set: (config: ConfigSala | null) => void

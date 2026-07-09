@@ -66,7 +66,6 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
 // Context
 const ConexionProfeContext = createContext<ReturnType<typeof useHandlersConexionSalaProfe> | undefined>(undefined)
 
-// Provider - El auth viene del server. `abrirSalaId` (opcional) abre esa sala al conectar.
 export const ConexionProfeProvider: React.FC<{
   auth: Omit<PasaporteProfe, 'rol'>
   abrirSalaId?: string

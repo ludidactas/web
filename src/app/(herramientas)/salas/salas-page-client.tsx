@@ -61,8 +61,6 @@ function FormCrearSala() {
   const [ingresar, setIngresar] = useState(true)
   const inicioCreacion = useRef(0)
 
-  // Confirmación (`sala:creada` → idSala): esperamos a que pase también la carga mínima, y ahí sí
-  // damos el OK — toast + navegar (si "ingresar") o resetear el form.
   useEffect(() => {
     if (!creando || !idSala) return
     const restante = Math.max(0, CARGA_MINIMA_MS - (Date.now() - inicioCreacion.current))
@@ -307,7 +305,6 @@ export default function SalasPageClient() {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
   const { estado, listarSalas } = useConexionProfe()
 
-  // Al conectar, pedimos la lista de salas (evita depender del emit inicial del server).
   useEffect(() => {
     if (estado === StatusDeConexion.Conectado) listarSalas()
   }, [estado, listarSalas])

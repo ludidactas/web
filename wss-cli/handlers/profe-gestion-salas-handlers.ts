@@ -3,10 +3,7 @@ import { Socket } from 'socket.io-client'
 import { storeConfig } from '../stores/config-store'
 import { SalaResumen, storeSalas } from '../stores/salas-store'
 
-/**
- * GESTIÓN (ABM) de las salas del profe — espejo cliente de `handlersGestionSalasProfe`. La conexión
- * es token-only, sin sala abierta: acá solo van la lista y los verbos de alta/baja/modificación.
- */
+/** GESTIÓN (ABM) — espejo cliente de `handlersGestionSalasProfe`. */
 export default function profeGestionSalasHandlers(socket: Socket | null) {
   const almacenSalas = storeSalas.getState()
 
@@ -14,10 +11,9 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
     montar: () => {
       if (!socket) return
 
-      // Lista de salas del profe (pantalla de gestión)
       socket.on('salas:lista', (salas: SalaResumen[]) => almacenSalas.set(salas ?? []))
 
-      // Sala recién creada: guardamos su id para que el form de creación pueda navegar a operarla.
+      // El id de la sala nueva, para que el form de creación navegue a operarla.
       socket.on('sala:creada', ({ idSala }: { idSala: string }) => storeConfig.getState().setIdSala(idSala))
     },
 

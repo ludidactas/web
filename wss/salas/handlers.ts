@@ -22,11 +22,7 @@ async function emitirAbierta(socket: SocketProfe, sala: Sala) {
   })
 }
 
-/**
- * OPERACIÓN (sala activa) — registra los listeners de la sala abierta (`sala`), ligados a ella en
- * closure, y emite `sala:abierta`. Se llama recién al abrir una sala (`sala:abrir` / `sala:crear`), no
- * al conectar: en modo gestión estos listeners ni existen. Incluye los de encuestas de esa sala.
- */
+/** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
   socket.data.salaActiva = sala.id
   socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`])
@@ -89,17 +85,12 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     })
   )
 
-  // Encuestas de esta sala (ligadas a ella).
   await handlersEncuestasProfe(socket, sala)
 
   await emitirAbierta(socket, sala)
 }
 
-/**
- * GESTIÓN — la conexión del profe es token-only (identidad), sin sala fija. Acá van solo los eventos
- * de gestión (ABM): `salas:listar`, `sala:crear`, `sala:renombrar`, `sala:eliminar`, y `sala:abrir`.
- * Los eventos de operación los engancha `handlersSalaActivaProfe` recién cuando se abre una sala.
- */
+/** GESTIÓN (ABM) — token-only, sin sala fija. La operación se engancha al abrir (`handlersSalaActivaProfe`). */
 export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   const safe = conErrorHandling(socket)
   const email = socket.data.session.email
@@ -173,7 +164,6 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     })
   )
 
-  // Estado inicial: la lista de salas del profe.
   await emitirLista()
 
   socket.on('disconnect', (reason) => {

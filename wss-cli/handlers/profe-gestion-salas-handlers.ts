@@ -1,5 +1,6 @@
 import { ConfigCreacionSala } from '@/wss/validators/salas'
 import { Socket } from 'socket.io-client'
+import { storeConfig } from '../stores/config-store'
 import { SalaResumen, storeSalas } from '../stores/salas-store'
 
 /**
@@ -15,6 +16,9 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
 
       // Lista de salas del profe (pantalla de gestión)
       socket.on('salas:lista', (salas: SalaResumen[]) => almacenSalas.set(salas ?? []))
+
+      // Sala recién creada: guardamos su id para que el form de creación pueda navegar a operarla.
+      socket.on('sala:creada', ({ idSala }: { idSala: string }) => storeConfig.getState().setIdSala(idSala))
     },
 
     acciones: {
@@ -29,6 +33,7 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
       if (!socket) return
 
       socket.removeAllListeners('salas:lista')
+      socket.removeAllListeners('sala:creada')
     },
   }
 }

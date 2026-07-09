@@ -140,7 +140,9 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
-      await abrir(sala) // abrimos la nueva para que el cliente navegue a operarla
+      // No la abrimos acá (gestión no opera salas): le pasamos el id al cliente para que navegue
+      // a `/salas/[id]` y la opere en su propia página.
+      socket.emit('sala:creada', { idSala: sala.id })
     })
   )
 

@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from 'react'
+import { PropsWithChildren, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Dialog,
@@ -22,11 +22,6 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
   const { config } = storeConfig()
   const { lista: listaPermitidos, nombres } = storePermitidos()
   const [listaActiva, setListaActiva] = useState(listaPermitidos.length > 0 || !!config?.solo_invitados)
-  const [nombre, setNombre] = useState(config?.nombre ?? '')
-
-  useEffect(() => {
-    setNombre(config?.nombre ?? '')
-  }, [config?.nombre])
 
   const pideDni = config?.metodo_login === MetodosLogin.DNI
 
@@ -38,17 +33,6 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
           <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
         </DialogHeader>
         <div className={cn('flex flex-col gap-2 w-full')}>
-          <div className={cn('flex flex-col gap-1')}>
-            <label className={cn('text-sm font-medium')}>Nombre de la sala</label>
-            <input
-              className={cn('border rounded px-3 py-1.5 text-sm w-full')}
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              onBlur={() => actualizarConfig({ nombre })}
-              onKeyDown={(e) => e.key === 'Enter' && actualizarConfig({ nombre })}
-              placeholder="Ingresá un nombre para la sala"
-            />
-          </div>
           <AnimatePresence initial={false}>
             {pideDni && (
               <motion.div

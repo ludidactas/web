@@ -20,6 +20,7 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
+import { MetodosLogin } from '@/wss/validators/auth'
 
 export const ListaEstudiantes = () => {
   const { limpiarEstudiantes } = useConexionProfe()
@@ -58,18 +59,21 @@ export const ListaEstudiantes = () => {
               <Users size={18} /> Participantes
             </TabsTrigger>
           </TabsList>
-          <HoverCard>
-            <PanelConfigSala>
-              <HoverCardTrigger asChild>
-                <button className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}>
-                  <Settings size={16} />
-                </button>
-              </HoverCardTrigger>
-            </PanelConfigSala>
-            <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Configuración</p>
-            </HoverCardContent>
-          </HoverCard>
+          {/* Config solo si es por DNI: en salas por nombre no hay contenido útil para mostrar */}
+          {configSala?.metodo_login === MetodosLogin.DNI && (
+            <HoverCard>
+              <PanelConfigSala>
+                <HoverCardTrigger asChild>
+                  <button className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}>
+                    <Settings size={16} />
+                  </button>
+                </HoverCardTrigger>
+              </PanelConfigSala>
+              <HoverCardContent>
+                <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Configuración</p>
+              </HoverCardContent>
+            </HoverCard>
+          )}
         </div>
 
         {/* Tab: Tu sala */}

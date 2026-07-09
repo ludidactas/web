@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -38,46 +39,60 @@ type FormState = {
   nombres: Record<string, string>
 }
 
+const FORM_INICIAL: FormState = {
+  nombre: '',
+  metodoLogin: MetodosLogin.Nombre,
+  listaActiva: false,
+  soloInvitados: false,
+  lista: [],
+  nombres: {},
+}
+
+// Carga mínima tras "Crear": el OK llega cuando ocurre lo último entre la confirmación y este lapso.
+const CARGA_MINIMA_MS = 300
+
 function FormCrearSala() {
   const router = useRouter()
   const { crearSala, estado } = useConexionProfe()
   const idSala = storeConfig((s) => s.idSala)
 
-  const [form, setForm] = useState<FormState>({
-    nombre: '',
-    metodoLogin: MetodosLogin.Nombre,
-    listaActiva: false,
-    soloInvitados: false,
-    lista: [],
-    nombres: {},
-  })
+  const [form, setForm] = useState<FormState>(FORM_INICIAL)
   const [creando, setCreando] = useState(false)
   const [ingresar, setIngresar] = useState(true)
+  const inicioCreacion = useRef(0)
 
-  // Al llegar `sala:abierta` (idSala seteado) la creación terminó: entramos o nos quedamos.
+  // Confirmación (`sala:creada` → idSala): esperamos a que pase también la carga mínima, y ahí sí
+  // damos el OK — toast + navegar (si "ingresar") o resetear el form.
   useEffect(() => {
     if (!creando || !idSala) return
-    if (ingresar) {
-      router.push(`/salas/${idSala}`)
-    } else {
-      setCreando(false)
-      setForm((f) => ({ ...f, nombre: '' }))
-    }
+    const restante = Math.max(0, CARGA_MINIMA_MS - (Date.now() - inicioCreacion.current))
+    const t = setTimeout(() => {
+      toast.success('Sala creada con éxito')
+      if (ingresar) {
+        router.push(`/salas/${idSala}`)
+      } else {
+        setCreando(false)
+        setForm(FORM_INICIAL)
+      }
+    }, restante)
+    return () => clearTimeout(t)
   }, [creando, idSala, ingresar, router])
 
   const conectando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
+  const nombreValido = form.nombre.trim().length > 0
 
   const handleCrear = () => {
-    if (conectando || creando) return
+    if (conectando || creando || !nombreValido) return
     // Limpiamos cualquier id previo para que el efecto navegue recién con el de la sala nueva.
     storeConfig.getState().setIdSala(null)
+    inicioCreacion.current = Date.now()
     setCreando(true)
     crearSala({
       config: {
         metodo_login: form.metodoLogin,
         solo_invitados: form.soloInvitados,
-        nombre: form.nombre.trim() || undefined,
+        nombre: form.nombre.trim(),
         listaPermitidos: form.lista,
       },
     })
@@ -100,7 +115,7 @@ function FormCrearSala() {
         type="text"
         value={form.nombre}
         onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-        placeholder="Nombre de la sala (opcional)"
+        placeholder="Nombre de la sala"
         className={cn('border rounded-lg px-3 py-2 w-full')}
       />
 
@@ -189,10 +204,10 @@ function FormCrearSala() {
       <button
         className={cn(
           'mt-2 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
-          (conectando || creando) && 'opacity-50 cursor-not-allowed'
+          (conectando || creando || !nombreValido) && 'opacity-50 cursor-not-allowed'
         )}
         onClick={handleCrear}
-        disabled={conectando || creando}
+        disabled={conectando || creando || !nombreValido}
       >
         {creando ? 'Creando...' : conectando ? 'Conectando...' : ingresar ? 'Crear e ingresar' : 'Crear'}
       </button>

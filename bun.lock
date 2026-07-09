@@ -49,6 +49,7 @@
         "next-themes": "^0.4.6",
         "nodemon": "^3.1.10",
         "p5": "^1.11.3",
+        "qrcode.react": "^4.2.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-resizable-panels": "^3.0.5",
@@ -66,6 +67,7 @@
         "usehooks-ts": "^3.1.1",
         "vaul": "^1.1.1",
         "xlsx": "^0.18.5",
+        "yaml": "^2.9.0",
         "zod": "^3.24.1",
         "zustand": "^5.0.7",
       },
@@ -1469,6 +1471,8 @@
 
     "punycode": ["punycode@2.3.1", "", {}, ""],
 
+    "qrcode.react": ["qrcode.react@4.2.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA=="],
+
     "queue-microtask": ["queue-microtask@1.2.3", "", {}, ""],
 
     "react": ["react@19.0.0", "", {}, ""],
@@ -1789,7 +1793,7 @@
 
     "yallist": ["yallist@3.1.1", "", {}, ""],
 
-    "yaml": ["yaml@2.6.1", "", { "bin": "bin.mjs" }, ""],
+    "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
     "yocto-queue": ["yocto-queue@0.1.0", "", {}, ""],
 
@@ -1973,9 +1977,13 @@
 
     "parse-entities/@types/unist": ["@types/unist@2.0.11", "", {}, ""],
 
+    "postcss-load-config/yaml": ["yaml@2.6.1", "", { "bin": "bin.mjs" }, ""],
+
     "prop-types/react-is": ["react-is@16.13.1", "", {}, ""],
 
     "regjsparser/jsesc": ["jsesc@3.0.2", "", { "bin": "bin/jsesc" }, ""],
+
+    "remark-mdx-frontmatter/yaml": ["yaml@2.6.1", "", { "bin": "bin.mjs" }, ""],
 
     "rimraf/glob": ["glob@7.2.3", "", { "dependencies": { "fs.realpath": "^1.0.0", "inflight": "^1.0.4", "inherits": "2", "minimatch": "^3.1.1", "once": "^1.3.0", "path-is-absolute": "^1.0.0" } }, ""],
 

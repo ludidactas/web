@@ -1,0 +1,165 @@
+version: 1
+nombre: Conformación del Estado nacional argentino
+preguntas:
+  - pregunta: 'La primera fundación de Buenos Aires (1536) terminó…'
+    opciones:
+      - Abandonada tras el hambre y los enfrentamientos con los pueblos originarios
+      - Refundada de inmediato más al norte, sobre el río Paraná
+      - Sostenida con dificultad como un pequeño fuerte durante medio siglo
+      - Reforzada con colonos y provisiones enviados desde el Perú
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Durante buena parte de la época colonial, Buenos Aires creció sobre todo gracias a…'
+    opciones:
+      - La minería de plata y oro extraída de su propio territorio
+      - Una industria de tejidos que abastecía buena parte del virreinato
+      - El contrabando y el comercio por fuera de las reglas de la corona
+      - El comercio de cueros y granos autorizado y regulado por España
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Los ingresos de la aduana del puerto de Buenos Aires quedaban sobre todo en manos porteñas, no del resto del país. ¿Qué consecuencia de fondo te parece que tuvo eso?'
+    opciones:
+      - Alimentó largas guerras entre Buenos Aires y las provincias del interior
+      - Marcó una desigualdad entre puerto e interior que todavía se siente
+      - Definió quién mandaba, al decidir quién se quedaba con la plata
+      - Explica buena parte de por qué costó tanto formar un país unido
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El primer gran empréstito de la historia argentina, tomado en 1824 con la banca Baring de Londres,…'
+    opciones:
+      - Se invirtió en el puerto y las aguas corrientes, tal como estaba previsto
+      - Se rechazó en la Legislatura antes de tomar un solo peso
+      - Se saldó en pocos años con la renta de la aduana porteña
+      - Llegó en gran parte como papeles y descuentos, y se terminó de pagar casi 80 años después
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'En 1828, el gobernador de Buenos Aires Manuel Dorrego fue…'
+    opciones:
+      - Obligado a renunciar y a dejar el país rumbo a Montevideo
+      - Fusilado sin juicio por orden de Juan Lavalle
+      - Apartado del cargo por la Legislatura y reemplazado en orden
+      - Derrotado en el campo de batalla y tomado prisionero por años
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La Guerra de la Triple Alianza (1865-1870) diezmó a la población del Paraguay y fue resistida en buena parte del interior argentino. Sobre por qué se desató, los historiadores discuten. ¿Cuál de estas miradas te parece más para tener en cuenta?'
+    opciones:
+      - Los intereses comerciales y los préstamos británicos, que algunos llaman el "cuarto aliado"
+      - Las ambiciones de Brasil y la Argentina sobre la cuenca del Plata y sus ríos
+      - La política del Paraguay de Solano López al intervenir en el conflicto uruguayo
+      - Que ninguna causa única alcanza, y que pesaron varias a la vez
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Uno de los resultados concretos de la mal llamada Conquista del Desierto (1879) fue…'
+    opciones:
+      - Repartir millones de hectáreas entre unas pocas familias y empresas
+      - Entregar pequeñas parcelas a los soldados y colonos que avanzaron
+      - Crear reservas donde los pueblos originarios conservaron sus tierras
+      - Abrir las tierras a la compra libre de cualquier habitante del país
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'A la campaña militar de 1879 se la llamó "Conquista del Desierto", pero el territorio estaba habitado por pueblos originarios. ¿Qué hace, te parece, un nombre así?'
+    opciones:
+      - Convierte un despojo en una epopeya de "progreso" y "civilización"
+      - Borra a quienes vivían ahí, como si esas tierras no tuvieran dueño
+      - Justifica de antemano que esas tierras pasaran a pocas manos
+      - Nos enseña a desconfiar de cómo se nombran los hechos
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'A los pueblos originarios sometidos en esa campaña, el Estado…'
+    opciones:
+      - Les reconoció la propiedad de las tierras donde ya vivían
+      - Les ofreció ciudadanía y cargos a cambio de rendirse
+      - Los repartió como mano de obra y separó familias, con prisioneros enviados a la isla Martín García
+      - Los trasladó a reservas protegidas lejos de la frontera
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Restos de caciques y de personas originarias muertas en esas campañas terminaron exhibidos como piezas en museos, como el de La Plata. Hoy muchas comunidades reclaman que se los devuelvan. ¿Qué te moviliza de todo esto?'
+    opciones:
+      - Que durante mucho tiempo se trató a personas como objetos de exhibición
+      - Que recién ahora empieza a escucharse el reclamo de las comunidades
+      - Que reparar también es devolver lo que nunca debió tomarse
+      - Que la ciencia y los museos también cargan con esa historia
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El principal jefe militar de la Conquista del Desierto, Julio A. Roca,…'
+    opciones:
+      - Fue apartado del Ejército apenas terminó la campaña
+      - Quedó como una figura militar sin mayor peso político
+      - Fue cuestionado en vida y retirado de los homenajes oficiales
+      - Llegó dos veces a la presidencia y estuvo décadas en el billete de 100 pesos
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Durante mucho tiempo, la "historia oficial" de la escuela mostró a los próceres como héroes casi sin contradicciones. ¿Qué se pierde con un relato así?'
+    opciones:
+      - Las voces de los pueblos y personas que quedaron del lado de los vencidos
+      - La idea de que la historia la hacen muchos, y no solo unos pocos nombres
+      - La posibilidad de discutir las decisiones, en vez de solo admirarlas
+      - El costo humano que tuvieron muchas de esas gestas
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'El primer golpe de Estado militar del siglo XX en la Argentina ocurrió…'
+    opciones:
+      - En 1916, al asumir por primera vez un gobierno por voto universal
+      - En 1930, derrocando a Hipólito Yrigoyen
+      - En 1943, contra el gobierno conservador de entonces
+      - En 1955, derrocando a Juan Domingo Perón
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Durante la última dictadura militar (1976-1983), la deuda externa argentina…'
+    opciones:
+      - Se redujo gracias al ingreso de las exportaciones del campo
+      - Se mantuvo estable bajo el control de los militares
+      - Se multiplicó varias veces, en buena parte como deuda privada que luego asumió el Estado
+      - Se renegoció en buenas condiciones con los bancos del exterior
+    admiteAportes: false
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'La última dictadura (1976-1983) llevó adelante un plan sistemático de terrorismo de Estado: desaparición forzada de miles de personas, centros clandestinos y robo de bebés. Frente a esa memoria, ¿qué te parece más importante hoy?'
+    opciones:
+      - Sostener el "Nunca más" para que algo así no vuelva a pasar
+      - Acompañar la búsqueda de los nietos y nietas que todavía faltan
+      - Entender cómo una sociedad puede llegar a permitir o callar algo así
+      - Cuidar la memoria como una tarea de todos, no solo de las víctimas
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: 'Si pensás juntos el empréstito Baring, el fusilamiento de Dorrego y los golpes militares, ¿qué hilo en común ves?'
+    opciones:
+      - Decisiones tomadas por pocos, muchas veces a espaldas de la mayoría
+      - El peso de los intereses económicos por detrás de la política
+      - La violencia usada como recurso para zanjar los conflictos
+      - Una historia que después se contó para justificar lo hecho
+    admiteAportes: true
+    admiteMultiplesVotos: false
+    maxMultiplesVotos: null
+  - pregunta: '¿Para qué puede servirnos mirar nuestra propia historia con ojo crítico? (elegí hasta tres)'
+    opciones:
+      - Para entender desigualdades del presente que vienen de lejos
+      - Para reconocer a quienes la historia oficial dejó afuera
+      - Para no repetir la lógica de decidir todo a espaldas del pueblo
+      - Para imaginar un país que se cuente a sí mismo de otra manera
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 3
+  - pregunta: 'Después de pensar todo esto, ¿qué te gustaría hacer distinto?'
+    opciones:
+      - Cuestionar los relatos que doy por obvios
+      - Buscar las voces que la historia oficial calló
+      - Conocer la historia de los pueblos originarios de mi región
+      - Compartir esta mirada con otras personas
+    admiteAportes: true
+    admiteMultiplesVotos: true
+    maxMultiplesVotos: 4

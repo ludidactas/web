@@ -10,7 +10,7 @@ export async function loginFake(page: Page, user: { name: string; email: string 
     form: {
       csrfToken,
       redirect: 'false',
-      callbackUrl: '/sala',
+      callbackUrl: '/salas',
       ...user,
     },
     headers: {

@@ -1,13 +1,12 @@
-import { PasaportePublico } from '@/wss/validators/auth'
 import { useWss } from '../use-wss'
-import { RolEncuesta } from '@/wss/tipos'
+import { PasaportePublico, RolSala } from '@/wss/validators/auth'
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { StatusDeConexion } from '../conexion-wss'
 
 const useHandlersConexionSalaPublico = (auth: Omit<PasaportePublico, 'rol'>) => {
-  const { socket, estado, error } = useWss({ ...auth, rol: RolEncuesta.Publico })
+  const { socket, estado, error } = useWss({ ...auth, rol: RolSala.Publico })
 
   // Aguantamos un segundo antes de confirmar que la sala no existe
   const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(

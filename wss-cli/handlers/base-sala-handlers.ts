@@ -19,10 +19,15 @@ export default function baseSalaHandlers(socket: Socket | null) {
 
       // Al recibir un error, mostrarlo con un toast
       socket.on('wss:error', ({ message }: { message: string }) => {
+        console.warn('wss error completo:', { message })
         toast.error(message)
       })
 
       // Pedimos la config ahora que el listener ya está registrado
+      /**  @todo : Esto está introduciendo otro bug en el que cualquier intento de reconexión vuelve a pedir la config y se la vuelve a mostrar al usuario como "actualizada".
+       * 
+       * 
+      */
       socket.emit('sala:pedir_config')
     },
 

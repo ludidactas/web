@@ -1,0 +1,37 @@
+[
+  {
+    "nombre": "Romper el hielo",
+    "descripcion": "Preguntas livianas para arrancar una clase.",
+    "archivo": "romper-el-hielo.yaml"
+  },
+  {
+    "nombre": "Cierre de clase",
+    "descripcion": "Pequeña encuesta para pedir feedback al final de la clase.",
+    "archivo": "cierre-de-clase.yaml"
+  },
+  {
+    "nombre": "Historia decolonial",
+    "descripcion": "Repensar la historia desde la perspectiva latinoamericana, inspiradas en Enrique Dussel.",
+    "archivo": "historia-decolonial.yaml"
+  },
+  {
+    "nombre": "Conformación del Estado nacional argentino",
+    "descripcion": "Una mirada crítica de lo propio: el puerto, la deuda y los pueblos.",
+    "archivo": "estado-nacional-argentino.yaml"
+  },
+  {
+    "nombre": "Campañas de Estados Unidos en América Latina",
+    "descripcion": "De la Doctrina Monroe al Plan Cóndor: intervenciones, golpes y modelos impuestos.",
+    "archivo": "campanas-eeuu-latam.yaml"
+  },
+  {
+    "nombre": "Ciencia árabe e islámica, aportes en las sombras",
+    "descripcion": "Aportes del mundo islámico y el relato eurocéntrico que los relegó.",
+    "archivo": "ciencia-arabe-islamica.yaml"
+  },
+  {
+    "nombre": "Conceptos de programación",
+    "descripcion": "Preguntas introductorias sobre fundamentos de programación.",
+    "archivo": "programacion-basica.yaml"
+  }
+]

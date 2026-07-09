@@ -4,11 +4,12 @@ import { useSession } from 'next-auth/react'
 import { storeEstudianteLogin } from '../stores/estudiante-login-store'
 import { useEffect, useState } from 'react'
 import { storeConfig } from '../stores/config-store'
+import { MetodosLogin } from '@/wss/validators/auth'
 
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const store = storeEstudianteLogin()
   const { config } = storeConfig()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   const [ready, setReady] = useState(false)
 
@@ -33,10 +34,18 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
       store.setDNI(storedDni)
     }
 
+    // clientId estable por sala: identifica al estudiante entre reconexiones
+    let clientId = localStorage.getItem(`encuestas-clientid-${idSala}`)
+    if (!clientId) {
+      clientId = crypto.randomUUID()
+      localStorage.setItem(`encuestas-clientid-${idSala}`, clientId)
+    }
+    store.setClientId(clientId)
+
     const storeIngresado = localStorage.getItem(`encuestas-ingresado-${idSala}`) === '1'
 
     // Si tiene todos los datos necesatios, lo ingresamos directo -- no está andando, hay que arreglar una race condition
-    if (config.pedir_dni) {
+    if (config.metodo_login === MetodosLogin.DNI) {
       store.setIngresado(storeIngresado && !!storedDni && !!storedName)
     } else {
       store.setIngresado(storeIngresado && !!storedName)
@@ -45,12 +54,12 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     setReady(true)
   }, [idSala, config, status])
 
-  // Derivamos el nombre: si hay sesión de Google usamos ese, sino el que haya provisto
-  const nombreFinal = status === 'authenticated' ? session?.user?.name || 'Usuario' : store.nombre
-
+  // El login de estudiante por Google está deshabilitado, así que el nombre es siempre el que
+  // tipeó el estudiante. (NO derivarlo de la sesión de Google: en el navegador del profe esa
+  // sesión es la suya y terminaría secuestrando el nombre del estudiante.)
   return {
     ...store,
     ready,
-    nombre: nombreFinal,
+    nombre: store.nombre,
   }
 }

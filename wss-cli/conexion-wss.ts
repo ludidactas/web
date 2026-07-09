@@ -1,17 +1,12 @@
-import { RolEncuesta } from '@/wss/tipos'
+import { RolSala } from '@/wss/validators/auth'
 import { Pasaporte } from '@/wss/validators/auth'
+import { TipoErrorSesion } from '@/wss/validators/errors'
 import { isNullish } from 'remeda'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
 
 // Máquina de estados finitos para la conexión al WebSocket Server (WSS).
-
-export interface RazonExpiracion {
-  type: string
-  action: string
-  message: string
-}
 
 /** Representa los posibles estados de nuestra conexión al WebSocket Server (WSS). */
 export enum StatusDeConexion {
@@ -23,8 +18,8 @@ export enum StatusDeConexion {
   Conectado = 'connected',
   /** Error. Si el estado es este `error` contiene un mensaje. */
   Error = 'error',
-  /** El servidor bochó la conexión. */
-  Expirado = 'expired',
+  /** El servidor rechazó la conexión por una razón conocida (sala inexistente, DNI inválido, etc.). No reconecta automáticamente. */
+  Rechazado = 'rechazado',
 }
 
 /** Enumera los estados de la conexión para los que tenemos que mostrar la pantalla de loading */
@@ -42,7 +37,7 @@ type Estado = {
   desconectar: () => void
   // Acciones internas para gestionar transiciones de estado
   _manejarError: (err: any) => void
-  _manejarExpiracion: (autorreconectar?: boolean) => void
+  _manejarDesconexion: (reason: string) => void
   _limpiarSocket: (reason?: string) => void
 }
 
@@ -65,8 +60,8 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     const huboCambioDeSala =
       sockAuth &&
-      sockAuth.rol === RolEncuesta.Estudiante &&
-      auth.rol === RolEncuesta.Estudiante &&
+      sockAuth.rol === RolSala.Estudiante &&
+      auth.rol === RolSala.Estudiante &&
       sockAuth.idSala !== auth.idSala
 
     const huboCambioDeRol = sockAuth && sockAuth.rol !== auth.rol
@@ -106,9 +101,8 @@ export const conexionWss = create<Estado>((set, get) => ({
         sock,
         listeners: {
           onConnect: (s) => set({ socket: s, status: StatusDeConexion.Conectado }),
-          onDisconnect: (_, reason) => get()._limpiarSocket(`Desconectado: ${reason}`),
-          onExpired: (_, _data) => get()._manejarExpiracion(),
-          onError: (_, err) => get()._manejarError(err),
+          onDisconnect: (_, reason) => get()._manejarDesconexion(reason),
+          onConnectionError: (_, err) => get()._manejarError(err),
         },
       })
 
@@ -125,21 +119,16 @@ export const conexionWss = create<Estado>((set, get) => ({
     const { socket: sock, status } = get()
 
     if (isNullish(sock)) {
-      // Si hay un handshake en curso, cancelamos el estado para que el próximo provider pueda conectar
-      if (status === StatusDeConexion.Conectando) {
-        console.warn('❗ Cancelando conexión en progreso (socket aún no conectado).')
+      // Limpiamos aunque no haya socket — cubre casos de Conectando y Error sin socket establecido
+      if (status !== StatusDeConexion.Quieto) {
+        console.warn('❗ Limpiando estado sin socket activo.')
         get()._limpiarSocket(razon)
-      } else {
-        console.warn('❗ No hay socket activo para desconectar.')
       }
       return
     }
 
-    // Desconexión efectiva
     console.log(`🔌 Desconectando del WSS (Forzado)...`)
-    sock.disconnect() // Esto disparará el evento 'disconnect' y llamará a _limpiarSocket
-
-    // Limpiamos
+    sock.disconnect()
     console.log(`♻️ Limpiando el socket`)
     get()._limpiarSocket(razon)
   },
@@ -149,54 +138,53 @@ export const conexionWss = create<Estado>((set, get) => ({
   _limpiarSocket(razon = 'cleanup') {
     console.log(`🔄 Limpiando estado de conexión: ${razon}`)
 
-    // Quitamos listeners
     const sock = get().socket
-    if (sock) limpiarListeners(sock) // Asegurarse de que el socket anterior esté limpio
+    if (sock) limpiarListeners(sock)
 
-    // Si no está en error (clave), vuelve a Quieto.
-    const statusToSet = get().status === StatusDeConexion.Error ? StatusDeConexion.Error : StatusDeConexion.Quieto
-    // Invalidamos el id para que cualquier handshake en vuelo se descarte al resolverse.
-    set({ socket: null, status: statusToSet, _conexionActualId: null })
+    // Reseteamos todo el estado a Quieto, los errores en este punto ya fueron manejados y notificados al usuario.
+    // El socket ya fue desconectado y limpiado, así que no hay riesgo de que quede un socket zombie con listeners activos.
+    set({ socket: null, status: StatusDeConexion.Quieto, error: null, _conexionActualId: null })
   },
 
-  // Se llama desde onExpired y desde manejarError si el error indica expiración
-  _manejarExpiracion(autoreconectar = false) {
-    console.warn('⏳ Sesión expirada. Limpiando sesión local y reintentando...')
-
-    // El hook se encarga de limpiar el localStorage a través de 'sessionReady'
-    set({ status: StatusDeConexion.Expirado })
-
-    // Forzamos un reintento limpio
-    if (autoreconectar) {
-      console.log('♻️ Auto-reconectando tras expiración...')
-      const auth = get().socket?.auth as Pasaporte // Asumiendo que el auth original está en el socket
-      get().desconectar() // Dispara _limpiarSocket -> Quieto
-
-      // Reconectamos con delay
-      if (auth) setTimeout(() => get().iniciarConexion(auth), 500)
-      else console.warn('❗ No se puede auto-reconectar: no hay auth disponible en el socket.')
-    }
+  _manejarDesconexion(reason: string) {
+    return get()._limpiarSocket(`Desconectado: ${reason}`)
+    // etc
   },
 
   _manejarError(err: any) {
-    let msg = err.message ? err.message : '⚠️ Error desconocido'
+    let msg = err.data?.message ?? err.message ?? '⚠️ Error desconocido'
 
-    // El server expiró la sesión
-    if (err.data) {
-      msg = err.data.message ?? '😵 Sesión expirada'
+    // Si el mensaje es `xhr poll error`, no se está pudiendo conectar con el server (típicamente no lo corrimos).
+    if (msg === 'xhr poll error') msg = 'Parece que el servidor no está activo'
 
-      // Mesaje
-      toast.error(msg)
+    console.log('❗ Error de conexión al WSS:', msg, 'Detalle del error:', err)
+    toast.error(msg)
 
-      // Comanda
-      if (err.data.action === 'clear_session') {
-        get()._manejarExpiracion()
-        return
-      }
+    // Acá switcheamos según el tipo de error para manejar casos específicos como expiración de sesión, etc.
+    switch (err.data?.type as TipoErrorSesion | undefined) {
+      case TipoErrorSesion.SalaNoExiste:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
+      case TipoErrorSesion.DniNoPermitido:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
+      case TipoErrorSesion.NombreEnUso:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
+      case TipoErrorSesion.AuthInvalido:
+        get()._limpiarSocket(`Rechazado: ${msg}`)
+        set({ status: StatusDeConexion.Rechazado, error: msg })
+        break
+
+      default:
+        console.log('❗ Error de conexión al WSS fatal:', msg)
+        set({ status: StatusDeConexion.Error, error: msg })
     }
-
-    set({ status: StatusDeConexion.Error, error: msg })
-
-    /** @todo Podríamos llamar a get()._limpiarSocket() si el error es fatal e irreversible. */
   },
 }))

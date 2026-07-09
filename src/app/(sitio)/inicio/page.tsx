@@ -23,8 +23,8 @@ export default function Page() {
         {/* <Hero /> */}
         <Portada />
         <Identidad />
-        <Propuestas />
         <Recursos />
+        <Propuestas />
         <Contacto />
       </WithAOS>
     </div>

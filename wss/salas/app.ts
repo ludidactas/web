@@ -283,6 +283,24 @@ export namespace Salas {
     return db.existeSala(salaId)
   }
 
+  /**
+   * Elimina la sala por completo: avisa y desconecta a todos los presentes (profe, estudiantes,
+   * público) y borra toda su data de la DB (incluye estudiantes, asistencia, invitados y encuestas).
+   */
+  export async function eliminar(salaId: string) {
+    const sockets = await io.in(`sala:${salaId}`).fetchSockets()
+    await Promise.all(
+      sockets.map(async (s) => {
+        s.emit('sala:eliminada')
+        s.disconnect(true)
+      })
+    )
+
+    await db.borrarSala(salaId)
+
+    console.log(`🗑️ Sala ${salaId} eliminada`)
+  }
+
   export async function assertExiste(salaId: string) {
     // Verificamos que la sala exista
     if (!(await existe(salaId))) throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe.`)

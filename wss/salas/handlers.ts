@@ -101,6 +101,15 @@ async function configurarHandlersProfe(
   // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
   socket.on('sala:abrir', emitirApertura)
 
+  // Listener para que el profe elimine la sala (avisa y desconecta a todos los presentes, y borra toda la data)
+  socket.on(
+    'sala:eliminar',
+    safe(async () => {
+      console.log(`🗑️ Profe ${sala.profe.email} eliminó la sala ${sala.id}`)
+      await Salas.eliminar(sala.id)
+    })
+  )
+
   // Emitimos de inmediato la info inicial
   await emitirApertura()
 

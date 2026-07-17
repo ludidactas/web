@@ -10,6 +10,15 @@ import { MetodosLogin } from '@/wss/validators/auth'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
@@ -204,6 +213,49 @@ function Cuenta() {
   )
 }
 
+function BotonEliminarSala({ idSala }: { idSala: string }) {
+  const { eliminarSala } = useConexionProfe()
+  const [eliminando, setEliminando] = useState(false)
+
+  const handleEliminar = () => {
+    setEliminando(true)
+    eliminarSala()
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="px-4 py-2 border rounded-full text-center text-red-600 border-red-600 hover:bg-red-50 transition-colors w-fit">
+          Eliminar sala
+        </button>
+      </DialogTrigger>
+      <DialogContent aria-description="Confirmar eliminación de la sala">
+        <DialogHeader>
+          <DialogTitle>¿Eliminar la sala {idSala}?</DialogTitle>
+        </DialogHeader>
+        <p className="text-muted-foreground">
+          Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
+          asistencia, encuestas). Esta acción no se puede deshacer.
+        </p>
+        <DialogFooter className="gap-2">
+          <DialogClose asChild>
+            <button className="px-4 py-2 border rounded-full">Cancelar</button>
+          </DialogClose>
+          <DialogClose asChild>
+            <button
+              className="px-4 py-2 text-white rounded-full bg-red-600 disabled:opacity-50"
+              onClick={handleEliminar}
+              disabled={eliminando}
+            >
+              {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+            </button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function VerSalas() {
   const { estado } = useConexionProfe()
   const idSala = storeConfig((s) => s.idSala)
@@ -217,12 +269,15 @@ function VerSalas() {
   return (
     <div className="p-10 flex flex-col gap-2">
       <p className="text-2xl">Tus salas activas:</p>
-      <Link
-        href={`/salas/${idSala}`}
-        className="px-4 py-2 border rounded-full text-center hover:bg-slate-50 transition-colors w-fit"
-      >
-        Ir a la sala {idSala}
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/salas/${idSala}`}
+          className="px-4 py-2 border rounded-full text-center hover:bg-slate-50 transition-colors w-fit"
+        >
+          Ir a la sala {idSala}
+        </Link>
+        <BotonEliminarSala idSala={idSala} />
+      </div>
     </div>
   )
 }

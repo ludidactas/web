@@ -57,6 +57,16 @@ export default function profeSalaHandlers(socket: Socket | null) {
       )
 
       socket.on('sala:lista_permitidos', almacenPermitidos.set)
+
+      // El server avisa (y después desconecta) cuando el profe eliminó la sala
+      socket.on('sala:eliminada', () => {
+        toast.success('Sala eliminada')
+        almacenConfig.setIdSala(null)
+        almacenConfig.set(null)
+        almacenEstudiantes.set([])
+        almacenEncuestas.set([])
+        almacenPermitidos.set([])
+      })
     },
 
     acciones: {
@@ -69,6 +79,8 @@ export default function profeSalaHandlers(socket: Socket | null) {
       crearSala: (payload: { config?: Partial<ConfigCreacionSala>; listaPermitidos?: string[] }) => {
         socket?.emit('sala:crear', payload)
       },
+
+      eliminarSala: () => socket?.emit('sala:eliminar'),
 
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
@@ -84,6 +96,7 @@ export default function profeSalaHandlers(socket: Socket | null) {
       socket.removeAllListeners('sala:estudiantes')
       socket.removeAllListeners('sala:estudiante_conectado')
       socket.removeAllListeners('sala:estudiante_desconectado')
+      socket.removeAllListeners('sala:eliminada')
     },
   }
 }

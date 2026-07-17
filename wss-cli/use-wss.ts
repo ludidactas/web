@@ -8,8 +8,11 @@ import DebugPanel from '@/components/ui/debug-panel'
 /**
  * Cose la sesión de Google, si la hay, con el server de WSS.
  * @param auth No hace falta memoizarlo, lo serializamos internamente.
+ * @param opts.autoConectar Si es `false`, no conecta solo al montar: hay que llamar a `iniciarConexion` a mano
+ *   (p.ej. recién cuando el usuario aprieta un botón "Crear"). Default `true`.
  */
-export function useWss(auth: Pasaporte) {
+export function useWss(auth: Pasaporte, opts?: { autoConectar?: boolean }) {
+  const autoConectar = opts?.autoConectar ?? true
   const { status: statusSesionNext } = useSessionNext()
   const { status, iniciarConexion, desconectar, socket, error } = conexionWss()
 
@@ -23,6 +26,8 @@ export function useWss(auth: Pasaporte) {
 
   // Trigger de conexión
   useEffect(() => {
+    if (!autoConectar) return
+
     // 1. Si es admin o profe, esperar sesión de google
     if ((auth.rol === RolSala.Admin || auth.rol === RolSala.Profe) && !sessionReady) return
 
@@ -36,7 +41,7 @@ export function useWss(auth: Pasaporte) {
       setTimeout(() => iniciarConexion(auth), 1000)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Evitamos que se re-defina la función por cambios de estado que no produzcan cambios de valor en auth
-  }, [sessionReady, authKey, status, iniciarConexion])
+  }, [autoConectar, sessionReady, authKey, status, iniciarConexion])
 
   return {
     estado: status,

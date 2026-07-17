@@ -28,7 +28,7 @@ type FormState = {
 
 function FormCrearSala() {
   const router = useRouter()
-  const { crearSala, estado } = useConexionProfe()
+  const { crearSala, estado, conectar } = useConexionProfe()
   const idSala = storeConfig((s) => s.idSala)
 
   const [form, setForm] = useState<FormState>({
@@ -47,18 +47,38 @@ function FormCrearSala() {
     }
   }, [creando, idSala, router])
 
-  const conectando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
+  // Recién cuando el socket (que arrancamos a mano en handleCrear) termina de conectar, pedimos crear la sala
+  useEffect(() => {
+    if (creando && !idSala && estado === StatusDeConexion.Conectado) {
+      crearSala({ config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, listaPermitidos: form.lista })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Solo nos interesa reaccionar a la transición a Conectado, no a cambios del form
+  }, [creando, idSala, estado, crearSala])
+
+  // Si falló la conexión (p.ej. WSS caído), no dejamos el botón trabado en "Creando..."
+  useEffect(() => {
+    if (creando && (estado === StatusDeConexion.Error || estado === StatusDeConexion.Rechazado)) {
+      setCreando(false)
+    }
+  }, [creando, estado])
+
+  const conectando = estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
 
   const handleCrear = () => {
-    if (conectando) return
+    if (conectando || creando) return
     // Si ya tiene sala, navegar directo (igual que antes hacía crearSala con sala existente)
     if (idSala) {
       router.push(`/salas/${idSala}`)
       return
     }
     setCreando(true)
-    crearSala({ config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, listaPermitidos: form.lista })
+    // Recién acá arrancamos el socket, si todavía no está conectado (profe sin sala previa)
+    if (estado === StatusDeConexion.Quieto) {
+      conectar()
+    } else if (estado === StatusDeConexion.Conectado) {
+      crearSala({ config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, listaPermitidos: form.lista })
+    }
   }
 
   const agregarALista = (dni: string, nombre?: string) => {
@@ -188,9 +208,9 @@ function VerSalas() {
   const { estado } = useConexionProfe()
   const idSala = storeConfig((s) => s.idSala)
 
-  const cargando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
-
-  if (cargando) return <p className="p-4 text-muted-foreground">Cargando...</p>
+  // "Quieto" ya no implica "cargando": si el profe no tiene sala, el socket se queda quieto a propósito
+  // (recién conecta cuando aprieta "Crear"), así que no hay nada por lo que esperar.
+  if (!idSala && estado === StatusDeConexion.Conectando) return <p className="p-4 text-muted-foreground">Cargando...</p>
 
   if (!idSala) return <p className="p-4 text-muted-foreground">No tenés ninguna sala creada todavía.</p>
 
@@ -207,8 +227,13 @@ function VerSalas() {
   )
 }
 
-export default function SalasPageClient() {
+export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: string | null }) {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
+
+  // Precargamos el store con lo que ya sabíamos desde el server (sin esperar al socket)
+  useEffect(() => {
+    if (idSalaInicial) storeConfig.getState().setIdSala(idSalaInicial)
+  }, [idSalaInicial])
 
   return (<>
 

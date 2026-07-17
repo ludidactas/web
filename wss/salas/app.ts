@@ -238,23 +238,6 @@ export namespace Salas {
     }
   }
 
-  /** Obtiene una sala existente, y si no existe la crea y le asigna un namespace */
-  export async function obtenerOCrear(socket: SocketProfe): Promise<ReturnType<typeof get>> {
-    const email = socket.data.session.email
-
-    // Averiguamos si ya tiene sala
-    const owner = await db.getIdSalaDeProfe(email)
-
-    // Si no tiene, le creamos una
-    if (!owner) {
-      const sala = await crear(socket)
-      console.log(`✅ Sala creada para profe ${email}: ${sala.id}`)
-    }
-
-    // Recuperamos la sala
-    return getByEmailProfe(email)
-  }
-
   //Obtiene la sala del profe si existe, o null si no tiene ninguna. */
   export async function obtener(socket: SocketProfe): Promise<Awaited<ReturnType<typeof get>> | null> {
     const idSala = await db.getIdSalaDeProfe(socket.data.session.email)

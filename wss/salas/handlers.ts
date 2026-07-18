@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import { conErrorHandling } from '../middleware/error-handling'
+import { conAck, conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
@@ -97,10 +97,10 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
   socket.join(`profe:${email}`)
 
-  /** Emite al profe la lista de sus salas (para la pantalla de gestión). */
+  /** Emite la lista de salas a todas las conexiones del profe (room `profe:${email}`). */
   const emitirLista = safe(async () => {
     const salas = await Salas.getSalasDeProfe(email)
-    socket.emit(
+    io.to(`profe:${email}`).emit(
       'salas:lista',
       salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
     )
@@ -120,9 +120,11 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
   socket.on('salas:listar', emitirLista)
 
+  // Responde por ack con el id de la sala nueva; el cliente navega a `/salas/[id]` para operarla
+  // (gestión no abre salas). `emitirLista` refresca el listado en las demás pestañas del profe.
   socket.on(
     'sala:crear',
-    safe(async (payload: { config?: unknown }) => {
+    conAck(socket)(async (payload: { config?: unknown }) => {
       // LÍMITE SUSCRIPCIÓN (desactivado): await assertPuedeCrearSala(email)
       const { listaPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
 
@@ -131,9 +133,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
-      // No la abrimos acá (gestión no opera salas): le pasamos el id al cliente para que navegue
-      // a `/salas/[id]` y la opere en su propia página.
-      socket.emit('sala:creada', { idSala: sala.id })
+      return { idSala: sala.id }
     })
   )
 

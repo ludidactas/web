@@ -7,6 +7,7 @@ import { tokenWss } from '@/server/token_wss'
 import Link from 'next/link'
 
 import { ConexionProfeProvider } from '@/wss-cli/providers/wss-profe-context'
+import { TituloPestanaSala } from '@/components/salas/titulo-pestana-sala'
 import { SignOut } from '../../login/components/botones'
 
 export default async function SalaPage({ params }: { params: Promise<{ idSala: string }> }) {
@@ -25,6 +26,7 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
 
   return (
     <ConexionProfeProvider auth={{ token }} abrirSalaId={idSala}>
+      <TituloPestanaSala />
       <Toaster />
       <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
         <HeaderSala className="animate-aparecer" btnLogout={headerBtns} waveHeight="h-[20px] md:h-[90px]">

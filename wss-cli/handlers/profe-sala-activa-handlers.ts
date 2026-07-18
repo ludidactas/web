@@ -35,7 +35,6 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       socket.on(
         'sala:abierta',
         ({
-          sala,
           polls,
           estudiantes,
           config,
@@ -47,7 +46,6 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
           config: ConfigSala
           listaPermitidos: string[]
         }) => {
-          almacenConfig.setIdSala(sala.id)
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
           almacenEstudiantes.set(estudiantes)

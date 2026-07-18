@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -23,7 +23,6 @@ import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
@@ -51,30 +50,15 @@ const FORM_INICIAL: FormState = {
 // Carga mínima tras "Crear": el OK llega cuando ocurre lo último entre la confirmación y este lapso.
 const CARGA_MINIMA_MS = 300
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 function FormCrearSala() {
   const router = useRouter()
   const { crearSala, estado } = useConexionProfe()
-  const idSala = storeConfig((s) => s.idSala)
 
   const [form, setForm] = useState<FormState>(FORM_INICIAL)
-  const [creando, setCreando] = useState(false)
   const [ingresar, setIngresar] = useState(true)
-  const inicioCreacion = useRef(0)
-
-  useEffect(() => {
-    if (!creando || !idSala) return
-    const restante = Math.max(0, CARGA_MINIMA_MS - (Date.now() - inicioCreacion.current))
-    const t = setTimeout(() => {
-      toast.success('Sala creada con éxito')
-      if (ingresar) {
-        router.push(`/salas/${idSala}`)
-      } else {
-        setCreando(false)
-        setForm(FORM_INICIAL)
-      }
-    }, restante)
-    return () => clearTimeout(t)
-  }, [creando, idSala, ingresar, router])
+  const [creando, startCreacion] = useTransition()
 
   const conectando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
@@ -82,17 +66,26 @@ function FormCrearSala() {
 
   const handleCrear = () => {
     if (conectando || creando || !nombreValido) return
-    // Limpiamos cualquier id previo para que el efecto navegue recién con el de la sala nueva.
-    storeConfig.getState().setIdSala(null)
-    inicioCreacion.current = Date.now()
-    setCreando(true)
-    crearSala({
-      config: {
-        metodo_login: form.metodoLogin,
-        solo_invitados: form.soloInvitados,
-        nombre: form.nombre.trim(),
-        listaPermitidos: form.lista,
-      },
+    startCreacion(async () => {
+      try {
+        // El OK se muestra cuando ocurre lo último entre la confirmación y el piso de carga.
+        const [idSala] = await Promise.all([
+          crearSala({
+            config: {
+              metodo_login: form.metodoLogin,
+              solo_invitados: form.soloInvitados,
+              nombre: form.nombre.trim(),
+              listaPermitidos: form.lista,
+            },
+          }),
+          delay(CARGA_MINIMA_MS),
+        ])
+        toast.success('Sala creada con éxito')
+        if (ingresar) router.push(`/salas/${idSala}`)
+        else setForm(FORM_INICIAL)
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
+      }
     })
   }
 

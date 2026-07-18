@@ -11,6 +11,7 @@ import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import { useWss } from '../use-wss'
 import { StatusDeConexion } from '../conexion-wss'
+import { storeConfig } from '../stores/config-store'
 
 /**
  * Cose el socket del profe con su state. La conexión es token-only (identidad); qué sala se opera se
@@ -50,6 +51,9 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
   useEffect(() => {
     if (abrirSalaId && estado === StatusDeConexion.Conectado) handlers.gestion.acciones.abrirSala(abrirSalaId)
   }, [abrirSalaId, estado, handlers])
+
+  // Al salir de la sala limpiamos su config para no dejar valores stale al navegar.
+  useEffect(() => () => storeConfig.getState().set(null), [])
 
   return {
     socket,

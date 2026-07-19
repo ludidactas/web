@@ -1,56 +1,15 @@
 'use client'
-import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
-import { motion } from 'framer-motion'
-import { ReactNode, useEffect, useRef, useState } from 'react'
-import { isNullish } from 'remeda'
-import { EstadisticaSvgConfig } from './estadistica-svg-config'
-
-function useScrambleText(targetText: string) {
-  const [displayText, setDisplayText] = useState(targetText)
-  const prevRef = useRef(targetText)
-
-  useEffect(() => {
-    if (prevRef.current === targetText) return
-    prevRef.current = targetText
-
-    const CHARS = '?!#@%ABCDEFGHIJKLMNOPRSTUVWXYZ0123456789'
-    const STEPS = 18
-    const INTERVAL_MS = 45
-    let step = 0
-    let timer: ReturnType<typeof setTimeout>
-
-    const tick = () => {
-      step++
-      const settled = Math.floor((step / STEPS) * targetText.length)
-      setDisplayText(
-        targetText
-          .split('')
-          .map((char, i) => {
-            if (char === ' ') return ' '
-            if (i < settled) return char
-            return CHARS[Math.floor(Math.random() * CHARS.length)]
-          })
-          .join('')
-      )
-      if (step < STEPS) {
-        timer = setTimeout(tick, INTERVAL_MS)
-      } else {
-        setDisplayText(targetText)
-      }
-    }
-
-    timer = setTimeout(tick, INTERVAL_MS)
-    return () => clearTimeout(timer)
-  }, [targetText])
-
-  return displayText
-}
-
+import useScrambleText from '@/components/hooks/use-scramble-text'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useConexionOverlay } from '@/wss-cli/providers/wss-overlay-context'
 import { overlayEncuestaStore } from '@/wss-cli/stores/overlay-encuestas-store'
+import { EncuestaConVotos, OpcionConVotos } from '@/wss/validators/polls'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { motion } from 'framer-motion'
+import { ReactNode, useEffect, useState } from 'react'
+import { isNullish } from 'remeda'
 import LoadingSala from '../loading-sala'
+import { EstadisticaSvgConfig } from './estadistica-svg-config'
 
 export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgConfig }) {
   // Agarramos la encuesta del server, accediendo a la sala como si fueramos estudiante

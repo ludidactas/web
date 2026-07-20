@@ -17,7 +17,7 @@ import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { useConexionPublico } from '@/wss-cli/providers/wss-public-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
-import { MetodosLogin } from '@/wss/validators/auth'
+import { MAX_LEN_DNI, MAX_LEN_NOMBRE, MetodosLogin } from '@/wss/validators/auth'
 
 /** Página de login a sala, donde pedimos nombre y DNI */
 
@@ -144,6 +144,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
               id="nombre"
               ref={inputNombreRef}
               defaultValue={nombre}
+              maxLength={MAX_LEN_NOMBRE}
               required
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -160,6 +161,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
                 id="dni"
                 ref={inputDNIRef}
                 defaultValue={dni}
+                maxLength={MAX_LEN_DNI}
                 required
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {

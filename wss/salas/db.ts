@@ -62,37 +62,6 @@ export async function eliminarSalaDeProfe(email: string, salaId: string): Promis
   await Promise.all([redis.srem(`profe:${email}:salas`, salaId), redis.hdel('salas_owners', salaId)])
 }
 
-/** Devuelve todas las claves `sala:{salaId}:*` (estudiantes, asistencia, invitados, encuestas, votos, etc.) */
-async function clavesDeSala(salaId: string): Promise<string[]> {
-  const keys: string[] = []
-  let cursor = '0'
-  do {
-    const [siguienteCursor, encontradas] = await redis.scan(cursor, 'MATCH', `sala:${salaId}:*`, 'COUNT', 100)
-    cursor = siguienteCursor
-    keys.push(...encontradas)
-  } while (cursor !== '0')
-  return keys
-}
-
-/**
- * Borra la sala por completo: su registro, la relación con el profe, y toda su data namespaced
- * (estudiantes, asistencia, lista de invitados, encuestas y votos).
- */
-export async function borrarSala(salaId: string): Promise<void> {
-  const email = await getEmailProfe(salaId)
-  const claves = await clavesDeSala(salaId)
-
-  const pipeline = redis.pipeline()
-  pipeline.hdel('salas', salaId)
-  if (email) {
-    pipeline.hdel('owners_salas', email)
-    pipeline.hdel('salas_owners', salaId)
-  }
-  if (claves.length > 0) pipeline.del(...claves)
-
-  await pipeline.exec()
-}
-
 // -- Estudiantes --
 
 /**

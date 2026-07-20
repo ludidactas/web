@@ -2,17 +2,20 @@ import NextAuth, { NextAuthConfig } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import type { OIDCConfig } from 'next-auth/providers'
-import { config } from '@/config/entorno'
 
-// IdP falso local (`npm run idp:dev`): mismo flujo OIDC que Google, tokens firmados de mentira.
-// IDP_HOST debe coincidir con el del script (localhost, o la IP de la máquina para probar por LAN).
-const idpDev: OIDCConfig<Record<string, string>> = {
-  id: 'idp-dev',
-  name: 'IdP de desarrollo',
-  type: 'oidc',
-  issuer: `http://${process.env.IDP_HOST ?? 'localhost'}:3006`,
-  clientId: 'ludidactas-dev',
-  clientSecret: 'ludidactas-dev',
+const esDesarrollo = process.env.NODE_ENV === 'development'
+
+// IdP falso local (`npm run idp:dev`)
+function idpDev(): OIDCConfig<Record<string, string>> {
+  if (!process.env.IDP_HOST) throw new Error('Falta IDP_HOST')
+  return {
+    id: 'idp-dev',
+    name: 'IdP de desarrollo',
+    type: 'oidc',
+    issuer: `http://${process.env.IDP_HOST}:3006`,
+    clientId: 'ludidactas-dev',
+    clientSecret: 'ludidactas-dev',
+  }
 }
 
 const credencialesMock = Credentials({
@@ -31,15 +34,12 @@ const credencialesMock = Credentials({
   },
 })
 
-// El IdP falso y el mock de credenciales (tests) solo existen en dev.
-const providers: NextAuthConfig['providers'] = config.esDesarrollo
-  ? [Google, idpDev, credencialesMock]
-  : [Google]
+const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock] : [Google]
+
+export const proveedorLogin = esDesarrollo ? 'idp-dev' : 'google'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers,
-  // Para poder entrar por IP/LAN y probar desde el cel.
-  trustHost: config.esDesarrollo,
   pages: {
     signIn: '/login',
   },

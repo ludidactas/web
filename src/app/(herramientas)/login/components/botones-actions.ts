@@ -1,11 +1,9 @@
 'use server'
 
-import { signIn, signOut } from '@/app/auth'
-import { perfilLogin } from '@/config/login'
+import { signIn, signOut, proveedorLogin } from '@/app/auth'
 
 export async function accionSignIn(redirectTo: string) {
-  const { provider, credenciales } = perfilLogin
-  await signIn(provider, { ...credenciales, redirectTo })
+  await signIn(proveedorLogin, { redirectTo })
 }
 
 export async function accionSignOut() {

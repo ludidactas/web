@@ -3,8 +3,8 @@
 import { OAuth2Server, Events } from 'oauth2-mock-server'
 
 const PUERTO = 3006
-// Default localhost; para probar desde el cel por LAN, IDP_HOST=<ip de la máquina>.
-const HOST = process.env.IDP_HOST ?? 'localhost'
+const HOST = process.env.IDP_HOST
+if (!HOST) throw new Error('Falta IDP_HOST')
 
 const identidad = {
   sub: 'profe-test',

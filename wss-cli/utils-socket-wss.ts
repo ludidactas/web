@@ -1,6 +1,10 @@
 import { Pasaporte } from '@/wss/validators/auth'
-import { config } from '@/config/entorno'
 import { io, Socket } from 'socket.io-client'
+
+const encuestaHost = process.env.NEXT_PUBLIC_ENCUESTA_HOST
+if (!encuestaHost) {
+  throw new Error('Falta NEXT_PUBLIC_ENCUESTA_HOST')
+}
 
 /**
  * Definición local del tipo de Socket con nuestro objeto 'auth' tipado.
@@ -11,7 +15,7 @@ export interface SocketWssCli extends Socket {
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function handshake(auth: Pasaporte) {
-  return io(config.encuestaHost, {
+  return io(encuestaHost, {
     auth,
     autoConnect: false,
     reconnection: false,

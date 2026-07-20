@@ -1,16 +1,16 @@
 import { ExtendedError, Socket } from 'socket.io'
 import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
-import { Salas } from '../salas/app'
+import { Sala, Salas } from '../salas/app'
 import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from './app'
 
-export const handlersEncuestasProfe = async (socket: SocketProfe) => {
+/**
+ * Handlers de encuestas del profe, ligados a la sala abierta (`sala`). Se registran desde
+ * `handlersSalaActivaProfe` al abrir la sala — no al conectar — así que `sala` es fija en closure.
+ */
+export const handlersEncuestasProfe = async (socket: SocketProfe, sala: Sala) => {
   const safe = conErrorHandling(socket)
-
-  const sala = await Salas.obtener(socket)
-  if (!sala) return  // Profe sin sala aún — se registran después al crear la sala
-
-  const profe = await profeSala(sala.profe.email)
+  const profe = await profeSala(sala.id)
 
   socket.on(
     'poll:create',

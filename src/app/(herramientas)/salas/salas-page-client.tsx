@@ -1,14 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import Link from 'next/link'
+import Image from 'next/image'
+import { useSession } from 'next-auth/react'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+} from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
-import Link from 'next/link'
-import Image from 'next/image'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
 import {
   Dialog,
@@ -20,14 +32,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
-import { useSession } from 'next-auth/react'
 import { LdSvg } from '@/components/custom/ld-svg'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
 import { Outlined } from '@/components/fx/filtros'
 
 type FormState = {
+  nombre: string
   metodoLogin: MetodosLogin
   listaActiva: boolean
   soloInvitados: boolean
@@ -35,59 +47,54 @@ type FormState = {
   nombres: Record<string, string>
 }
 
+const FORM_INICIAL: FormState = {
+  nombre: '',
+  metodoLogin: MetodosLogin.Nombre,
+  listaActiva: false,
+  soloInvitados: false,
+  lista: [],
+  nombres: {},
+}
+
+// Carga mínima tras "Crear": el OK llega cuando ocurre lo último entre la confirmación y este lapso.
+const CARGA_MINIMA_MS = 300
+
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 function FormCrearSala() {
   const router = useRouter()
-  const { crearSala, estado, conectar } = useConexionProfe()
-  const idSala = storeConfig((s) => s.idSala)
-
-  const [form, setForm] = useState<FormState>({
-    metodoLogin: MetodosLogin.Nombre,
-    listaActiva: false,
-    soloInvitados: false,
-    lista: [],
-    nombres: {},
-  })
-  const [creando, setCreando] = useState(false)
-
-  // Navegar cuando sala:abierta llega tras emitir sala:crear
-  useEffect(() => {
-    if (creando && idSala) {
-      router.push(`/salas/${idSala}`)
-    }
-  }, [creando, idSala, router])
-
-  // Recién cuando el socket (que arrancamos a mano en handleCrear) termina de conectar, pedimos crear la sala
-  useEffect(() => {
-    if (creando && !idSala && estado === StatusDeConexion.Conectado) {
-      crearSala({ config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, listaPermitidos: form.lista })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Solo nos interesa reaccionar a la transición a Conectado, no a cambios del form
-  }, [creando, idSala, estado, crearSala])
-
-  // Si falló la conexión (p.ej. WSS caído), no dejamos el botón trabado en "Creando..."
-  useEffect(() => {
-    if (creando && (estado === StatusDeConexion.Error || estado === StatusDeConexion.Rechazado)) {
-      setCreando(false)
-    }
-  }, [creando, estado])
+  const { crearSala, estado } = useConexionProfe()
+  const [form, setForm] = useState<FormState>(FORM_INICIAL)
+  const [ingresar, setIngresar] = useState(true)
+  const [creando, startCreacion] = useTransition()
 
   const conectando = estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
+  const nombreValido = form.nombre.trim().length > 0
 
   const handleCrear = () => {
-    if (conectando || creando) return
-    // Si ya tiene sala, navegar directo (igual que antes hacía crearSala con sala existente)
-    if (idSala) {
-      router.push(`/salas/${idSala}`)
-      return
-    }
-    setCreando(true)
-    // Recién acá arrancamos el socket, si todavía no está conectado (profe sin sala previa)
-    if (estado === StatusDeConexion.Quieto) {
-      conectar()
-    } else if (estado === StatusDeConexion.Conectado) {
-      crearSala({ config: { metodo_login: form.metodoLogin, solo_invitados: form.soloInvitados }, listaPermitidos: form.lista })
-    }
+    if (conectando || creando || !nombreValido) return
+    startCreacion(async () => {
+      try {
+        // El OK se muestra cuando ocurre lo último entre la confirmación y el piso de carga.
+        const [idSala] = await Promise.all([
+          crearSala({
+            config: {
+              metodo_login: form.metodoLogin,
+              solo_invitados: form.soloInvitados,
+              nombre: form.nombre.trim(),
+              listaPermitidos: form.lista,
+            },
+          }),
+          delay(CARGA_MINIMA_MS),
+        ])
+        toast.success('Sala creada con éxito')
+        if (ingresar) router.push(`/salas/${idSala}`)
+        else setForm(FORM_INICIAL)
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
+      }
+    })
   }
 
   const agregarALista = (dni: string, nombre?: string) => {
@@ -100,8 +107,16 @@ function FormCrearSala() {
   }
 
   return (
-    <div className="flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20">
-      <h2 className="text-xl font-bold text-center leading-6 my-6">Configuración de la sala</h2>
+    <div className={cn('flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20')}>
+      <h2 className={cn('text-xl font-bold text-center leading-6 my-6')}>Configuración de la sala</h2>
+
+      <input
+        type="text"
+        value={form.nombre}
+        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+        placeholder="Nombre de la sala"
+        className={cn('border rounded-lg px-3 py-2 w-full')}
+      />
 
       <SwitchCard
         title="DNI obligatorio"
@@ -128,7 +143,7 @@ function FormCrearSala() {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             style={{ overflow: 'hidden', width: '100%' }}
-            className="flex flex-col gap-2"
+            className={cn('flex flex-col gap-2')}
           >
             <SwitchCard
               title="Lista de Invitadxs"
@@ -146,7 +161,7 @@ function FormCrearSala() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
                   style={{ overflow: 'hidden', width: '100%' }}
-                  className="flex flex-col gap-2 pt-2"
+                  className={cn('flex flex-col gap-2 pt-2')}
                 >
                   <SwitchCard
                     title="Permitir ingreso sólo a invitadxs"
@@ -175,15 +190,25 @@ function FormCrearSala() {
         )}
       </AnimatePresence>
 
+      <label className={cn('flex items-center justify-center gap-2 mt-4 cursor-pointer select-none')}>
+        <input
+          type="checkbox"
+          checked={ingresar}
+          onChange={(e) => setIngresar(e.target.checked)}
+          className={cn('h-4 w-4 accent-teal-500')}
+        />
+        <span>Ir a la sala</span>
+      </label>
+
       <button
         className={cn(
-          'mt-4 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
-          (conectando || creando) && 'opacity-50 cursor-not-allowed'
+          'mt-2 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
+          (conectando || creando || !nombreValido) && 'opacity-50 cursor-not-allowed'
         )}
         onClick={handleCrear}
-        disabled={conectando || creando}
+        disabled={conectando || creando || !nombreValido}
       >
-        {creando ? 'Creando...' : conectando ? 'Conectando...' : 'Crear'}
+        {creando ? 'Creando...' : conectando ? 'Conectando...' : ingresar ? 'Crear e ingresar' : 'Crear'}
       </button>
     </div>
   )
@@ -193,9 +218,12 @@ function Cuenta() {
   const { data: session } = useSession()
   const user = session?.user
 
-  return (<div className='p-10'>
+  return (
+    <div className="p-10">
       <h2 className="text-2xl font-bold">Tu cuenta</h2>
-      <p>Haz ingresado a <span className='font-bold'>Salas </span>con los siguientes datos</p>
+      <p>
+        Haz ingresado a <span className="font-bold">Salas </span>con los siguientes datos
+      </p>
       {user ? (
         <div className="flex flex-col m-10 gap-4 bg-slate-100 w-fit p-4 rounded">
           <div className="flex items-center gap-4">
@@ -209,7 +237,7 @@ function Cuenta() {
       ) : (
         <p className="text-muted-foreground">No hay sesión activa.</p>
       )}
-   </div>
+    </div>
   )
 }
 
@@ -257,41 +285,77 @@ function BotonEliminarSala({ idSala }: { idSala: string }) {
 }
 
 function VerSalas() {
-  const { estado } = useConexionProfe()
-  const idSala = storeConfig((s) => s.idSala)
+  const { estado, renombrarSala, eliminarSala } = useConexionProfe()
+  const salas = storeSalas((s) => s.salas)
 
   // "Quieto" ya no implica "cargando": si el profe no tiene sala, el socket se queda quieto a propósito
   // (recién conecta cuando aprieta "Crear"), así que no hay nada por lo que esperar.
-  if (!idSala && estado === StatusDeConexion.Conectando) return <p className="p-4 text-muted-foreground">Cargando...</p>
+  const cargando = salas === null || estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
 
-  if (!idSala) return <p className="p-4 text-muted-foreground">No tenés ninguna sala creada todavía.</p>
+  const handleRenombrar = (id: string, actual?: string) => {
+    const nuevo = window.prompt('Nuevo nombre de la sala:', actual ?? '')
+    if (nuevo === null) return
+    renombrarSala(id, nuevo)
+  }
+
+  const handleEliminar = (id: string, nombre?: string) => {
+    if (!window.confirm(`¿Eliminar la sala "${nombre ?? id}"? Esta acción no se puede deshacer.`)) return
+    eliminarSala()
+  }
+
+  if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
+
+  if (salas.length === 0)
+    return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
 
   return (
-    <div className="p-10 flex flex-col gap-2">
-      <p className="text-2xl">Tus salas activas:</p>
-      <div className="flex items-center gap-2">
-        <Link
-          href={`/salas/${idSala}`}
-          className="px-4 py-2 border rounded-full text-center hover:bg-slate-50 transition-colors w-fit"
-        >
-          Ir a la sala {idSala}
-        </Link>
-        <BotonEliminarSala idSala={idSala} />
-      </div>
+    <div className={cn('p-10 flex flex-col gap-3')}>
+      <p className={cn('text-2xl')}>Tus salas:</p>
+      <ul className={cn('flex flex-col gap-2')}>
+        {salas.map((sala) => (
+          <li
+            key={sala.id}
+            className={cn('flex items-center justify-between gap-2 px-4 py-3 border rounded-xl bg-white/60')}
+          >
+            <span className={cn('font-medium')}>{sala.nombre || `Sala ${sala.id}`}</span>
+            <div className={cn('flex items-center gap-2')}>
+              <Link
+                href={`/salas/${sala.id}`}
+                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
+              >
+                Ingresar
+              </Link>
+              <button
+                onClick={() => handleRenombrar(sala.id, sala.nombre)}
+                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
+              >
+                Renombrar
+              </button>
+              <button
+                onClick={() => handleEliminar(sala.id, sala.nombre)}
+                className={cn(
+                  'px-3 py-1 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors'
+                )}
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
 
 export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: string | null }) {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
+  const { estado, listarSalas } = useConexionProfe()
 
-  // Precargamos el store con lo que ya sabíamos desde el server (sin esperar al socket)
   useEffect(() => {
-    if (idSalaInicial) storeConfig.getState().setIdSala(idSalaInicial)
-  }, [idSalaInicial])
+    if (estado === StatusDeConexion.Conectado) listarSalas()
+  }, [estado, listarSalas])
 
-  return (<>
-
+  return (
     <SidebarProvider
       className="flex-none sm:flex-1 flex-col sm:flex-row px-0 my-0 sm:px-20 sm:my-6 rounded-xl -mt-4 sm:mt-0"
       style={{ minHeight: 0 }}
@@ -338,7 +402,7 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className=''>
+        <SidebarFooter>
          <LdSvg className="hidden sm:block sm:w-52" SvgComponent={IlustSalas} />
         </SidebarFooter>
       </Sidebar>
@@ -351,6 +415,5 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
         </div>
       </SidebarInset>
     </SidebarProvider>
-  </>
   )
 }

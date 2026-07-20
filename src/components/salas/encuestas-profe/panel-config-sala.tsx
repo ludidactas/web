@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useState } from 'react'
+import { PropsWithChildren, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Dialog,
@@ -33,28 +33,17 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
   const { config } = storeConfig()
   const { lista: listaPermitidos, nombres } = storePermitidos()
   const [listaActiva, setListaActiva] = useState(listaPermitidos.length > 0 || !!config?.solo_invitados)
-  const [nombre, setNombre] = useState(config?.nombre ?? '')
-
-  useEffect(() => {
-    setNombre(config?.nombre ?? '')
-  }, [config?.nombre])
 
   const pideDni = config?.metodo_login === MetodosLogin.DNI
 
-  const contenido = (
-    <>
-      <div className={cn('flex flex-col gap-2 w-full')}>
-          <div className={cn('flex flex-col gap-1')}>
-            <label className={cn('text-sm font-medium')}>Nombre de la sala</label>
-            <input
-              className={cn('border rounded px-3 py-1.5 text-sm w-full')}
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              onBlur={() => actualizarConfig({ nombre })}
-              onKeyDown={(e) => e.key === 'Enter' && actualizarConfig({ nombre })}
-              placeholder="Ingresá un nombre para la sala"
-            />
-          </div>
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className={cn('flex flex-col items-center')} aria-description="Configuración de la sala">
+        <DialogHeader>
+          <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
+        </DialogHeader>
+        <div className={cn('flex flex-col gap-2 w-full')}>
           <AnimatePresence initial={false}>
             {pideDni && (
               <motion.div
@@ -116,47 +105,48 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
             )}
           </AnimatePresence>
         </div>
-    </>
-  )
-
-  if (isMobile) {
-    return (
-      <Drawer>
-        <DrawerTrigger asChild>{children}</DrawerTrigger>
-        <DrawerContent aria-description="Configuración de la sala">
-          <DrawerHeader>
-            <DrawerTitle className={cn('text-center leading-6')}>Configuración de la sala</DrawerTitle>
-          </DrawerHeader>
-          <div className={cn('flex flex-col items-center gap-2 px-4 pb-2 overflow-y-auto max-h-[65vh]')}>
-            {contenido}
-          </div>
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <p className={cn('px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full text-center')}>
-                Cerrar
-              </p>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    )
-  }
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className={cn('flex flex-col items-center')} aria-description="Configuración de la sala">
-        <DialogHeader>
-          <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
-        </DialogHeader>
-        {contenido}
-
-        <DialogFooter>
-          <DialogClose>
-            <p className={cn('px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full')}>Cerrar</p>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
+    </DialogContent>
     </Dialog>
   )
+
+  // if (isMobile) {
+  //   return (
+  //     <Drawer>
+  //       <DrawerTrigger asChild>{children}</DrawerTrigger>
+  //       <DrawerContent aria-description="Configuración de la sala">
+  //         <DrawerHeader>
+  //           <DrawerTitle className={cn('text-center leading-6')}>Configuración de la sala</DrawerTitle>
+  //         </DrawerHeader>
+  //         <div className={cn('flex flex-col items-center gap-2 px-4 pb-2 overflow-y-auto max-h-[65vh]')}>
+  //           {contenido}
+  //         </div>
+  //         <DrawerFooter>
+  //           <DrawerClose asChild>
+  //             <p className={cn('px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full text-center')}>
+  //               Cerrar
+  //             </p>
+  //           </DrawerClose>
+  //         </DrawerFooter>
+  //       </DrawerContent>
+  //     </Drawer>
+  //   )
+  // }
+
+  // return (
+  //   <Dialog>
+  //     <DialogTrigger asChild>{children}</DialogTrigger>
+  //     <DialogContent className={cn('flex flex-col items-center')} aria-description="Configuración de la sala">
+  //       <DialogHeader>
+  //         <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
+  //       </DialogHeader>
+  //       {contenido}
+
+  //       <DialogFooter>
+  //         <DialogClose>
+  //           <p className={cn('px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full')}>Cerrar</p>
+  //         </DialogClose>
+  //       </DialogFooter>
+  //     </DialogContent>
+  //   </Dialog>
+  // )
 }

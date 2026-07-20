@@ -13,7 +13,7 @@ export default function baseSalaHandlers(socket: Socket | null) {
 
       // Registramos el listener ANTES de pedirla para evitar race condition
       socket.on('sala:config_actualizada', (config: ConfigSala) => {
-        toast.success(`Configuración actualizada!`)
+        // toast.success(`Configuración actualizada!`)
         setConfig(config)
       })
 
@@ -24,10 +24,7 @@ export default function baseSalaHandlers(socket: Socket | null) {
       })
 
       // Pedimos la config ahora que el listener ya está registrado
-      /**  @todo : Esto está introduciendo otro bug en el que cualquier intento de reconexión vuelve a pedir la config y se la vuelve a mostrar al usuario como "actualizada".
-       * 
-       * 
-      */
+      /**  @todo : Esto está introduciendo otro bug en el que cualquier intento de reconexión vuelve a pedir la config y se la vuelve a mostrar al usuario como "actualizada". */
       socket.emit('sala:pedir_config')
     },
 

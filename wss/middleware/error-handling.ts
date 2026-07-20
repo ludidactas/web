@@ -28,6 +28,34 @@ export const conErrorHandling =
     }
   }
 
+/** Envelope de respuesta para comandos con ack. El cliente decide la UI según `ok`. */
+export type Ack<T> = { ok: true; data: T } | { ok: false; error: string }
+
+/**
+ * Wrapper para handlers de comando que responden por ack (último argumento). Resultado y error
+ * viajan por el callback, así el `emitWithAck` del cliente nunca queda colgado. El error se entrega
+ * por el ack; solo cae a `wss:error` si no vino callback.
+ */
+export const conAck =
+  (socket: Socket) =>
+  <A extends unknown[], R>(handler: (...args: A) => Promise<R>) => {
+    return async (...args: unknown[]) => {
+      const posibleAck = args[args.length - 1]
+      const ack = typeof posibleAck === 'function' ? (posibleAck as (res: Ack<R>) => void) : null
+      const handlerArgs = (ack ? args.slice(0, -1) : args) as A
+      try {
+        const data = await handler(...handlerArgs)
+        ack?.({ ok: true, data })
+      } catch (err: unknown) {
+        console.log(`🎬 error-handling.ts (ack): Handler ${handler.name} con args:`, handlerArgs, 'emitió error:', err)
+        const message = err instanceof Error ? err.message : 'Error desconocido'
+        if (ack) ack({ ok: false, error: message })
+        else socket.emit('wss:error', { message })
+        if (process.env.NODE_ENV === 'development') throw err
+      }
+    }
+  }
+
 export const conErrorLogging = async (socket: Socket, next: (err?: ExtendedError) => void) => {
   socket.on('connect_error', (error) => {
     console.error(`❌ Error en ${socket.nsp.name}:`, error.message)

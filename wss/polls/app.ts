@@ -6,9 +6,7 @@ import { nuevaEncuesta, voteValidator } from '../validators/polls'
 import * as db from './db'
 
 /** Crea un closure para operar los componentes de una sala */
-export async function profeSala(email: string) {
-  const { id: salaId } = await Salas.getByEmailProfe(email)
-
+export async function profeSala(salaId: string) {
   // Acciones de profe:
 
   async function listarEncuestas() {

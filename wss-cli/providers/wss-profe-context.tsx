@@ -6,18 +6,26 @@ import { RolSala } from '@/wss/validators/auth'
 import { PasaporteProfe } from '@/wss/validators/auth'
 
 import baseSalaHandlers from '../handlers/base-sala-handlers'
-import profeSalaHandlers from '../handlers/profe-sala-handlers'
+import profeGestionSalasHandlers from '../handlers/profe-gestion-salas-handlers'
+import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import { useWss } from '../use-wss'
+import { StatusDeConexion } from '../conexion-wss'
+import { storeConfig } from '../stores/config-store'
 
-/** Cose el socket con el state para profe */
-const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, opts?: { autoConectar?: boolean }) => {
-  const { socket, estado, error, iniciarConexion, WssDebugPanel } = useWss({ ...auth, rol: RolSala.Profe }, opts)
+/**
+ * Cose el socket del profe con su state. La conexión es token-only (identidad); qué sala se opera se
+ * decide con `sala:abrir`. Si se pasa `abrirSalaId`, apenas conecta abre esa sala (la usa la página
+ * de operación `/salas/[idSala]`); sin él, la conexión queda en modo gestión (la usa `/salas`).
+ */
+const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSalaId?: string) => {
+  const { socket, estado, error, WssDebugPanel } = useWss({ ...auth, rol: RolSala.Profe })
 
   // Cuando cambia el socket, re-definimos los handlers con el nuevo socket
   const handlers = useMemo(
     () => ({
-      profe: profeSalaHandlers(socket),
+      gestion: profeGestionSalasHandlers(socket),
+      salaActiva: profeSalaActivaHandlers(socket),
       base: baseSalaHandlers(socket),
       encuestas: profeEncuestasHandlers(socket),
     }),
@@ -26,24 +34,33 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, opts?: 
 
   // Conectamos el socket a sus handlers
   useEffect(() => {
-    handlers.profe.montar()
+    handlers.gestion.montar()
+    handlers.salaActiva.montar()
     handlers.base.montar()
     handlers.encuestas.montar()
 
     return () => {
-      handlers.profe.desmontar()
+      handlers.gestion.desmontar()
+      handlers.salaActiva.desmontar()
       handlers.base.desmontar()
       handlers.encuestas.desmontar()
     }
   }, [handlers])
 
+  // Página de operación: apenas la conexión está lista, abrimos la sala pedida.
+  useEffect(() => {
+    if (abrirSalaId && estado === StatusDeConexion.Conectado) handlers.gestion.acciones.abrirSala(abrirSalaId)
+  }, [abrirSalaId, estado, handlers])
+
+  // Al salir de la sala limpiamos su config para no dejar valores stale al navegar.
+  useEffect(() => () => storeConfig.getState().set(null), [])
+
   return {
     socket,
     estado,
     error,
-    // Dispara la conexión a mano (para cuando `autoConectar` es `false` y hay que esperar una acción explícita, p.ej. "Crear")
-    conectar: () => iniciarConexion({ ...auth, rol: RolSala.Profe }),
-    ...handlers.profe.acciones,
+    ...handlers.gestion.acciones,
+    ...handlers.salaActiva.acciones,
     ...handlers.base.acciones,
     ...handlers.encuestas.acciones,
     WssDebugPanel,
@@ -53,15 +70,13 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, opts?: 
 // Context
 const ConexionProfeContext = createContext<ReturnType<typeof useHandlersConexionSalaProfe> | undefined>(undefined)
 
-// Provider - El auth viene del server
 export const ConexionProfeProvider: React.FC<{
   auth: Omit<PasaporteProfe, 'rol'>
-  /** Si es `false`, no conecta el socket solo al montar: espera a que se llame `conectar()` explícitamente. Default `true`. */
-  autoConectar?: boolean
+  abrirSalaId?: string
   children: React.ReactNode
-}> = ({ auth, autoConectar, children }) => {
+}> = ({ auth, abrirSalaId, children }) => {
   return (
-    <ConexionProfeContext.Provider value={useHandlersConexionSalaProfe(auth, { autoConectar })}>
+    <ConexionProfeContext.Provider value={useHandlersConexionSalaProfe(auth, abrirSalaId)}>
       {children}
     </ConexionProfeContext.Provider>
   )

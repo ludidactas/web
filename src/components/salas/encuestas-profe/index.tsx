@@ -1,10 +1,12 @@
 'use client'
 
-import { Copy, SquareCheckBig } from 'lucide-react'
+import { Check, Copy, Settings } from 'lucide-react'
 import Link from 'next/link'
 
 import useClipboard from '@/components/hooks/use-clipboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
 import { estadisticaSvgConfigValidator } from '@/components/salas/overlay/estadistica-svg-config'
@@ -167,18 +169,40 @@ export default function EncuestasProfe() {
                     Visualizador vista previa
                   </p>
                   <div className="flex flex-col items-center p-2 mt-2 w-full">
-                    <div className="flex flex-col items-center">
-                      <div className="flex">
-                        <Link target="_blank" href={linkOverlay} className="text-blue-700 hover:underline">
-                          {linkOverlay}
-                        </Link>
-                        <button title="Copiar" onClick={handleCopy(linkOverlay)}>
-                          {justCopied ? (
-                            <SquareCheckBig className="text-emerald-700 w-4 h-4" />
-                          ) : (
-                            <Copy size={20} className="hover:cursor-pointer" />
-                          )}
-                        </button>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={cn(
+                                'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95',
+                                justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
+                              )}
+                              onClick={handleCopy(linkOverlay)}
+                            >
+                              {justCopied ? <Check size={14} /> : <Copy size={14} />}
+                              {justCopied ? '¡Copiado!' : 'Copiar link'}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Copiá el link del visualizador</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        {/* TODO: abrir panel de configuración del visualizador */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={cn(
+                                'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform'
+                              )}
+                            >
+                              <Settings size={14} /> Configurar
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Configurá la apariencia del visualizador</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                     <EncuestaSVG encuesta={encuestaEnfocada} config={config} />

@@ -29,7 +29,16 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
   return (
     <div className="w-full">
       {error && <p className="text-red-500">Error: {error}</p>}
-      {estado === StatusDeConexion.Conectado && encuesta && <EncuestaSVG encuesta={encuesta} config={config} />}
+      {estado === StatusDeConexion.Conectado && encuesta && (
+        <motion.div
+          key={encuesta.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <EncuestaSVG encuesta={encuesta} config={config} />
+        </motion.div>
+      )}
     </div>
   )
 }

@@ -1,16 +1,23 @@
 'use client'
 
 import { Check, Copy, Settings } from 'lucide-react'
-import Link from 'next/link'
+
+import { useState } from 'react'
 
 import useClipboard from '@/components/hooks/use-clipboard'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
-import { estadisticaSvgConfigValidator } from '@/components/salas/overlay/estadistica-svg-config'
+import {
+  CONFIG_DEFAULTS,
+  construirUrlOverlay,
+  EstadisticaSvgConfig,
+} from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
+import { PanelConfigOverlay } from './panel-config-overlay'
 
 import { DialogAcciones } from './acciones'
 import { AgregarPregunta } from './agregar-pregunta'
@@ -33,14 +40,8 @@ export default function EncuestasProfe() {
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused)
 
-  // Configuracion del overlay (los campos no seteados toman su default del validator)
-  const config = estadisticaSvgConfigValidator.parse({
-    fondo: 'rgba(0, 0, 0, 0.6)',
-    altoBarra: 60,
-    espacioBarras: 20, // gap entre barras
-    altoTitulo: 70,
-    margen: 10,
-  })
+  // Configuración del overlay, editable desde el panel. Arranca en los defaults del validator.
+  const [config, setConfig] = useState<EstadisticaSvgConfig>(CONFIG_DEFAULTS)
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -56,7 +57,7 @@ export default function EncuestasProfe() {
     return <LoadingSala overlay mensaje="Esperando config de sala..." />
   }
 
-  const linkOverlay = configSala.link.replace(/\/$/, '') + '/overlay'
+  const linkOverlay = construirUrlOverlay(configSala.link.replace(/\/$/, '') + '/overlay', config)
 
   return (
     <>
@@ -188,24 +189,30 @@ export default function EncuestasProfe() {
                             <p className="text-xs">Copiá el link del visualizador</p>
                           </TooltipContent>
                         </Tooltip>
-                        {/* TODO: abrir panel de configuración del visualizador */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              className={cn(
-                                'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform'
-                              )}
-                            >
-                              <Settings size={14} /> Configurar
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">Configurá la apariencia del visualizador</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <Popover>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className={cn(
+                                    'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform'
+                                  )}
+                                >
+                                  <Settings size={14} /> Configurar
+                                </button>
+                              </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Configurá la apariencia del visualizador</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <PopoverContent align="end" className="max-h-[70vh] w-80 overflow-y-auto">
+                            <PanelConfigOverlay config={config} onChange={setConfig} />
+                          </PopoverContent>
+                        </Popover>
                       </div>
+                      <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                     </div>
-                    <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
                   </div>
                 </div>
               </>

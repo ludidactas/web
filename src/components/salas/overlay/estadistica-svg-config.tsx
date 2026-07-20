@@ -43,17 +43,69 @@ const listaColores = (def: string[]) =>
 // Validación de query params. Cada `.describe()` documenta el parámetro (lo usará el panel de config).
 export const estadisticaSvgConfigValidator = z.object({
   fondo: color('rgba(0, 0, 0, 0.4)').describe('Color de fondo del recuadro (hex, rgb/rgba o nombre CSS).'),
+  radioFondo: numero(12, 0, 50).describe('Radio de las esquinas del recuadro de fondo, en px (0–50).'),
   altoBarra: numero(40, 8, 200).describe('Alto de cada barra, en px (8–200).'),
   espacioBarras: numero(20, 0, 300).describe('Espacio (gap) vertical entre barras, en px (0–300).'),
-  altoTitulo: numero(40, 0, 400).describe('Alto reservado para la pregunta, en px (0–400).'),
-  margen: numero(80, 0, 400).describe('Margen exterior del recuadro, en px (0–400).'),
-  radioBarra: numero(8, 0, 100).describe('Radio de las esquinas de las barras, en px (0–100).'),
+  margen: numero(12, 0, 50).describe(
+    'Padding interno del recuadro (espacio entre el borde y las barras), en px (0–50).'
+  ),
+  radioBarra: numero(8, 0, 25).describe('Radio de las esquinas de las barras, en px (0–25).'),
+  colorTexto: color('rgb(255, 255, 255)').describe('Color del texto de la pregunta y de las etiquetas de respuesta.'),
+  colorContorno: color('rgba(0, 0, 0, 0)').describe('Color del contorno del título, las opciones y las barras.'),
   colores: listaColores(PALETA_DEFAULT).describe(
     'Paleta de las barras (lista separada por comas); cicla si hay más opciones que colores.'
   ),
   // Par de colores del bloque de valor (%/votos); se usan invertidos entre sí para dar contraste.
-  colorValor: color('white').describe('Color del texto del % y del contorno de los votos.'),
-  colorValorAlterno: color('black').describe('Color del contorno del % y del relleno de los votos.'),
+  colorValor: color('rgb(255, 255, 255)').describe('Color del texto del % y del contorno de los votos.'),
+  colorValorAlterno: color('rgb(0, 0, 0)').describe('Color del contorno del % y del relleno de los votos.'),
 })
 
 export type EstadisticaSvgConfig = z.infer<typeof estadisticaSvgConfigValidator>
+
+// Config por defecto (lo que ve el overlay sin ningún query param).
+export const CONFIG_DEFAULTS: EstadisticaSvgConfig = estadisticaSvgConfigValidator.parse({})
+
+// ────────────────────────────────────────────────────────────────────────────
+// Metadata para el panel de configuración: describe qué control renderizar por campo.
+// El texto de ayuda sale del `.describe()` del schema (fuente única de verdad).
+// Nota: los rangos deben coincidir con los del validator de arriba.
+// ────────────────────────────────────────────────────────────────────────────
+export type CampoOverlay =
+  | { key: keyof EstadisticaSvgConfig; label: string; tipo: 'numero'; min: number; max: number }
+  | { key: keyof EstadisticaSvgConfig; label: string; tipo: 'color' }
+  | { key: keyof EstadisticaSvgConfig; label: string; tipo: 'colores' }
+
+export const CAMPOS_OVERLAY: CampoOverlay[] = [
+  { key: 'altoBarra', label: 'Alto de barra', tipo: 'numero', min: 8, max: 200 },
+  { key: 'espacioBarras', label: 'Espacio entre barras', tipo: 'numero', min: 0, max: 300 },
+  { key: 'radioBarra', label: 'Redondeo de barras', tipo: 'numero', min: 0, max: 25 },
+  { key: 'margen', label: 'Margen interno', tipo: 'numero', min: 0, max: 50 },
+  { key: 'fondo', label: 'Fondo', tipo: 'color' },
+  { key: 'radioFondo', label: 'Redondeo del fondo', tipo: 'numero', min: 0, max: 50 },
+  { key: 'colorTexto', label: 'Color de texto', tipo: 'color' },
+  { key: 'colorContorno', label: 'Color de contorno', tipo: 'color' },
+  { key: 'colorValor', label: 'Color de valores', tipo: 'color' },
+  { key: 'colorValorAlterno', label: 'Color alterno de valores', tipo: 'color' },
+  { key: 'colores', label: 'Paleta de barras', tipo: 'colores' },
+]
+
+/** Descripción (ayuda) de un campo, tomada del `.describe()` del schema. */
+export const descripcionCampo = (key: keyof EstadisticaSvgConfig): string | undefined =>
+  estadisticaSvgConfigValidator.shape[key].description
+
+/**
+ * Arma la URL del overlay con los params que difieren del default (los defaults se omiten para
+ * mantener el link corto). `URLSearchParams` encodea solo; `colores` va como params repetidos para
+ * que los `rgb(...)` con comas no se partan.
+ */
+export function construirUrlOverlay(base: string, config: EstadisticaSvgConfig): string {
+  const params = new URLSearchParams()
+  for (const { key } of CAMPOS_OVERLAY) {
+    const valor = config[key]
+    if (JSON.stringify(valor) === JSON.stringify(CONFIG_DEFAULTS[key])) continue // omitir defaults
+    if (Array.isArray(valor)) valor.forEach((v) => params.append(key, String(v)))
+    else params.set(key, String(valor))
+  }
+  const qs = params.toString()
+  return qs ? `${base}?${qs}` : base
+}

@@ -241,48 +241,39 @@ function Cuenta() {
   )
 }
 
-function BotonEliminarSala({ idSala }: { idSala: string }) {
-  const { eliminarSala } = useConexionProfe()
-  const [eliminando, setEliminando] = useState(false)
-
-  const handleEliminar = () => {
-    setEliminando(true)
-    eliminarSala()
-  }
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button className="px-4 py-2 border rounded-full text-center text-red-600 border-red-600 hover:bg-red-50 transition-colors w-fit">
-          Eliminar sala
-        </button>
-      </DialogTrigger>
-      <DialogContent aria-description="Confirmar eliminación de la sala">
-        <DialogHeader>
-          <DialogTitle>¿Eliminar la sala {idSala}?</DialogTitle>
-        </DialogHeader>
-        <p className="text-muted-foreground">
-          Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
-          asistencia, encuestas). Esta acción no se puede deshacer.
-        </p>
-        <DialogFooter className="gap-2">
-          <DialogClose asChild>
-            <button className="px-4 py-2 border rounded-full">Cancelar</button>
-          </DialogClose>
-          <DialogClose asChild>
-            <button
-              className="px-4 py-2 text-white rounded-full bg-red-600 disabled:opacity-50"
-              onClick={handleEliminar}
-              disabled={eliminando}
-            >
-              {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
-            </button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
+//   return (
+//     <Dialog>
+//       <DialogTrigger asChild>
+//         <button className="px-4 py-2 border rounded-full text-center text-red-600 border-red-600 hover:bg-red-50 transition-colors w-fit">
+//           Eliminar sala
+//         </button>
+//       </DialogTrigger>
+//       <DialogContent aria-description="Confirmar eliminación de la sala">
+//         <DialogHeader>
+//           <DialogTitle>¿Eliminar la sala {idSala}?</DialogTitle>
+//         </DialogHeader>
+//         <p className="text-muted-foreground">
+//           Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
+//           asistencia, encuestas). Esta acción no se puede deshacer.
+//         </p>
+//         <DialogFooter className="gap-2">
+//           <DialogClose asChild>
+//             <button className="px-4 py-2 border rounded-full">Cancelar</button>
+//           </DialogClose>
+//           <DialogClose asChild>
+//             <button
+//               className="px-4 py-2 text-white rounded-full bg-red-600 disabled:opacity-50"
+//               onClick={handleEliminar}
+//               disabled={eliminando}
+//             >
+//               {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+//             </button>
+//           </DialogClose>
+//         </DialogFooter>
+//       </DialogContent>
+//     </Dialog>
+//   )
+// }
 
 function VerSalas() {
   const { estado, renombrarSala, eliminarSala } = useConexionProfe()
@@ -296,11 +287,6 @@ function VerSalas() {
     const nuevo = window.prompt('Nuevo nombre de la sala:', actual ?? '')
     if (nuevo === null) return
     renombrarSala(id, nuevo)
-  }
-
-  const handleEliminar = (id: string, nombre?: string) => {
-    if (!window.confirm(`¿Eliminar la sala "${nombre ?? id}"? Esta acción no se puede deshacer.`)) return
-    eliminarSala()
   }
 
   if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
@@ -332,7 +318,7 @@ function VerSalas() {
                 Renombrar
               </button>
               <button
-                onClick={() => handleEliminar(sala.id, sala.nombre)}
+                onClick={() => eliminarSala(sala.id)}
                 className={cn(
                   'px-3 py-1 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors'
                 )}

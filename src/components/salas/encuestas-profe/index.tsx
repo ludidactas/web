@@ -33,11 +33,11 @@ export default function EncuestasProfe() {
 
   // Configuracion del overlay (los campos no seteados toman su default del validator)
   const config = estadisticaSvgConfigValidator.parse({
-    bg: 'rgba(0, 0, 0, 0.6)',
-    barHeight: 60,
-    barSpacing: 80,
-    titleHeight: 70,
-    margin: 10,
+    fondo: 'rgba(0, 0, 0, 0.6)',
+    altoBarra: 60,
+    espacioBarras: 20, // gap entre barras
+    altoTitulo: 70,
+    margen: 10,
   })
 
   const { handleCopy, justCopied } = useClipboard()

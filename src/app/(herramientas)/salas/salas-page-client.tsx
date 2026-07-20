@@ -100,7 +100,7 @@ function FormCrearSala() {
   }
 
   return (
-    <div className="flex flex-col justify-center gap-2 my-4 w-full px-20">
+    <div className="flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20">
       <h2 className="text-xl font-bold text-center leading-6 my-6">Configuración de la sala</h2>
 
       <SwitchCard
@@ -157,7 +157,7 @@ function FormCrearSala() {
 
                   <div className="flex border rounded flex-col items-center gap-2 max-h-72 mt-2">
                     <h1 className="font-bold my-2">Lista de Invitadxs</h1>
-                    <div className="flex w-full">
+                    <div className="flex flex-col sm:flex-row w-full">
                       <ListaInvitadosForm onAgregar={agregarALista} />
                       <ListaPermitidosForm
                         lista={form.lista}
@@ -292,12 +292,21 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
 
   return (<>
 
-    <SidebarProvider className="flex-1 px-20 my-6 rounded-xl" style={{ minHeight: 0 }}>
-      <Sidebar className="rounded-l p-4 w-fit bg-indigo-500 text-white" collapsible="none">
+    <SidebarProvider
+      className="flex-none sm:flex-1 flex-col sm:flex-row px-0 my-0 sm:px-20 sm:my-6 rounded-xl -mt-4 sm:mt-0"
+      style={{ minHeight: 0 }}
+    >
+      <Sidebar
+        className="sm:rounded-l sm:rounded-t-none p-4 w-full sm:w-fit h-auto sm:h-full bg-indigo-500 text-white"
+        collapsible="none"
+      >
         <SidebarContent>
-          <SidebarHeader>
-              <Outlined outlineColor='white' className='text-cyan-500 text-7xl'>Salas</Outlined>
-          <Outlined outlineColor='white' radius={2} className='text-black font-bold text-xl'>Crea una sala y compartela con otrxs</Outlined>
+          <SidebarHeader className="flex-row items-center gap-4 sm:flex-col sm:items-start">
+            <LdSvg className="w-24 shrink-0 sm:hidden" SvgComponent={IlustSalas} />
+            <div className="flex flex-col">
+              <Outlined outlineColor='white' className='text-cyan-500 text-5xl sm:text-7xl'>Salas</Outlined>
+              <Outlined outlineColor='white' radius={2} className='text-black font-bold text-md sm:text-xl'>Crea una sala y compartela con otrxs</Outlined>
+            </div>
           </SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -330,7 +339,7 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className=''>
-         <LdSvg className="w-52" SvgComponent={IlustSalas} />
+         <LdSvg className="hidden sm:block sm:w-52" SvgComponent={IlustSalas} />
         </SidebarFooter>
       </Sidebar>
 

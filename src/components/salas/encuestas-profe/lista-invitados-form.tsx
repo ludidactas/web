@@ -89,7 +89,7 @@ export function ListaPermitidosForm({
 
   return (
     <div className={cn('flex flex-col rounded items-center max-h-50')}>
-      <div className={cn('flex m-2 overflow-y-auto bg-slate-50 h-40 w-60 rounded')}>
+      <div className={cn('flex m-2 overflow-y-auto bg-slate-50 h-40 w-full sm:w-60 rounded')}>
         {lista.length > 0 ? (
           <ul className={cn('text-sm flex flex-col w-full p-2')}>
             {[...lista]

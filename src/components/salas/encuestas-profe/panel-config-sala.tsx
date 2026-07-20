@@ -9,6 +9,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
+import { useIsMobile } from '@/components/hooks/use-mobile'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
@@ -18,6 +28,7 @@ import { cn } from '@/lib/utils'
 import { ListaInvitadosForm, ListaPermitidosForm } from './lista-invitados-form'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
+  const isMobile = useIsMobile()
   const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos } = useConexionProfe()
   const { config } = storeConfig()
   const { lista: listaPermitidos, nombres } = storePermitidos()
@@ -30,14 +41,9 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
 
   const pideDni = config?.metodo_login === MetodosLogin.DNI
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className={cn('flex flex-col items-center')} aria-description="Configuración de la sala">
-        <DialogHeader>
-          <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
-        </DialogHeader>
-        <div className={cn('flex flex-col gap-2 w-full')}>
+  const contenido = (
+    <>
+      <div className={cn('flex flex-col gap-2 w-full')}>
           <div className={cn('flex flex-col gap-1')}>
             <label className={cn('text-sm font-medium')}>Nombre de la sala</label>
             <input
@@ -87,7 +93,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
 
                       <div className={cn('flex border rounded flex-col items-center gap-2 max-h-72 mt-2')}>
                         <h1 className={cn('font-bold my-2')}>Lista de Invitadxs</h1>
-                        <div className={cn('flex w-full')}>
+                        <div className={cn('flex flex-col sm:flex-row w-full')}>
                           <ListaInvitadosForm
                             onAgregar={(dni, nombre) => {
                               agregarPermitidos([dni])
@@ -110,6 +116,40 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
             )}
           </AnimatePresence>
         </div>
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <Drawer>
+        <DrawerTrigger asChild>{children}</DrawerTrigger>
+        <DrawerContent aria-description="Configuración de la sala">
+          <DrawerHeader>
+            <DrawerTitle className={cn('text-center leading-6')}>Configuración de la sala</DrawerTitle>
+          </DrawerHeader>
+          <div className={cn('flex flex-col items-center gap-2 px-4 pb-2 overflow-y-auto max-h-[65vh]')}>
+            {contenido}
+          </div>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <p className={cn('px-4 py-2 text-white text-xl border-2 bg-teal-500 rounded-full text-center')}>
+                Cerrar
+              </p>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className={cn('flex flex-col items-center')} aria-description="Configuración de la sala">
+        <DialogHeader>
+          <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
+        </DialogHeader>
+        {contenido}
 
         <DialogFooter>
           <DialogClose>

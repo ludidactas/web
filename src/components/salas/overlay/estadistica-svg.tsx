@@ -9,7 +9,6 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 import { motion } from 'framer-motion'
 import { ReactNode, useEffect, useState } from 'react'
 import { isNullish } from 'remeda'
-import LoadingSala from '../loading-sala'
 import { EstadisticaSvgConfig } from './estadistica-svg-config'
 
 // Alto reservado para la etiqueta del texto, que va siempre encima de la barra.
@@ -29,18 +28,8 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 
   return (
     <div className="w-full">
-      {estado !== StatusDeConexion.Conectado && <LoadingSala />}
       {error && <p className="text-red-500">Error: {error}</p>}
-      {estado === StatusDeConexion.Conectado && (
-        <>
-          {encuesta && <EncuestaSVG encuesta={encuesta} config={config} />}
-          {!encuesta && (
-            <div className="flex flex-col items-center justify-center h-64">
-              <p className="text-gray-500">No hay datos de encuestas disponibles.</p>
-            </div>
-          )}
-        </>
-      )}
+      {estado === StatusDeConexion.Conectado && encuesta && <EncuestaSVG encuesta={encuesta} config={config} />}
     </div>
   )
 }
@@ -49,7 +38,7 @@ export default function EstadisticaLiveSvg({ config }: { config: EstadisticaSvgC
 export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; config: EstadisticaSvgConfig }) {
   if (isNullish(encuesta)) {
     return (
-      <div className="bg-white w-full rounded-xl">
+      <div className="bg-transparent w-full rounded-xl">
         <p className="text-center text-slate-400 p-4">No hay encuestas enfocadas</p>
       </div>
     )

@@ -108,15 +108,26 @@ function FormCrearSala() {
 
   return (
     <div className={cn('flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20')}>
-      <h2 className={cn('text-xl font-bold text-center leading-6 my-6')}>Configuración de la sala</h2>
-
+      <h2 className={cn('text-xl font-bold text-center leading-6 my-4')}>Configuración de la sala</h2>
+    <div className={cn('flex items-center justify-between gap-4')}>
       <input
         type="text"
         value={form.nombre}
         onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-        placeholder="Nombre de la sala"
-        className={cn('border rounded-lg px-3 py-2 w-full')}
+        placeholder="Ingresa el nombre de la sala"
+        className={cn('rounded-lg px-3 h-10 text-xs sm:text-lg sm:py-2 w-full')}
       />
+
+       <label className={cn('flex items-center justify-center gap-2 mt-2 cursor-pointer select-none w-1/2')}>
+        <input
+          type="checkbox"
+          checked={ingresar}
+          onChange={(e) => setIngresar(e.target.checked)}
+          className={cn('h-4 w-4 accent-teal-500')}
+        />
+        <span>Ir a la sala al crear</span>
+      </label>
+      </div>
 
       <SwitchCard
         title="DNI obligatorio"
@@ -172,7 +183,7 @@ function FormCrearSala() {
 
                   <div className="flex border rounded flex-col items-center gap-2 max-h-72 mt-2">
                     <h1 className="font-bold my-2">Lista de Invitadxs</h1>
-                    <div className="flex flex-col sm:flex-row w-full">
+                    <div className="flex flex-col gap-2 sm:flex-row w-full p-2 ">
                       <ListaInvitadosForm onAgregar={agregarALista} />
                       <ListaPermitidosForm
                         lista={form.lista}
@@ -189,16 +200,6 @@ function FormCrearSala() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <label className={cn('flex items-center justify-center gap-2 mt-4 cursor-pointer select-none')}>
-        <input
-          type="checkbox"
-          checked={ingresar}
-          onChange={(e) => setIngresar(e.target.checked)}
-          className={cn('h-4 w-4 accent-teal-500')}
-        />
-        <span>Ir a la sala</span>
-      </label>
 
       <button
         className={cn(
@@ -235,7 +236,7 @@ function Cuenta() {
           </div>
         </div>
       ) : (
-        <p className="text-muted-foreground">No hay sesión activa.</p>
+        <p className="text-muted-foreground m-20">No hay sesión activa.</p>
       )}
     </div>
   )
@@ -292,7 +293,7 @@ function VerSalas() {
   if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
 
   if (salas.length === 0)
-    return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
+    return <p className={cn('flex p-10 text-muted-foreground justify-center')}>No tenés ninguna sala creada todavía.</p>
 
   return (
     <div className={cn('p-10 flex flex-col gap-3')}>
@@ -393,7 +394,7 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="rounded">
+      <SidebarInset className="rounded min-h-0 overflow-y-auto">
         {activo === 'ver' && <VerSalas />}
         {activo === 'cuenta' && <Cuenta />}
         <div className={activo !== 'crear' ? 'hidden' : ''}>

@@ -68,9 +68,11 @@ export default function ContenidoIdentidad() {
 
           <Title text='El Equipo' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
 
-          <div className="flex flex-col gap-8 items-center">
+          <div className="flex flex-col gap-8 items-center justify-center">
+
+            {/* Vlad */}
             <div className="flex flex-col md:block md:relative items-center">
-              <div className="flex flex-col justify-center items-center float-left md:[shape-outside:circle(50%)] [shape-margin:0.05rem] md:mr-12">
+              <div className="flex flex-col justify-center items-center float-left md:[shape-outside:circle(50%)] [shape-margin:0.05rem] md:mr-12 hover:scale-110 hover:-rotate-3">
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
@@ -83,17 +85,18 @@ export default function ContenidoIdentidad() {
                 <div className='md:w-80 -translate-y-7'>
                   <Title data-aos="fade-right" text='Vladimir' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
                 </div>
-
               </div>
-              <p className={`text-justify leading-relaxed`}>
+              <p className={`text-justify my-10 text-leading-relaxed`}>
                 Desarrollador y educador. Elaboró la propuesta de Ludidatcas en 2021 como una manera de poner sus
                 habilidades al servicio de la regeneración educativa, la cual considera necesaria para ver un mundo más
                 integrado, justo y próspero.
               </p>
               <div className="clear-left"></div>
             </div>
+
+            {/* Ale */}
             <div className="flex flex-col md:block md:relative items-center">
-              <div className="flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full md:ml-12 ">
+              <div className="flex flex-col justify-center items-center float-right [shape-outside:circle(50%)] rounded-full md:ml-12 hover:scale-110 hover:rotate-3">
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
@@ -107,12 +110,34 @@ export default function ContenidoIdentidad() {
                   <Title data-aos="fade-left" className='md:w-80 -translate-y-7' text='Alejandra' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
-              <p className="text-justify leading-relaxed">
-                Profesional en filosofia, ilustradora y desarrolladora front-end autodidacta. Es quien se encuentra
-                detrás del diseño UX/UI de la página y asiste en el desarrollo de los talleres. Participa del proyecto
-                desde el 2024.
+              <p className="text-justify my-10 leading-relaxed">
+                Profesional en Filosofía, Ilustradora y Desarrolladora front-end autodidacta. Participa del proyecto
+                desde el 2024, con la intención de trabajar por una transformación de los procesos de aprendizaje y de construcción de conocimiento. 
               </p>
               <div className="clear-right"></div>
+            </div>
+
+            {/* Jere */}
+            <div className="flex flex-col md:block md:relative items-center">
+              <div className="flex flex-col justify-center items-center float-left md:[shape-outside:circle(50%)] [shape-margin:0.05rem] md:mr-14 hover:scale-110 hover:-rotate-3">
+                <Image
+                  data-aos="flip-left"
+                  data-aos-duration="2000"
+                  className="rounded-full bg-[#55B7D4] h-32 w-32 md:h-60 md:w-60 "
+                  src={'/img/Jere.webp'}
+                  height={200}
+                  width={200}
+                  alt=""
+                />
+                <div className='md:w-80 -translate-y-7'>
+                  <Title data-aos="fade-right" text='Jeremías' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+                </div>
+              </div>
+              <p className={`text-justify my-10 leading-relaxed`}>
+                Desarrollador de software con vocación de profe. Sostiene la intención de tratar la enseñanza como un acto de amor, de nutrición y emancipación. 
+                Siente en este proyecto la sintetización honesta y orgánica de aquella intención.
+              </p>
+              <div className="clear-left"></div>
             </div>
           </div>
         </div>
@@ -124,7 +149,7 @@ export default function ContenidoIdentidad() {
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
           <div className='mb-10 md:mb-0'>
-          <Title text='Nuestra Visión' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
+            <Title text='Nuestra Visión' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
           </div>
           {/* Texto */}
           <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -198,7 +223,7 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-orange-200/60" />
 
       {/* Juego */}
-      <div className='mt-10'/>
+      <div className='mt-10' />
       <Title data-aos="fade-left" text='El juego' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
       <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
         <p>
@@ -217,7 +242,7 @@ export default function ContenidoIdentidad() {
           muestra horizontes, que reclaman caminos.
         </p>
       </div>
-      
+
 
       {/* Secciones con titulo + dibujo + texto */}
       <ShapeDividerWaves top colorText={'text-violet-200/60'} />

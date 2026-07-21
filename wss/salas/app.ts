@@ -6,6 +6,7 @@ import { io } from '../server'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
 import { configActualizable, configSala, ConfigSala, SalaData } from '../validators/salas'
+import { CONFIG_DEFAULTS } from '../validators/overlay'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
@@ -247,16 +248,17 @@ export namespace Salas {
   }
 
   /** Crea una sala nueva y la asigna al profe del socket. Devuelve la sala lista para operar. */
-  export async function crear(socket: SocketProfe, config: Omit<ConfigSala, 'nombre_profe' | 'link'>) {
+  export async function crear(socket: SocketProfe, config: Omit<ConfigSala, 'nombre_profe' | 'link' | 'overlay'>) {
     const id = randomUUID().split('-')[0]
     const email = socket.data.session.email
 
     // Los defaults de creación (metodo_login, solo_invitados) los aplica `configCreacionSala` en el
-    // caller; acá solo sumamos los campos que genera el server.
+    // caller; acá solo sumamos los campos que genera el server (incluida la config del overlay por defecto).
     const configCompleta: ConfigSala = {
       ...config,
       nombre_profe: socket.data.session.nombre || email,
       link: `${process.env.NEXT_PUBLIC_HOST}/sala/${id}/`,
+      overlay: CONFIG_DEFAULTS,
     }
 
     const salaData: SalaData = {

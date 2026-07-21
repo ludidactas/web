@@ -2,7 +2,8 @@
 
 import { Check, Copy, Settings } from 'lucide-react'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import useClipboard from '@/components/hooks/use-clipboard'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -34,14 +35,32 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 
 export default function EncuestasProfe() {
-  const { estado, WssDebugPanel, error } = useConexionProfe()
+  const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused)
 
-  // Configuración del overlay, editable desde el panel. Arranca en los defaults del validator.
+  // Config del overlay editable desde el panel. Es solo la preferencia del profe: siembra el panel y
+  // es el source del link. El overlay real solo lee query params, no esta config.
   const [config, setConfig] = useState<EstadisticaSvgConfig>(CONFIG_DEFAULTS)
+
+  // Sembramos una vez con la config guardada de la sala cuando llega (sin pisar ediciones posteriores).
+  const configSembrada = useRef(false)
+  const overlayGuardado = configSala?.overlay
+  useEffect(() => {
+    if (!configSembrada.current && overlayGuardado) {
+      setConfig(overlayGuardado)
+      configSembrada.current = true
+    }
+  }, [overlayGuardado])
+
+  // Al cerrar el panel persistimos la config como preferencia de la sala; solo si cambió algo.
+  const guardarConfig = () => {
+    if (JSON.stringify(config) === JSON.stringify(overlayGuardado)) return
+    actualizarConfig({ overlay: config })
+    toast.success('Configuración del visualizador guardada')
+  }
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -189,7 +208,7 @@ export default function EncuestasProfe() {
                             <p className="text-xs">Copiá el link del visualizador</p>
                           </TooltipContent>
                         </Tooltip>
-                        <Popover>
+                        <Popover onOpenChange={(open) => !open && guardarConfig()}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <PopoverTrigger asChild>

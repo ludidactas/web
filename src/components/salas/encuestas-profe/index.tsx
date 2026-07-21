@@ -118,7 +118,7 @@ export default function EncuestasProfe() {
       </div>
 
       {/* VISTA DESKTOP */}
-      <div className="hidden md:flex animate-aparecer py-2 gap-2 max-h-screen">
+      <div className="hidden md:flex animate-aparecer py-2 gap-2 max-h-screen mb-2">
         {/* Preguntas Formulario */}
         <div className="flex-1 min-w-0 flex flex-col bg-white rounded-xl px-2" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">
@@ -148,14 +148,14 @@ export default function EncuestasProfe() {
         {/* Lista de estudiantes y overlay desktop */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
           {/* Lista de estudiantes */}
-          <div className="h-[70%]">
+          <div className="max-h-[60%]">
             <div className="flex h-full flex-col gap-4 bg-white rounded-xl p-8">
               <ListaEstudiantes />
             </div>
           </div>
 
           {/* Overlay */}
-          <div className="relative flex-col rounded-xl text-[#6F41CB] items-center bg-white">
+          <div className="relative max-h-[40%] flex-col rounded-xl text-[#6F41CB] items-center bg-white">
             {!encuestaEnfocada && (
               <p className="flex items-center justify-center h-full min-h-48 text-slate-400 italic ">
                 No hay ninguna encuesta enfocada aún ...{' '}

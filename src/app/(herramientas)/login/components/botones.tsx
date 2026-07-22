@@ -1,15 +1,10 @@
-import { signIn, signOut } from '@/app/auth'
+import { accionSignIn, accionSignOut } from './botones-actions'
 import { BtnAuth } from '@/components/ui/btn-auth'
 import { LogOut } from 'lucide-react'
 
 export function SignIn({ redirectTo }: { redirectTo: string }) {
   return (
-    <form
-      action={async () => {
-        'use server'
-        await signIn('google', { redirectTo })
-      }}
-    >
+    <form action={accionSignIn.bind(null, redirectTo)}>
       <BtnAuth type="submit">Conectarse con Google</BtnAuth>
     </form>
   )
@@ -17,12 +12,7 @@ export function SignIn({ redirectTo }: { redirectTo: string }) {
 
 export function SignOut() {
   return (
-    <form
-      action={async () => {
-        'use server'
-        await signOut()
-      }}
-    >
+    <form action={accionSignOut}>
       <BtnAuth className="hidden sm:flex justify-items-end" type="submit">
         Cerrar sesión
       </BtnAuth>

@@ -22,11 +22,31 @@ export async function existeSala(salaId: string): Promise<boolean> {
   return (await redis.hexists('salas', salaId)) === 1
 }
 
-// -- Relaciones profe-sala --
+/**
+ * Borra la sala del hash `salas` y TODAS sus claves derivadas (`sala:<id>:*`): estudiantes,
+ * asistencia, lista de permitidos, encuestas y votos. No toca las relaciones profe-sala
+ * (de eso se encarga `eliminarSalaDeProfe`). Usa SCAN para no bloquear redis.
+ */
+export async function borrarSala(salaId: string): Promise<void> {
+  await redis.hdel('salas', salaId)
 
-/** Devuelve el ID de sala asociado al email de un profe, o `null`. */
-export async function getIdSalaDeProfe(email: string): Promise<string | null> {
-  return redis.hget('owners_salas', email)
+  const patron = `sala:${salaId}:*`
+  let cursor = '0'
+  do {
+    const [next, keys] = await redis.scan(cursor, 'MATCH', patron, 'COUNT', 100)
+    cursor = next
+    if (keys.length > 0) await redis.del(...keys)
+  } while (cursor !== '0')
+}
+
+// -- Relaciones profe-sala (1 profe → N salas) --
+
+// El índice directo es un Set por profe (`profe:<email>:salas`), que admite varias salas.
+// El índice inverso (`salas_owners`, sala → email) lo usamos para chequear propiedad.
+
+/** Devuelve los IDs de las salas de un profe (puede ser vacío). */
+export async function getIdsSalasDeProfe(email: string): Promise<string[]> {
+  return redis.smembers(`profe:${email}:salas`)
 }
 
 /** Devuelve el email del profe dueño de la sala, o `null`. */
@@ -34,9 +54,12 @@ export async function getEmailProfe(salaId: string): Promise<string | null> {
   return redis.hget('salas_owners', salaId)
 }
 
-/** Registra la relación bidireccional entre un profe y su sala. */
-export async function registrarProfe(email: string, salaId: string): Promise<void> {
-  await Promise.all([redis.hset('owners_salas', email, salaId), redis.hset('salas_owners', salaId, email)])
+export async function agregarSalaAProfe(email: string, salaId: string): Promise<void> {
+  await Promise.all([redis.sadd(`profe:${email}:salas`, salaId), redis.hset('salas_owners', salaId, email)])
+}
+
+export async function eliminarSalaDeProfe(email: string, salaId: string): Promise<void> {
+  await Promise.all([redis.srem(`profe:${email}:salas`, salaId), redis.hdel('salas_owners', salaId)])
 }
 
 // -- Estudiantes --

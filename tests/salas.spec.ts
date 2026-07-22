@@ -17,7 +17,7 @@ test.describe('Sala de encuestas', () => {
     const { sala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
 
     // Verificar que el profe puede ver la sala
-    await expect(sala.getByRole('heading', { name: '¡Haz una pregunta!' })).toBeVisible()
+    await expect(sala.getByRole('heading', { name: '¡Hacé una pregunta!' })).toBeVisible()
 
     // Acceder como estudiante
     const alumnoPage = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })

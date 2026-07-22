@@ -61,7 +61,7 @@ export const SESSION_ESTUDIANTE_POR_METODO_LOGIN = {
 
 // ------------------------------------------------------------------------------
 
-const WssProfeSessionSchema = z
+export const WssProfeSessionSchema = z
   .object({
     ...camposServer,
     rol: z.literal(RolSala.Profe),
@@ -71,7 +71,7 @@ const WssProfeSessionSchema = z
   })
   .transform((data) => ({ ...data, userId: data.email }))
 
-const WssAdminSessionSchema = z
+export const WssAdminSessionSchema = z
   .object({
     ...camposServer,
     rol: z.literal(RolSala.Admin),

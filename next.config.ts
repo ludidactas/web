@@ -8,6 +8,14 @@ import bracketedSpans from 'remark-bracketed-spans'
 
 const nextConfig: NextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
+  },
   reactStrictMode: true,
   logging: {
     fetches: {

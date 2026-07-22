@@ -27,6 +27,9 @@ if (!!process.env.BACKDOOR) {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers,
+  pages: {
+    signIn: '/login',
+  },
   session: {
     strategy: 'jwt',
   },

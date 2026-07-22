@@ -1,6 +1,6 @@
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldTitle } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
-import { ComponentProps, useState } from 'react'
+import { ComponentProps, useId } from 'react'
 
 type SwitchChecked = ComponentProps<typeof Switch>['checked']
 type SwitchOnCheckedChange = ComponentProps<typeof Switch>['onCheckedChange']
@@ -16,7 +16,7 @@ export function SwitchCard({
   checked: SwitchChecked
   onCheckedChange: SwitchOnCheckedChange
 }) {
-  const [id, _setId] = useState(`switch-${Math.random().toString(36).slice(2, 7)}`)
+  const id = useId()
   return (
     <FieldLabel htmlFor={id}>
       <Field orientation="horizontal">

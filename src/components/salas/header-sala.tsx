@@ -6,12 +6,13 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import ShapeDividerWaves from '@/app/(sitio)/custom/shape-divider'
 
-interface HeaderProps extends PropsWithChildren {
+interface HeaderSalaProps extends PropsWithChildren {
   className?: string
   btnLogout?: ReactNode
+  waveHeight?: string
 }
 
-export default function HeaderSala({ className, children, btnLogout }: HeaderProps) {
+export default function HeaderSala({ className, children, btnLogout, waveHeight }: HeaderSalaProps) {
   return (
     <div>
       <div className={cn('bg-white w-screen px-2 md:px-4 py-6 items-center grid grid-cols-3', className)}>
@@ -24,7 +25,6 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
               width={100}
               height={100}
             />
-
             <div className="hidden md:flex sm:flex-col font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
               <Image
                 unoptimized
@@ -41,8 +41,7 @@ export default function HeaderSala({ className, children, btnLogout }: HeaderPro
         {children}
         <div className="flex justify-end">{btnLogout}</div>
       </div>
-      {/* Shape divider justo después del header */}
-      <ShapeDividerWaves bottom colorText="text-white" />{' '}
+      <ShapeDividerWaves bottom colorText="text-white" height={waveHeight} />
     </div>
   )
 }

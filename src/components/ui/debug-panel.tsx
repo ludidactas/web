@@ -2,11 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Minimize2, Maximize2, Eye, EyeOff, Copy, Move, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export default function DebugPanel({
-  data,
-  title = 'Debug Panel',
-  classNames,
-}: {
+type DebugPanelProps = {
   data: { [key: string]: any }
   title?: string
   classNames?: {
@@ -15,7 +11,14 @@ export default function DebugPanel({
     content?: string
     button?: string
   }
-}) {
+}
+
+export default function DebugPanel(props: DebugPanelProps) {
+  if (process.env.NODE_ENV !== 'development') return null
+  return <DebugPanelInner {...props} />
+}
+
+function DebugPanelInner({ data, title = 'Debug Panel', classNames }: DebugPanelProps) {
   const [position, setPosition] = useState({ x: 20, y: 20 })
   const [size, setSize] = useState({ width: 450, height: 350 })
   const [isVisible, setIsVisible] = useState(false)

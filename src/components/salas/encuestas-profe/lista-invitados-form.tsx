@@ -24,7 +24,7 @@ export function ListaInvitadosForm({ onAgregar }: { onAgregar: (dni: string, nom
   }
 
   return (
-    <div className={cn('flex flex-col gap-1 flex-1 rounded p-2 max-h-56')}>
+    <div className={cn('flex flex-col gap-1 flex-1 rounded max-h-56')}>
       <p className={cn('text-sm')}>Nombre</p>
       <input
         className={cn('border rounded p-2 text-sm w-full')}
@@ -88,8 +88,8 @@ export function ListaPermitidosForm({
   }
 
   return (
-    <div className={cn('flex flex-col rounded items-center max-h-50')}>
-      <div className={cn('flex m-2 overflow-y-auto bg-slate-50 h-40 w-60 rounded')}>
+    <div className={cn('flex flex-col rounded items-center max-h-50 flex-1')}>
+      <div className={cn('flex m-2 overflow-y-auto bg-slate-50 h-40 w-full rounded')}>
         {lista.length > 0 ? (
           <ul className={cn('text-sm flex flex-col w-full p-2')}>
             {[...lista]

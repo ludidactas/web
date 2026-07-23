@@ -22,6 +22,15 @@ import { cn } from '@/lib/utils'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
@@ -55,12 +64,11 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 function FormCrearSala() {
   const router = useRouter()
   const { crearSala, estado } = useConexionProfe()
-
   const [form, setForm] = useState<FormState>(FORM_INICIAL)
   const [ingresar, setIngresar] = useState(true)
   const [creando, startCreacion] = useTransition()
 
-  const conectando = estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
+  const conectando = estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
   const nombreValido = form.nombre.trim().length > 0
 
@@ -99,16 +107,27 @@ function FormCrearSala() {
   }
 
   return (
-    <div className={cn('flex flex-col justify-center gap-2 my-4 w-full px-20')}>
-      <h2 className={cn('text-xl font-bold text-center leading-6 my-6')}>Configuración de la sala</h2>
-
+    <div className={cn('flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20')}>
+      <h2 className={cn('text-xl font-bold text-center leading-6 my-4')}>Configuración de la sala</h2>
+    <div className={cn('flex items-center justify-between gap-4')}>
       <input
         type="text"
         value={form.nombre}
         onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-        placeholder="Nombre de la sala"
-        className={cn('border rounded-lg px-3 py-2 w-full')}
+        placeholder="Ingresa el nombre de la sala"
+        className={cn('rounded-lg px-3 h-10 text-xs sm:text-lg sm:py-2 w-full')}
       />
+
+       <label className={cn('flex items-center justify-center gap-2 mt-2 cursor-pointer select-none w-1/2')}>
+        <input
+          type="checkbox"
+          checked={ingresar}
+          onChange={(e) => setIngresar(e.target.checked)}
+          className={cn('h-4 w-4 accent-teal-500')}
+        />
+        <span>Ir a la sala al crear</span>
+      </label>
+      </div>
 
       <SwitchCard
         title="DNI obligatorio"
@@ -162,9 +181,9 @@ function FormCrearSala() {
                     onCheckedChange={() => setForm((f) => ({ ...f, soloInvitados: !f.soloInvitados }))}
                   />
 
-                  <div className={cn('flex border rounded flex-col items-center gap-2 max-h-72 mt-2')}>
-                    <h1 className={cn('font-bold my-2')}>Lista de Invitadxs</h1>
-                    <div className={cn('flex w-full')}>
+                  <div className="flex border rounded flex-col items-center gap-2 max-h-72 mt-2">
+                    <h1 className="font-bold my-2">Lista de Invitadxs</h1>
+                    <div className="flex flex-col gap-2 sm:flex-row w-full p-2 ">
                       <ListaInvitadosForm onAgregar={agregarALista} />
                       <ListaPermitidosForm
                         lista={form.lista}
@@ -181,16 +200,6 @@ function FormCrearSala() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <label className={cn('flex items-center justify-center gap-2 mt-4 cursor-pointer select-none')}>
-        <input
-          type="checkbox"
-          checked={ingresar}
-          onChange={(e) => setIngresar(e.target.checked)}
-          className={cn('h-4 w-4 accent-teal-500')}
-        />
-        <span>Ir a la sala</span>
-      </label>
 
       <button
         className={cn(
@@ -227,16 +236,52 @@ function Cuenta() {
           </div>
         </div>
       ) : (
-        <p className="text-muted-foreground">No hay sesión activa.</p>
+        <p className="text-muted-foreground m-20">No hay sesión activa.</p>
       )}
     </div>
   )
 }
 
+//   return (
+//     <Dialog>
+//       <DialogTrigger asChild>
+//         <button className="px-4 py-2 border rounded-full text-center text-red-600 border-red-600 hover:bg-red-50 transition-colors w-fit">
+//           Eliminar sala
+//         </button>
+//       </DialogTrigger>
+//       <DialogContent aria-description="Confirmar eliminación de la sala">
+//         <DialogHeader>
+//           <DialogTitle>¿Eliminar la sala {idSala}?</DialogTitle>
+//         </DialogHeader>
+//         <p className="text-muted-foreground">
+//           Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
+//           asistencia, encuestas). Esta acción no se puede deshacer.
+//         </p>
+//         <DialogFooter className="gap-2">
+//           <DialogClose asChild>
+//             <button className="px-4 py-2 border rounded-full">Cancelar</button>
+//           </DialogClose>
+//           <DialogClose asChild>
+//             <button
+//               className="px-4 py-2 text-white rounded-full bg-red-600 disabled:opacity-50"
+//               onClick={handleEliminar}
+//               disabled={eliminando}
+//             >
+//               {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+//             </button>
+//           </DialogClose>
+//         </DialogFooter>
+//       </DialogContent>
+//     </Dialog>
+//   )
+// }
+
 function VerSalas() {
   const { estado, renombrarSala, eliminarSala } = useConexionProfe()
   const salas = storeSalas((s) => s.salas)
 
+  // "Quieto" ya no implica "cargando": si el profe no tiene sala, el socket se queda quieto a propósito
+  // (recién conecta cuando aprieta "Crear"), así que no hay nada por lo que esperar.
   const cargando = salas === null || estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
 
   const handleRenombrar = (id: string, actual?: string) => {
@@ -245,15 +290,10 @@ function VerSalas() {
     renombrarSala(id, nuevo)
   }
 
-  const handleEliminar = (id: string, nombre?: string) => {
-    if (!window.confirm(`¿Eliminar la sala "${nombre ?? id}"? Esta acción no se puede deshacer.`)) return
-    eliminarSala(id)
-  }
-
   if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
 
   if (salas.length === 0)
-    return <p className={cn('p-4 text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
+    return <p className={cn('flex p-10 text-muted-foreground justify-center')}>No tenés ninguna sala creada todavía.</p>
 
   return (
     <div className={cn('p-10 flex flex-col gap-3')}>
@@ -279,7 +319,7 @@ function VerSalas() {
                 Renombrar
               </button>
               <button
-                onClick={() => handleEliminar(sala.id, sala.nombre)}
+                onClick={() => eliminarSala(sala.id)}
                 className={cn(
                   'px-3 py-1 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors'
                 )}
@@ -294,7 +334,7 @@ function VerSalas() {
   )
 }
 
-export default function SalasPageClient() {
+export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: string | null }) {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
   const { estado, listarSalas } = useConexionProfe()
 
@@ -303,16 +343,21 @@ export default function SalasPageClient() {
   }, [estado, listarSalas])
 
   return (
-    <SidebarProvider className="flex-1 px-20 my-6 rounded-xl" style={{ minHeight: 0 }}>
-      <Sidebar className="rounded-l p-4 w-fit bg-indigo-500 text-white" collapsible="none">
+    <SidebarProvider
+      className="flex-none sm:flex-1 flex-col sm:flex-row px-0 my-0 sm:px-20 sm:my-6 rounded-xl -mt-4 sm:mt-0"
+      style={{ minHeight: 0 }}
+    >
+      <Sidebar
+        className="sm:rounded-l sm:rounded-t-none p-4 w-full sm:w-fit h-auto sm:h-full bg-indigo-500 text-white"
+        collapsible="none"
+      >
         <SidebarContent>
-          <SidebarHeader>
-            <Outlined outlineColor="white" className="text-cyan-500 text-7xl">
-              Salas
-            </Outlined>
-            <Outlined outlineColor="white" radius={2} className="text-black font-bold text-xl">
-              Crea una sala y compartela con otrxs
-            </Outlined>
+          <SidebarHeader className="flex-row items-center gap-4 sm:flex-col sm:items-start">
+            <LdSvg className="w-24 shrink-0 sm:hidden" SvgComponent={IlustSalas} />
+            <div className="flex flex-col">
+              <Outlined outlineColor='white' className='text-cyan-500 text-5xl sm:text-7xl'>Salas</Outlined>
+              <Outlined outlineColor='white' radius={2} className='text-black font-bold text-md sm:text-xl'>Crea una sala y compartela con otrxs</Outlined>
+            </div>
           </SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -344,12 +389,12 @@ export default function SalasPageClient() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="">
-          <LdSvg className="w-52" SvgComponent={IlustSalas} />
+        <SidebarFooter>
+         <LdSvg className="hidden sm:block sm:w-52" SvgComponent={IlustSalas} />
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="rounded">
+      <SidebarInset className="rounded min-h-0 overflow-y-auto">
         {activo === 'ver' && <VerSalas />}
         {activo === 'cuenta' && <Cuenta />}
         <div className={activo !== 'crear' ? 'hidden' : ''}>

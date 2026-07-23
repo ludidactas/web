@@ -9,9 +9,9 @@ import { Title } from '@/components/custom/ld-title'
 
 export default function Recursos() {
   return (
-    <div className="recursosini bg-indigo-300/50">
+    <div className="recursosini ">
       <Pantalla
-        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#8345FD]'} size={'text-4xl md:text-7xl'} />}
+        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#00B0D2]'} size={'text-4xl md:text-7xl'} />}
         one={
           <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
             <p>
@@ -20,15 +20,16 @@ export default function Recursos() {
               para que la utilices conectándote con tu cuenta de google.{' '}
             </p>
             <p>
-              Estamos trabajando en hacer disponibles en el sitio los contenidos producidos en los talleres, cursos y
-              seminarios de modo que este funcione como biblioteca de recursos y material de referencia, abierto y
-              gratuito, para docentes y talleristas.
+              Estamos trabajando en otras herramientas didácticas y en hacer disponibles en el sitio los contenidos
+              producidos en los talleres, cursos y seminarios de modo que este funcione como biblioteca de recursos y
+              material de referencia, abierto y gratuito, para docentes y talleristas.
             </p>
           </div>
         }
         two={<Imagenes />}
         btn={<BotonLink titulo={'Explorar Sala'} url={'/salas'} />}
         scroll={<ArrowDownLd to="contactoini" />}
+        espejado
       />
     </div>
   )

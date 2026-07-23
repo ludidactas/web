@@ -30,6 +30,10 @@ export enum MetodosLogin {
 //  La idea, en resumen, es: Pasaporte -> login -> Session
 // ════════════════════════════════════════════════════════════════════════════
 
+// Límites de longitud para el input libre de identidad del estudiante (tope contra inputs abusivos).
+export const MAX_LEN_NOMBRE = 50
+export const MAX_LEN_DNI = 20
+
 export const PasaporteEstudianteBase = z.object({
   rol: z.literal(RolSala.Estudiante),
   idSala: z.string({ message: 'El id de la sala es obligatorio' }).min(1),
@@ -41,8 +45,8 @@ export const PasaporteEstudianteBase = z.object({
  * y el server descarta el resto al construir la sesión.
  */
 export const PasaporteEstudianteSchema = PasaporteEstudianteBase.extend({
-  nombre: z.string().optional(),
-  dni: z.string().optional(),
+  nombre: z.string().max(MAX_LEN_NOMBRE, `El nombre no puede superar los ${MAX_LEN_NOMBRE} caracteres`).optional(),
+  dni: z.string().max(MAX_LEN_DNI, `El DNI no puede superar los ${MAX_LEN_DNI} caracteres`).optional(),
   email: z.string().optional(),
   avatar: z.string().optional(),
   token: z.string().optional(),

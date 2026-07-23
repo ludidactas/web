@@ -7,5 +7,5 @@ export async function accionSignIn(redirectTo: string) {
 }
 
 export async function accionSignOut() {
-  await signOut({ redirectTo: '/login' })
+  await signOut({ redirectTo: '/login?callbackUrl=/salas' })
 }

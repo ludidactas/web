@@ -44,7 +44,7 @@ export function ListaEncuestas() {
     )
 
   return (
-    <ScrollArea className="h-[500px] overflow-y-auto" scrollHideDelay={1000}>
+    <ScrollArea className="overflow-y-auto" scrollHideDelay={1000}>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}

@@ -1,0 +1,104 @@
+desafios:
+  - numero: 1
+    nombre: "Manzana"
+    descripcion: "Vamos con un primer desafio de movimiento simple. El gatito quiere llegar hasta la manzana, peeeeero..."
+    imagenUrl: "/desafios/1.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323777300/"
+    pistas:
+      - "Para este desafio, solo usamos bloques de eventos (amarillo) y movimiento (azul). Fijate que el gatito puede moverse en todas las direcciones excepto en una, ¿que crees que está faltando?"
+      - "Cada coordenada te dice para dónde moverte: el punto (0,0) es el centro, de donde parte todo. Si X es positivo vas a la derecha, si es negativo vas a la izquierda. Si Y es positivo el gatito irá hacia arriba, si es negativo irá hacia abajo. "
+      - "/desafios/1Pista.png" 
+    solucionUrl: "https://scratch.mit.edu/projects/1352195017/"
+  
+  - numero: 2
+    nombre: "Manzana II"
+    descripcion: "Aquí tenemos un desafío muy similar al anterior. Además le sumamos que descubras cómo hacer que el gatito exprese correctamente sus acciones"
+    imagenUrl: "/desafios/2.png"
+    previewUrl: "https://scratch.mit.edu/projects/1325209486/"
+    pistas:
+      - "Ahora todo el movimiento está definido en un mismo bloque. Siguiendo la lógica del ejercicio anterior, haz que el gatito pueda moverse en las direcciones correctas"
+      - "Además, necesitamos armar otro bloque para que el gatito se comunique de forma correcta. Nosotros te damos las piezas, en vos queda descubrir el orden en el que debe armarse el segundo bloque."
+    solucionUrl: "https://scratch.mit.edu/projects/1325208305/"
+
+  - numero: 3
+    nombre: "Como pez en el agua"
+    descripcion: "Ahora en lugar de un gatito, tenemos un pez nadando. Por ello queremos que su movimiento sea vea más suave y natural, ¿cómo lo lograremos? "
+    imagenUrl: "/desafios/3.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323796103/"
+    pistas:
+       - "Nuevamente tenemos una pequeña falla en el bloque de movimiento. ¿Puedes detectarla y modificarla? "
+       - "Además, cuando un pez nada, ¡debe estar mirando en la dirección en la que nada! (No puede nadar en 'reversa'). ¿Cómo haremos que nuestro pez mire hacia arriba cuando vaya hacia arriba y así con todas las direcciones? Explora los bloques de movimiento (azules)"
+    solucionUrl: "https://scratch.mit.edu/projects/1352238775/"
+
+  - numero: 4
+    nombre: "La Caminata del Duende"
+    descripcion: "Esta es una animación cuadro a cuadro (¡Sí, en Scratch también podés hacer animaciones!). Descubrí cómo podemos hacer que el duende camine en loop)"
+    imagenUrl: "/desafios/4.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323784909/"
+    pistas:
+      - "A la derecha, encontrarás dos bloques sueltos. ¿Para qué crees que nos servirán? Descubre qué hacen y dónde debes integrarlos."
+      - "En la pestaña de disfraces, debes buscar la forma de que logremos el 'efecto caminata' (tal y como te lo mostramos en el gif y en la solución)."
+      - "/desafios/CaminataDuende.gif"
+    solucionUrl: "https://scratch.mit.edu/projects/1323792882/"
+
+  - numero: 5
+    nombre: "Laberinto"
+    descripcion: "Quisieramos lograr un ejemplo jugable de un bichito en un laberinto. ¡Pero parece que nuestro bichito atraviesa las paredes! Descubrí como crear el efecto pared de nuestro laberinto."
+    imagenUrl: "/desafios/5.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323796103/"
+    pistas:
+      - "Fijate que el bichito se mueve de otra manera: con las flechas izquierda/derecha gira y con las flechas arriba/abajo avanza y retrocede. ¿Cómo podemos basarnos en esto para crear el efecto de una colisión?"
+      - "¿Qué pasa si al avanzar 1 paso, retrocedemos un paso? Quedamos en el mismo punto. Si al avanzar cierta cantidad de pasos tocamos el laberinto e inmediatamente retrocedemos la misma cantidad, ¿qué sucederá?"
+    solucionUrl: "https://scratch.mit.edu/projects/1323783934/"
+
+  - numero: 6
+    nombre: "Laberinto II"
+    descripcion: "Acá tenemos otro laberinto. Para lograr la sensación de 'mapa' que el personaje va descubriendo, ¡dejamos quieto al personaje y movemos el mundo a su alrededor!"
+    imagenUrl: "/desafios/6.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323788869/"
+    pistas:
+      - "El bloque de instrucciones que controla el movimiento parece correcto, pero no funciona como esperamos. ¿Por qué crees sucede esto? ¿Cómo podemos modificarlo?"
+      - "En este ejemplo tenemos otro bloque que controla las colisiones de forma distinta a como lo hicimos en el ejemplo anterior. No tienes que hacer nada con él, solo observalo, comparalo y si querés, descubrí cómo funciona."
+    solucionUrl: "https://scratch.mit.edu/projects/1323788623/"  
+
+  - numero: 7
+    nombre: "Clonando gatitos"
+    descripcion: "En Scratch podemos crear muchas copias del mismo objeto y que al mismo tiempo, cada una puede tener diferente información. En este ejemplo, estamos creando 10 gatitos, pero parece haber solo uno. ¿Podés descubrir qué está pasando?"
+    imagenUrl: "/desafios/7.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323797586/"
+    pistas:
+      - "El bloque de código de la izquierda nos indica que estamos creando 10 clones y se está ejecutando correctamente."
+      - "Así deberian verse nuestros clones: aparecen y se mueven aleatoriamente en la pantalla. La clave es su aleatoriedad."
+      - "/desafios/clones.gif"
+    solucionUrl: "https://scratch.mit.edu/projects/1323784417/"
+
+  - numero: 8
+    nombre: "Perspectiva"
+    descripcion: "Acá tenemos otro ejemplo de una animación: un lobo que se acerca corriendo mientras las nubes en el cielo pasan. En este caso, generamos el efecto de animación, no solo mediante disfraces sino mediante el código. Descubrí cómo funciona y qué hace falta para que nuestro efecto de perspectiva funcione"
+    imagenUrl: "/desafios/8.png"
+    previewUrl: "https://scratch.mit.edu/projects/504310055/"
+    pistas:
+      - "Lo más importante de la animación es que está construida por capas: cada objeto es una capa que va construyendo la imagen. Hacé click en cada objeto y observa los bloques de código que contienen"
+      - "/desafios/8Pista.png"
+      - "La perspectiva no funciona bien porque hay objetos que se comportan de forma extraña (¿Una nube que baja a la tierra? ¿Un lobo que al acercarse se achica?...)"
+    solucionUrl: "https://scratch.mit.edu/projects/1323779779/"
+
+  - numero: 9
+    nombre: "Plataformas"
+    descripcion: "Las plataformas son un formato clásico de juego. Aquí tenemos un pequeño ejemplo de un mundo pantalla por pantalla en donde debes saltar a través de plataformas y evitar tocar el suelo."
+    imagenUrl: "/desafios/9.png"
+    previewUrl: "https://scratch.mit.edu/projects/1325210683/"
+    pistas:
+      - "Este formato no funciona tan bien si se puede saltar desde el aire. ¿Podés lograr que solo se pueda saltar desde el suelo?"
+      - "Cuando construímos los niveles por pantallas salir por un borde nos hace ingresar por el otro."
+    solucionUrl: "https://scratch.mit.edu/projects/1325218527/"
+
+  - numero: 10
+    nombre: "Colectora"
+    descripcion: "Finalmente, tenemos un prototipo jugable de un juego de carreras (con puntaje que puedes ganar o perder y pantalla de final de juego). El juego funciona bien, solo se ve horrible. ¿Puedes descubrir qué pasa?"
+    imagenUrl: "/desafios/10.png"
+    previewUrl: "https://scratch.mit.edu/projects/1323786619/"
+    pistas:
+      - "El principal problema está en las capas. Fijate en la solucion cómo deberia verse el mapa y completa los bloques que hacen falta para que las capas se ordenen"
+      - "Un momento... también 'parece' que perdemos demasiados puntos cuando chocamos. De el equilibrio depende la jugabilidad del juego"
+    solucionUrl: "https://scratch.mit.edu/projects/1323795572/"

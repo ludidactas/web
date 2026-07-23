@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { MetodosLogin } from './auth'
+import { CONFIG_DEFAULTS, estadisticaSvgConfigValidator } from './overlay'
 
 /** Data enviada al momento de crear la sala */
 export const configCreacionSala = z.object({
@@ -20,6 +21,8 @@ export const configCreacionSala = z.object({
 export const configSala = configCreacionSala.omit({ listaPermitidos: true }).extend({
   nombre_profe: z.string(),
   link: z.string(),
+  // Config del visualizador (overlay). El `.catch` cubre salas viejas sin este campo: caen al default.
+  overlay: estadisticaSvgConfigValidator.catch(CONFIG_DEFAULTS),
 })
 
 /**
@@ -27,7 +30,7 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true }).ext
  * El `metodo_login` es inmutable: se fija al crear la sala y no se cambia más.
  * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
  */
-export const configActualizable = configSala.pick({ solo_invitados: true, nombre: true }).strict()
+export const configActualizable = configSala.pick({ solo_invitados: true, nombre: true, overlay: true }).strict()
 
 /** La data completa de una sala tal como se persiste en redis. */
 export const salaData = z.object({

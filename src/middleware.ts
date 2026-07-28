@@ -12,9 +12,12 @@ export default auth((req) => {
     return Response.redirect(loginUrl)
   }
 
-  // Si está logueado y va a login, redirige a inicio
+  // Logueado en /login → a su callbackUrl interno, o /inicio.
   if (req.auth && pathname === '/login') {
-    return Response.redirect(new URL('/inicio', req.nextUrl.origin))
+    const callbackUrl = req.nextUrl.searchParams.get('callbackUrl')
+    const destino = callbackUrl ? new URL(callbackUrl, req.nextUrl.origin) : null
+    const target = destino?.origin === req.nextUrl.origin ? destino.pathname : '/inicio'
+    return Response.redirect(new URL(target, req.nextUrl.origin))
   }
 })
 

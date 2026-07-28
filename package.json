@@ -11,7 +11,7 @@
     "svgo": "bun run scripts/reembed-webp.ts && svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
     "svgo:reembed": "bun run scripts/reembed-webp.ts",
     "expose": "next dev -H 0.0.0.0",
-    "idp:dev": "NODE_ENV=development bun run scripts/idp-dev.ts",
+    "idp:dev": "bun run scripts/idp-dev.ts",
     "idp:check": "bun run scripts/check-idp-login.ts",
     "wss:start": "bun run wss/server.ts",
     "wss:dev": "NODE_ENV=development nodemon --watch wss --exec bun run wss/server.ts",

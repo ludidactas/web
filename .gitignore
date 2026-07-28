@@ -24,6 +24,7 @@ bun.lock
 # misc
 .DS_Store
 *.pem
+dump.rdb
 
 # debug
 npm-debug.log*

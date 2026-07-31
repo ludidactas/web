@@ -69,7 +69,7 @@ export default function EncuestasProfe() {
         {/* Menú de Navegación Mobile */}
         {estado === StatusDeConexion.Conectado && (
           <Tabs defaultValue="formulario">
-            <TabsList className="rounded-none w-full bg-[#8345FE] text-white">
+            <TabsList className="rounded-none w-full bg-ld-violeta text-white">
               <TabsTrigger className="text-xs " value="formulario">
                 ¡Hacé una pregunta!
               </TabsTrigger>
@@ -83,7 +83,7 @@ export default function EncuestasProfe() {
             <TabsContent value={'formulario'}>
               {/* Vista Formulario - Hacé una pregunta */}
               <div className="flex flex-col bg-white p-2" tabIndex={0}>
-                <h1 className="text-3xl text-center p-2 text-[#8345FE]">¡Hacé una pregunta!</h1>
+                <h1 className="text-3xl text-center p-2 text-ld-violeta">¡Hacé una pregunta!</h1>
                 <div className="bg-white h-full rounded-b-xl">
                   {estado === StatusDeConexion.Conectado && (
                     <div className="flex flex-col gap-10">
@@ -97,7 +97,7 @@ export default function EncuestasProfe() {
             <TabsContent value="preguntas">
               <div className="flex flex-col bg-white">
                 <div className="flex flex-col items-center justify-center p-4 h-24">
-                  <h1 className="text-3xl text-center text-[#00B0D2]">Lista de Preguntas</h1>
+                  <h1 className="text-3xl text-center text-ld-azul">Lista de Preguntas</h1>
                   <DialogAcciones />
                   <ImportarExportar />
                 </div>
@@ -121,7 +121,7 @@ export default function EncuestasProfe() {
         {/* Preguntas Formulario */}
         <div className="flex-1 min-w-0 flex flex-col bg-white rounded-xl px-2" tabIndex={0}>
           <div className="flex flex-col items-center justify-center p-4 h-24 rounded-t-xl">
-            <h1 className="text-3xl md:text-4xl text-center text-[#8345FE]">¡Hacé una pregunta!</h1>
+            <h1 className="text-3xl md:text-4xl text-center text-ld-violeta">¡Hacé una pregunta!</h1>
           </div>
           <div className="bg-white h-full rounded-b-xl">
             {estado === StatusDeConexion.Conectado && (
@@ -136,7 +136,7 @@ export default function EncuestasProfe() {
         {estado === StatusDeConexion.Conectado && (
           <div className="flex-1 min-w-0 flex flex-col bg-white gap-6 rounded-xl w-[33%] box-content">
             <div className="flex flex-col items-center p-6 h-24 rounded-t-xl">
-              <h1 className="text-4xl text-center text-[#00B0D2]">Preguntas</h1>
+              <h1 className="text-4xl text-center text-ld-azul">Preguntas</h1>
               <DialogAcciones />
               <ImportarExportar />
             </div>
@@ -154,7 +154,7 @@ export default function EncuestasProfe() {
           </div>
 
           {/* Overlay */}
-          <div className="relative flex-col rounded-xl text-[#6F41CB] items-center bg-white">
+          <div className="relative flex-col rounded-xl text-ld-violeta-oscuro items-center bg-white">
             {!encuestaEnfocada && (
               <p className="flex items-center justify-center h-full min-h-48 text-slate-400 italic ">
                 No hay ninguna encuesta enfocada aún ...{' '}
@@ -164,7 +164,7 @@ export default function EncuestasProfe() {
             {encuestaEnfocada && (
               <>
                 <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
-                <div className="w-full border-4 border-[#6F41CB] animate-border-pulse  h-full rounded-xl overflow-y-auto p-10">
+                <div className="w-full border-4 border-ld-violeta-oscuro animate-border-pulse  h-full rounded-xl overflow-y-auto p-10">
                   <p className="flex bg-[#e1e2fb] font-bold text-[23px] py-1 pr-20 pl-12 rounded-xl">
                     Visualizador vista previa
                   </p>

@@ -6,5 +6,5 @@ interface HlProps extends PropsWithChildren {
 }
 
 export const Hl = ({ className, children }: HlProps) => (
-  <span className={cn('text-[#46BFD7] font-bold', className)}>{children}</span>
+  <span className={cn('text-ld-azul font-bold', className)}>{children}</span>
 )

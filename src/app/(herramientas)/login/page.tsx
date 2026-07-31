@@ -25,7 +25,7 @@ export default async function ProfeLoginPage({ searchParams }: Props) {
 
   if (!session?.user)
     return (
-      <div className="flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 justify-center h-[100vh] w-[100vw]">
+      <div className="flex flex-col items-center bg-ld-gradiente-fondo justify-center h-[100vh] w-[100vw]">
         <GoogleLogin className="animate-aparecer" intent={intent} />
       </div>
     )

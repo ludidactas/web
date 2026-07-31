@@ -151,7 +151,7 @@ export const BotonEncuesta = ({
 
 export function DialogAcciones() {
   return (
-    <div className="flex rounded text-[#00B0D2] items-center justify-center hover:font-bold hover:underline">
+    <div className="flex rounded text-ld-azul items-center justify-center hover:font-bold hover:underline">
       <Dialog>
         <DialogTrigger className="flex gap-1 ">
           <Info />

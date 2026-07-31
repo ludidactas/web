@@ -28,7 +28,7 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
     <ConexionProfeProvider auth={{ token }} abrirSalaId={idSala}>
       <TituloPestanaSala />
       <Toaster />
-      <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
+      <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-ld-gradiente-fondo ">
         <HeaderSala className="animate-aparecer" btnLogout={headerBtns} waveHeight="h-[20px] md:h-[90px]">
           <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user?.name)}!</p>
         </HeaderSala>

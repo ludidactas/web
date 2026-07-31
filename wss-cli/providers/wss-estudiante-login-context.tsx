@@ -5,6 +5,7 @@ import { storeEstudianteLogin } from '../stores/estudiante-login-store'
 import { useEffect, useState } from 'react'
 import { storeConfig } from '../stores/config-store'
 import { MetodosLogin } from '@/wss/validators/auth'
+import { idAleatorio } from '../utils-id'
 
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const store = storeEstudianteLogin()
@@ -37,7 +38,7 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     // clientId estable por sala: identifica al estudiante entre reconexiones
     let clientId = localStorage.getItem(`encuestas-clientid-${idSala}`)
     if (!clientId) {
-      clientId = crypto.randomUUID()
+      clientId = idAleatorio()
       localStorage.setItem(`encuestas-clientid-${idSala}`, clientId)
     }
     store.setClientId(clientId)

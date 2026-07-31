@@ -1,9 +1,9 @@
 'use server'
 
-import { signIn, signOut } from '@/app/auth'
+import { signIn, signOut, proveedorLogin } from '@/app/auth'
 
 export async function accionSignIn(redirectTo: string) {
-  await signIn('google', { redirectTo })
+  await signIn(proveedorLogin, { redirectTo })
 }
 
 export async function accionSignOut() {

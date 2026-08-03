@@ -304,7 +304,8 @@ export namespace Salas {
    */
   export async function assertEsDueño(email: string, salaId: string) {
     const dueño = await db.getEmailProfe(salaId)
-    if (dueño !== email)
+    if (dueño !== email) {
       throw new ErrorSesion(TipoErrorSesion.SalaNoExiste, `La sala ${salaId} no existe o no te pertenece.`)
+    }
   }
 }

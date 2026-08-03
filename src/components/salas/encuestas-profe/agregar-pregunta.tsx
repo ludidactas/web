@@ -66,7 +66,7 @@ export function AgregarPregunta() {
     <div className="flex flex-col mx-2 rounded-xl bg-[#f2ebff] p-8 gap-2 md:min-w-[450px] md:max-h-[570px]">
       {/* Pregunta */}
       <div>
-        <p className="text-2xl  text-[#8345FE]  font-bold">Pregunta:</p>
+        <p className="text-2xl  text-ld-violeta  font-bold">Pregunta:</p>
         <textarea
           className="w-full p-2 resize-none rounded"
           placeholder="Haz tu pregunta..."
@@ -77,14 +77,14 @@ export function AgregarPregunta() {
       </div>
 
       {/* Opciones */}
-      <p className="text-2xl mt-4 text-[#8345FE]  font-bold">Opciones:</p>
+      <p className="text-2xl mt-4 text-ld-violeta  font-bold">Opciones:</p>
       <div className="flex flex-col gap-1 overflow-y-auto">
         {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
 
         {opciones.length > 0 &&
           opciones.map((respuesta, index) => (
             <div key={index} className="flex gap-2 items-center ml-4">
-              <span className="whitespace-nowrap text-[#8345FE] font-bold">{String.fromCharCode(97 + index)}.</span>
+              <span className="whitespace-nowrap text-ld-violeta font-bold">{String.fromCharCode(97 + index)}.</span>
               <input
                 className="rounded w-full p-1"
                 type="text"
@@ -113,7 +113,7 @@ export function AgregarPregunta() {
         onClick={agregarRespuesta}
         tabIndex={opciones.length + 2}
       >
-        <CirclePlus className="text-[#8345FE] font-bold hover:scale-105" size={30} />
+        <CirclePlus className="text-ld-violeta font-bold hover:scale-105" size={30} />
       </button>
 
       {/* Checkbox estudiantes pueden agregar respuestas */}

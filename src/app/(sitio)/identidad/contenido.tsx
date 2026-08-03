@@ -23,11 +23,11 @@ export default function ContenidoIdentidad() {
         {/* El proyecto */}
         <div className={`${stylediv}`}>
           {/* Titulo */}
-          <Title text='El Proyecto' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
+          <Title text='El Proyecto' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
           {/* Texto */}
           <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
-            <span className="text-[#8b5cf6] font-bold">
+            <span className="text-ld-violeta font-bold">
               crecimiento regenerativo de la educación, orgánico y comunitario, con amor por la enseñanza, la técnica y
               la educación.
             </span>{' '}
@@ -35,14 +35,14 @@ export default function ContenidoIdentidad() {
           </p>
           <p>
             A medida que nos vamos encontrando y reconociendo, esta visión se concretiza en{' '}
-            <span className="text-[#46BFD7] font-bold">
+            <span className="text-ld-azul font-bold">
               talleres, ciclos de formación, conversaciones, producción de material de referencia, publicaciones
             </span>{' '}
             y demás formas de encuentro.
           </p>
           <p>
             La propuesta pedagógica gira alrededor de{' '}
-            <span className="text-[#46BFD7] font-bold">la práctica y la técnica para el juego</span>, quitando el foco
+            <span className="text-ld-azul font-bold">la práctica y la técnica para el juego</span>, quitando el foco
             de la utilidad, la deriva, la ganancia. Y configura los medios de manera que que haya lugar para todo el
             mundo, para un crecimiento rizomático, nodal, sostenible.
           </p>
@@ -66,7 +66,7 @@ export default function ContenidoIdentidad() {
       <div className="bg-indigo-200/60 w-screen flex flex-col items-center gap-4">
         <div className={`${stylediv}`}>
 
-          <Title text='El Equipo' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+          <Title text='El Equipo' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
 
           <div className="flex flex-col gap-8 items-center justify-center">
 
@@ -76,14 +76,14 @@ export default function ContenidoIdentidad() {
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
-                  className="rounded-full bg-[#55B7D4] h-32 w-32 md:h-60 md:w-60 "
+                  className="rounded-full bg-ld-azul h-32 w-32 md:h-60 md:w-60 "
                   src={'/img/Vlad.webp'}
                   height={200}
                   width={200}
                   alt=""
                 />
                 <div className='md:w-80 -translate-y-7'>
-                  <Title data-aos="fade-right" text='Vladimir' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+                  <Title data-aos="fade-right" text='Vladimir' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
               <p className={`text-justify my-6 leading-relaxed`}>
@@ -100,14 +100,14 @@ export default function ContenidoIdentidad() {
                 <Image
                   data-aos="flip-left"
                   data-aos-duration="2000"
-                  className="mx-8 bg-[#55B7D4] rounded-full h-32 w-32 md:h-60 md:w-60"
+                  className="mx-8 bg-ld-azul rounded-full h-32 w-32 md:h-60 md:w-60"
                   src={'/img/Aleja.webp'}
                   height={200}
                   width={200}
                   alt="Team member 2"
                 />
                 <div className='md:w-80 -translate-y-7'>
-                  <Title data-aos="fade-left" className='md:w-80 -translate-y-7' text='Alejandra' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+                  <Title data-aos="fade-left" className='md:w-80 -translate-y-7' text='Alejandra' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
               <p className="text-justify my-10 leading-relaxed">
@@ -149,7 +149,7 @@ export default function ContenidoIdentidad() {
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
           <div className='mb-10 md:mb-0'>
-            <Title text='Nuestra Visión' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
+          <Title text='Nuestra Visión' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
           </div>
           {/* Texto */}
           <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -223,21 +223,21 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-orange-200/60" />
 
       {/* Juego */}
-      <div className='mt-10' />
-      <Title data-aos="fade-left" text='El juego' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+      <div className='mt-10'/>
+      <Title data-aos="fade-left" text='El juego' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
       <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
         <p>
           Ocupa un lugar central en nuestra propuesta. Entendemos{' '}
-          <span className="text-[#46BFD7] font-bold lg:text-2xl">
+          <span className="text-ld-azul font-bold lg:text-2xl">
             el juego como germen de la educación y de la creatividad
           </span>
           , que ocurre en la naturaleza espontánea y consistentemente{' '}
-          <span className="text-[#46BFD7] font-bold lg:text-2xl">con un rol didáctico:</span> cada especie juega como le
+          <span className="text-ld-azul font-bold lg:text-2xl">con un rol didáctico:</span> cada especie juega como le
           va a ser propio trabajar en su edad adulta. Y juego es también el proceso de ensayo y autoperfeccionamiento:
           la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que practica, ensaya y
           estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la performarce.{' '}
         </p>
-        <p className="text-[#8b5cf6] font-bold text-2xl pt-6">
+        <p className="text-ld-violeta font-bold text-2xl pt-6">
           El juego nos impulsa a la investigación, a aprender a aprender, independientemente de la forma que tome. Nos
           muestra horizontes, que reclaman caminos.
         </p>
@@ -255,7 +255,7 @@ export default function ContenidoIdentidad() {
               cuantificar, ni de organizar el deber en función de metas y expectativas preestablecidas, con la ansiedad
               que inevitablemente entraña. Educar en función de la empleabilidad tiene su lugar, pero no puede ser todos
               los lugares. Cuando se practica y se investiga por visión, y no por imposición, es que{' '}
-              <span className="text-[#46BFD7] font-bold">
+              <span className="text-ld-azul font-bold">
                 el verdadero aprendizaje tiene lugar, el que se siente como descubrir, no como adquirir
               </span>
             </P>
@@ -266,7 +266,7 @@ export default function ContenidoIdentidad() {
           <SvgPibis />
           <P>
             Enseñamos, en principio,{' '}
-            <span className="text-[#46BFD7] font-bold">
+            <span className="text-ld-azul font-bold">
               programación, matemática, ilustración digital y otras técnicas cercanas al desarrollo de videojuegos{' '}
             </span>
             , porque es el ámbito y contexto concreto donde el proyecto se originó. Pero esperamos eventualmente dar la
@@ -283,7 +283,7 @@ export default function ContenidoIdentidad() {
         <p className="p-0  text-[1.2rem] md:text-[1.5rem]">
           {' '}
           Desde Ludidactas,{' '}
-          <span className="text-[#8b5cf6] font-bold text-2xl pt-6">
+          <span className="text-ld-violeta font-bold text-2xl pt-6">
             buscamos acometer esta labor desde una perspectiva lúdica y didáctica{' '}
           </span>{' '}
           (de allí nuestro nombre), pues creemos que atendiendo al proceso didáctico-pedagógico podemos regenerar el
@@ -311,7 +311,7 @@ const TituloYDosColumnas = ({ titulo, children, invertido = false }: TituloYDosC
   <div className="flex flex-col mx-4 md:mx-20 max-w-[1480px]">
     <h1
       data-aos="fade-left"
-      className={`${fuenteTitulo.className} text-center my-8 lg:m-20 drop-shadow-lg bg-gradient-to-r from-cyan-500 to-violet-500 text-transparent bg-clip-text text-4xl lg:text-5xl`}
+      className={`${fuenteTitulo.className} text-center my-8 lg:m-20 drop-shadow-lg bg-ld-gradiente-texto text-transparent bg-clip-text text-4xl lg:text-5xl`}
     >
       {titulo}
     </h1>

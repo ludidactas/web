@@ -27,7 +27,7 @@ const Formatos = ({ formato, descripcion, icono }: FormatosProps) => {
       data-aos-delay="100"
       className="bg-white h-full w-full p-4 rounded-2xl md:w-full"
     >
-      <h1 className={`flex text-xl lg:text-3xl font-bold items-center my-4 justify-center text-[#06b6d4]`}>
+      <h1 className={`flex text-xl lg:text-3xl font-bold items-center my-4 justify-center text-ld-azul`}>
         <Icon className="mx-2 h-10 w-10" icon={icono} />
         {formato}
       </h1>
@@ -60,7 +60,7 @@ const Lineas = ({ titulo, descripcion, imagen, lista, btn }: LineasProps) => {
         <div className="flex flex-col justify-between items-center rounded-xl bg-white/90 h-full pb-6">
           <div className="flex flex-col items-center  lg:gap-4">
             <LdSvg className="w-40 md:w-96 -translate-y-5" SvgComponent={imagen} />
-            <h3 className="text-[1rem] lg:text-2xl m-4 text-center font-semibold text-[#06b6d4]">{descripcion}</h3>
+            <h3 className="text-[1rem] lg:text-2xl m-4 text-center font-semibold text-ld-azul">{descripcion}</h3>
           </div>
           <ul className="flex flex-col text-center gap-4 p-4 lg:px-10 text-[1rem] lg:text-lg">
             {lista.map((txt) => (
@@ -80,14 +80,14 @@ const LineasModulo = () => {
     <div className="flex flex-col items-center w-screen">
       <div className="flex flex-col text-center items-center p-4 max-w-[1480px] lg:px-24 text-sm lg:text-2xl mb-20 bg-white/50">
         <div className='mb-6'>
-        <Title text='Líneas de Contenido' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
+        <Title text='Líneas de Contenido' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
         </div>
         <p className="mt-16">
           Hemos buscado desarrollar un esquema que nos permita ofrecer{' '}
-          <span className="font-bold text-[#06b6d4]">oportunidades de formación para todo el mundo.</span>{' '}
+          <span className="font-bold text-ld-azul">oportunidades de formación para todo el mundo.</span>{' '}
         </p>
         <p className="m-4">
-          La clave está en la <span className="font-bold text-[#8B5BF6]">flexibilidad</span> debida a{' '}
+          La clave está en la <span className="font-bold text-ld-violeta">flexibilidad</span> debida a{' '}
           <LinkGradiente href="/identidad">nuestras necesidades identitarias</LinkGradiente>. En los talleres, los
           estudiantes más avanzados enseñan a los más nuevos y así practican también la didáctica. El material
           generado durante las clases particulares se pone a disposición como recursos para que sirva a autodidactas y
@@ -95,7 +95,7 @@ const LineasModulo = () => {
           textos sobre pedagogía y enseñanza al público general.
         </p>
         <Link className="hover:scale-110" href="https://instagram.com/ludidactas">
-          <Title text='¡Consúltanos!' color={'text-[#00B0D2]'} size={'text-4xl md:text-7xl'} />
+          <Title text='¡Consúltanos!' color={'text-ld-azul'} size={'text-4xl md:text-7xl'} />
         </Link>
       </div>
 
@@ -105,7 +105,7 @@ const LineasModulo = () => {
         {/* Lineas */}
         <div className="flex flex-col md:grid md:grid-cols-3">
           <Lineas
-            titulo={<Title radius={2} text='Técnica' color={'text-[#8B5BF6]'} size={'text-4xl md:text-6xl'} />}
+            titulo={<Title radius={2} text='Técnica' color={'text-ld-violeta'} size={'text-4xl md:text-6xl'} />}
 
             descripcion="Aprendemos mediante la experiencia en grupo, en talleres grupales estables o seminarios de temas específicos"
             lista={[
@@ -118,7 +118,7 @@ const LineasModulo = () => {
           />
 
           <Lineas
-            titulo={<Title radius={2}  text='Didáctica' color={'text-[#8B5BF6]'} size={'text-4xl md:text-6xl'} />}
+            titulo={<Title radius={2}  text='Didáctica' color={'text-ld-violeta'} size={'text-4xl md:text-6xl'} />}
             descripcion="En la línea Didáctica nos enfocamos en el proceso de transmisión:  el cómo y las condiciones para enseñar o instruir"
             lista={[
               'Dirigida a talleristas, docentes o personas que estén interesadas en la enseñanza de estas tecnologías y en el desarrollo de las actividades y los materiales que les son propios tales como rutas de aprendizaje, guías de ejercicios, trabajos prácticos, etc.',
@@ -128,7 +128,7 @@ const LineasModulo = () => {
             imagen={DidacticaIlus}
           />
           <Lineas
-            titulo={<Title radius={2}  text='Pedagógica' color={'text-[#8B5BF6]'} size={'text-4xl md:text-6xl'} />}
+            titulo={<Title radius={2}  text='Pedagógica' color={'text-ld-violeta'} size={'text-4xl md:text-6xl'} />}
             descripcion="En la línea pedagógica exploramos la relación humana con el proceso educativo. ¿Qué hace allí el docente? ¿Desde dónde se para? ¿Cómo decide qué va a mostrar? ¿Qué muestra -es decir, enseña- con su actutid, sus acciones, su forma de estar? ¿Cuál es el proyecto político y cultural que incorpora?"
             lista={[
               'Orientada a la comunidad educativa en general, principalmente a personas implicadas en el aspecto regenerativo/reflexivo del proyecto.',
@@ -182,13 +182,13 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
       {/* Disables hover delay */}
       <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger
-          className="p-4 hover:outline-8 hover:outline-dashed hover:outline-[#00B0D2]/50 rounded-xl"
+          className="p-4 hover:outline-8 hover:outline-dashed hover:outline-ld-azul/50 rounded-xl"
           onClick={() => setOpen(!open)}
         >
           <Image className="w-20 h-20 lg:w-full lg:h-full " src={url} width={100} height={100} alt="" />
         </TooltipTrigger>
         <TooltipContent className="bg-black text-center text-white w-[20em] p-5">
-          <h1 className="text-2xl pb-2 text-[#4198AA]">{nombre}</h1>
+          <h1 className="text-2xl pb-2 text-ld-azul-oscuro">{nombre}</h1>
           <p className="text-center">{descripcion}</p>
         </TooltipContent>
       </Tooltip>
@@ -202,7 +202,7 @@ const Tecnologias = () => {
       <div className="flex flex-col px-20 pt-10 h-full bg-white/80">
       <div className='flex justify-center'>
          <div className='mb-6'>
-        <Title text='Tecnologías' color={'text-[#8b5cf6]'} size={'text-5xl md:text-7xl'} />
+        <Title text='Tecnologías' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
         </div>
       </div>
         <p className=" text-center lg:p-8 mx-4 text-[1rem] lg:text-3xl ">

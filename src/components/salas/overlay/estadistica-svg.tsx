@@ -105,7 +105,7 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
 
   return (
     <div
-      className="w-auto"
+      className="w-full"
       style={{ backgroundColor: bg, margin: 2, padding: `${paddingInterno}px`, borderRadius: `${radioFondo}px` }}
     >
       <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`}>

@@ -1,33 +1,25 @@
 import { auth } from '@/app/auth'
-import EncuestasProfe from '@/components/salas/encuestas-profe'
+import { tokenWss } from '@/server/token_wss'
+import { getIdsSalasDeProfe } from '@/wss/salas/db'
+import { ConexionProfeProvider } from '@/wss-cli/providers/wss-profe-context'
 import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
-import { tokenWss } from '@/server/token_wss'
-import { redirect } from 'next/navigation'
-import { SignOut } from '../login/components/botones'
-import { ConexionProfeProvider } from '@/wss-cli/providers/wss-profe-context'
+import { SignOut } from '@/app/(herramientas)/login/components/botones'
+import SalasPageClient from './salas-page-client'
 
-export default async function SalaPage() {
+export default async function SalasPage() {
   const session = await auth()
-
-  // Esto no habría que hacerlo, hay que resolverlo con next-auth
-  if (!session || !session.user) redirect('/login?callbackUrl=/salas')
-
   const token = await tokenWss()
 
   return (
     <ConexionProfeProvider auth={{ token }}>
       <Toaster />
-      <div className="min-h-screen w-screen mx-auto flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 ">
-        <HeaderSala className="animate-aparecer" btnLogout={<SignOut />}>
-          <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user.name)}!</p>
+      <div className="h-screen flex flex-col overflow-y-auto sm:overflow-hidden bg-ld-gradiente-fondo">
+        <HeaderSala btnLogout={<SignOut />} waveHeight="h-[20px] md:h-[50px]">
+          <p className="text-md md:text-4xl text-center">¡Hola {nombreSplit(session?.user?.name)}!</p>
         </HeaderSala>
-        <div className="w-screen min-h-screen md:px-4">
-          <EncuestasProfe />
-        </div>
-
-        <div className="w-full" />
+        <SalasPageClient />
       </div>
     </ConexionProfeProvider>
   )

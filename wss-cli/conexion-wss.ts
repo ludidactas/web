@@ -5,6 +5,7 @@ import { isNullish } from 'remeda'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { configurarListeners, handshake, limpiarListeners, SocketWssCli } from './utils-socket-wss'
+import { idAleatorio } from './utils-id'
 
 // Máquina de estados finitos para la conexión al WebSocket Server (WSS).
 
@@ -81,7 +82,7 @@ export const conexionWss = create<Estado>((set, get) => ({
     }
 
     console.log(`🔌 Iniciando conexión WSS... Rol: ${auth.rol}`)
-    const miId = crypto.randomUUID() // Usamos un id para trackear la conexión y no abrir otra encima
+    const miId = idAleatorio() // Usamos un id para trackear la conexión y no abrir otra encima
     set({ status: StatusDeConexion.Conectando, error: null, _conexionActualId: miId })
 
     try {

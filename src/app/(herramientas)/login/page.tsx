@@ -10,15 +10,23 @@ type Props = {
   }>
 }
 
+/** El middleware manda `callbackUrl` como URL absoluta (`http://host/salas`); el logout lo manda relativo (`/salas`). Contemplamos ambos formatos. */
+function intentDesdeCallbackUrl(callbackUrl?: string): Intent | undefined {
+  if (!callbackUrl) return undefined
+  const pathname = callbackUrl.startsWith('/') ? callbackUrl : new URL(callbackUrl).pathname
+  return pathname === '/salas' || pathname.startsWith('/salas/') ? '/salas' : undefined
+}
+
 export default async function ProfeLoginPage({ searchParams }: Props) {
   const session = await auth()
 
   const { callbackUrl } = await searchParams
+  const intent = intentDesdeCallbackUrl(callbackUrl)
 
   if (!session?.user)
     return (
-      <div className="flex flex-col items-center bg-gradient-to-r from-cyan-500/70 to-indigo-500/70 justify-center h-[100vh] w-[100vw]">
-        <GoogleLogin className="animate-aparecer" intent={callbackUrl as Intent} />
+      <div className="flex flex-col items-center bg-ld-gradiente-fondo justify-center h-[100vh] w-[100vw]">
+        <GoogleLogin className="animate-aparecer" intent={intent} />
       </div>
     )
 

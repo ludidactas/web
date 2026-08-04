@@ -13,8 +13,8 @@ export function Status() {
       {/* Desktop */}
       <div className="hidden md:flex md:flex-col mt-4 p-4 rounded-xl">
         <div className="flex justify-between items-center mx-2">
-          <div className="flex items-center gap-2">
-            <LdSvg className="w-[1000px]" SvgComponent={EncuestasIcon} />
+          <div className="flex items-center gap-2 min-w-0">
+            <LdSvg className="w-[1000px] max-w-full h-auto" SvgComponent={EncuestasIcon} />
           </div>
 
           {estado === StatusDeConexion.Conectado ? (

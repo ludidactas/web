@@ -1,38 +1,41 @@
 import { Socket } from 'socket.io'
-import { conErrorHandling } from '../middleware/error-handling'
+import { conAck, conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
+import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
-import { Salas } from './app'
+import { Sala, Salas } from './app'
+import { configCreacionSala } from '../validators/salas'
+import { assertPuedeCrearSala } from '../suscripciones/planes'
 
-export const handlersSalaProfe = async (socket: SocketProfe) => {
-  const safe = conErrorHandling(socket)
+/** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
+async function emitirAbierta(socket: SocketProfe, sala: Sala) {
+  const profe = await profeSala(sala.id)
+  socket.emit('sala:abierta', {
+    sala: await sala.raw(),
+    polls: await profe.listarEncuestas(),
+    estudiantes: await sala.listarEstudiantes(),
+    config: await sala.config(),
+    listaPermitidos: await sala.listaPermitidos().obtener(),
+  })
+}
 
-  // Se conectó un profe, le armamos una sala:
-  const sala = await Salas.obtenerOCrear(socket)
-  const profe = await profeSala(sala.profe.email)
+/** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
+async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
+  socket.data.salaActiva = sala.id
+  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`])
+  console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
-  // Rooms
-  socket.join([`profe:${socket.data.session.email}`, `sala:${sala.id}`, `sala:${sala.id}:profe`])
-
-  console.log(`🔌 Se conectó profe ${sala.profe.email}, sala ${sala.id}`)
-
-  // Listener para actualizar configuración de la sala
   socket.on(
     'sala:actualizar_config',
     safe(async (payload: unknown) => {
       await sala.actualizarConfig(payload)
-
-      // Revocamos las sesiones que haya que revocar después de cambiar la config
       await sala.sanitizar()
-
-      // Notificamos a todos los clientes de la sala que la config se actualizó, enviándoles la nueva config (completa)
       await sala.broadcast('sala:config_actualizada', await sala.config())
     })
   )
 
-  // Listener para lista de estudiantes de la sala
   socket.on(
     'sala:listar_estudiantes',
     safe(async () => {
@@ -40,7 +43,6 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
-  // Listener para que el profe pida la asistencia (intervalos de conexión por estudiante)
   socket.on(
     'sala:pedir_asistencia',
     safe(async () => {
@@ -48,7 +50,6 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
-  // Listener para que el profe pida limpiar la lista de estudiantes sin sesiones activas
   socket.on(
     'sala:limpar_estudiantes_sala',
     safe(async () => {
@@ -56,8 +57,6 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
       socket.emit('sala:estudiantes', await sala.listarEstudiantes())
     })
   )
-
-  // Funciones de lista de acceso:
 
   socket.on(
     'sala:permitidos_agregar',
@@ -85,25 +84,91 @@ export const handlersSalaProfe = async (socket: SocketProfe) => {
     })
   )
 
-  const emitirApertura = safe(async () => {
-    socket.emit('sala:abierta', {
-      sala: await sala.raw(),
-      polls: await profe.listarEncuestas(),
-      estudiantes: await sala.listarEstudiantes(),
-      config: await sala.config(),
-      listaPermitidos: await sala.listaPermitidos().obtener(),
-    })
+  await handlersEncuestasProfe(socket, sala)
+
+  await emitirAbierta(socket, sala)
+}
+
+/** GESTIÓN (ABM) — token-only, sin sala fija. La operación se engancha al abrir (`handlersSalaActivaProfe`). */
+export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
+  const safe = conErrorHandling(socket)
+  const email = socket.data.session.email
+
+  socket.join(`profe:${email}`)
+
+  /** Emite la lista de salas a todas las conexiones del profe (room `profe:${email}`). */
+  const emitirLista = safe(async () => {
+    const salas = await Salas.getSalasDeProfe(email)
+    io.to(`profe:${email}`).emit(
+      'salas:lista',
+      salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
+    )
   })
 
-  // Listener para que el profe pida abrir la sala (enviamos en respuesta la info de la sala, encuestas y estudiantes)
-  socket.on('sala:abrir', emitirApertura)
+  /**
+   * Abre una sala en esta conexión. Modelo página-por-sala: una conexión opera UNA sala. Si ya hay
+   * otra abierta, se rechaza (para cambiar de sala se reconecta); si es la misma, se re-emite su
+   * estado sin re-registrar listeners.
+   */
+  const abrir = async (sala: Sala) => {
+    if (socket.data.salaActiva && socket.data.salaActiva !== sala.id)
+      throw new Error('Ya hay una sala abierta en esta conexión. Reconectá para operar otra.')
+    if (socket.data.salaActiva === sala.id) return emitirAbierta(socket, sala)
+    await handlersSalaActivaProfe(socket, sala, safe)
+  }
 
-  // Emitimos de inmediato la info inicial
-  await emitirApertura()
+  socket.on('salas:listar', emitirLista)
 
-  // Console logueamos la desconexión del profe
+  // Responde por ack con el id de la sala nueva; el cliente navega a `/salas/[id]` para operarla
+  // (gestión no abre salas). `emitirLista` refresca el listado en las demás pestañas del profe.
+  socket.on(
+    'sala:crear',
+    conAck(socket)(async (payload: { config?: unknown }) => {
+      await assertPuedeCrearSala(email)
+      const { listaPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
+
+      const sala = await Salas.crear(socket, config)
+      if (listaPermitidos.length > 0) await sala.listaPermitidos().agregar(listaPermitidos)
+
+      console.log(`✅ Sala creada por ${email}: ${sala.id}`)
+      await emitirLista()
+      return { idSala: sala.id }
+    })
+  )
+
+  socket.on(
+    'sala:renombrar',
+    safe(async ({ idSala, nombre }: { idSala: string; nombre: string }) => {
+      await Salas.assertEsDueño(email, idSala)
+      await (await Salas.get(idSala)).actualizarConfig({ nombre: nombre.trim() })
+      await emitirLista()
+    })
+  )
+
+  // Responde por ack: el cliente necesita saber si la eliminación realmente ocurrió (ej: sala ya
+  // borrada por otra pestaña) antes de sacarla de su lista, en vez de asumir éxito optimistamente.
+  socket.on(
+    'sala:eliminar',
+    conAck(socket)(async ({ idSala }: { idSala: string }) => {
+      await Salas.assertEsDueño(email, idSala)
+      await Salas.eliminar(email, idSala)
+      if (socket.data.salaActiva === idSala) socket.data.salaActiva = undefined
+      await emitirLista()
+    })
+  )
+
+  socket.on(
+    'sala:abrir',
+    safe(async ({ idSala }: { idSala: string }) => {
+      await Salas.assertEsDueño(email, idSala)
+      await abrir(await Salas.get(idSala))
+    })
+  )
+
+  await emitirLista()
+
   socket.on('disconnect', (reason) => {
-    console.log(`❌ Profe ${sala.profe.email} desconectado: ${reason}`)
+    console.log(`❌ Profe ${email} desconectado: ${reason}`)
   })
 }
 

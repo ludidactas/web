@@ -6,7 +6,7 @@ export function BtnAuth({ className, ...props }: ComponentProps<'button'>) {
   return (
     <button
       className={cn(
-        'text-lg w-fit h-fit p-2 border rounded-lg border-black border-b-2 border-r-2  hover:text-teal-600 hover:border-teal-600',
+        'text-lg w-fit h-fit p-2 border-4 hover:border-dashed rounded-2xl hover:transform hover:rotate-3  text-teal-600 border-teal-600',
         className
       )}
       {...props}

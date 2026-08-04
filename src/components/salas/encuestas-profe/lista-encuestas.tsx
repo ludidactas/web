@@ -18,7 +18,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CircleUserRound, Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
+import { useDebounceValue } from 'usehooks-ts'
 import { AccionesToggle } from './accionesToggle'
+import { AvanzarEstado, ESTADOS_ENCUESTA, estadoEncuesta } from './avanzar-estado'
 
 export function ListaEncuestas() {
   const { estado } = useConexionProfe()
@@ -32,19 +34,19 @@ export function ListaEncuestas() {
   const conectando = statusesDeCarga.includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio)) {
-    return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>
+    return <div className="flex-1 min-h-0 flex items-center justify-center">Cargando encuestas...</div>
   }
 
   if (confirmadoVacio && posibleVacio)
     return (
-      <div className="flex flex-col justify-center items-center grayscale">
+      <div className="flex flex-col flex-1 min-h-0 justify-center items-center grayscale">
         <p className="text-center text-slate-500 text-xl m-4"> ¡Aún no haz hecho ninguna pregunta!</p>
-        <LdSvg className="w-3/4" SvgComponent={profeUps} />
+        <LdSvg className="max-w-[75%] max-h-full w-auto h-auto" SvgComponent={profeUps} />
       </div>
     )
 
   return (
-    <ScrollArea className="h-[500px] overflow-y-auto" scrollHideDelay={1000}>
+    <ScrollArea className="flex-1 min-h-0 overflow-y-auto" scrollHideDelay={1000}>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}
@@ -58,7 +60,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
   const totalVotos = encuesta.opciones.reduce((total, opcion) => total + opcion.votos, 0)
-  const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
+  // Debounced: el label de estado no debe parpadear mientras "avanzar" dispara varios cambios en
+  // cadena (ej: publicar+abrir+enfocar) — solo lo actualizamos una vez que el valor se estabiliza.
+  const [estado] = useDebounceValue(estadoEncuesta(encuesta), 500)
+  const { label: labelEstado, className: claseEstado, descripcion: descripcionEstado } = ESTADOS_ENCUESTA[estado]
 
   return (
     <div className="p-2 mx-4  mb-2 rounded-3xl">
@@ -68,9 +73,9 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
           <AccordionTrigger
             className={cn(
               'flex flex-col w-full gap-2',
-              'bg-[#00B0D2]/15 text-[#00B0D2] border-3 border-[#00B0D2]/30',
+              'bg-ld-azul/15 text-ld-azul border-3 border-ld-azul/30',
               'rounded-2xl p-4 md:px-8 cursor-pointer ',
-              'hover:bg-[#00B0D2]/25 transition-colors',
+              'hover:bg-ld-azul/25 transition-colors',
               'data-[state=open]:rounded-b-none'
             )}
           >
@@ -82,16 +87,20 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
                   <div className="flex items-center gap-2 text-indigo-500 ">
-                    <span
-                      className={cn(' text-sm', {
-                        'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
-                        'text-rose-800': estado === 'Cerrada',
-                        'text-indigo-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
-                      })}
-                    >
-                      {estado}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={cn('text-sm', claseEstado)}>{labelEstado}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{descripcionEstado}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    {estado === 'enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'} />}
+                    {/* @todo: AvanzarEstado renderiza un <button>, anidado en el <button> de AccordionTrigger.
+                        HTML inválido (warning en consola), lo toleramos por ahora. */}
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <AvanzarEstado encuesta={encuesta} />
                     </span>
-                    {estado === 'Enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'} />}
                   </div>
                   <span className="text-[0.6rem]  text-slate-400 text-right">
                     {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}
@@ -135,10 +144,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 
           {/* Contenido desplegado */}
           <AccordionContent>
-            <div className="relative rounded-xl border-4 w-full border-t-0 rounded-t-none border-[#00B0D2]/20 px-10">
+            <div className="relative rounded-xl border-4 w-full border-t-0 rounded-t-none border-ld-azul/20 px-10">
               {/* Opciones */}
               {encuesta.opciones.length > 0 && (
-                <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-[#00B0D2]/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">
+                <ol className="list-[lower-latin] text-xs md:text-xl font-bold  text-ld-azul/80 py-4 pl-4 flex flex-col justify-center gap-2 w-full">
                   <div className="flex justify-end">
                     {encuesta.isRevealed && <Icon icon={'iconamoon:eye'} className="text-cyan-500 w-8 h-8" />}{' '}
                     {!encuesta.isRevealed && <Icon icon={'iconamoon:eye-off'} className="text-slate-500 w-8 h-8" />}
@@ -172,7 +181,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
                   ))}
 
                   {/* Total participantes */}
-                  <div className="flex mt-2 text-md mx-16 text-[#00B0D2] border-[#00B0D2] font-bold text-center items-center justify-between gap-4 border-b-2 border-dotted">
+                  <div className="flex mt-2 text-md mx-16 text-ld-azul border-ld-azul font-bold text-center items-center justify-between gap-4 border-b-2 border-dotted">
                     <p className="text-xs"> Total Participantes </p>
                     <p>{totalVotos}</p>{' '}
                   </div>
@@ -209,8 +218,8 @@ function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes:
           {votantes.length > 0 &&
             votantes.map((nombre) => (
               <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={nombre}>
-                <CircleUserRound className="w-4 h-4 text-[#4198AA]" />
-                <p className="text-sm text-[#4198AA]">{nombre}</p>
+                <CircleUserRound className="w-4 h-4 text-ld-azul-oscuro" />
+                <p className="text-sm text-ld-azul-oscuro">{nombre}</p>
               </div>
             ))}
         </div>

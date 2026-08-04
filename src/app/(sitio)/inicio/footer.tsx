@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { Instagram } from 'lucide-react'
 import Image from 'next/image'
 import { titulo } from '@/components/fonts'
 import ShapeDividerWaves from '../custom/shape-divider'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 export default function Footer() {
   return (
@@ -21,11 +21,9 @@ export default function Footer() {
             href="https://www.instagram.com/ludidactas/"
             target="_blank"
           >
-            <div className="hidden lg:flex flex-col items-center">
-              <Instagram width={35} height={35} /> <p className="m-0 text-2xl">@ludidactas</p>{' '}
-            </div>
-            <div className="flex lg:hidden flex-col items-center">
-              <Instagram width={20} height={20} /> <p className="m-0 text-md">@ludidactas</p>{' '}
+            <div className="flex flex-col items-center">
+              <Icon className='w-6 h-6 md:w-10 md:h-10' icon={'mdi:instagram'}/>
+              <p className="m-0 text-xl md:text-2xl">@ludidactas</p>
             </div>
           </Link>
 

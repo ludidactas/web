@@ -47,6 +47,8 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
 
       enfocar: (id: string) => socket?.emit('poll:focus', { pollId: id }),
 
+      desenfocar: (id: string) => socket?.emit('poll:unfocus', { pollId: id }),
+
       revelar: (id: string) => socket?.emit('poll:reveal', { pollId: id }),
 
       ocultar: (id: string) => socket?.emit('poll:unreveal', { pollId: id }),

@@ -49,17 +49,25 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   // Hacemos login como profe de prueba
   await loginFake(profePage, profe)
 
-  // Vamos a la sala y agarramos el link
+  // Vamos a la gestión de salas y abrimos el flujo de "Crear sala"
   await profePage.goto('/salas')
+  await profePage.getByRole('button', { name: 'Crear sala' }).click()
 
-  /**
-   * @todo: Acá configurar la sala en vez de asumir que de una entramos
-   */
+  if (config.metodo_login === MetodosLogin.DNI) {
+    await profePage.getByText('DNI obligatorio').click()
+    if (config.solo_invitados) {
+      await profePage.getByText('Lista de Invitadxs', { exact: true }).click()
+      await profePage.getByText('Permitir ingreso sólo a invitadxs').click()
+    }
+  }
 
-  const linkSala = profePage.locator('p').filter({ hasText: 'Tu sala:' }).locator('a').first()
-  const fullUrl = await linkSala.getAttribute('href')
+  await profePage.getByRole('button', { name: 'Crear' }).click()
+  await profePage.waitForURL(/\/salas\/.+/)
 
-  if (!fullUrl) throw new Error('No se pudo obtener el link de la sala')
+  // El link público del estudiante es /sala/<id>/ con el mismo id que la URL de operación
+  const idSala = new URL(profePage.url()).pathname.split('/').filter(Boolean).pop()
+  if (!idSala) throw new Error('No se pudo obtener el id de la sala')
+  const fullUrl = `/sala/${idSala}/`
 
   // Definimos la función para que un estudiante entre a la sala
   const estudiante = async ({ nombre, dni }: LoginEstudiante) => {

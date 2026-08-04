@@ -1,5 +1,12 @@
 import type { Config } from 'tailwindcss'
 
+// Paleta de marca LD (ver identidad visual). Estos son los únicos hex "crudos"
+// permitidos: todo el resto del código debe referenciar las clases ld-violeta/ld-azul.
+const ldVioletaClaro = '#8345FE'
+const ldVioletaOscuro = '#6F41CB'
+const ldAzulClaro = '#00B0D2'
+const ldAzulOscuro = '#4198AA'
+
 export default {
   darkMode: ['class'],
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
@@ -46,6 +53,21 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        'ld-violeta': {
+          DEFAULT: ldVioletaClaro,
+          oscuro: ldVioletaOscuro,
+        },
+        'ld-azul': {
+          DEFAULT: ldAzulClaro,
+          oscuro: ldAzulOscuro,
+        },
+      },
+      backgroundImage: {
+        // Gradiente de marca para texto (bg-clip-text), color sólido.
+        'ld-gradiente-texto': `linear-gradient(to right, ${ldAzulClaro}, ${ldVioletaClaro})`,
+        // Gradiente de marca para fondos de página, con la opacidad ya incorporada.
+        // Segundo color dejamos indigo-500 de Tailwind (no ld-violeta).
+        'ld-gradiente-fondo': `linear-gradient(to right, rgb(0 176 210 / 0.7), rgb(99 102 241 / 0.7))`,
       },
       keyframes: {
         fadeIn: {
@@ -75,7 +97,7 @@ export default {
 
         'border-pulse': {
           '0%, 100%': {
-            borderColor: '#6F41CB',
+            borderColor: ldVioletaOscuro,
             boxShadow: '0 0 0px 0px rgba(111, 65, 203, 0)',
           },
           '50%': {

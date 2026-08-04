@@ -5,7 +5,7 @@ module.exports = {
       name: 'wss',
       script: 'bun',
       args: 'wss/server.ts',
-      cwd: '/home/vlad/poc_roadmaps/',
+      cwd: '/home/vlad/web/',
       interpreter: 'none',
       env: {
         NODE_ENV: 'production',

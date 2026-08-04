@@ -2,13 +2,7 @@
 import Link from 'next/link'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Outlined } from '@/components/fx/filtros'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 interface DesafioCardProps {
   numero: number
   nombre: string
@@ -33,16 +27,29 @@ const btnContent = (label: string) => (
   </Outlined>
 )
 
-export function DesafioCard({ numero, nombre, descripcion, imagenUrl, previewUrl, pistas, solucionUrl }: DesafioCardProps) {
+export function DesafioCard({
+  numero,
+  nombre,
+  descripcion,
+  imagenUrl,
+  previewUrl,
+  pistas,
+  solucionUrl,
+}: DesafioCardProps) {
   return (
-    <div className="flex items-center gap-6 w-full max-w-4xl my-4">
+    <div className="flex flex-col md:flex-row items-center gap-6 w-full max-w-4xl my-4">
       {/* Número */}
       <Outlined outlineColor="white" radius={3} className="text-7xl font-bold text-[#4c1d95] w-16 text-center shrink-0">
         {numero}
       </Outlined>
 
       {/* Card preview */}
-      <Link href={previewUrl} target="_blank" rel="noopener noreferrer" className="flex-1 hover:scale-[1.02] transition-transform">
+      <Link
+        href={previewUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 hover:scale-[1.02] transition-transform"
+      >
         <div className="bg-white/30 border-2 border-white/60 rounded-2xl p-6 min-h-[140px] flex flex-col justify-between shadow">
           <div className="flex-1 rounded-xl mb-4 min-h-[60px] overflow-hidden">
             {imagenUrl ? (
@@ -58,7 +65,7 @@ export function DesafioCard({ numero, nombre, descripcion, imagenUrl, previewUrl
       </Link>
 
       {/* Botones */}
-      <div className="flex flex-col gap-4 shrink-0">
+      <div className="flex flex-row md:flex-col flex-wrap justify-center gap-4 shrink-0">
         <Dialog>
           <DialogTrigger asChild>
             <div>{btnContent('Ver pistas')}</div>
@@ -74,7 +81,9 @@ export function DesafioCard({ numero, nombre, descripcion, imagenUrl, previewUrl
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={pista} alt={`Pista ${i + 1}`} className="w-full rounded-lg" />
                   ) : (
-                    <>{i + 1}. {pista}</>
+                    <>
+                      {i + 1}. {pista}
+                    </>
                   )}
                 </li>
               ))}

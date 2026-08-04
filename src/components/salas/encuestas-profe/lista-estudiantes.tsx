@@ -52,10 +52,10 @@ export const ListaEstudiantes = () => {
         {/* Header: tabs + settings gear */}
         <div className={cn("flex items-center gap-2 mb-3")}>
           <TabsList className={cn("flex-1 h-fit bg-slate-100")}>
-            <TabsTrigger value="tu-sala" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-[#6F41CB]")}>
+            <TabsTrigger value="tu-sala" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-ld-violeta-oscuro")}>
               <School size={18} /> Tu sala
             </TabsTrigger>
-            <TabsTrigger value="participantes" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-[#00B0D2]")}>
+            <TabsTrigger value="participantes" className={cn("flex-1 flex items-center gap-2 text-lg font-semibold py-2.5 data-[state=active]:text-ld-azul")}>
               <Users size={18} /> Participantes
             </TabsTrigger>
           </TabsList>
@@ -64,7 +64,7 @@ export const ListaEstudiantes = () => {
             <HoverCard>
               <PanelConfigSala>
                 <HoverCardTrigger asChild>
-                  <button className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}>
+                  <button className={cn("items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110")}>
                     <Settings size={16} />
                   </button>
                 </HoverCardTrigger>
@@ -181,7 +181,7 @@ export const ListaEstudiantes = () => {
             <HoverCard>
               <HoverCardTrigger asChild>
                 <button
-                  className={cn("flex text-center w-fit rounded-full bg-[#6F41CB] p-2 text-white font-bold hover:scale-110")}
+                  className={cn("flex text-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white font-bold hover:scale-110")}
                   onClick={limpiarEstudiantes}
                 >
                   <Eraser size={16} />
@@ -194,7 +194,7 @@ export const ListaEstudiantes = () => {
             <HoverCard>
               <HoverCardTrigger asChild>
                 <button
-                  className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110")}
+                  className={cn("items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110")}
                   onClick={handleCopy(datosEstudiantes)}
                 >
                   {justCopied ? <SquareCheckBig size={16} /> : <Copy size={16} />}
@@ -207,7 +207,7 @@ export const ListaEstudiantes = () => {
             <HoverCard>
               <HoverCardTrigger asChild>
                 <button
-                  className={cn("items-center w-fit rounded-full bg-[#6F41CB] p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed")}
+                  className={cn("items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed")}
                   onClick={handleExportToExcel}
                   disabled={estudiantes.length === 0}
                 >

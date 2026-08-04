@@ -54,7 +54,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
             <div className="flex flex-col text-center text-lg md:text-3xl">
               <p>
                 Estás en la{' '}
-                <span className="text-lg md:text-4xl text-[#8345FE] rounded-full md:px-4 ">
+                <span className="text-lg md:text-4xl text-ld-violeta rounded-full md:px-4 ">
                   Sala de Encuestas
                   <LdSvg className="w-10 md:w-20 inline-block mx-1" SvgComponent={IconEnc} />
                 </span>

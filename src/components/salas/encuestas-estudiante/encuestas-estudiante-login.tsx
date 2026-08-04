@@ -171,7 +171,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
               />
             )}
           </div>
-          <Button className=" bg-[#6F41CB] font-semibold" type="button" onClick={handleConectarse}>
+          <Button className=" bg-ld-violeta-oscuro font-semibold" type="button" onClick={handleConectarse}>
             Conectarse con nombre {pideDni ? 'y DNI' : ''}
           </Button>
 

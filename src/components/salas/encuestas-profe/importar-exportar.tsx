@@ -173,7 +173,7 @@ export function ImportarExportar() {
   return (
     <div className="flex gap-3 items-center justify-center text-sm mt-1">
       <button
-        className="flex items-center gap-1 text-[#00B0D2] hover:font-bold hover:underline disabled:text-slate-300 disabled:no-underline disabled:font-normal"
+        className="flex items-center gap-1 text-ld-azul hover:font-bold hover:underline disabled:text-slate-300 disabled:no-underline disabled:font-normal"
         onClick={() => setExportarAbierto(true)}
         disabled={encuestas.length === 0}
         title="Descargar las preguntas de esta sala como un archivo YAML"
@@ -190,7 +190,7 @@ export function ImportarExportar() {
             </DialogDescription>
           </DialogHeader>
 
-          <p className="font-bold text-[#8345FE]">Nombre de la colección</p>
+          <p className="font-bold text-ld-violeta">Nombre de la colección</p>
           <input
             className="rounded border p-2"
             type="text"
@@ -210,7 +210,7 @@ export function ImportarExportar() {
       </Dialog>
 
       <button
-        className="flex items-center gap-1 text-[#00B0D2] hover:font-bold hover:underline"
+        className="flex items-center gap-1 text-ld-azul hover:font-bold hover:underline"
         onClick={() => setAbierto(true)}
         title="Crear preguntas a partir de un archivo o una colección"
       >
@@ -227,7 +227,7 @@ export function ImportarExportar() {
           </DialogHeader>
 
           {/* Subir archivo */}
-          <p className="font-bold text-[#8345FE]">Desde un archivo</p>
+          <p className="font-bold text-ld-violeta">Desde un archivo</p>
           <input
             ref={inputArchivo}
             type="file"
@@ -244,7 +244,7 @@ export function ImportarExportar() {
           </button>
 
           {/* Desde URL */}
-          <p className="font-bold text-[#8345FE] mt-2">Desde una URL</p>
+          <p className="font-bold text-ld-violeta mt-2">Desde una URL</p>
           <div className="flex gap-2">
             <input
               className="flex-1 min-w-0 rounded border p-2"
@@ -255,7 +255,7 @@ export function ImportarExportar() {
               onKeyDown={(evento) => evento.key === 'Enter' && importarUrl()}
             />
             <button
-              className="flex items-center gap-1 rounded-full bg-[#8345FE] text-white px-4 py-2 disabled:bg-slate-300"
+              className="flex items-center gap-1 rounded-full bg-ld-violeta text-white px-4 py-2 disabled:bg-slate-300"
               onClick={importarUrl}
               disabled={importando || !url.trim()}
             >
@@ -266,16 +266,16 @@ export function ImportarExportar() {
           {/* Presets */}
           {presets.length > 0 && (
             <>
-              <p className="font-bold text-[#8345FE] mt-2">Colecciones de ejemplo</p>
+              <p className="font-bold text-ld-violeta mt-2">Colecciones de ejemplo</p>
               <div className="flex flex-col gap-2">
                 {presets.map((preset) => (
                   <button
                     key={preset.archivo}
-                    className="flex flex-col items-start rounded-lg border border-[#8345FE]/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-[#8345FE] disabled:opacity-50"
+                    className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
                     onClick={() => importarDesdeArchivoRemoto(preset.archivo)}
                     disabled={importando}
                   >
-                    <span className="font-semibold text-[#8345FE]">{preset.nombre}</span>
+                    <span className="font-semibold text-ld-violeta">{preset.nombre}</span>
                     {preset.descripcion && <span className="text-xs text-slate-500">{preset.descripcion}</span>}
                   </button>
                 ))}

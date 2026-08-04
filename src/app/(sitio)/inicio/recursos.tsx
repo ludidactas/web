@@ -11,7 +11,7 @@ export default function Recursos() {
   return (
     <div className="recursosini ">
       <Pantalla
-        title={<Title radius={2} text={'Salas y Recursos'} color={'text-[#00B0D2]'} size={'text-4xl md:text-7xl'} />}
+        title={<Title radius={2} text={'Salas y Recursos'} color={'text-ld-violeta'} size={'text-4xl md:text-7xl'} />}
         one={
           <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
             <p>

@@ -6,7 +6,7 @@ export const LinkGradiente = (props: ComponentProps<typeof NextLink>) => (
   <NextLink
     {...props}
     className={cn(
-      `bg-gradient-to-r from-cyan-500 to-violet-500 
+      `bg-ld-gradiente-texto
     text-transparent bg-clip-text
     hover:underline border-violet-500 font-bold`,
       props.className

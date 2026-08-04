@@ -10,11 +10,11 @@ export default function Contacto() {
     <div className="contactoini">
       <Pantalla
         classname="mb-0"
-        title={<Title radius={2} text={'Contacto'} color={'text-[#00B0D2]'} size={'text-4xl md:text-7xl'}/>
+        title={<Title radius={2} text={'Contacto'} color={'text-ld-azul'} size={'text-4xl md:text-7xl'}/>
        }
         one={
           <div className="flex flex-col max-w-[720px] text-center items-center md:p-8 text-[1.5em] md:text-3xl gap-4">
-            <p className="text-[#46BFD7] font-bold md:mb-4">
+            <p className="text-ld-azul font-bold md:mb-4">
               ¡Preguntar es clave en todo proceso de enseñanza y aprendizaje!
             </p>
             <p>

@@ -27,7 +27,7 @@ export default function LoadingSala({ mensaje, overlay = false, error = false }:
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center bg-gradient-to-r from-cyan-500 to-indigo-500',
+        'flex flex-col items-center justify-center bg-ld-gradiente-fondo',
         overlay ? 'fixed inset-0 z-50 h-screen w-screen' : 'h-screen w-screen'
       )}
     >

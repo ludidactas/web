@@ -38,7 +38,7 @@ import { LdSvg } from '@/components/custom/ld-svg'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Pencil, Trash2 } from 'lucide-react'
+import { CirclePlus, Pencil, Trash2 } from 'lucide-react'
 import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
 import { Outlined } from '@/components/fx/filtros'
@@ -367,7 +367,7 @@ function FilaSala({
   )
 }
 
-function VerSalas() {
+function VerSalas({ onCrear }: { onCrear: () => void }) {
   const { estado, renombrarSala, eliminarSala } = useConexionProfe()
   const salas = storeSalas((s) => s.salas)
 
@@ -378,7 +378,18 @@ function VerSalas() {
   if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
 
   if (salas.length === 0)
-    return <p className={cn('flex p-10 text-muted-foreground justify-center')}>No tenés ninguna sala creada todavía.</p>
+    return (
+      <div className={cn('flex flex-col items-center gap-4 p-10')}>
+        <p className={cn('text-muted-foreground')}>No tenés ninguna sala creada todavía.</p>
+        <button
+          onClick={onCrear}
+          className="flex items-center gap-2 font-semibold text-white text-sm px-4 py-3 rounded-full bg-ld-azul hover:bg-ld-azul/80 transition-colors md:text-base"
+        >
+          <CirclePlus className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+          Crear una sala
+        </button>
+      </div>
+    )
 
   return (
     <div className={cn('p-10 flex flex-col gap-3')}>
@@ -388,11 +399,18 @@ function VerSalas() {
           <FilaSala key={sala.id} sala={sala} onRenombrar={renombrarSala} onEliminar={eliminarSala} />
         ))}
       </ul>
+      <button
+        onClick={onCrear}
+        className="w-max self-center flex items-center gap-2 font-semibold text-white text-sm px-4 py-3 rounded-full bg-ld-azul hover:bg-ld-azul/80 transition-colors md:text-base"
+      >
+        <CirclePlus className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+        Crear sala
+      </button>
     </div>
   )
 }
 
-export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: string | null }) {
+export default function SalasPageClient() {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
   const { estado, listarSalas } = useConexionProfe()
 
@@ -457,7 +475,7 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
       </Sidebar>
 
       <SidebarInset className="rounded min-h-0 overflow-y-auto">
-        {activo === 'ver' && <VerSalas />}
+        {activo === 'ver' && <VerSalas onCrear={() => setActivo('crear')} />}
         {activo === 'cuenta' && <Cuenta />}
         <div className={activo !== 'crear' ? 'hidden' : ''}>
           <FormCrearSala />

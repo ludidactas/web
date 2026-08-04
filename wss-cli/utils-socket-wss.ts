@@ -1,8 +1,9 @@
 import { Pasaporte } from '@/wss/validators/auth'
 import { io, Socket } from 'socket.io-client'
 
-if (!process.env.NEXT_PUBLIC_ENCUESTA_HOST) {
-  throw new Error('Falta la dirección del host de websockets!')
+const encuestaHost = process.env.NEXT_PUBLIC_ENCUESTA_HOST
+if (!encuestaHost) {
+  throw new Error('Falta NEXT_PUBLIC_ENCUESTA_HOST')
 }
 
 /**
@@ -14,7 +15,7 @@ export interface SocketWssCli extends Socket {
 
 /** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
 export async function handshake(auth: Pasaporte) {
-  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}`, {
+  return io(encuestaHost, {
     auth,
     autoConnect: false,
     reconnection: false,

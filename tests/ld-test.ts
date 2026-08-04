@@ -49,9 +49,9 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   // Hacemos login como profe de prueba
   await loginFake(profePage, profe)
 
-  // Vamos a la gestión de salas y abrimos el flujo de "Agregar sala"
+  // Vamos a la gestión de salas y abrimos el flujo de "Crear sala"
   await profePage.goto('/salas')
-  await profePage.getByRole('button', { name: 'Agregar sala' }).click()
+  await profePage.getByRole('button', { name: 'Crear sala' }).click()
 
   if (config.metodo_login === MetodosLogin.DNI) {
     await profePage.getByText('DNI obligatorio').click()

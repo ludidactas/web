@@ -35,6 +35,11 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Pencil, Trash2 } from 'lucide-react'
+import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
 import { Outlined } from '@/components/fx/filtros'
 
@@ -65,15 +70,21 @@ function FormCrearSala() {
   const router = useRouter()
   const { crearSala, estado } = useConexionProfe()
   const [form, setForm] = useState<FormState>(FORM_INICIAL)
-  const [ingresar, setIngresar] = useState(true)
   const [creando, startCreacion] = useTransition()
 
   const conectando = estado === StatusDeConexion.Conectando
   const pideDni = form.metodoLogin === MetodosLogin.DNI
   const nombreValido = form.nombre.trim().length > 0
+  const razonDisabled = conectando
+    ? 'Conectando...'
+    : creando
+    ? 'Creando la sala...'
+    : !nombreValido
+    ? 'Ingresá un nombre para la sala'
+    : null
 
   const handleCrear = () => {
-    if (conectando || creando || !nombreValido) return
+    if (razonDisabled) return
     startCreacion(async () => {
       try {
         // El OK se muestra cuando ocurre lo último entre la confirmación y el piso de carga.
@@ -89,8 +100,7 @@ function FormCrearSala() {
           delay(CARGA_MINIMA_MS),
         ])
         toast.success('Sala creada con éxito')
-        if (ingresar) router.push(`/salas/${idSala}`)
-        else setForm(FORM_INICIAL)
+        router.push(`/salas/${idSala}`)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
       }
@@ -109,24 +119,14 @@ function FormCrearSala() {
   return (
     <div className={cn('flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20')}>
       <h2 className={cn('text-xl font-bold text-center leading-6 my-4')}>Configuración de la sala</h2>
-    <div className={cn('flex items-center justify-between gap-4')}>
-      <input
-        type="text"
-        value={form.nombre}
-        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-        placeholder="Ingresa el nombre de la sala"
-        className={cn('rounded-lg px-3 h-10 text-xs sm:text-lg sm:py-2 w-full')}
-      />
-
-       <label className={cn('flex items-center justify-center gap-2 mt-2 cursor-pointer select-none w-1/2')}>
-        <input
-          type="checkbox"
-          checked={ingresar}
-          onChange={(e) => setIngresar(e.target.checked)}
-          className={cn('h-4 w-4 accent-teal-500')}
+      <div className={cn('flex items-center justify-between gap-4')}>
+        <Input
+          type="text"
+          value={form.nombre}
+          onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+          placeholder="Ingresa el nombre de la sala"
+          className={cn('h-10 text-xs sm:text-lg sm:py-2 w-full')}
         />
-        <span>Ir a la sala al crear</span>
-      </label>
       </div>
 
       <SwitchCard
@@ -201,16 +201,23 @@ function FormCrearSala() {
         )}
       </AnimatePresence>
 
-      <button
-        className={cn(
-          'mt-2 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full self-center transition-opacity',
-          (conectando || creando || !nombreValido) && 'opacity-50 cursor-not-allowed'
-        )}
-        onClick={handleCrear}
-        disabled={conectando || creando || !nombreValido}
-      >
-        {creando ? 'Creando...' : conectando ? 'Conectando...' : ingresar ? 'Crear e ingresar' : 'Crear'}
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="self-center" tabIndex={razonDisabled ? 0 : -1}>
+            <button
+              className={cn(
+                'mt-2 px-6 py-2 text-white text-xl border-2 bg-teal-500 rounded-full transition-opacity',
+                razonDisabled && 'opacity-50 cursor-not-allowed pointer-events-none'
+              )}
+              onClick={handleCrear}
+              disabled={!!razonDisabled}
+            >
+              {creando ? 'Creando...' : conectando ? 'Conectando...' : 'Crear e ingresar'}
+            </button>
+          </span>
+        </TooltipTrigger>
+        {razonDisabled && <TooltipContent>{razonDisabled}</TooltipContent>}
+      </Tooltip>
     </div>
   )
 }
@@ -242,39 +249,113 @@ function Cuenta() {
   )
 }
 
-//   return (
-//     <Dialog>
-//       <DialogTrigger asChild>
-//         <button className="px-4 py-2 border rounded-full text-center text-red-600 border-red-600 hover:bg-red-50 transition-colors w-fit">
-//           Eliminar sala
-//         </button>
-//       </DialogTrigger>
-//       <DialogContent aria-description="Confirmar eliminación de la sala">
-//         <DialogHeader>
-//           <DialogTitle>¿Eliminar la sala {idSala}?</DialogTitle>
-//         </DialogHeader>
-//         <p className="text-muted-foreground">
-//           Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
-//           asistencia, encuestas). Esta acción no se puede deshacer.
-//         </p>
-//         <DialogFooter className="gap-2">
-//           <DialogClose asChild>
-//             <button className="px-4 py-2 border rounded-full">Cancelar</button>
-//           </DialogClose>
-//           <DialogClose asChild>
-//             <button
-//               className="px-4 py-2 text-white rounded-full bg-red-600 disabled:opacity-50"
-//               onClick={handleEliminar}
-//               disabled={eliminando}
-//             >
-//               {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
-//             </button>
-//           </DialogClose>
-//         </DialogFooter>
-//       </DialogContent>
-//     </Dialog>
-//   )
-// }
+function FilaSala({
+  sala,
+  onRenombrar,
+  onEliminar,
+}: {
+  sala: SalaResumen
+  onRenombrar: (id: string, nuevoNombre: string) => void
+  onEliminar: (id: string) => void
+}) {
+  const nombre = sala.nombre || `Sala ${sala.id}`
+  const [renombrarAbierto, setRenombrarAbierto] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState(sala.nombre ?? '')
+  const nuevoNombreValido = nuevoNombre.trim().length > 0
+
+  const handleConfirmarRenombrar = () => {
+    if (!nuevoNombreValido) return
+    onRenombrar(sala.id, nuevoNombre.trim())
+    setRenombrarAbierto(false)
+  }
+
+  return (
+    <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
+      <Link
+        href={`/salas/${sala.id}`}
+        className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
+      >
+        {nombre}
+      </Link>
+      <div className={cn('flex items-center gap-1 pr-2')}>
+        <Dialog
+          open={renombrarAbierto}
+          onOpenChange={(abierto) => {
+            setRenombrarAbierto(abierto)
+            if (abierto) setNuevoNombre(sala.nombre ?? '')
+          }}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Renombrar</p>
+            </TooltipContent>
+          </Tooltip>
+          <DialogContent aria-description="Renombrar la sala">
+            <DialogHeader>
+              <DialogTitle>Renombrar sala</DialogTitle>
+            </DialogHeader>
+            <Input
+              autoFocus
+              value={nuevoNombre}
+              onChange={(e) => setNuevoNombre(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleConfirmarRenombrar()}
+              placeholder="Nombre de la sala"
+            />
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button onClick={handleConfirmarRenombrar} disabled={!nuevoNombreValido}>
+                Guardar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 hover:text-red-600">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Eliminar</p>
+            </TooltipContent>
+          </Tooltip>
+          <DialogContent aria-description="Confirmar eliminación de la sala">
+            <DialogHeader>
+              <DialogTitle>¿Eliminar la sala {nombre}?</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground">
+              Se va a desconectar a todos los que estén participando, y se va a borrar toda su data (estudiantes,
+              asistencia, encuestas). Esta acción no se puede deshacer.
+            </p>
+            <DialogFooter className="gap-2">
+              <DialogClose asChild>
+                <Button variant="outline">Cancelar</Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button variant="destructive" onClick={() => onEliminar(sala.id)}>
+                  Eliminar
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </li>
+  )
+}
 
 function VerSalas() {
   const { estado, renombrarSala, eliminarSala } = useConexionProfe()
@@ -283,12 +364,6 @@ function VerSalas() {
   // "Quieto" ya no implica "cargando": si el profe no tiene sala, el socket se queda quieto a propósito
   // (recién conecta cuando aprieta "Crear"), así que no hay nada por lo que esperar.
   const cargando = salas === null || estado === StatusDeConexion.Quieto || estado === StatusDeConexion.Conectando
-
-  const handleRenombrar = (id: string, actual?: string) => {
-    const nuevo = window.prompt('Nuevo nombre de la sala:', actual ?? '')
-    if (nuevo === null) return
-    renombrarSala(id, nuevo)
-  }
 
   if (cargando) return <p className={cn('p-4 text-muted-foreground')}>Cargando...</p>
 
@@ -300,34 +375,7 @@ function VerSalas() {
       <p className={cn('text-2xl')}>Tus salas:</p>
       <ul className={cn('flex flex-col gap-2')}>
         {salas.map((sala) => (
-          <li
-            key={sala.id}
-            className={cn('flex items-center justify-between gap-2 px-4 py-3 border rounded-xl bg-white/60')}
-          >
-            <span className={cn('font-medium')}>{sala.nombre || `Sala ${sala.id}`}</span>
-            <div className={cn('flex items-center gap-2')}>
-              <Link
-                href={`/salas/${sala.id}`}
-                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
-              >
-                Ingresar
-              </Link>
-              <button
-                onClick={() => handleRenombrar(sala.id, sala.nombre)}
-                className={cn('px-3 py-1 border rounded-full hover:bg-slate-50 transition-colors')}
-              >
-                Renombrar
-              </button>
-              <button
-                onClick={() => eliminarSala(sala.id)}
-                className={cn(
-                  'px-3 py-1 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition-colors'
-                )}
-              >
-                Eliminar
-              </button>
-            </div>
-          </li>
+          <FilaSala key={sala.id} sala={sala} onRenombrar={renombrarSala} onEliminar={eliminarSala} />
         ))}
       </ul>
     </div>
@@ -355,8 +403,12 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
           <SidebarHeader className="flex-row items-center gap-4 sm:flex-col sm:items-start">
             <LdSvg className="w-24 shrink-0 sm:hidden" SvgComponent={IlustSalas} />
             <div className="flex flex-col">
-              <Outlined outlineColor='white' className='text-cyan-500 text-5xl sm:text-7xl'>Salas</Outlined>
-              <Outlined outlineColor='white' radius={2} className='text-black font-bold text-md sm:text-xl'>Crea una sala y compartela con otrxs</Outlined>
+              <Outlined outlineColor="white" className="text-cyan-500 text-5xl sm:text-7xl">
+                Salas
+              </Outlined>
+              <Outlined outlineColor="white" radius={2} className="text-black font-bold text-md sm:text-xl">
+                Crea una sala y compartela con otrxs
+              </Outlined>
             </div>
           </SidebarHeader>
           <SidebarMenu>
@@ -390,7 +442,7 @@ export default function SalasPageClient({ idSalaInicial }: { idSalaInicial: stri
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-         <LdSvg className="hidden sm:block sm:w-52" SvgComponent={IlustSalas} />
+          <LdSvg className="hidden sm:block sm:w-52" SvgComponent={IlustSalas} />
         </SidebarFooter>
       </Sidebar>
 

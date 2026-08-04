@@ -48,7 +48,15 @@ export function AgregarPregunta() {
     data: encuesta,
     success,
     error,
-  } = crearEncuesta.safeParse({ pregunta, opciones, admiteAportes, admiteMultiplesVotos, maxMultiplesVotos })
+  } = crearEncuesta.safeParse({
+    pregunta,
+    opciones,
+    admiteAportes,
+    admiteMultiplesVotos,
+    maxMultiplesVotos,
+    isOpen: true,
+    isPublished: true,
+  })
 
   const postearPregunta = () => {
     if (!success) return
@@ -82,9 +90,7 @@ export function AgregarPregunta() {
         <DialogClose className="absolute right-4 top-4">
           <Icon className="w-6 h-6 text-ld-violeta" icon={'material-symbols:close-rounded'} />
         </DialogClose>
-        <DialogTitle className='text-ld-violeta text-center text-xl md:text-3xl'>
-          Agregar pregunta
-        </DialogTitle>
+        <DialogTitle className="text-ld-violeta text-center text-xl md:text-3xl">Agregar pregunta</DialogTitle>
 
         {/* Pregunta */}
         <div>

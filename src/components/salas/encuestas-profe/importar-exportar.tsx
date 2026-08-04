@@ -113,7 +113,8 @@ export function ImportarExportar() {
       )
     if (omitidas > 0)
       partes.push(
-        `${omitidas} ya ${omitidas === 1 ? 'existía' : 'existían'} en la sala y no se ${omitidas === 1 ? 'duplicó' : 'duplicaron'
+        `${omitidas} ya ${omitidas === 1 ? 'existía' : 'existían'} en la sala y no se ${
+          omitidas === 1 ? 'duplicó' : 'duplicaron'
         }`
       )
     if (partes.length > 0) {
@@ -188,35 +189,28 @@ export function ImportarExportar() {
 
       <DrawerContent>
         <DrawerHeader className="relative">
-          <DrawerClose
-            className="absolute right-4 top-4 text-ld-violeta"
-            aria-label="Cerrar"
-            title="Cerrar"
-          >
+          <DrawerClose className="absolute right-4 top-4 text-ld-violeta" aria-label="Cerrar" title="Cerrar">
             <Icon icon="material-symbols:close-rounded" className="w-6 h-6" />
           </DrawerClose>
 
           <div className="flex items-center gap-2">
             {vista !== 'menu' && (
-              <button
-                className="text-ld-violeta"
-                onClick={() => setVista('menu')}
-                aria-label="Volver"
-                title="Volver"
-              >
+              <button className="text-ld-violeta" onClick={() => setVista('menu')} aria-label="Volver" title="Volver">
                 <Icon icon="mdi:arrow-left" className="w-5 h-5" />
               </button>
             )}
             <DrawerTitle className="flex-1 text-center text-2xl text-ld-violeta">{TITULOS[vista]}</DrawerTitle>
             {vista !== 'menu' && <div className="w-5" />}
           </div>
-
         </DrawerHeader>
 
         <div className="flex flex-1 flex-col gap-3 items-center text-sm mt-1 px-4 pb-6 overflow-y-auto">
           {vista === 'menu' && (
             <>
-              <p className='text-center'>Puedes exportar la lista de preguntas que creaste o importar una lista de preguntas en formato yaml. También hemos creado colecciones de ejemplo listas para usar. </p>
+              <p className="text-center">
+                Puedes exportar la lista de preguntas que creaste o importar una lista de preguntas en formato yaml.
+                También hemos creado colecciones de ejemplo listas para usar.{' '}
+              </p>
 
               <button
                 className="flex items-center w-full justify-center gap-2 font-semibold text-white px-4 py-2 bg-ld-azul hover:bg-ld-azul/80 transition-colors disabled:text-slate-300 disabled:no-underline disabled:font-normal"

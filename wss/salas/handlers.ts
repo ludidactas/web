@@ -146,9 +146,11 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     })
   )
 
+  // Responde por ack: el cliente necesita saber si la eliminación realmente ocurrió (ej: sala ya
+  // borrada por otra pestaña) antes de sacarla de su lista, en vez de asumir éxito optimistamente.
   socket.on(
     'sala:eliminar',
-    safe(async ({ idSala }: { idSala: string }) => {
+    conAck(socket)(async ({ idSala }: { idSala: string }) => {
       await Salas.assertEsDueño(email, idSala)
       await Salas.eliminar(email, idSala)
       if (socket.data.salaActiva === idSala) socket.data.salaActiva = undefined

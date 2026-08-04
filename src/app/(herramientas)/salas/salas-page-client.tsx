@@ -256,17 +256,27 @@ function FilaSala({
 }: {
   sala: SalaResumen
   onRenombrar: (id: string, nuevoNombre: string) => void
-  onEliminar: (id: string) => void
+  onEliminar: (id: string) => Promise<void>
 }) {
   const nombre = sala.nombre || `Sala ${sala.id}`
   const [renombrarAbierto, setRenombrarAbierto] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState(sala.nombre ?? '')
   const nuevoNombreValido = nuevoNombre.trim().length > 0
+  const [eliminarAbierto, setEliminarAbierto] = useState(false)
+  const [eliminando, setEliminando] = useState(false)
 
   const handleConfirmarRenombrar = () => {
     if (!nuevoNombreValido) return
     onRenombrar(sala.id, nuevoNombre.trim())
     setRenombrarAbierto(false)
+  }
+
+  const handleConfirmarEliminar = () => {
+    setEliminando(true)
+    onEliminar(sala.id)
+      .then(() => setEliminarAbierto(false))
+      .catch((e) => toast.error(e instanceof Error ? e.message : 'No se pudo eliminar la sala'))
+      .finally(() => setEliminando(false))
   }
 
   return (
@@ -319,7 +329,7 @@ function FilaSala({
           </DialogContent>
         </Dialog>
 
-        <Dialog>
+        <Dialog open={eliminarAbierto} onOpenChange={(abierto) => !eliminando && setEliminarAbierto(abierto)}>
           <Tooltip>
             <TooltipTrigger asChild>
               <DialogTrigger asChild>
@@ -342,13 +352,13 @@ function FilaSala({
             </p>
             <DialogFooter className="gap-2">
               <DialogClose asChild>
-                <Button variant="outline">Cancelar</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button variant="destructive" onClick={() => onEliminar(sala.id)}>
-                  Eliminar
+                <Button variant="outline" disabled={eliminando}>
+                  Cancelar
                 </Button>
               </DialogClose>
+              <Button variant="destructive" onClick={handleConfirmarEliminar} disabled={eliminando}>
+                {eliminando ? 'Eliminando...' : 'Eliminar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

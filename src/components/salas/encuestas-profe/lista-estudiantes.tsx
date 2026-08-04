@@ -186,8 +186,11 @@ export const ListaEstudiantes = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className={cn('flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95')}
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                )}
                 onClick={limpiarEstudiantes}
+                disabled={estudiantes.length === 0}
               >
                 <Eraser size={14} /> Limpiar
               </button>
@@ -200,10 +203,11 @@ export const ListaEstudiantes = () => {
             <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95',
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
                   justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
                 )}
                 onClick={handleCopy(datosEstudiantes)}
+                disabled={estudiantes.length === 0}
               >
                 {justCopied ? <SquareCheckBig size={14} /> : <Copy size={14} />}
                 {justCopied ? '¡Copiado!' : 'Copiar'}

@@ -155,67 +155,68 @@ export default function EncuestasProfe() {
 
           {/* Overlay */}
           <div className="relative flex-1 min-h-0 max-h-[40%] flex flex-col overflow-hidden rounded-xl text-ld-violeta-oscuro items-center bg-white">
-            {!encuestaEnfocada && (
-              <p className="flex items-center justify-center h-full min-h-48 text-slate-400 italic ">
-                No hay ninguna encuesta enfocada aún ...{' '}
+            {encuestaEnfocada && <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />}
+            <div
+              className={cn(
+                'w-full h-full rounded-xl overflow-y-auto p-10',
+                encuestaEnfocada && 'border-4 border-ld-violeta-oscuro animate-border-pulse'
+              )}
+            >
+              <p className="flex items-center justify-center gap-2 text-ld-violeta text-center text-2xl">
+                <Search size={20} /> Visualizador
               </p>
-            )}
-
-            {encuestaEnfocada && (
-              <>
-                <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
-                <div className="w-full border-4 border-ld-violeta-oscuro animate-border-pulse  h-full rounded-xl overflow-y-auto p-10">
-                  <p className="flex items-center justify-center gap-2 text-ld-violeta text-center text-2xl">
-                    <Search size={20} /> Visualizador
-                  </p>
-                  <div className="flex flex-col items-center p-2 mt-2 w-full">
-                    <div className="flex flex-col items-center gap-2 w-full">
-                      <div className="flex gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+              <div className="flex flex-col items-center p-2 mt-2 w-full">
+                <div className="flex flex-col items-center gap-2 w-full">
+                  <div className="flex gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className={cn(
+                            'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95',
+                            justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
+                          )}
+                          onClick={handleCopy(linkOverlay)}
+                        >
+                          {justCopied ? <Check size={14} /> : <Link size={14} />}
+                          {justCopied ? '¡Copiado!' : 'Copiar link'}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Copiá el link del visualizador</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Popover onOpenChange={(open) => !open && guardarConfig()}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <PopoverTrigger asChild>
                             <button
                               className={cn(
-                                'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95',
-                                justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
+                                'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform'
                               )}
-                              onClick={handleCopy(linkOverlay)}
                             >
-                              {justCopied ? <Check size={14} /> : <Link size={14} />}
-                              {justCopied ? '¡Copiado!' : 'Copiar link'}
+                              <Settings size={14} /> Configurar
                             </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">Copiá el link del visualizador</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Popover onOpenChange={(open) => !open && guardarConfig()}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <PopoverTrigger asChild>
-                                <button
-                                  className={cn(
-                                    'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 active:scale-95 transition-transform'
-                                  )}
-                                >
-                                  <Settings size={14} /> Configurar
-                                </button>
-                              </PopoverTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">Configurá la apariencia del visualizador</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          <PopoverContent align="end" className="max-h-[70vh] w-80 overflow-y-auto">
-                            <PanelConfigOverlay config={config} onChange={setConfig} />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
-                    </div>
+                          </PopoverTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Configurá la apariencia del visualizador</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <PopoverContent align="end" className="max-h-[70vh] w-80 overflow-y-auto">
+                        <PanelConfigOverlay config={config} onChange={setConfig} />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+                  {encuestaEnfocada ? (
+                    <EncuestaSVG encuesta={encuestaEnfocada} config={config} />
+                  ) : (
+                    <p className="flex items-center justify-center h-full min-h-48 text-slate-400 italic">
+                      Enfocá una pregunta para ver los resultados en vivo
+                    </p>
+                  )}
                 </div>
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

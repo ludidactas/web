@@ -11,7 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import { EncuestaSVG } from '@/components/salas/overlay/estadistica-svg'
 import {
-  CONFIG_DEFAULTS, construirUrlOverlay, EstadisticaSvgConfig,
+  CONFIG_DEFAULTS,
+  construirUrlOverlay,
+  EstadisticaSvgConfig,
 } from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
 import { PanelConfigOverlay } from './panel-config-overlay'
@@ -27,8 +29,6 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
-
-
 
 export default function EncuestasProfe() {
   const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
@@ -96,7 +96,7 @@ export default function EncuestasProfe() {
             <TabsContent value="preguntas">
               <div className="flex flex-col bg-white">
                 <div className="flex flex-col items-center justify-center p-4">
-                  <h1 className='flex gap-2 text-3xl font-medium text-center text-ld-azul'>
+                  <h1 className="flex gap-2 text-3xl font-medium text-center text-ld-azul">
                     Preguntas
                     <Icon icon={'fluent:chat-bubbles-question-16-regular'} />
                   </h1>
@@ -123,18 +123,17 @@ export default function EncuestasProfe() {
 
       {/* VISTA DESKTOP */}
       <div className="hidden md:flex animate-aparecer py-2 gap-2 max-h-screen mb-2">
-
         {/* Lista de preguntas */}
         {estado === StatusDeConexion.Conectado && (
           <div className="flex-1 min-w-0 flex flex-col h-90 bg-white gap-2 rounded-xl w-[33%] box-content">
             <div className="flex items-center p-6 justify-between rounded-t-xl">
               <div className="flex flex-col px-10 gap-3">
-                <h1 className='flex gap-2 text-5xl font-medium text-center text-ld-azul'>
+                <h1 className="flex gap-2 text-5xl font-medium text-center text-ld-azul">
                   Preguntas
                   <Icon icon={'fluent:chat-bubbles-question-16-regular'} />
                 </h1>
               </div>
-              <div className='flex flex-col gap-2'>
+              <div className="flex flex-col gap-2">
                 {/* Boton agregar pregunta */}
                 <AgregarPregunta />
                 <ImportarExportar />
@@ -155,7 +154,7 @@ export default function EncuestasProfe() {
           </div>
 
           {/* Overlay */}
-          <div className="flex-1 min-h-0 relative flex flex-col overflow-hidden rounded-xl text-ld-violeta-oscuro items-center bg-white">
+          <div className="relative flex-1 min-h-0 max-h-[40%] flex flex-col overflow-hidden rounded-xl text-ld-violeta-oscuro items-center bg-white">
             {!encuestaEnfocada && (
               <p className="flex items-center justify-center h-full min-h-48 text-slate-400 italic ">
                 No hay ninguna encuesta enfocada aún ...{' '}
@@ -166,9 +165,7 @@ export default function EncuestasProfe() {
               <>
                 <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
                 <div className="w-full border-4 border-ld-violeta-oscuro animate-border-pulse  h-full rounded-xl overflow-y-auto p-10">
-                  <p className="text-ld-violeta text-center text-2xl">
-                    Visualizador
-                  </p>
+                  <p className="text-ld-violeta text-center text-2xl">Visualizador</p>
                   <div className="flex flex-col items-center p-2 mt-2 w-full">
                     <div className="flex flex-col items-center gap-2 w-full">
                       <div className="flex gap-2">
@@ -260,9 +257,7 @@ function BorrarTodo() {
         <p className="text-center text-slate-500">Esta acción no se puede deshacer.</p>
         <div className="flex gap-2">
           <DialogClose asChild>
-            <button className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full">
-              Cancelar
-            </button>
+            <button className="bg-emerald-700/90 text-white px-4 py-2 min-w-40 text-xl rounded-full">Cancelar</button>
           </DialogClose>
           <DialogClose asChild>
             <button

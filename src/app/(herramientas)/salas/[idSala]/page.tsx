@@ -4,6 +4,7 @@ import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
 import { tokenWss } from '@/server/token_wss'
+import { Icon } from '@iconify/react'
 import Link from 'next/link'
 
 import { ConexionProfeProvider } from '@/wss-cli/providers/wss-profe-context'
@@ -17,8 +18,9 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
 
   const headerBtns = (
     <div className="flex items-center gap-2">
-      <Link href="/salas" className="text-lg w-fit h-fit p-2 border-4 hover:border-dashed rounded-2xl hover:transform hover:rotate-3  text-indigo-600 border-indigo-600">
-        Volver a Salas
+      <Link href="/salas" className="text-xs sm:text-lg w-fit h-fit p-2 sm:border-4 hover:border-dashed rounded-2xl hover:transform hover:rotate-3  text-indigo-600 border-indigo-600">
+        <Icon icon="mingcute:back-2-fill" className="sm:hidden w-5 h-5" />
+        <span className="hidden sm:inline">Volver a Salas</span>
       </Link>
       <SignOut />
     </div>

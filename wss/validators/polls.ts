@@ -91,6 +91,8 @@ export const crearEncuesta = z
     admiteAportes: z.boolean().default(false),
     admiteMultiplesVotos: z.boolean().default(false),
     maxMultiplesVotos: z.number().nullable().default(null),
+    isOpen: z.boolean().default(false),
+    isPublished: z.boolean().default(false),
   })
   .refine((datos) => datos.admiteAportes || datos.opciones.length >= 2, {
     message: 'La pregunta debe tener al menos dos opciones o admitir aportes de los participantes',
@@ -111,8 +113,6 @@ export const voteValidator = z.discriminatedUnion('tipo', [
 export const nuevaEncuesta = crearEncuesta.transform((data) => ({
   ...data,
   opciones: data.opciones.map((opc, i): Opcion => ({ id: i.toString(), texto: opc })),
-  isOpen: true,
-  isPublished: true,
   isFocused: false, // @todo Enfocar por default al crear
   isRevealed: false,
 }))

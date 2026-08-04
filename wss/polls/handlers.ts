@@ -73,6 +73,10 @@ export const handlersEncuestasProfe = async (socket: SocketProfe, sala: Sala) =>
       if (previa) await broadcastPoll(sala, previa)
     })
   )
+  socket.on(
+    'poll:unfocus',
+    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.unfocusPoll(pollId)))
+  )
 
   socket.on(
     'poll:delete',

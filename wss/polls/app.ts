@@ -5,6 +5,22 @@ import { RolSala } from '../validators/auth'
 import { nuevaEncuesta, voteValidator } from '../validators/polls'
 import * as db from './db'
 
+/**
+ * `updatePoll` es lectura-modificación-escritura, no atómica. Si dos llegan casi juntas para la
+ * misma pregunta (ej: el botón "avanzar" dispara publicar+abrir+enfocar de una), pueden pisarse los
+ * cambios entre sí. Serializamos por pregunta (a nivel módulo, no por conexión) para que cada
+ * `updatePoll` vea el resultado del anterior antes de leer.
+ */
+const colasPorEncuesta = new Map<string, Promise<unknown>>()
+
+function serializadoPorEncuesta<T>(salaId: string, pollId: string, tarea: () => Promise<T>): Promise<T> {
+  const clave = `${salaId}:${pollId}`
+  const anterior = colasPorEncuesta.get(clave) ?? Promise.resolve()
+  const actual = anterior.catch(() => {}).then(tarea)
+  colasPorEncuesta.set(clave, actual)
+  return actual
+}
+
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {
   // Acciones de profe:
@@ -72,26 +88,28 @@ export async function profeSala(salaId: string) {
   }
 
   async function updatePoll(pollId: string, update: Partial<Encuesta>) {
-    await assertPollExists(salaId, pollId)
+    return serializadoPorEncuesta(salaId, pollId, async () => {
+      await assertPollExists(salaId, pollId)
 
-    const poll = (await db.getEncuesta(salaId, pollId))!
+      const poll = (await db.getEncuesta(salaId, pollId))!
 
-    // Dependiendo de qué se actualice, validamos:
-    if (update.isOpen === true) enforce(!poll.isOpen, 'La encuesta ya está abierta!!')
-    if (update.isOpen === false) enforce(poll.isOpen, 'La encuesta ya cerró!')
-    if (update.isPublished === true) enforce(!poll.isPublished, 'La encuesta ya está oculta!')
-    if (update.isPublished === false) enforce(poll.isPublished, 'La encuesta no está publicada!')
-    if (update.isFocused === true) enforce(!poll.isFocused, 'La encuesta ya está focuseada!')
-    if (update.isRevealed === true) enforce(!poll.isRevealed, 'La encuesta ya está revelada!')
-    if (update.isRevealed === false) enforce(poll.isRevealed, 'La encuesta no está revelada!')
-    if (update.admiteAportes === false) enforce(poll.admiteAportes, 'La encuesta ya no admite aportes')
-    if (update.admiteAportes === true) enforce(!poll.admiteAportes, 'La encuesta ya admite aportes')
+      // Dependiendo de qué se actualice, validamos:
+      if (update.isOpen === true) enforce(!poll.isOpen, 'La encuesta ya está abierta!!')
+      if (update.isOpen === false) enforce(poll.isOpen, 'La encuesta ya cerró!')
+      if (update.isPublished === true) enforce(!poll.isPublished, 'La encuesta ya está oculta!')
+      if (update.isPublished === false) enforce(poll.isPublished, 'La encuesta no está publicada!')
+      if (update.isFocused === true) enforce(!poll.isFocused, 'La encuesta ya está focuseada!')
+      if (update.isRevealed === true) enforce(!poll.isRevealed, 'La encuesta ya está revelada!')
+      if (update.isRevealed === false) enforce(poll.isRevealed, 'La encuesta no está revelada!')
+      if (update.admiteAportes === false) enforce(poll.admiteAportes, 'La encuesta ya no admite aportes')
+      if (update.admiteAportes === true) enforce(!poll.admiteAportes, 'La encuesta ya admite aportes')
 
-    const nueva = merge(poll, update) as Encuesta
-    await db.guardarEncuesta(salaId, nueva)
-    console.log(`🔔 Encuesta ${poll.id} updateada:`, JSON.stringify(update))
+      const nueva = merge(poll, update) as Encuesta
+      await db.guardarEncuesta(salaId, nueva)
+      console.log(`🔔 Encuesta ${poll.id} updateada:`, JSON.stringify(update))
 
-    return await pollConVotos(salaId, pollId, nueva)
+      return await pollConVotos(salaId, pollId, nueva)
+    })
   }
 
   async function deletePoll({ pollId }: { pollId: string }) {
@@ -121,19 +139,30 @@ export async function profeSala(salaId: string) {
   }
 
   async function focusPoll(pollId: string) {
-    // Nos fijamos si ya hay una encuesta enfocada para poder desfocarla después
+    // Nos fijamos si ya hay una encuesta enfocada (y es otra) para poder desfocarla después
     const enfocada = await db.getEnfocada(salaId)
+    const hayQueDesenfocarOtra = enfocada && enfocada !== pollId
 
     // Enfocamos la nueva
     await db.setEnfocada(salaId, pollId)
 
-    if (enfocada) console.log(`👀 Encuesta ${enfocada} desenfocada!`)
+    if (hayQueDesenfocarOtra) console.log(`👀 Encuesta ${enfocada} desenfocada!`)
 
     // Devolvemos la nueva y la anterior, o solo la nueva
-    if (enfocada)
+    if (hayQueDesenfocarOtra)
       return [await updatePoll(pollId, { isFocused: true }), await updatePoll(enfocada, { isFocused: false })] as const
 
     return [await updatePoll(pollId, { isFocused: true }), null] as const
+  }
+
+  async function unfocusPoll(pollId: string) {
+    // El puntero de "encuesta enfocada" de la sala vive separado del flag `isFocused` de la
+    // encuesta; si no lo limpiamos acá, `focusPoll` la va a creer todavía enfocada y va a
+    // desenfocarla de nuevo apenas se la vuelva a enfocar.
+    const enfocada = await db.getEnfocada(salaId)
+    if (enfocada === pollId) await db.limpiarEnfocada(salaId)
+
+    return await updatePoll(pollId, { isFocused: false })
   }
 
   async function consultarResultados(pollId: string) {
@@ -152,6 +181,7 @@ export async function profeSala(salaId: string) {
     updatePoll,
     deletePoll,
     focusPoll,
+    unfocusPoll,
   }
 }
 

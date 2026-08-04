@@ -1,5 +1,6 @@
 import { LimiteSalasAlcanzado } from '../validators/errors'
 import * as salaDb from '../salas/db'
+import { registradoComoAdmin } from '../middleware/auth'
 
 /**
  * Plan de un profe. Hoy hay un único plan (`gratis`), pero esta es la ÚNICA pieza que conoce los
@@ -14,11 +15,13 @@ export type Plan = {
   maxSalas: number
 }
 
-const PLAN_GRATIS: Plan = { id: 'gratis', maxSalas: 1 }
+const PLAN_GRATIS: Plan = { id: 'gratis', maxSalas: 2 }
+const PLAN_ADMIN: Plan = { id: 'pro', maxSalas: 100 }
 
 /** Devuelve el plan del profe. Hoy todos están en el plan gratis. */
 export function getPlanDeProfe(email: string): Plan {
   void email
+  if (registradoComoAdmin(email)) return PLAN_ADMIN
   return PLAN_GRATIS
 }
 

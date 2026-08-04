@@ -24,7 +24,12 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
         return res.data.idSala
       },
       renombrarSala: (idSala: string, nombre: string) => socket?.emit('sala:renombrar', { idSala, nombre }),
-      eliminarSala: (idSala: string) => socket?.emit('sala:eliminar', { idSala }),
+      // Comando con ack: el caller espera la confirmación antes de sacarla de la lista/UI.
+      eliminarSala: async (idSala: string): Promise<void> => {
+        if (!socket) throw new Error('Sin conexión')
+        const res: Ack<void> = await socket.timeout(5000).emitWithAck('sala:eliminar', { idSala })
+        if (!res.ok) throw new Error(res.error)
+      },
       abrirSala: (idSala: string) => socket?.emit('sala:abrir', { idSala }),
     },
 

@@ -18,7 +18,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CircleUserRound, Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
+import { useDebounceValue } from 'usehooks-ts'
 import { AccionesToggle } from './accionesToggle'
+import { AvanzarEstado, ESTADOS_ENCUESTA, estadoEncuesta } from './avanzar-estado'
 
 export function ListaEncuestas() {
   const { estado } = useConexionProfe()
@@ -58,7 +60,10 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 
   const opcionesInfo = encuesta.opciones.map((opcion) => '\n' + opcion.texto + ' -' + ' ' + opcion.votos + ' votos')
   const totalVotos = encuesta.opciones.reduce((total, opcion) => total + opcion.votos, 0)
-  const estado = encuesta.isFocused ? 'Enfocada' : encuesta.isOpen ? 'Abierta' : 'Cerrada'
+  // Debounced: el label de estado no debe parpadear mientras "avanzar" dispara varios cambios en
+  // cadena (ej: publicar+abrir+enfocar) — solo lo actualizamos una vez que el valor se estabiliza.
+  const [estado] = useDebounceValue(estadoEncuesta(encuesta), 500)
+  const { label: labelEstado, className: claseEstado, descripcion: descripcionEstado } = ESTADOS_ENCUESTA[estado]
 
   return (
     <div className="p-2 mx-4  mb-2 rounded-3xl">
@@ -82,16 +87,20 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
               <div className="flex items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
                   <div className="flex items-center gap-2 text-indigo-500 ">
-                    <span
-                      className={cn(' text-sm', {
-                        'text-emerald-700 animate-pulse duration-1000': estado === 'Abierta',
-                        'text-rose-800': estado === 'Cerrada',
-                        'text-indigo-500 font-bold animate-pulse duration-500': estado === 'Enfocada',
-                      })}
-                    >
-                      {estado}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={cn('text-sm', claseEstado)}>{labelEstado}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">{descripcionEstado}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    {estado === 'enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'} />}
+                    {/* @todo: AvanzarEstado renderiza un <button>, anidado en el <button> de AccordionTrigger.
+                        HTML inválido (warning en consola), lo toleramos por ahora. */}
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <AvanzarEstado encuesta={encuesta} />
                     </span>
-                    {estado === 'Enfocada' && <Icon icon={'heroicons:magnifying-glass-16-solid'} />}
                   </div>
                   <span className="text-[0.6rem]  text-slate-400 text-right">
                     {formatDistanceToNow(new Date(encuesta.createdAt), { addSuffix: true, locale: es })}

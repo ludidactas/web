@@ -5,7 +5,7 @@ type Middleware<T extends unknown[]> = (...args: T) => Promise<void>
 
 /**
  * Wrapper de handlers que agrega error handling al socket.
- * Cuando ocurre un error, se lo notifica al cliente que emitió el evento y se throwea.
+ * Cuando ocurre un error, se lo notifica al cliente que emitió el evento y se loguea.
  */
 export const conErrorHandling =
   (socket: Socket) =>
@@ -14,16 +14,21 @@ export const conErrorHandling =
       try {
         await handler(...args)
       } catch (err: unknown) {
-
-        console.log(`🎬 error-handling.ts: Handler: ${handler.name} ejecutándose con args:`, args, `y socket: `, socket.data, 'emitió error: ', err)
-
-        // Si no es un Error, lo rethroweamos tal cual
+        // Si no es un Error, lo rethroweamos tal cual (no es un caso que sepamos reportar al FE)
         if (!(err instanceof Error)) {
           throw err
         }
 
+        console.error(
+          `🚨 error-handling.ts: Handler ${handler.name} con args:`,
+          args,
+          `y socket:`,
+          socket.data,
+          'emitió error:',
+          err
+        )
+
         socket.emit('wss:error', { message: err.message })
-        if (process.env.NODE_ENV === 'development') throw err
       }
     }
   }
@@ -47,11 +52,15 @@ export const conAck =
         const data = await handler(...handlerArgs)
         ack?.({ ok: true, data })
       } catch (err: unknown) {
-        console.log(`🎬 error-handling.ts (ack): Handler ${handler.name} con args:`, handlerArgs, 'emitió error:', err)
+        console.error(
+          `🚨 error-handling.ts (ack): Handler ${handler.name} con args:`,
+          handlerArgs,
+          'emitió error:',
+          err
+        )
         const message = err instanceof Error ? err.message : 'Error desconocido'
         if (ack) ack({ ok: false, error: message })
         else socket.emit('wss:error', { message })
-        if (process.env.NODE_ENV === 'development') throw err
       }
     }
   }

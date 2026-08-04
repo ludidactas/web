@@ -7,8 +7,7 @@ import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { configCreacionSala } from '../validators/salas'
-// LÍMITE SUSCRIPCIÓN (desactivado): reactivar junto con la llamada en `sala:crear`.
-// import { assertPuedeCrearSala } from '../suscripciones/planes'
+import { assertPuedeCrearSala } from '../suscripciones/planes'
 
 /** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
 async function emitirAbierta(socket: SocketProfe, sala: Sala) {
@@ -125,7 +124,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   socket.on(
     'sala:crear',
     conAck(socket)(async (payload: { config?: unknown }) => {
-      // LÍMITE SUSCRIPCIÓN (desactivado): await assertPuedeCrearSala(email)
+      await assertPuedeCrearSala(email)
       const { listaPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
 
       const sala = await Salas.crear(socket, config)

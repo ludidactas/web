@@ -21,7 +21,8 @@ export class LimiteSalasAlcanzado extends Error {
   readonly tipo = 'limite_salas' as const
   constructor(
     public readonly maxSalas: number,
-    message = `Alcanzaste el límite de ${maxSalas} sala(s) de tu plan. Suscribite para crear más.`
+    // message = `Alcanzaste el límite de ${maxSalas} sala(s) de tu plan. Suscribite para crear más.`
+    message = `Alcanzaste el límite de ${maxSalas} sala(s). Estamos trabajando para permitirte crear más.`
   ) {
     super(message)
     this.name = 'LimiteSalasAlcanzado'

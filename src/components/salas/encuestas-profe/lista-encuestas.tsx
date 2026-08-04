@@ -34,19 +34,19 @@ export function ListaEncuestas() {
   const conectando = statusesDeCarga.includes(estado)
 
   if (conectando || (posibleVacio && !confirmadoVacio)) {
-    return <div className="h-full flex items-center justify-center">Cargando encuestas...</div>
+    return <div className="flex-1 min-h-0 flex items-center justify-center">Cargando encuestas...</div>
   }
 
   if (confirmadoVacio && posibleVacio)
     return (
-      <div className="flex flex-col justify-center items-center grayscale">
+      <div className="flex flex-col flex-1 min-h-0 justify-center items-center grayscale">
         <p className="text-center text-slate-500 text-xl m-4"> ¡Aún no haz hecho ninguna pregunta!</p>
-        <LdSvg className="w-3/4" SvgComponent={profeUps} />
+        <LdSvg className="max-w-[75%] max-h-full w-auto h-auto" SvgComponent={profeUps} />
       </div>
     )
 
   return (
-    <ScrollArea className="overflow-y-auto" scrollHideDelay={1000}>
+    <ScrollArea className="flex-1 min-h-0 overflow-y-auto" scrollHideDelay={1000}>
       {encuestas.map((e) => (
         <DisplayEncuesta key={e.id} encuesta={e} />
       ))}

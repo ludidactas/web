@@ -3,9 +3,9 @@ import { Switch } from '@/components/ui/switch'
 import { Encuesta } from '@/wss/validators/polls'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { cn } from '@/lib/utils'
-import { BotonEncuesta } from './acciones'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { Search } from 'lucide-react'
 
 export function AccionesToggle({ encuesta }: { encuesta: Encuesta }) {
   const { revelar, ocultar, enfocar, desenfocar, publicar, esconder, abrir, cerrar, borrar } = useConexionProfe()
@@ -55,7 +55,7 @@ export function AccionesToggle({ encuesta }: { encuesta: Encuesta }) {
           className="flex gap-2 md:min-w-28 rounded-xl items-center bg-purple-500 text-white px-4"
           onClick={() => (encuesta.isFocused ? desenfocar(encuesta.id) : enfocar(encuesta.id))}
         >
-          <Icon className="w-4 h-4" icon={'entypo:magnifying-glass'} />
+          <Search className="w-4 h-4" />
           {encuesta.isFocused ? 'Desenfocar' : 'Enfocar'}
         </button>
 

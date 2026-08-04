@@ -35,7 +35,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@radix-ui/react-hover-card'
 
 import useClipboard from '@/components/hooks/use-clipboard'
 
@@ -83,22 +82,21 @@ export const ListaEstudiantes = () => {
         <div className={cn('flex flex-col gap-2')}>
           {/* Config solo si es por DNI: en salas por nombre no hay contenido útil para mostrar */}
           {configSala?.metodo_login === MetodosLogin.DNI && (
-            <HoverCard>
+            <div className="contents md:relative md:block md:w-11 md:h-11 md:shrink-0">
               <PanelConfigSala>
-                <HoverCardTrigger asChild>
-                  <button
-                    className={cn(
-                      'items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110 md:self-end'
-                    )}
-                  >
-                    <Settings size={16} />
-                  </button>
-                </HoverCardTrigger>
+                <button
+                  className={cn(
+                    'group flex items-center w-full md:w-fit justify-center gap-2 md:gap-0 md:hover:gap-2 font-semibold text-white text-sm px-4 py-3 md:py-0 rounded-full bg-ld-violeta-oscuro hover:bg-ld-violeta-oscuro/80 transition-colors md:absolute md:right-0 md:top-0 md:z-10 md:h-11 md:flex-row-reverse md:justify-start md:hover:px-4 md:text-base'
+                  )}
+                  title="Configurá el acceso a tu sala"
+                >
+                  <Settings className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  <span className="whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
+                    Configurar
+                  </span>
+                </button>
               </PanelConfigSala>
-              <HoverCardContent>
-                <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Configuración</p>
-              </HoverCardContent>
-            </HoverCard>
+            </div>
           )}
 
           {configSala?.link && (
@@ -184,51 +182,53 @@ export const ListaEstudiantes = () => {
             </ul>
           )}
         </div>
-        <div className={cn('flex justify-end gap-1 mb-3')}>
-          <HoverCard>
-            <HoverCardTrigger asChild>
+        <div className={cn('flex justify-end gap-2 mb-3 text-ld-violeta-oscuro')}>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
-                className={cn(
-                  'flex text-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white font-bold hover:scale-110'
-                )}
+                className={cn('flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95')}
                 onClick={limpiarEstudiantes}
               >
-                <Eraser size={16} />
+                <Eraser size={14} /> Limpiar
               </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Limpiar lista</p>
-            </HoverCardContent>
-          </HoverCard>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <button
-                className={cn('items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110')}
-                onClick={handleCopy(datosEstudiantes)}
-              >
-                {justCopied ? <SquareCheckBig size={16} /> : <Copy size={16} />}
-              </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Copiar lista</p>
-            </HoverCardContent>
-          </HoverCard>
-          <HoverCard>
-            <HoverCardTrigger asChild>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Limpiá la lista de participantes conectados</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'items-center w-fit rounded-full bg-ld-violeta-oscuro p-2 text-white hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed'
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95',
+                  justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
+                )}
+                onClick={handleCopy(datosEstudiantes)}
+              >
+                {justCopied ? <SquareCheckBig size={14} /> : <Copy size={14} />}
+                {justCopied ? '¡Copiado!' : 'Copiar'}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Copiá la lista de participantes</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
                 )}
                 onClick={handleExportToExcel}
                 disabled={estudiantes.length === 0}
               >
-                <Download size={16} />
+                <Download size={14} /> Exportar
               </button>
-            </HoverCardTrigger>
-            <HoverCardContent>
-              <p className="text-xs text-white rounded-xl p-2 mt-1 bg-slate-500">Exportar a Excel</p>
-            </HoverCardContent>
-          </HoverCard>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Exportá la lista a Excel</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

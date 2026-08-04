@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy, Settings } from 'lucide-react'
+import { Check, Link, Search, Settings } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import useClipboard from '@/components/hooks/use-clipboard'
@@ -165,7 +165,9 @@ export default function EncuestasProfe() {
               <>
                 <LdSvg className="absolute -top-1 right-0 w-32 h-32 z-10" SvgComponent={enfocar} />
                 <div className="w-full border-4 border-ld-violeta-oscuro animate-border-pulse  h-full rounded-xl overflow-y-auto p-10">
-                  <p className="text-ld-violeta text-center text-2xl">Visualizador</p>
+                  <p className="flex items-center justify-center gap-2 text-ld-violeta text-center text-2xl">
+                    <Search size={20} /> Visualizador
+                  </p>
                   <div className="flex flex-col items-center p-2 mt-2 w-full">
                     <div className="flex flex-col items-center gap-2 w-full">
                       <div className="flex gap-2">
@@ -178,7 +180,7 @@ export default function EncuestasProfe() {
                               )}
                               onClick={handleCopy(linkOverlay)}
                             >
-                              {justCopied ? <Check size={14} /> : <Copy size={14} />}
+                              {justCopied ? <Check size={14} /> : <Link size={14} />}
                               {justCopied ? '¡Copiado!' : 'Copiar link'}
                             </button>
                           </TooltipTrigger>

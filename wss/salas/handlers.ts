@@ -140,7 +140,9 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     'sala:renombrar',
     safe(async ({ idSala, nombre }: { idSala: string; nombre: string }) => {
       await Salas.assertEsDueño(email, idSala)
-      await (await Salas.get(idSala)).actualizarConfig({ nombre: nombre.trim() })
+      const sala = await Salas.get(idSala)
+      await sala.actualizarConfig({ nombre: nombre.trim() })
+      await sala.broadcast('sala:config_actualizada', await sala.config())
       await emitirLista()
     })
   )

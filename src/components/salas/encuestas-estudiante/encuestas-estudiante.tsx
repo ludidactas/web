@@ -60,7 +60,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
                 </span>
                 de
               </p>
-              <p className="text-teal-500"> {config?.nombre_profe ?? idSala}</p>
+              <p className="text-teal-500"> {config?.nombre?.trim() || (config?.nombre_profe ?? idSala)}</p>
               <p className="text-xs md:text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
             </div>
           </div>

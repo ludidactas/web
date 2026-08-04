@@ -97,8 +97,8 @@ export default function EncuestasProfe() {
               <div className="flex flex-col bg-white">
                 <div className="flex flex-col items-center justify-center p-4">
                   <h1 className="flex gap-2 text-3xl font-medium text-center text-ld-azul">
-                    Preguntas
                     <Icon icon={'fluent:chat-bubbles-question-16-regular'} />
+                    Preguntas
                   </h1>
                   <div className="flex flex-col gap-2 py-4">
                     <AgregarPregunta />
@@ -125,12 +125,12 @@ export default function EncuestasProfe() {
       <div className="hidden md:flex animate-aparecer py-2 gap-2 max-h-screen mb-2">
         {/* Lista de preguntas */}
         {estado === StatusDeConexion.Conectado && (
-          <div className="flex-1 min-w-0 flex flex-col h-90 bg-white gap-2 rounded-xl w-[33%] box-content">
+          <div className="w-3/5 min-w-0 flex flex-col h-90 bg-white gap-2 rounded-xl box-content">
             <div className="flex items-center p-6 justify-between rounded-t-xl">
               <div className="flex flex-col px-10 gap-3">
                 <h1 className="flex gap-2 text-5xl font-medium text-center text-ld-azul">
-                  Preguntas
                   <Icon icon={'fluent:chat-bubbles-question-16-regular'} />
+                  Preguntas
                 </h1>
               </div>
               <div className="flex flex-col gap-2">
@@ -145,7 +145,7 @@ export default function EncuestasProfe() {
         )}
 
         {/* Lista de estudiantes y overlay desktop */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="w-2/5 min-w-0 flex flex-col gap-2">
           {/* Lista de estudiantes */}
           <div className="flex-1 min-h-0 overflow-hidden">
             <div className="flex h-full flex-col gap-4 bg-white rounded-xl p-8">

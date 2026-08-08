@@ -44,12 +44,12 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
           polls: EncuestaHidratadaProfe[]
           estudiantes: Estudiante[]
           config: ConfigSala
-          listaPermitidos: string[]
+          listaPermitidos: { lista: string[]; nombres: Record<string, string> }
         }) => {
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
           almacenEstudiantes.set(estudiantes)
-          almacenPermitidos.set(listaPermitidos ?? [])
+          almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
         }
       )
 
@@ -61,7 +61,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
         almacenConfig.set(null)
         almacenEstudiantes.set([])
         almacenEncuestas.set([])
-        almacenPermitidos.set([])
+        almacenPermitidos.set({ lista: [], nombres: {} })
       })
     },
 
@@ -71,6 +71,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
       borrarListaPermitidos: () => socket?.emit('sala:permitidos_limpiar'),
+      setNombrePermitido: (dni: string, nombre: string) => socket?.emit('sala:permitidos_nombre', { dni, nombre }),
     },
 
     desmontar: () => {

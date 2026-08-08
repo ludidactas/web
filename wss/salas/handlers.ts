@@ -7,6 +7,7 @@ import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { configCreacionSala } from '../validators/salas'
+import { MAX_LEN_NOMBRE } from '../validators/auth'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
 
 /** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
@@ -17,8 +18,13 @@ async function emitirAbierta(socket: SocketProfe, sala: Sala) {
     polls: await profe.listarEncuestas(),
     estudiantes: await sala.listarEstudiantes(),
     config: await sala.config(),
-    listaPermitidos: await sala.listaPermitidos().obtener(),
+    listaPermitidos: await sala.listaPermitidos().obtenerConNombres(),
   })
+}
+
+/** Re-emite la lista de invitados (DNIs + nombres provistos) al profe, tras cualquier cambio. */
+async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
+  socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtenerConNombres())
 }
 
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
@@ -63,7 +69,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     safe(async (list: string[]) => {
       await sala.listaPermitidos().agregar(list)
       await sala.sanitizar()
-      socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      await emitirPermitidos(socket, sala)
     })
   )
 
@@ -72,7 +78,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     safe(async (list: string[]) => {
       await sala.listaPermitidos().remover(list)
       await sala.sanitizar()
-      socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      await emitirPermitidos(socket, sala)
     })
   )
 
@@ -80,7 +86,19 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     'sala:permitidos_limpiar',
     safe(async () => {
       await sala.listaPermitidos().limpiar()
-      socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtener())
+      await emitirPermitidos(socket, sala)
+    })
+  )
+
+  // Nombre que el profe le asigna a un invitado (por DNI) antes de que se conecte. Es independiente
+  // del alta en la lista (`permitidos_agregar`): permite ponerle/cambiarle nombre a un DNI ya cargado.
+  socket.on(
+    'sala:permitidos_nombre',
+    safe(async ({ dni, nombre }: { dni: string; nombre: string }) => {
+      const nombreTrimmed = nombre.trim().slice(0, MAX_LEN_NOMBRE)
+      if (!nombreTrimmed) throw new Error('El nombre no puede estar vacío')
+      await sala.listaPermitidos().setNombre(dni, nombreTrimmed)
+      await emitirPermitidos(socket, sala)
     })
   )
 

@@ -27,6 +27,37 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
   socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtenerConNombres())
 }
 
+/**
+ * Arma la planilla completa de la sala a partir del estado durable del server: una fila por cada
+ * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
+ * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
+ */
+async function armarPlanillaCompleta(sala: Sala) {
+  const [estudiantes, nombresProvistos, encuestas] = await Promise.all([
+    sala.listarEstudiantes(),
+    sala.listaPermitidos().nombres(),
+    profeSala(sala.id).then((profe) => profe.listarEncuestas()),
+  ])
+
+  const preguntas = encuestas.map((encuesta) => ({ id: encuesta.id, pregunta: encuesta.pregunta }))
+
+  const filas = estudiantes.map((estudiante) => {
+    const respuestas: Record<string, string> = {}
+    for (const encuesta of encuestas) {
+      const elegidas = encuesta.opciones.filter((opcion) => opcion.votantes.includes(estudiante.userId))
+      if (elegidas.length > 0) respuestas[encuesta.id] = elegidas.map((opcion) => opcion.texto).join(', ')
+    }
+
+    return {
+      ...estudiante,
+      nombreProvisto: nombresProvistos[estudiante.userId],
+      respuestas,
+    }
+  })
+
+  return { preguntas, filas }
+}
+
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
   socket.data.salaActiva = sala.id
@@ -55,6 +86,10 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
       socket.emit('sala:asistencia', await sala.asistencia())
     })
   )
+
+  // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
+  // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
+  socket.on('sala:pedir_planilla_completa', conAck(socket)(async () => armarPlanillaCompleta(sala)))
 
   socket.on(
     'sala:limpar_estudiantes_sala',

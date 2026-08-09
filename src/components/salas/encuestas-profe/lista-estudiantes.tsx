@@ -4,6 +4,7 @@ import {
   Copy,
   Download,
   Eraser,
+  FileSpreadsheet,
   Link,
   ListCollapse,
   QrCode,
@@ -13,14 +14,14 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { PropsWithChildren, useRef, useState } from 'react'
+import { PropsWithChildren, useRef, useState, useTransition } from 'react'
 import { isEmpty } from 'remeda'
 import { QRCodeCanvas } from 'qrcode.react'
 import { toast } from 'sonner'
 
 import { titulo as fuenteTitulo } from '@/components/fonts'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
-import { cn, exportarPlanilla } from '@/lib/utils'
+import { cn, exportarPlanilla, exportarPlanillaCompleta } from '@/lib/utils'
 
 import PanelConfigSala from './panel-config-sala'
 
@@ -45,25 +46,47 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { MetodosLogin } from '@/wss/validators/auth'
 
 export const ListaEstudiantes = () => {
-  const { limpiarEstudiantes } = useConexionProfe()
+  const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
   const [linkCopiado, setLinkCopiado] = useState(false)
+  const [exportandoPlanilla, startExportarPlanilla] = useTransition()
 
   const { handleCopy, justCopied } = useClipboard()
 
   const tituloSala =
     configSala?.nombre?.trim() || (configSala?.nombre_profe ? `Sala de ${configSala.nombre_profe}` : 'Tu sala')
 
-  const handleExportToExcel = () => {
-    const datosParaExcel = estudiantes.map((e) => ({
-      Nombre: e.nombre || 'Sin nombre',
-      Email: e.email || 'Sin email',
-      DNI: e.dni || 'Sin DNI',
-    }))
+  // Export local: recuperar cuando haya cuentas "full"
+  // const handleExportToExcel = () => {
+  //   const datosParaExcel = estudiantes.map((e) => ({
+  //     Nombre: e.nombre || 'Sin nombre',
+  //     Email: e.email || 'Sin email',
+  //     DNI: e.dni || 'Sin DNI',
+  //   }))
 
-    exportarPlanilla(datosParaExcel)
-  }
+  //   exportarPlanilla(datosParaExcel)
+  // }
+
+  /** Exporta la planilla completa desde el estado del servidor: incluye a quienes ya no están
+   * conectados (o fueron "limpiados" del store del FE) y una columna por cada pregunta con la
+   * respuesta de cada estudiante. A diferencia de `handleExportToExcel`, no depende de lo que este
+   * navegador haya visto en la sesión actual. */
+  const handleExportarPlanillaCompleta = () =>
+    startExportarPlanilla(async () => {
+      try {
+        const planilla = await pedirPlanillaCompleta()
+
+        if (planilla.filas.length === 0 || !configSala) {
+          toast.info('Todavía no hay estudiantes registrados en esta sala')
+          return
+        }
+
+        exportarPlanillaCompleta(planilla, configSala)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'No se pudo generar la planilla')
+      }
+    })
 
   const datosEstudiantes = estudiantes
     .map((e) => (e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`))
@@ -217,7 +240,8 @@ export const ListaEstudiantes = () => {
               <p className="text-xs">Copiá la lista de participantes</p>
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
+          {/* Cuando tengamos cuentas "full" volvemos a habilitar expor */}
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className={cn(
@@ -227,6 +251,22 @@ export const ListaEstudiantes = () => {
                 disabled={estudiantes.length === 0}
               >
                 <Download size={14} /> Exportar
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Exportá la lista a Excel</p>
+            </TooltipContent>
+          </Tooltip> */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                )}
+                onClick={handleExportarPlanillaCompleta}
+                disabled={exportandoPlanilla}
+              >
+                <FileSpreadsheet size={14} /> {exportandoPlanilla ? 'Generando...' : 'Exportar'}
               </button>
             </TooltipTrigger>
             <TooltipContent>

@@ -7,7 +7,7 @@ import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { configCreacionSala } from '../validators/salas'
-import { MAX_LEN_NOMBRE } from '../validators/auth'
+import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
 
 /** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
@@ -89,7 +89,10 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
 
   // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
   // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
-  socket.on('sala:pedir_planilla_completa', conAck(socket)(async () => armarPlanillaCompleta(sala)))
+  socket.on(
+    'sala:pedir_planilla_completa',
+    conAck(socket)(async () => armarPlanillaCompleta(sala))
+  )
 
   socket.on(
     'sala:limpar_estudiantes_sala',
@@ -178,10 +181,13 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     'sala:crear',
     conAck(socket)(async (payload: { config?: unknown }) => {
       await assertPuedeCrearSala(email)
-      const { listaPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
+      const { listaPermitidos, nombresPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
 
       const sala = await Salas.crear(socket, config)
       if (listaPermitidos.length > 0) await sala.listaPermitidos().agregar(listaPermitidos)
+      await Promise.all(
+        Object.entries(nombresPermitidos).map(([dni, nombre]) => sala.listaPermitidos().setNombre(dni, nombre))
+      )
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
@@ -269,6 +275,18 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
     await sala.registrarEstudiante(socket.data.session)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
+
+    // Si está en la lista de invitados (solo aplica a salas por DNI), le avisamos con su nombre
+    // provisto (si el profe le puso uno) para que el FE muestre el aviso y el toast de bienvenida.
+    const config = await sala.config()
+    if (config.metodo_login === MetodosLogin.DNI) {
+      const { userId } = socket.data.session
+      const esInvitado = await sala.listaPermitidos().incluye(userId)
+      if (esInvitado) {
+        const nombres = await sala.listaPermitidos().nombres()
+        socket.emit('sala:invitado', { nombreProvisto: nombres[userId] })
+      }
+    }
   })
   await emitir()
 }

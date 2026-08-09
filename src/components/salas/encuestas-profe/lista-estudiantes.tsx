@@ -50,7 +50,7 @@ export const ListaEstudiantes = () => {
   const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
-  const { lista: invitados } = storePermitidos()
+  const { lista: invitados, nombres: nombresInvitados } = storePermitidos()
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
 
@@ -194,7 +194,12 @@ export const ListaEstudiantes = () => {
                   </div>
                   {/* Nombre, email y DNI */}
                   <div className="flex flex-col">
-                    <span>{e.nombre}</span>
+                    <span className="flex items-center gap-1.5">
+                      {e.nombre}
+                      {nombresInvitados[e.userId] && (
+                        <span className="text-xs text-slate-400">– {nombresInvitados[e.userId]}</span>
+                      )}
+                    </span>
                     {e.dni && <span className="text-teal-500">{e.dni}</span>}
                     {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
                   </div>

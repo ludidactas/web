@@ -106,7 +106,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
             )}
           </AnimatePresence>
         </div>
-    </DialogContent>
+      </DialogContent>
     </Dialog>
   )
 

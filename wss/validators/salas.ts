@@ -15,10 +15,14 @@ export const configCreacionSala = z.object({
   
   // Lista de invitados inicial, lueguito el server la extrae y la guarda en su SET (`sala:<id>:allowed_list`)
   listaPermitidos: z.array(z.string()).default([]),
+
+  // Nombres provistos para (algunos de) los DNIs de `listaPermitidos`, cargados junto con la lista
+  // inicial. El server los extrae y los guarda en su hash (`sala:<id>:allowed_names`).
+  nombresPermitidos: z.record(z.string(), z.string()).default({}),
 })
 
 /** Data derivada o generada en el server (lo que se persiste en el blob). */
-export const configSala = configCreacionSala.omit({ listaPermitidos: true }).extend({
+export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombresPermitidos: true }).extend({
   nombre_profe: z.string(),
   link: z.string(),
   // Config del visualizador (overlay). El `.catch` cubre salas viejas sin este campo: caen al default.

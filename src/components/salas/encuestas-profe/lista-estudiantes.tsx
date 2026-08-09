@@ -43,12 +43,14 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { MetodosLogin } from '@/wss/validators/auth'
 
 export const ListaEstudiantes = () => {
   const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
+  const { lista: invitados } = storePermitidos()
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
 
@@ -206,22 +208,47 @@ export const ListaEstudiantes = () => {
           )}
         </div>
         <div className={cn('flex justify-end gap-2 mb-3 text-ld-violeta-oscuro')}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                )}
-                onClick={limpiarEstudiantes}
-                disabled={estudiantes.length === 0}
-              >
-                <Eraser size={14} /> Limpiar
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">Limpiá la lista de participantes conectados</p>
-            </TooltipContent>
-          </Tooltip>
+          <Dialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                    )}
+                    disabled={estudiantes.length === 0}
+                  >
+                    <Eraser size={14} /> Limpiar
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Limpiá la lista de participantes</p>
+              </TooltipContent>
+            </Tooltip>
+            <DialogContent className="flex flex-col items-center">
+              <DialogHeader>
+                <DialogTitle className="text-center leading-6">¿Limpiar la lista de participantes?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-500 text-center">
+                Se van a quitar de la lista los estudiantes desconectados.
+                {invitados.length > 0 && ` Los ${invitados.length} invitados no se van a borrar.`}
+              </p>
+              <DialogFooter className="flex-row justify-center gap-2">
+                <DialogClose>
+                  <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button
+                    className="flex items-center gap-1 bg-rose-700 text-white px-4 py-2 rounded-full text-sm"
+                    onClick={limpiarEstudiantes}
+                  >
+                    <Eraser size={14} /> Limpiar
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Tooltip>
             <TooltipTrigger asChild>
               <button

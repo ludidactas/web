@@ -83,8 +83,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
             <div className="flex w-full gap-4 justify-between items-center ">
               <div className="flex flex-1 min-w-0 items-center gap-2">
                 <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
-                <h3 className="w-full text-xs md:text-base text-center break-words font-bold">
-                  <PreguntaMarkdown texto={encuesta.pregunta} />
+                <h3 className="w-full text-xs md:text-base text-left break-words font-bold">
+                  {encuesta.pregunta}
                 </h3>
               </div>
               <div className="flex shrink-0 items-center gap-4">
@@ -142,6 +142,12 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
                 {encuesta.maxMultiplesVotos ? `hasta ${encuesta.maxMultiplesVotos}` : 'varias'} opciones
                 <Icon icon={'mingcute:check-fill'} />
               </p>
+            )}
+            {/* Descripción */}
+            {encuesta.descripcion && (
+              <div className="w-full pt-2 border-t border-ld-azul/20 text-xs md:text-sm text-left break-words text-ld-azul/90">
+                <PreguntaMarkdown texto={encuesta.descripcion} />
+              </div>
             )}
           </AccordionTrigger>
 

@@ -18,22 +18,25 @@ export function AgregarPregunta() {
 
   const [open, setOpen] = useState(false)
   const [pregunta, setPregunta] = useState('')
+  const [descripcion, setDescripcion] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const preguntaRef = useRef<HTMLTextAreaElement>(null)
+  const descripcionRef = useRef<HTMLTextAreaElement>(null)
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
   const [forzarMarkdown, setForzarMarkdown] = useState(false)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
 
-  // El alto del textarea sigue al contenido: lo colapsamos y lo reexpandimos al alto real del texto.
+  // El alto de los textarea sigue al contenido: los colapsamos y reexpandimos al alto real del texto.
   useEffect(() => {
-    const el = preguntaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [pregunta, open])
+    for (const el of [preguntaRef.current, descripcionRef.current]) {
+      if (!el) continue
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+  }, [pregunta, descripcion, open])
 
   const agregarRespuesta = () => {
     setOpciones((rs) => {
@@ -62,6 +65,7 @@ export function AgregarPregunta() {
     error,
   } = crearEncuesta.safeParse({
     pregunta,
+    descripcion,
     opciones,
     admiteAportes,
     admiteMultiplesVotos,
@@ -76,6 +80,7 @@ export function AgregarPregunta() {
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
+        setDescripcion('')
         setOpciones(['', ''])
         setAdmiteAportes(false)
         setAdmiteMultiplesVotos(false)
@@ -105,16 +110,31 @@ export function AgregarPregunta() {
         </DialogClose>
         <DialogTitle className="text-ld-violeta text-center text-xl md:text-3xl">Agregar pregunta</DialogTitle>
 
-        {/* Pregunta */}
+        {/* Enunciado */}
         <div>
           <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Pregunta:</p>
           <textarea
             ref={preguntaRef}
             className="w-full p-2 resize-none rounded overflow-hidden"
-            placeholder="Haz tu pregunta... podés incrustar $fórmulas$, ![imágenes](url) y ```code blocks```"
+            placeholder="Haz tu pregunta..."
             value={pregunta}
             onChange={(e) => setPregunta(e.target.value)}
             tabIndex={1}
+          />
+        </div>
+
+        {/* Body/Descripción -- acá va el markdown */}
+        <div>
+          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">
+            Descripción: <span className="text-sm font-normal text-ld-violeta/50">(opcional)</span>
+          </p>
+          <textarea
+            ref={descripcionRef}
+            className="w-full p-2 resize-none rounded overflow-hidden"
+            placeholder="Podés incrustar $fórmulas$, ![imágenes](url) y ```code blocks```"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            tabIndex={2}
           />
 
           {/* Switch para forzar la vista previa aunque no se detecte markdown */}
@@ -128,12 +148,12 @@ export function AgregarPregunta() {
           </label>
         </div>
 
-        {/* Vista previa de la pregunta */}
-        {(forzarMarkdown || necesitaMarkdown(pregunta)) && (
+        {/* Vista previa de la descripción */}
+        {(forzarMarkdown || necesitaMarkdown(descripcion)) && (
           <div className="shrink-0">
             <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
             <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
-              <PreguntaMarkdown texto={pregunta} forzar={forzarMarkdown} />
+              <PreguntaMarkdown texto={descripcion} forzar={forzarMarkdown} />
             </div>
           </div>
         )}
@@ -152,7 +172,7 @@ export function AgregarPregunta() {
                   type="text"
                   value={respuesta}
                   onChange={(e) => actualizarRespuesta(index, e.target.value)}
-                  tabIndex={index + 2}
+                  tabIndex={index + 3}
                   ref={(el) => {
                     inputRefs.current[index] = el
                   }}
@@ -173,7 +193,7 @@ export function AgregarPregunta() {
         <button
           className="flex items-center self-center w-fit font-semibold gap-2  text-white px-2 py-2 rounded-full"
           onClick={agregarRespuesta}
-          tabIndex={opciones.length + 2}
+          tabIndex={opciones.length + 3}
         >
           <CirclePlus className="text-ld-violeta font-bold hover:scale-105" size={30} />
         </button>
@@ -228,7 +248,7 @@ export function AgregarPregunta() {
               disabled={!success}
               className="flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500"
               onClick={postearPregunta}
-              tabIndex={opciones.length + 2}
+              tabIndex={opciones.length + 3}
             >
               <Send size={20} /> Enviar pregunta
             </button>

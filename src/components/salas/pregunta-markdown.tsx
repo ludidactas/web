@@ -48,11 +48,10 @@ export const necesitaMarkdown = (texto: string) => PATRONES_MARKDOWN.some((patro
  * Renderiza el texto de una pregunta: imágenes por URL, fórmulas (`$inline$` / `$$bloque$$`)
  * y code blocks con syntax highlighting. El HTML embebido se muestra literal, no se interpreta.
  *
- * Si el texto no tiene ningún patrón de markdown, se devuelve tal cual sin pasar por el parser,
- * salvo que `forzar` pida renderizarlo igual.
+ * Si el texto no tiene ningún patrón de markdown, se devuelve tal cual sin pasar por el parser.
  */
-export function PreguntaMarkdown({ texto, forzar = false }: { texto: string; forzar?: boolean }) {
-  if (!forzar && !necesitaMarkdown(texto)) return <>{texto}</>
+export function PreguntaMarkdown({ texto }: { texto: string }) {
+  if (!necesitaMarkdown(texto)) return <>{texto}</>
 
   return (
     <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>

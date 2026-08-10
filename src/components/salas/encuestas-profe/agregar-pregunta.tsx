@@ -1,5 +1,4 @@
 import { Checkbox } from '@/components/ui/checkbox'
-import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { NumberInput } from '@/components/ui/number-input'
 import { crearEncuesta } from '@/wss/validators/polls'
@@ -26,7 +25,6 @@ export function AgregarPregunta() {
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
-  const [forzarMarkdown, setForzarMarkdown] = useState(false)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
 
   // El alto de los textarea sigue al contenido: los colapsamos y reexpandimos al alto real del texto.
@@ -85,7 +83,6 @@ export function AgregarPregunta() {
         setAdmiteAportes(false)
         setAdmiteMultiplesVotos(false)
         setMaxMultiplesVotos(null)
-        setForzarMarkdown(false)
         setOpen(false)
       })
       .catch((msg) => toast.error(msg))
@@ -136,24 +133,14 @@ export function AgregarPregunta() {
             onChange={(e) => setDescripcion(e.target.value)}
             tabIndex={2}
           />
-
-          {/* Switch para forzar la vista previa aunque no se detecte markdown */}
-          <label className="flex items-center justify-end gap-2 pt-1 text-xs text-ld-violeta/50 cursor-pointer">
-            Ver como markdown
-            <Switch
-              className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3"
-              checked={forzarMarkdown}
-              onCheckedChange={setForzarMarkdown}
-            />
-          </label>
         </div>
 
         {/* Vista previa de la descripción */}
-        {(forzarMarkdown || necesitaMarkdown(descripcion)) && (
+        {necesitaMarkdown(descripcion) && (
           <div className="shrink-0">
             <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
             <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
-              <PreguntaMarkdown texto={descripcion} forzar={forzarMarkdown} />
+              <PreguntaMarkdown texto={descripcion} />
             </div>
           </div>
         )}

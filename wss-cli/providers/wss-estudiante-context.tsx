@@ -12,6 +12,7 @@ import estudianteEncuestasHandlers from '../handlers/estudiante-encuestas-handle
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
 import { storeEstudianteLogin } from '../stores/estudiante-login-store'
+import { storeInvitado } from '../stores/invitado-store'
 import { useWss } from '../use-wss'
 
 /** Cose el socket con el state para estudiante */
@@ -46,8 +47,14 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     }
   }, [socket])
 
-  // Al salir de la sala limpiamos su config para no dejar valores stale al navegar
-  useEffect(() => () => storeConfig.getState().set(null), [])
+  // Al salir de la sala limpiamos su config y estado de invitado para no dejar valores stale al navegar
+  useEffect(
+    () => () => {
+      storeConfig.getState().set(null)
+      storeInvitado.getState().reset()
+    },
+    []
+  )
 
   // Si el servidor rechaza la sesión, volvemos al login
   useEffect(() => {

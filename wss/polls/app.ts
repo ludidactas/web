@@ -3,6 +3,7 @@ import { Salas } from '../salas/app'
 import { Encuesta, EncuestaConVotos, EncuestaHidratadaEstudiante, EncuestaHidratadaProfe } from '../validators/polls'
 import { RolSala } from '../validators/auth'
 import { nuevaEncuesta, voteValidator } from '../validators/polls'
+import { normalizarTexto } from '../utils'
 import * as db from './db'
 
 /**
@@ -216,7 +217,7 @@ export async function estudianteSala(idSala: string, userId: string) {
       enforce(poll.admiteAportes, 'Esta encuesta no admite aportes')
       enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
       enforce(
-        !poll.opciones.find((opc) => opc.texto.toLowerCase() === voto.aporte.toLowerCase()),
+        !poll.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
         'Esa opción ya existe'
       )
 

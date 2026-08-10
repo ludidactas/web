@@ -13,10 +13,20 @@ export namespace ListaPermitidos {
 
   async function remover(list: string[], salaId: string) {
     await db.quitarPermitidosDe(list, salaId)
+    await db.quitarNombresPermitidos(list, salaId)
   }
 
   async function limpiar(salaId: string) {
     await db.limpiarListaPermitidosDe(salaId)
+    await db.limpiarNombresPermitidosDe(salaId)
+  }
+
+  async function setNombre(dni: string, nombre: string, salaId: string) {
+    await db.setNombrePermitido(salaId, dni, nombre)
+  }
+
+  async function nombres(salaId: string) {
+    return db.obtenerNombresPermitidos(salaId)
   }
 
   async function incluye(salaId: string, userId: string) {
@@ -43,6 +53,13 @@ export namespace ListaPermitidos {
       limpiar: () => limpiar(salaId),
       incluye: (dni: string) => incluye(salaId, dni),
       purgar: (sockets: SocketConSesion[]) => purgarSockets(salaId, sockets),
+
+      /** Asigna el nombre que el profe le dio a un DNI de la lista de invitados. */
+      setNombre: (dni: string, nombre: string) => setNombre(dni, nombre, salaId),
+      /** Mapa dni → nombre provisto de los invitados de la sala. */
+      nombres: () => nombres(salaId),
+      /** Lista de invitados junto con sus nombres provistos, para hidratar al FE de una sola vez. */
+      obtenerConNombres: async () => ({ lista: await obtener(salaId), nombres: await nombres(salaId) }),
     }
   }
 }

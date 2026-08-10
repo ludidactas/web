@@ -8,7 +8,15 @@ import IconEnc from '@/svg/dist/encuestas/EncuestaIcon.svg'
 import { EncuestaHidratadaEstudiante } from '@/wss/validators/polls'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Circle, CircleCheckBig, MessageCircleQuestionIcon, Send, Square, SquareCheckBig } from 'lucide-react'
+import {
+  BadgeCheck,
+  Circle,
+  CircleCheckBig,
+  MessageCircleQuestionIcon,
+  Send,
+  Square,
+  SquareCheckBig,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import LoadingSala from '../loading-sala'
 import Cabeza from '/svg/dist/ilustraciones/cabezas.svg'
@@ -20,6 +28,21 @@ import { useConexionEstudiante } from '@/wss-cli/providers/wss-estudiante-contex
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { intersection } from 'remeda'
 import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
+import { storeInvitado } from '@/wss-cli/stores/invitado-store'
+
+/** Avisa al estudiante que su DNI está en la lista de invitados de la sala (se le tomó asistencia). */
+function AvisoInvitado() {
+  const { esInvitado, nombreProvisto } = storeInvitado()
+
+  if (!esInvitado) return null
+
+  return (
+    <p className="flex items-center max-w-max gap-1.5 text-sm text-teal-600 bg-teal-50 rounded-full px-4 py-1.5 mt-2">
+      <BadgeCheck size={16} /> Estás en la lista de invitados de esta sala{' '}
+      {nombreProvisto && <>con el nombre {nombreProvisto}</>}
+    </p>
+  )
+}
 
 export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   const { estado, error } = useConexionEstudiante()
@@ -51,7 +74,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
               animation={oscilar(['cabeza'], 2, 1, 0.4)}
             />
 
-            <div className="flex flex-col text-center text-lg md:text-3xl">
+            <div className="flex flex-col items-center text-center text-lg md:text-3xl">
               <p>
                 Estás en la{' '}
                 <span className="text-lg md:text-4xl text-ld-violeta rounded-full md:px-4 ">
@@ -61,6 +84,7 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
                 de
               </p>
               <p className="text-teal-500"> {config?.nombre?.trim() || (config?.nombre_profe ?? idSala)}</p>
+              <AvisoInvitado />
               <p className="text-xs md:text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
             </div>
           </div>

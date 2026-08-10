@@ -10,6 +10,7 @@ import profeUps from '@/svg/dist/ilustraciones/ProfeUps.svg'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
+import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { EncuestaHidratadaProfe } from '@/wss/validators/polls'
 import { Icon, Icon as Iconito } from '@iconify/react'
 import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
@@ -209,6 +210,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 /** @todo: cambiar para recibir nombres con avatares como la lista de participantes? */
 function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes: string[] }) {
   const [open, setOpen] = useState(false)
+  const { items: estudiantes } = storeEstudiantes()
+
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger onClick={() => setOpen(true)}>{children}</TooltipTrigger>
@@ -216,10 +219,12 @@ function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes:
         <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
           {votantes.length === 0 && <p className="text-sm text-slate-400 bg-transparent">Nadie votó todavía</p>}
           {votantes.length > 0 &&
-            votantes.map((nombre) => (
-              <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={nombre}>
+            votantes.map((userId) => (
+              <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={userId}>
                 <CircleUserRound className="w-4 h-4 text-ld-azul-oscuro" />
-                <p className="text-sm text-ld-azul-oscuro">{nombre}</p>
+                <p className="text-sm text-ld-azul-oscuro">
+                  {estudiantes.find((e) => e.userId === userId)?.nombre ?? userId}
+                </p>
               </div>
             ))}
         </div>

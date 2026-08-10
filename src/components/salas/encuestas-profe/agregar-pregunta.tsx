@@ -1,15 +1,17 @@
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { NumberInput } from '@/components/ui/number-input'
 import { crearEncuesta } from '@/wss/validators/polls'
 import { CirclePlus, Infinity, Send } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { extractZodErrorMessages } from '@/wss/utils'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { necesitaMarkdown, PreguntaMarkdown } from '../pregunta-markdown'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
@@ -18,10 +20,20 @@ export function AgregarPregunta() {
   const [pregunta, setPregunta] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const preguntaRef = useRef<HTMLTextAreaElement>(null)
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
+  const [forzarMarkdown, setForzarMarkdown] = useState(false)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
+
+  // El alto del textarea sigue al contenido: lo colapsamos y lo reexpandimos al alto real del texto.
+  useEffect(() => {
+    const el = preguntaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [pregunta, open])
 
   const agregarRespuesta = () => {
     setOpciones((rs) => {
@@ -68,6 +80,7 @@ export function AgregarPregunta() {
         setAdmiteAportes(false)
         setAdmiteMultiplesVotos(false)
         setMaxMultiplesVotos(null)
+        setForzarMarkdown(false)
         setOpen(false)
       })
       .catch((msg) => toast.error(msg))
@@ -86,7 +99,7 @@ export function AgregarPregunta() {
         </DialogTrigger>
       </div>
 
-      <DialogContent className="flex flex-col w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto rounded-xl bg-[#f2ebff] p-2 sm:p-8 gap-2 sm:max-w-lg md:max-w-xl">
+      <DialogContent className="flex flex-col w-[95vw] sm:w-full top-[5vh] translate-y-0 max-h-[90vh] overflow-y-auto rounded-xl bg-[#f2ebff] p-2 sm:p-8 gap-2 sm:max-w-lg md:max-w-xl">
         <DialogClose className="absolute right-4 top-4">
           <Icon className="w-6 h-6 text-ld-violeta" icon={'material-symbols:close-rounded'} />
         </DialogClose>
@@ -96,17 +109,38 @@ export function AgregarPregunta() {
         <div>
           <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Pregunta:</p>
           <textarea
-            className="w-full p-2 resize-none rounded"
-            placeholder="Haz tu pregunta..."
+            ref={preguntaRef}
+            className="w-full p-2 resize-none rounded overflow-hidden"
+            placeholder="Haz tu pregunta... podés incrustar $fórmulas$, ![imágenes](url) y ```code blocks```"
             value={pregunta}
             onChange={(e) => setPregunta(e.target.value)}
             tabIndex={1}
           />
+
+          {/* Switch para forzar la vista previa aunque no se detecte markdown */}
+          <label className="flex items-center justify-end gap-2 pt-1 text-xs text-ld-violeta/50 cursor-pointer">
+            Ver como markdown
+            <Switch
+              className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3"
+              checked={forzarMarkdown}
+              onCheckedChange={setForzarMarkdown}
+            />
+          </label>
         </div>
+
+        {/* Vista previa de la pregunta */}
+        {(forzarMarkdown || necesitaMarkdown(pregunta)) && (
+          <div className="shrink-0">
+            <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
+            <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
+              <PreguntaMarkdown texto={pregunta} forzar={forzarMarkdown} />
+            </div>
+          </div>
+        )}
 
         {/* Opciones */}
         <p className="text-lg md:text-2xl  mt-4 text-ld-violeta  font-bold">Opciones:</p>
-        <div className="flex flex-col gap-1 overflow-y-auto">
+        <div className="flex flex-col gap-1 shrink-0 overflow-y-auto">
           {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
 
           {opciones.length > 0 &&

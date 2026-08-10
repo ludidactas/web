@@ -18,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CircleUserRound, Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
+import { PreguntaMarkdown } from '../pregunta-markdown'
 import { useDebounceValue } from 'usehooks-ts'
 import { AccionesToggle } from './accionesToggle'
 import { AvanzarEstado, ESTADOS_ENCUESTA, estadoEncuesta } from './avanzar-estado'
@@ -79,12 +80,14 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
               'data-[state=open]:rounded-b-none'
             )}
           >
-            <div className="flex gap-4 justify-between items-center ">
-              <div className="flex items-center gap-2">
+            <div className="flex w-full gap-4 justify-between items-center ">
+              <div className="flex flex-1 min-w-0 items-center gap-2">
                 <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
-                <h3 className="text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
+                <h3 className="w-full text-xs md:text-base text-center break-words font-bold">
+                  <PreguntaMarkdown texto={encuesta.pregunta} />
+                </h3>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex shrink-0 items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
                   <div className="flex items-center gap-2 text-indigo-500 ">
                     <Tooltip>

@@ -109,7 +109,7 @@ export function AgregarPregunta() {
 
         {/* Enunciado */}
         <div>
-          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Pregunta:</p>
+          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Enunciado:</p>
           <textarea
             ref={preguntaRef}
             className="w-full p-2 resize-none rounded overflow-hidden"

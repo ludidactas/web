@@ -66,7 +66,10 @@ export const ListaEstudiantes = () => {
   }
 
   const datosEstudiantes = estudiantes
-    .map((e) => (e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`))
+    .map((e) => {
+      const identificador = e.email || e.dni
+      return identificador ? `${e.nombre} (${identificador})` : e.nombre
+    })
     .join('\n')
 
   return (

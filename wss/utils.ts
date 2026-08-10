@@ -18,3 +18,11 @@ export function socketIp(socket: Socket) {
 
   return ip
 }
+
+/**
+ * Normaliza texto para comparaciones que no deberían distinguir mayúsculas, acentos, ni espacios
+ * de borde/repetidos.
+ */
+export function normalizarTexto(texto: string): string {
+  return texto.trim().replace(/\s+/g, ' ').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}

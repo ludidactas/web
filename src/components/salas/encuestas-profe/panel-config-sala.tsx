@@ -95,7 +95,10 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
                             nombres={nombres}
                             onRemover={(dni) => removerPermitidos([dni])}
                             onBorrar={borrarListaPermitidos}
-                            onAgregarCSV={(nuevos) => agregarPermitidos(nuevos)}
+                            onAgregarCSV={(nuevos) => {
+                              agregarPermitidos(nuevos.map((n) => n.dni))
+                              nuevos.forEach((n) => n.nombre && setNombrePermitido(n.dni, n.nombre))
+                            }}
                           />
                         </div>
                       </div>

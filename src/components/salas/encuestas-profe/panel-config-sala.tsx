@@ -29,7 +29,8 @@ import { ListaInvitadosForm, ListaPermitidosForm } from './lista-invitados-form'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
   const isMobile = useIsMobile()
-  const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos } = useConexionProfe()
+  const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos, setNombrePermitido } =
+    useConexionProfe()
   const { config } = storeConfig()
   const { lista: listaPermitidos, nombres } = storePermitidos()
   const [listaActiva, setListaActiva] = useState(listaPermitidos.length > 0 || !!config?.solo_invitados)
@@ -86,7 +87,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
                           <ListaInvitadosForm
                             onAgregar={(dni, nombre) => {
                               agregarPermitidos([dni])
-                              if (nombre) storePermitidos.getState().setNombre(dni, nombre)
+                              if (nombre) setNombrePermitido(dni, nombre)
                             }}
                           />
                           <ListaPermitidosForm
@@ -105,7 +106,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
             )}
           </AnimatePresence>
         </div>
-    </DialogContent>
+      </DialogContent>
     </Dialog>
   )
 

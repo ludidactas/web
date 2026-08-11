@@ -95,6 +95,7 @@ function FormCrearSala() {
               solo_invitados: form.soloInvitados,
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
+              nombresPermitidos: form.nombres,
             },
           }),
           delay(CARGA_MINIMA_MS),

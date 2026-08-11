@@ -191,7 +191,7 @@ function FormCrearSala() {
                         nombres={form.nombres}
                         onRemover={(dni) => setForm((f) => ({ ...f, lista: f.lista.filter((d) => d !== dni) }))}
                         onBorrar={() => setForm((f) => ({ ...f, lista: [], nombres: {} }))}
-                        onAgregarCSV={(nuevos) => nuevos.forEach((d) => agregarALista(d))}
+                        onAgregarCSV={(nuevos) => nuevos.forEach(({ dni, nombre }) => agregarALista(dni, nombre))}
                       />
                     </div>
                   </div>

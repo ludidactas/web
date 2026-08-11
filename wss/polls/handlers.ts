@@ -1,5 +1,5 @@
 import { ExtendedError, Socket } from 'socket.io'
-import { conErrorHandling } from '../middleware/error-handling'
+import { conAck, conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Sala, Salas } from '../salas/app'
 import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from './app'
@@ -119,17 +119,12 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
 }
 
 export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {
-  const safe = conErrorHandling(socket)
-
   socket.join(`sala:${idSala}:overlay`)
 
   console.log(`📺 Overlay conectado para sala ${idSala} (socket ${socket.id})`)
 
-  // Al conectarse, enviamos la encuesta enfocada actual si la hay
-  const emitir = safe(async () => {
-    const encuesta = await getEncuestaEnfocada(idSala)
-    if (encuesta) socket.emit('poll:updated', encuesta)
-  })
-
-  await emitir()
+  socket.on(
+    'poll:pedir_enfocada',
+    conAck(socket)(async () => await getEncuestaEnfocada(idSala))
+  )
 }

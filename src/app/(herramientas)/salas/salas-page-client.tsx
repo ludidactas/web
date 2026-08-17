@@ -42,6 +42,7 @@ import { CirclePlus, Pencil, Trash2 } from 'lucide-react'
 import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
 import { Outlined } from '@/components/fx/filtros'
+import { DrivePickerEmbed } from './google-integration'
 
 type FormState = {
   nombre: string
@@ -241,6 +242,12 @@ function Cuenta() {
               <p className="font-semibold">{user.name}</p>
               <p className="text-muted-foreground text-sm">{user.email}</p>
             </div>
+          </div>
+          <div>
+            <DrivePickerEmbed
+              clientId="310761259109-pet37e40n67hc50af8lg9dpn0035lmqa.apps.googleusercontent.com"
+              apiKey="AIzaSyCUOa_0ZNOC59j6wA84iKPpHC_wBIGE6Fg"
+            />
           </div>
         </div>
       ) : (

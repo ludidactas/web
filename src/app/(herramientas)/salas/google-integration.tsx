@@ -15,44 +15,51 @@ interface DrivePickerEmbedProps {
 
 export const DrivePickerEmbed: React.FC<DrivePickerEmbedProps> = ({ clientId, apiKey }) => {
   const [selectedFile, setSelectedFile] = useState<{ id: string; mimeType: string } | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isGsiLoaded, setIsGsiLoaded] = useState(false);
+  const [isPickerLoaded, setIsPickerLoaded] = useState(false);
   const [tokenClient, setTokenClient] = useState<any>(null);
 
   // 1. Cargar dinámicamente los SDKs de Google
   useEffect(() => {
-    const loadScripts = () => {
-      const scriptGsi = document.createElement('script');
-      scriptGsi.src = 'https://accounts.google.com/gsi/client';
-      scriptGsi.async = true;
-      document.body.appendChild(scriptGsi);
+    const loadScript = (src: string, onReady: () => void) => {
+      const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === 'true') onReady();
+        else existing.addEventListener('load', onReady);
+        return;
+      }
 
-      const scriptGapi = document.createElement('script');
-      scriptGapi.src = 'https://apis.google.com/js/api.js';
-      scriptGapi.async = true;
-      scriptGapi.onload = () => {
-        window.gapi.load('picker', () => setIsLoaded(true));
-      };
-      document.body.appendChild(scriptGapi);
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.addEventListener('load', () => {
+        script.dataset.loaded = 'true';
+        onReady();
+      });
+      document.body.appendChild(script);
     };
 
-    loadScripts();
+    loadScript('https://accounts.google.com/gsi/client', () => setIsGsiLoaded(true));
+    loadScript('https://apis.google.com/js/api.js', () => {
+      window.gapi.load('picker', () => setIsPickerLoaded(true));
+    });
   }, []);
 
   // 2. Inicializar cliente OAuth
   useEffect(() => {
-    if (isLoaded && window.google) {
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.file',
-        callback: (response: any) => {
-          if (response.access_token) {
-            openPicker(response.access_token);
-          }
-        },
-      });
-      setTokenClient(client);
-    }
-  }, [isLoaded, clientId]);
+    if (!isGsiLoaded) return;
+
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      callback: (response: any) => {
+        if (response.access_token) {
+          openPicker(response.access_token);
+        }
+      },
+    });
+    setTokenClient(client);
+  }, [isGsiLoaded, clientId]);
 
   // 3. Abrir el Picker de Google
   const handleSelectFile = () => {
@@ -83,10 +90,10 @@ export const DrivePickerEmbed: React.FC<DrivePickerEmbedProps> = ({ clientId, ap
   const getEmbedUrl = () => {
     if (!selectedFile) return '';
     if (selectedFile.mimeType === 'application/vnd.google-apps.spreadsheet') {
-      return `https://docs.google.com/spreadsheets/d/${selectedFile.id}/edit`;
+      return `https://docs.google.com/spreadsheets/d/${selectedFile.id}/preview`;
     }
     if (selectedFile.mimeType === 'application/vnd.google-apps.document') {
-      return `https://docs.google.com/document/d/${selectedFile.id}/edit`;
+      return `https://docs.google.com/document/d/${selectedFile.id}/preview`;
     }
     return `https://drive.google.com/file/d/${selectedFile.id}/preview`;
   };
@@ -95,7 +102,7 @@ export const DrivePickerEmbed: React.FC<DrivePickerEmbedProps> = ({ clientId, ap
     <div style={{ width: '100%', padding: '1rem' }}>
       <button 
         onClick={handleSelectFile}
-        disabled={!isLoaded}
+        disabled={!tokenClient || !isPickerLoaded}
         style={{ padding: '10px 16px', marginBottom: '1rem', cursor: 'pointer' }}
       >
         Seleccionar archivo de mi Drive

@@ -245,8 +245,8 @@ function Cuenta() {
           </div>
           <div>
             <DrivePickerEmbed
-              clientId="310761259109-pet37e40n67hc50af8lg9dpn0035lmqa.apps.googleusercontent.com"
-              apiKey="AIzaSyCUOa_0ZNOC59j6wA84iKPpHC_wBIGE6Fg"
+              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+              apiKey={process.env.NEXT_PUBLIC_GOOGLE_API_KEY!}
             />
           </div>
         </div>

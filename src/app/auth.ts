@@ -105,6 +105,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         session.user.name = token.name
         session.user.image = token.picture
       }
+      session.driveConectado = typeof token.driveRefreshToken === 'string'
       return session
     },
     async authorized({ auth }) {

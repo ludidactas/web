@@ -37,7 +37,7 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
           <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user?.name)}!</p>
         </HeaderSala>
         <div className="w-screen min-h-screen md:px-4">
-          <EncuestasProfe integracionGoogle={integracionGoogle} />
+          <EncuestasProfe integracionGoogle={integracionGoogle} driveConectado={session?.driveConectado ?? false} />
         </div>
 
         <div className="w-full" />

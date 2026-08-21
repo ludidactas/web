@@ -1,10 +1,23 @@
 'use client'
 
 import { Icon } from '@iconify/react'
-import { useEffect, useRef, useState } from 'react'
+import { signIn } from 'next-auth/react'
+
+import { AUTORIZACION } from '@/lib/google/autorizacion'
+import { useParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { create } from 'zustand'
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import {
+  ColeccionPreguntasEnDrive,
+  DriveNoConectado,
+  guardarColeccion as guardarColeccionEnDrive,
+  leerColecciones as leerColeccionesDeDrive,
+} from '@/lib/google/recursos-colecciones'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { extractZodErrorMessages } from '@/wss/utils'
 import { crearEncuesta } from '@/wss/validators/polls'
@@ -15,8 +28,9 @@ import {
   obtenerPresets,
   parsearColeccion,
   PresetColeccion,
+  serializarColeccion,
 } from './colecciones-io'
-import { aSlug } from '@/lib/utils'
+import { aSlug, cn } from '@/lib/utils'
 
 type Vista = 'menu' | 'exportar' | 'importar'
 
@@ -26,8 +40,33 @@ const TITULOS: Record<Vista, string> = {
   importar: 'Importar preguntas',
 }
 
+const ICONO_DRIVE = 'logos:google-drive'
+
+type ColeccionDrive = PresetColeccion & { contenido: string; preguntas: number }
+
+const storeColeccionDrive = create<{
+  abierta: string | null
+  abrir: (nombre: string) => void
+}>()((set) => ({
+  abierta: null,
+  abrir: (abierta) => set({ abierta }),
+}))
+
+function reconectarDrive() {
+  return signIn('google', { redirectTo: window.location.pathname }, { ...AUTORIZACION.conDrive, prompt: 'consent' })
+}
+
+function aColeccionDrive({ archivo, contenido }: ColeccionPreguntasEnDrive): ColeccionDrive {
+  try {
+    const { nombre, preguntas } = parsearColeccion(contenido)
+    return { archivo, contenido, nombre: nombre ?? archivo, preguntas: preguntas.length }
+  } catch {
+    return { archivo, contenido, nombre: archivo, preguntas: 0 }
+  }
+}
+
 /** UI para importar/exportar -- pendiente revisar/mejorar @comomaraleja */
-export function ImportarExportar() {
+export function ImportarExportar({ integracionGoogle }: { integracionGoogle: boolean }) {
   const { crear } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
 
@@ -39,10 +78,39 @@ export function ImportarExportar() {
   const [importando, setImportando] = useState(false)
   const inputArchivo = useRef<HTMLInputElement>(null)
 
+  const { idSala } = useParams<{ idSala: string }>()
+  const [misColecciones, setMisColecciones] = useState<ColeccionDrive[] | null>(null)
+  const [driveConectado, setDriveConectado] = useState(true)
+
   // Cargamos los presets disponibles al entrar a la vista de importar
   useEffect(() => {
     if (vista === 'importar' && presets.length === 0) obtenerPresets().then(setPresets)
   }, [vista, presets.length])
+
+  const leerDrive = useCallback(
+    () =>
+      leerColeccionesDeDrive(idSala)
+        .then((colecciones) => {
+          setMisColecciones(colecciones.map(aColeccionDrive))
+          setDriveConectado(true)
+        })
+        .catch((error: unknown) => {
+          if (!(error instanceof DriveNoConectado)) {
+            console.error('Drive: no se pudieron leer las colecciones', error)
+          }
+          setMisColecciones([])
+          setDriveConectado(false)
+        }),
+    [idSala]
+  )
+
+  useEffect(() => {
+    if (integracionGoogle && vista === 'importar' && misColecciones === null) leerDrive()
+  }, [integracionGoogle, vista, misColecciones, leerDrive])
+
+  const conectarDrive = () => {
+    reconectarDrive().catch((error: unknown) => console.error('Drive: no se pudo conectar', error))
+  }
 
   // Al cerrar el drawer, volvemos siempre al menú principal
   const alCambiarDrawer = (abierto: boolean) => {
@@ -134,6 +202,7 @@ export function ImportarExportar() {
       toast.error(error instanceof Error ? error.message : 'No se pudo leer la colección')
       return
     }
+    if (sobre.nombre) storeColeccionDrive.getState().abrir(sobre.nombre)
     setVista('menu')
     await importarPreguntas(sobre.preguntas)
   }
@@ -167,6 +236,11 @@ export function ImportarExportar() {
         return
       }
       await procesarTexto(texto)
+    })
+
+  const importarDesdeDrive = (coleccion: ColeccionDrive) =>
+    correr(async () => {
+      await procesarTexto(coleccion.contenido)
     })
 
   /** Función para consumir un archivo de texto provisto por URL */
@@ -299,6 +373,44 @@ export function ImportarExportar() {
                 </button>
               </div>
 
+              {integracionGoogle && (
+                <>
+                {/* Mis colecciones en Drive */}
+                <p className="font-bold text-ld-violeta mt-2 flex items-center gap-1">
+                  Mis colecciones <Icon icon={ICONO_DRIVE} className="w-4 h-4" />
+                </p>
+
+                {!driveConectado ? (
+                  <button
+                    className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2"
+                    onClick={conectarDrive}
+                  >
+                    <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
+                  </button>
+                ) : misColecciones === null ? (
+                  <p className="text-xs text-slate-500">Leyendo tu Google Drive…</p>
+                ) : misColecciones.length === 0 ? (
+                  <p className="text-xs text-slate-500">Todavía no guardaste ninguna colección.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {misColecciones.map((coleccion) => (
+                      <button
+                        key={coleccion.archivo}
+                        className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
+                        onClick={() => importarDesdeDrive(coleccion)}
+                        disabled={importando}
+                      >
+                        <span className="font-semibold text-ld-violeta">{coleccion.nombre}</span>
+                        <span className="text-xs text-slate-500">
+                          {coleccion.preguntas} pregunta{coleccion.preguntas === 1 ? '' : 's'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                </>
+              )}
+
               {/* Presets */}
               {presets.length > 0 && (
                 <>
@@ -323,5 +435,121 @@ export function ImportarExportar() {
         </div>
       </DrawerContent>
     </Drawer>
+  )
+}
+
+export function GuardarEnDrive() {
+  const { items: encuestas } = storeEncuestasProfe()
+  const config = storeConfig((estado) => estado.config)
+  const { idSala } = useParams<{ idSala: string }>()
+  const abierta = storeColeccionDrive((estado) => estado.abierta)
+  const abrir = storeColeccionDrive((estado) => estado.abrir)
+
+  const [dialogoAbierto, setDialogoAbierto] = useState(false)
+  const [nombre, setNombre] = useState('')
+  const [guardando, setGuardando] = useState(false)
+  const [existentes, setExistentes] = useState<string[]>([])
+  const [verificando, setVerificando] = useState(false)
+
+  const nombreFinal = nombre.trim()
+  const sobrescribe = nombreFinal.length > 0 && existentes.some((otro) => aSlug(otro) === aSlug(nombreFinal))
+
+  const abrirDialogo = () => {
+    setNombre(abierta ?? '')
+    setExistentes([])
+    setVerificando(true)
+
+    leerColeccionesDeDrive(idSala)
+      .then((colecciones) => setExistentes(colecciones.map((coleccion) => aColeccionDrive(coleccion).nombre)))
+      .catch((error: unknown) => {
+        if (!(error instanceof DriveNoConectado)) {
+          console.error('Drive: no se pudieron leer las colecciones', error)
+        }
+      })
+      .finally(() => {
+        setVerificando(false)
+        setDialogoAbierto(true)
+      })
+  }
+
+  const guardar = async () => {
+    if (!nombreFinal) return
+
+    setDialogoAbierto(false)
+    setGuardando(true)
+    try {
+      await guardarColeccionEnDrive(idSala, config?.nombre ?? idSala, nombreFinal, serializarColeccion(nombreFinal, encuestas))
+
+      abrir(nombreFinal)
+      toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
+    } catch (error) {
+      if (error instanceof DriveNoConectado) {
+        toast.info('Necesitamos tu permiso para guardar en Google Drive')
+        await reconectarDrive()
+        return
+      }
+
+      console.error('Drive: no se pudo guardar la colección', error)
+      toast.error('No se pudo guardar la colección en tu Google Drive')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <Dialog open={dialogoAbierto} onOpenChange={setDialogoAbierto}>
+      <div className="contents md:relative md:block md:w-11 md:h-11 md:shrink-0">
+        <button
+          className="group flex items-center w-full md:w-fit justify-center gap-2 md:gap-0 md:hover:gap-2 font-semibold text-white text-sm px-4 py-3 md:py-0 rounded-full bg-emerald-600 hover:bg-emerald-600/80 transition-colors disabled:text-slate-500 disabled:bg-slate-100 disabled:no-underline disabled:font-normal md:absolute md:right-0 md:top-0 md:z-10 md:h-11 md:flex-row-reverse md:justify-start md:hover:px-4 md:text-base"
+          disabled={encuestas.length === 0 || guardando || verificando}
+          title="Guardar estas preguntas como una colección en tu Google Drive"
+          onClick={abrirDialogo}
+        >
+          <Icon
+            icon={verificando ? 'mdi:loading' : ICONO_DRIVE}
+            className={cn('w-4 h-4 md:w-5 md:h-5 shrink-0', verificando && 'animate-spin')}
+          />
+          <span className="whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
+            Guardar
+          </span>
+        </button>
+      </div>
+
+      <DialogContent className="flex flex-col items-center">
+        <DialogHeader>
+          <DialogTitle className="text-center leading-6">Guardar en tu Google Drive</DialogTitle>
+        </DialogHeader>
+        <p className="text-center text-slate-500">
+          Se guardarán las {encuestas.length} pregunta(s) de esta sala como una colección.
+        </p>
+        <input
+          className="w-full rounded border p-2"
+          type="text"
+          value={nombre}
+          onChange={(evento) => setNombre(evento.target.value)}
+          onKeyDown={(evento) => evento.key === 'Enter' && guardar()}
+          placeholder="Nombre de la colección"
+          autoFocus
+        />
+        {sobrescribe && (
+          <p className="flex items-center gap-1 text-center text-sm text-amber-600">
+            <Icon icon="mdi:alert-outline" className="shrink-0" />
+            Ya tenés una colección con este nombre. Si guardás, la vas a sobrescribir.
+          </p>
+        )}
+        <div className="flex gap-2">
+          <DialogClose asChild>
+            <button className="bg-slate-200 px-4 py-2 min-w-40 rounded-full">Cancelar</button>
+          </DialogClose>
+          <button
+            className="flex items-center gap-1 bg-emerald-600 text-white px-4 py-2 rounded-full disabled:bg-slate-300"
+            onClick={guardar}
+            disabled={!nombreFinal}
+          >
+            <Icon icon={ICONO_DRIVE} /> {sobrescribe ? 'Sobrescribir' : 'Guardar'}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

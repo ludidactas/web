@@ -3,6 +3,7 @@ import EncuestasProfe from '@/components/salas/encuestas-profe'
 import HeaderSala from '@/components/salas/header-sala'
 import { Toaster } from '@/components/ui/sonner'
 import { nombreSplit } from '@/lib/utils'
+import { tieneIntegracionGoogle } from '@/server/entitlements'
 import { tokenWss } from '@/server/token_wss'
 import { Icon } from '@iconify/react'
 import Link from 'next/link'
@@ -15,6 +16,7 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
   const { idSala } = await params
   const session = await auth()
   const token = await tokenWss()
+  const integracionGoogle = await tieneIntegracionGoogle(session?.user?.email)
 
   const headerBtns = (
     <div className="flex items-center gap-2">
@@ -35,7 +37,7 @@ export default async function SalaPage({ params }: { params: Promise<{ idSala: s
           <p className="text-md md:text-4xl text-center rounded-xl">¡Hola {nombreSplit(session?.user?.name)}!</p>
         </HeaderSala>
         <div className="w-screen min-h-screen md:px-4">
-          <EncuestasProfe />
+          <EncuestasProfe integracionGoogle={integracionGoogle} />
         </div>
 
         <div className="w-full" />

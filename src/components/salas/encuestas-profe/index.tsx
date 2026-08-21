@@ -18,7 +18,7 @@ import {
 import LoadingSala from '../loading-sala'
 import { PanelConfigOverlay } from './panel-config-overlay'
 import { AgregarPregunta } from './agregar-pregunta'
-import { ImportarExportar } from './importar-exportar'
+import { GuardarEnDrive, ImportarExportar } from './importar-exportar'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
@@ -30,7 +30,7 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
-export default function EncuestasProfe() {
+export default function EncuestasProfe({ integracionGoogle }: { integracionGoogle: boolean }) {
   const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
@@ -102,8 +102,9 @@ export default function EncuestasProfe() {
                   </h1>
                   <div className="flex flex-col gap-2 py-4">
                     <AgregarPregunta />
-                    <ImportarExportar />
+                    <ImportarExportar integracionGoogle={integracionGoogle} />
                     <BorrarTodo />
+                    {integracionGoogle && <GuardarEnDrive />}
                   </div>
                 </div>
                 <ListaEncuestas />
@@ -136,8 +137,9 @@ export default function EncuestasProfe() {
               <div className="flex flex-col gap-2">
                 {/* Boton agregar pregunta */}
                 <AgregarPregunta />
-                <ImportarExportar />
+                <ImportarExportar integracionGoogle={integracionGoogle} />
                 <BorrarTodo />
+                {integracionGoogle && <GuardarEnDrive />}
               </div>
             </div>
             <ListaEncuestas />

@@ -66,15 +66,15 @@ const credencialesMock = Credentials({
   },
 })
 
-const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock] : [Google]
+const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock, Google] : [Google]
 
 // Gate de prod:
 // ID del provider "principal" que dispara el botón de login de la UI
 // (`signIn(proveedorLogin)`). En dev apunta al IdP falso; en prod, a Google. El
 // mock de credenciales se invoca solo desde tests.
-export const proveedorLogin = esDesarrollo ? 'idp-dev' : 'google'
+export const proveedorLogin = 'google'
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers,
   pages: {
     signIn: '/login',
@@ -83,12 +83,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, trigger, session }) {
       // Info que va al token:
       if (user?.email) {
         token.email = user.email
         token.name = user.name
         token.picture = user.image
+      }
+      if (account?.provider === 'google' && account.refresh_token) {
+        token.driveRefreshToken = account.refresh_token
+      }
+      if (trigger === 'update' && session && 'driveRefreshToken' in session) {
+        delete token.driveRefreshToken
       }
       return token
     },

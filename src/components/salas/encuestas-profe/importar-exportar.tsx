@@ -5,7 +5,6 @@ import { Icon } from '@iconify/react'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { create } from 'zustand'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { conectarConDrive } from '@/lib/google/conexion'
@@ -43,14 +42,6 @@ const ICONO_DRIVE = 'logos:google-drive'
 
 type ColeccionDrive = PresetColeccion & { contenido: string; preguntas: number }
 
-const storeColeccionDrive = create<{
-  abierta: string | null
-  abrir: (nombre: string) => void
-}>()((set) => ({
-  abierta: null,
-  abrir: (abierta) => set({ abierta }),
-}))
-
 function aColeccionDrive({ archivo, contenido }: ColeccionPreguntasEnDrive): ColeccionDrive {
   try {
     const { nombre, preguntas } = parsearColeccion(contenido)
@@ -64,9 +55,11 @@ function aColeccionDrive({ archivo, contenido }: ColeccionPreguntasEnDrive): Col
 export function ImportarExportar({
   integracionGoogle,
   driveConectado: conectadoInicial,
+  alImportar,
 }: {
   integracionGoogle: boolean
   driveConectado: boolean
+  alImportar: (nombre: string) => void
 }) {
   const { crear } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
@@ -207,7 +200,7 @@ export function ImportarExportar({
       toast.error(error instanceof Error ? error.message : 'No se pudo leer la colección')
       return
     }
-    if (sobre.nombre) storeColeccionDrive.getState().abrir(sobre.nombre)
+    if (sobre.nombre) alImportar(sobre.nombre)
     setVista('menu')
     await importarPreguntas(sobre.preguntas)
   }
@@ -443,12 +436,18 @@ export function ImportarExportar({
   )
 }
 
-export function GuardarEnDrive({ driveConectado: conectadoInicial }: { driveConectado: boolean }) {
+export function GuardarEnDrive({
+  driveConectado: conectadoInicial,
+  abierta,
+  alGuardar,
+}: {
+  driveConectado: boolean
+  abierta: string | null
+  alGuardar: (nombre: string) => void
+}) {
   const { items: encuestas } = storeEncuestasProfe()
   const config = storeConfig((estado) => estado.config)
   const { idSala } = useParams<{ idSala: string }>()
-  const abierta = storeColeccionDrive((estado) => estado.abierta)
-  const abrir = storeColeccionDrive((estado) => estado.abrir)
 
   const [dialogoAbierto, setDialogoAbierto] = useState(false)
   const [nombre, setNombre] = useState('')
@@ -506,7 +505,7 @@ export function GuardarEnDrive({ driveConectado: conectadoInicial }: { driveCone
     try {
       await guardarColeccionEnDrive(idSala, config?.nombre ?? idSala, nombreFinal, serializarColeccion(nombreFinal, encuestas))
 
-      abrir(nombreFinal)
+      alGuardar(nombreFinal)
       toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
     } catch (error) {
       if (error instanceof DriveNoConectado) {

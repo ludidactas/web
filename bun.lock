@@ -6,8 +6,6 @@
       "name": "poc-roadmaps",
       "dependencies": {
         "@googleapis/drive": "^21.0.0",
-        "@googleapis/sheets": "^14.0.0",
-        "@googleworkspace/drive-picker-react": "^0.2.0",
         "@iconify-json/streamline-pixel": "^1.2.0",
         "@iconify/react": "^6.0.1",
         "@mdx-js/loader": "^3.1.0",
@@ -317,12 +315,6 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.8", "", {}, ""],
 
     "@googleapis/drive": ["@googleapis/drive@21.0.0", "", { "dependencies": { "googleapis-common": "^8.0.0" } }, "sha512-vebQpAqn+FZcmDWh1TEQTcYdkKftcSaHc7kO2ZxrINBb+ZMcFu1UybD3+maeqdLs60HrRDYwyzJ6TgZ7/Vn2Rg=="],
-
-    "@googleapis/sheets": ["@googleapis/sheets@14.0.0", "", { "dependencies": { "googleapis-common": "^8.0.0" } }, "sha512-fANEl4RQohsPYUWhcLSYyUyE8A8bRfvw/bp8h0t8VDQqTgdQ3itZBkty4nddtdqCAvNDpA+KM66OejVKDd6aFg=="],
-
-    "@googleworkspace/drive-picker-element": ["@googleworkspace/drive-picker-element@0.7.3", "", {}, "sha512-z1hZh1HsPAQ19lencw2x3FcUVoymWYexcWgq66iXum4mUfWWaQ37oGtQ6hGvM8dyrC81G79P26gq7HhRtbGb2Q=="],
-
-    "@googleworkspace/drive-picker-react": ["@googleworkspace/drive-picker-react@0.2.0", "", { "dependencies": { "@googleworkspace/drive-picker-element": "0.7.3" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-3CIEZ7U+HDKd8UoXG3l/fPSZFhxajC3MYNIqAZQSba2totuYKVTQMOJsgonO7OnnJq88YD35n7whCF4i5QUyvA=="],
 
     "@humanwhocodes/config-array": ["@humanwhocodes/config-array@0.13.0", "", { "dependencies": { "@humanwhocodes/object-schema": "^2.0.3", "debug": "^4.3.1", "minimatch": "^3.0.5" } }, ""],
 

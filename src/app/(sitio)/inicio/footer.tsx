@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { titulo } from '@/components/fonts'
 import ShapeDividerWaves from '../custom/shape-divider'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import logoSketchy from '@/img/logo_sketchy.gif'
+import lemaSketchy from '@/img/lema_sketchy.gif'
 
 export default function Footer() {
   return (
@@ -11,8 +13,8 @@ export default function Footer() {
       <div className="flex flex-col items-center text-center bg-indigo-300/50">
         <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center gap-4 pt-10">
           <div className="flex flex-col items-center gap-2">
-            <Image className="w-[50px] lg:w-[100px] h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
-            <Image className="w-[200px] lg:w-[300px] h-auto" src="/img/lema_sketchy.gif" alt={''} width={12013} height={1082} />
+            <Image className="w-[50px] lg:w-[100px] h-auto" src={logoSketchy} alt="" />
+            <Image className="w-[200px] lg:w-[300px] h-auto" src={lemaSketchy} alt="Ludidactas" />
             <p className={`font-medium pt-1 ${titulo.className} text-[1em] m-0`}>Educación emergente </p>
           </div>
 

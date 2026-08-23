@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { SignIn } from './botones'
 import Ilustracion from './ilustracion'
 import Link from 'next/link'
+import logoSketchy from '@/img/logo_sketchy.gif'
+import lemaSketchy from '@/img/lema_sketchy.gif'
 
 export type Intent = '/salas'
 
@@ -22,15 +24,9 @@ export default function GoogleLogin({ className, intent }: { className?: string;
           <div className="flex flex-col gap-4">
             <Link href={'/'}>
               <div className="flex md:w-[30em] items-center gap-4">
-                <Image className="w-8 md:w-16 h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
+                <Image className="w-8 md:w-16 h-auto" src={logoSketchy} alt="" />
                 <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
-                  <Image
-                    className="w-[200px] md:w-[800px] h-auto"
-                    src="/img/lema_sketchy.gif"
-                    alt={''}
-                    width={12013}
-                    height={1082}
-                  />
+                  <Image className="w-[200px] md:w-[800px] h-auto" src={lemaSketchy} alt="Ludidactas" />
                 </div>
               </div>
             </Link>

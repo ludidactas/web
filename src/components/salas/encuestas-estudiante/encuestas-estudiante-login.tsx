@@ -12,6 +12,8 @@ import { useRef } from 'react'
 import { toast } from 'sonner'
 import LoadingSala from '../loading-sala'
 import DibuEstudiante from '/svg/dist/ilustraciones/ups.svg'
+import logoSketchy from '@/img/logo_sketchy.gif'
+import lemaSketchy from '@/img/lema_sketchy.gif'
 
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
@@ -125,9 +127,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
       <div className=" flex flex-col gap-2 text-center w-fit md:p-10">
         <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
-          <Image className="w-8 md:w-10 h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
+          <Image className="w-8 md:w-10 h-auto" src={logoSketchy} alt="" />
           <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
-            <Image className="w-[200px] md:w-[800px] h-auto" src="/img/lema_sketchy.gif" alt={''} width={12013} height={1082} />
+            <Image className="w-[200px] md:w-[800px] h-auto" src={lemaSketchy} alt="Ludidactas" />
           </div>
         </div>
 

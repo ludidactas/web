@@ -80,7 +80,7 @@ export default function ContenidoIdentidad() {
                   src={'/img/Vlad.webp'}
                   height={200}
                   width={200}
-                  alt=""
+                  alt="Vladimir"
                 />
                 <div className='md:w-80 -translate-y-7'>
                   <Title data-aos="fade-right" text='Vladimir' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
@@ -104,7 +104,7 @@ export default function ContenidoIdentidad() {
                   src={'/img/Aleja.webp'}
                   height={200}
                   width={200}
-                  alt="Team member 2"
+                  alt="Alejandra"
                 />
                 <div className='md:w-80 -translate-y-7'>
                   <Title data-aos="fade-left" className='md:w-80 -translate-y-7' text='Alejandra' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
@@ -127,7 +127,7 @@ export default function ContenidoIdentidad() {
                   src={'/img/Jere.webp'}
                   height={200}
                   width={200}
-                  alt=""
+                  alt="Jeremías"
                 />
                 <div className='md:w-80 -translate-y-7'>
                   <Title data-aos="fade-right" text='Jeremías' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />

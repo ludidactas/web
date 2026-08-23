@@ -3,6 +3,8 @@ import { SignOut } from './components/botones'
 import Link from 'next/link'
 import GoogleLogin, { Intent } from './components/login'
 import Image from 'next/image'
+import logoSketchy from '@/img/logo_sketchy.gif'
+import lemaSketchy from '@/img/lema_sketchy.gif'
 
 type Props = {
   searchParams: Promise<{
@@ -35,9 +37,9 @@ export default async function ProfeLoginPage({ searchParams }: Props) {
     <div className="flex flex-col gap-2 items-center bg-cyan-50 justify-center h-screen">
       <div className=" flex flex-col bg-white p-10 rounded-xl items-center justify-center ">
         <div className="flex md:w-[20em] items-center mb-4 gap-4">
-          <Image className="w-8 md:w-10 h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
+          <Image className="w-8 md:w-10 h-auto" src={logoSketchy} alt="" />
           <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
-            <Image className="w-[200px] md:w-[800px] h-auto" src="/img/lema_sketchy.gif" alt={''} width={12013} height={1082} />
+            <Image className="w-[200px] md:w-[800px] h-auto" src={lemaSketchy} alt="Ludidactas" />
           </div>
         </div>
         <p>Ya estás conectadx con </p>

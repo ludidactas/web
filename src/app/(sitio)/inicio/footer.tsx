@@ -11,8 +11,8 @@ export default function Footer() {
       <div className="flex flex-col items-center text-center bg-indigo-300/50">
         <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center gap-4 pt-10">
           <div className="flex flex-col items-center gap-2">
-            <Image className="w-[50px] lg:w-[100px]" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
-            <Image className="w-[200px] lg:w-[300px]" src="/img/lema_sketchy.gif" alt={''} width={300} height={300} />
+            <Image className="w-[50px] lg:w-[100px] h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
+            <Image className="w-[200px] lg:w-[300px] h-auto" src="/img/lema_sketchy.gif" alt={''} width={12013} height={1082} />
             <p className={`font-medium pt-1 ${titulo.className} text-[1em] m-0`}>Educación emergente </p>
           </div>
 

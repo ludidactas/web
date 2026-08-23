@@ -125,9 +125,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
       <div className=" flex flex-col gap-2 text-center w-fit md:p-10">
         <div className="flex md:w-[20em] justify-center items-center mb-4 gap-4">
-          <Image className="w-8 md:w-10" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
+          <Image className="w-8 md:w-10 h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
           <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
-            <Image className="w-[200px] md:w-[800px]" src="/img/lema_sketchy.gif" alt={''} width={200} height={200} />
+            <Image className="w-[200px] md:w-[800px] h-auto" src="/img/lema_sketchy.gif" alt={''} width={12013} height={1082} />
           </div>
         </div>
 

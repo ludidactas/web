@@ -22,14 +22,14 @@ export default function GoogleLogin({ className, intent }: { className?: string;
           <div className="flex flex-col gap-4">
             <Link href={'/'}>
               <div className="flex md:w-[30em] items-center gap-4">
-                <Image className="w-8 md:w-16" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
+                <Image className="w-8 md:w-16 h-auto" src="/img/logo_sketchy.gif" alt={''} width={2373} height={2217} />
                 <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
                   <Image
-                    className="w-[200px] md:w-[800px]"
+                    className="w-[200px] md:w-[800px] h-auto"
                     src="/img/lema_sketchy.gif"
                     alt={''}
-                    width={200}
-                    height={200}
+                    width={12013}
+                    height={1082}
                   />
                 </div>
               </div>

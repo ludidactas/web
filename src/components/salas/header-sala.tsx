@@ -19,20 +19,20 @@ export default function HeaderSala({ className, children, btnLogout, waveHeight 
         <div className="flex md:w-[20em] items-start sm:items-center gap-1 md:gap-4">
           <Link href="/" className="flex items-center gap-4">
             <Image
-              className="w-8 sm:ml-4 md:ml-0 md:w-16"
+              className="w-8 sm:ml-4 md:ml-0 md:w-16 h-auto"
               src="/img/logo_sketchy.gif"
               alt={''}
-              width={100}
-              height={100}
+              width={2373}
+              height={2217}
             />
             <div className="hidden md:flex sm:flex-col font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1">
               <Image
                 unoptimized
-                className="w-[150px] md:w-[800px]"
+                className="w-[150px] md:w-[800px] h-auto"
                 src="/img/lema_sketchy.gif"
                 alt={''}
-                width={200}
-                height={200}
+                width={12013}
+                height={1082}
               />
               <p className={`${titulo.className} m-0 text-nowrap md:text-[1em]`}>Educación emergente </p>
             </div>

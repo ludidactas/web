@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthConfig } from 'next-auth'
+import NextAuth, { NextAuthConfig, Session } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import type { OIDCConfig } from 'next-auth/providers'
@@ -74,7 +74,12 @@ const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credenc
 // mock de credenciales se invoca solo desde tests.
 export const proveedorLogin = 'google'
 
-export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
+// Payload que entiende el `trigger: 'update'` del callback `jwt` de abajo.
+// Canal interno para pedirle al callback que borre el
+// refresh token. Solo `desconectarDrive()` debe construir uno de estos.
+type SeñalJwt = { driveRefreshToken: null }
+
+const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers,
   pages: {
     signIn: '/login',
@@ -94,8 +99,8 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
       if (account?.provider === 'google' && account.refresh_token) {
         token.driveRefreshToken = account.refresh_token
       }
-      // Si el usuario revoca el acceso a Drive, lo borramos
-      if (trigger === 'update' && session && 'driveRefreshToken' in session) {
+      // Si el usuario revoca el acceso a Drive, lo borramos (ver `SeñalJwt`/`desconectarDrive`)
+      if (trigger === 'update' && session && 'driveRefreshToken' in (session as Partial<SeñalJwt>)) {
         delete token.driveRefreshToken
       }
       return token
@@ -116,3 +121,14 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
     },
   },
 })
+
+export { handlers, signIn, signOut, auth }
+
+/**
+ * Desconecta Drive de la sesión actual: borra el `driveRefreshToken` guardado en el JWT
+ * (usado cuando Google invalida el grant, ver `responderError` en `server/google/cliente.ts`).
+ */
+export async function desconectarDrive() {
+  const señal: SeñalJwt = { driveRefreshToken: null }
+  await unstable_update(señal as Partial<Session>)
+}

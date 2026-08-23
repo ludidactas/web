@@ -2,7 +2,7 @@ import { auth, drive } from '@googleapis/drive'
 import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 
-import { unstable_update } from '@/app/auth'
+import { desconectarDrive } from '@/app/auth'
 
 const opcionesRed = {
   timeout: 20_000,
@@ -55,14 +55,19 @@ function esGrantInvalido(e: unknown) {
  * Handler de errores común para las rutas que usan `clienteDrive`.
  *
  * Si el problema es de conexión con Drive (nunca conectó, o Google invalidó el grant),
- * responde 409 y, en el caso de un grant inválido, limpia el `driveRefreshToken` de la
- * sesión (vía `unstable_update`) para que el próximo request ya sepa que hay que
- * reconectar en lugar de reintentar con un token muerto.
+ * responde 409 y, en el caso de un grant inválido, llama a `desconectarDrive()` para que
+ * el próximo request ya sepa que hay que reconectar en lugar de reintentar con un token muerto.
  */
+function driveNoConectado() {
+  return NextResponse.json({ error: 'Drive no está conectado' }, { status: 409 })
+}
+
 export async function responderError(e: unknown) {
-  if (e instanceof SinConexionDrive || esGrantInvalido(e)) {
-    if (!(e instanceof SinConexionDrive)) await unstable_update({ driveRefreshToken: null })
-    return NextResponse.json({ error: 'Drive no está conectado' }, { status: 409 })
+  if (e instanceof SinConexionDrive) return driveNoConectado()
+
+  if (esGrantInvalido(e)) {
+    await desconectarDrive()
+    return driveNoConectado()
   }
 
   console.error('Drive: error contra la API de Google', e)

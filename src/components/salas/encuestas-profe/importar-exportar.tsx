@@ -376,7 +376,7 @@ export function ImportarExportar({
                     </button>
                   ) : (
                     <button
-                      className="flex items-center justify-center gap-2 rounded-full bg-emerald-600 text-white px-4 py-2 disabled:bg-slate-300"
+                      className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2 disabled:bg-slate-300"
                       onClick={guardarEnDrive}
                       disabled={!nombreFinal || guardandoEnDrive || verificandoDrive}
                       title="Guardar estas preguntas como una colección en tu Google Drive"

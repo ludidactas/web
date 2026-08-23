@@ -1,5 +1,6 @@
 'use client'
 import { LdSvg } from '@/components/custom/ld-svg'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import loading from '@/svg/dist/ui/loading.svg'
 import { Icon } from '@iconify/react'
@@ -24,6 +25,12 @@ export default function LoadingSala({ mensaje, overlay = false, error = false }:
     </div>
   )
 
+  const botonRecargar = (
+    <Button className="mt-4" onClick={() => window.location.reload()}>
+      Recargar página
+    </Button>
+  )
+
   return (
     <div
       className={cn(
@@ -42,6 +49,7 @@ export default function LoadingSala({ mensaje, overlay = false, error = false }:
         }
       />
       {mensaje && <p>{mensaje}</p>}
+      {error && botonRecargar}
     </div>
   )
 }

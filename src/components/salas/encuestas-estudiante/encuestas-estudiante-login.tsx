@@ -90,9 +90,10 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
   if (confirmadoError)
     return (
-      <div className="w-screen h-screen place-content-center">
+      <div className="w-screen h-screen flex flex-col items-center place-content-center gap-4">
         <p className="text-xl md:text-4xl text-red-500 text-center">Error de conexión. Por favor, recargá la página.</p>
         <p className="text-xl md:text-2xl text-red-500 text-center">{error}</p>
+        <Button onClick={() => window.location.reload()}>Recargar página</Button>
       </div>
     )
 

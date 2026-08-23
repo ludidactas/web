@@ -6,6 +6,8 @@ const ldVioletaClaro = '#8345FE'
 const ldVioletaOscuro = '#6F41CB'
 const ldAzulClaro = '#00B0D2'
 const ldAzulOscuro = '#4198AA'
+const ldAmarilloClaro = '#fcd55a'
+const ldAmarilloOscuro = '#f59927'
 
 export default {
   darkMode: ['class'],
@@ -60,6 +62,10 @@ export default {
         'ld-azul': {
           DEFAULT: ldAzulClaro,
           oscuro: ldAzulOscuro,
+        },
+        'ld-amarillo': {
+          DEFAULT: ldAmarilloClaro,
+          oscuro: ldAmarilloOscuro,
         },
       },
       backgroundImage: {

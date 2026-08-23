@@ -90,9 +90,11 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         token.name = user.name
         token.picture = user.image
       }
+      // Capturamos el refresh token
       if (account?.provider === 'google' && account.refresh_token) {
         token.driveRefreshToken = account.refresh_token
       }
+      // Si el usuario revoca el acceso a Drive, lo borramos
       if (trigger === 'update' && session && 'driveRefreshToken' in session) {
         delete token.driveRefreshToken
       }

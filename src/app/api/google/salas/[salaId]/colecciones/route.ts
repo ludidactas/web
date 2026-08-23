@@ -7,6 +7,12 @@ import { guardarColeccion, leerColecciones } from '@/server/google/drive'
 
 type Parametros = { params: Promise<{ salaId: string }> }
 
+/**
+ * Gate de entitlement: `null` si el usuario de la sesión puede usar la integración,
+ * o la respuesta 403 a devolver si no. No valida que `salaId` le pertenezca al
+ * usuario de la sesión: cualquier profe autenticado con la integración habilitada
+ * puede leer/escribir colecciones bajo cualquier `salaId`, en su propio Drive.
+ */
 async function sinIntegracion() {
   const session = await auth()
   if (await tieneIntegracionGoogle(session?.user?.email)) return null
@@ -14,6 +20,7 @@ async function sinIntegracion() {
   return NextResponse.json({ error: 'La integración con Google no está habilitada' }, { status: 403 })
 }
 
+/** Lista las colecciones de preguntas que el profe ya guardó en Drive para `salaId`. */
 export async function GET(request: Request, { params }: Parametros) {
   const { salaId } = await params
 
@@ -28,6 +35,7 @@ export async function GET(request: Request, { params }: Parametros) {
   }
 }
 
+/** Crea (o sobrescribe, si ya existe una con el mismo nombre) una colección de preguntas en el Drive del profe. */
 export async function POST(request: Request, { params }: Parametros) {
   const { salaId } = await params
   const { nombreSala, nombre, contenido } = (await request.json()) as {

@@ -81,6 +81,8 @@ export function ImportarExportar({
     if (vista === 'importar' && presets.length === 0) obtenerPresets().then(setPresets)
   }, [vista, presets.length])
 
+  // `driveConectado` se corrige acá con la respuesta real del server (409 → no conectado), ya que el valor
+  // inicial (`conectadoInicial`, de la sesión) puede haber quedado desactualizado si el grant se revocó.
   const leerDrive = useCallback(
     () =>
       leerColeccionesDeDrive(idSala)
@@ -102,6 +104,7 @@ export function ImportarExportar({
     if (integracionGoogle && driveConectado && vista === 'importar' && misColecciones === null) leerDrive()
   }, [integracionGoogle, driveConectado, vista, misColecciones, leerDrive])
 
+  // Tras el popup de consentimiento, invalidamos el cache de colecciones para que el efecto de arriba las recargue.
   const conectarDrive = () => {
     conectarConDrive().then((conectado) => {
       if (!conectado) return

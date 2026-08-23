@@ -32,12 +32,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { useNavegacionConCarga } from '@/components/navegacion/use-navegacion-con-carga'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
+import LoadingSala from '@/components/salas/loading-sala'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Icon } from '@iconify/react'
 import { CirclePlus, Pencil, Trash2 } from 'lucide-react'
 import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
@@ -260,6 +263,7 @@ function FilaSala({
   onEliminar: (id: string) => Promise<void>
 }) {
   const nombre = sala.nombre || `Sala ${sala.id}`
+  const { isPending, onClickNavegar } = useNavegacionConCarga()
   const [renombrarAbierto, setRenombrarAbierto] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState(sala.nombre ?? '')
   const nuevoNombreValido = nuevoNombre.trim().length > 0
@@ -284,10 +288,13 @@ function FilaSala({
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
       <Link
         href={`/salas/${sala.id}`}
-        className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
+        onClick={onClickNavegar(`/salas/${sala.id}`)}
+        className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors flex items-center gap-2')}
       >
         {nombre}
+        {isPending && <Icon icon="svg-spinners:6-dots-scale-middle" className="h-4 w-4 text-indigo-600" />}
       </Link>
+      {isPending && <LoadingSala overlay mensaje="Renderizando sala..." />}
       <div className={cn('flex items-center gap-1 pr-2')}>
         <Dialog
           open={renombrarAbierto}

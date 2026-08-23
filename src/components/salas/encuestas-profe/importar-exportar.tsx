@@ -3,7 +3,7 @@
 import { Icon } from '@iconify/react'
 
 import { useParams } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { conectarConDrive } from '@/lib/google/conexion'
@@ -67,8 +67,8 @@ export function ImportarExportar({
   const [nombre, setNombre] = useState('Colección de preguntas')
   const [presets, setPresets] = useState<PresetColeccion[]>([])
   const [url, setUrl] = useState('')
-  const [importando, setImportando] = useState(false)
-  const [guardandoEnDrive, setGuardandoEnDrive] = useState(false)
+  const [importando, iniciarImportacion] = useTransition()
+  const [guardandoEnDrive, iniciarGuardado] = useTransition()
   const inputArchivo = useRef<HTMLInputElement>(null)
 
   const { idSala } = useParams<{ idSala: string }>()
@@ -105,9 +105,12 @@ export function ImportarExportar({
   }, [integracionGoogle, driveConectado, vista, misColecciones, leerDrive])
 
   const coleccionesExistentes = misColecciones?.map((coleccion) => coleccion.nombre) ?? []
+
   const nombreFinal = nombre.trim()
+
   const sobrescribeEnDrive =
     nombreFinal.length > 0 && coleccionesExistentes.some((otro) => aSlug(otro) === aSlug(nombreFinal))
+
   const verificandoDrive = driveConectado && misColecciones === null
 
   // Tras el popup de consentimiento, invalidamos el cache de colecciones para que el efecto de arriba las recargue.
@@ -214,27 +217,17 @@ export function ImportarExportar({
     await importarPreguntas(sobre.preguntas)
   }
 
-  /** Envuelve la ejecución de una función con el estado de carga (activa al iniciar, desactiva al finalizar). */
-  const correr = async (fn: () => Promise<void>) => {
-    setImportando(true)
-    try {
-      await fn()
-    } finally {
-      setImportando(false)
-    }
-  }
-
   /** Función para consumir un archivo de texto subido por el usuario. */
   const importarArchivo = (evento: React.ChangeEvent<HTMLInputElement>) => {
     const archivo = evento.target.files?.[0]
     evento.target.value = '' // permite re-elegir el mismo archivo
     if (!archivo) return
-    correr(async () => procesarTexto(await archivo.text()))
+    iniciarImportacion(async () => procesarTexto(await archivo.text()))
   }
 
   /** Descarga desde una URL/preset y delega a procesarTexto; aísla los errores de red. */
   const importarDesdeArchivoRemoto = (archivo: string) =>
-    correr(async () => {
+    iniciarImportacion(async () => {
       let texto: string
       try {
         texto = await obtenerColeccionDesdeUrl(archivo)
@@ -246,9 +239,7 @@ export function ImportarExportar({
     })
 
   const importarDesdeDrive = (coleccion: ColeccionDrive) =>
-    correr(async () => {
-      await procesarTexto(coleccion.contenido)
-    })
+    iniciarImportacion(async () => procesarTexto(coleccion.contenido))
 
   /** Función para consumir un archivo de texto provisto por URL */
   const importarUrl = () => {
@@ -256,37 +247,36 @@ export function ImportarExportar({
   }
 
   /** Guarda las preguntas de la sala como una colección en el Drive del profe. */
-  const guardarEnDrive = async () => {
+  const guardarEnDrive = () => {
     if (!nombreFinal) return
 
-    setGuardandoEnDrive(true)
-    try {
-      await guardarColeccionEnDrive(
-        idSala,
-        config?.nombre ?? idSala,
-        nombreFinal,
-        serializarColeccion(nombreFinal, encuestas)
-      )
+    iniciarGuardado(async () => {
+      try {
+        await guardarColeccionEnDrive(
+          idSala,
+          config?.nombre ?? idSala,
+          nombreFinal,
+          serializarColeccion(nombreFinal, encuestas)
+        )
 
-      setMisColecciones(null) // refresca la lista para que el aviso de sobrescritura quede al día
-      toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
-      setNombre('')
-      setVista('menu')
-      setDrawerAbierto(false)
-    } catch (error) {
-      if (error instanceof DriveNoConectado) {
-        setDriveConectado(false)
-        toast.info('Necesitamos tu permiso para guardar en Google Drive', {
-          action: { label: 'Conectar', onClick: conectarDrive },
-        })
-        return
+        setMisColecciones(null) // refresca la lista para que el aviso de sobrescritura quede al día
+        toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
+        setNombre('')
+        setVista('menu')
+        setDrawerAbierto(false)
+      } catch (error) {
+        if (error instanceof DriveNoConectado) {
+          setDriveConectado(false)
+          toast.info('Necesitamos tu permiso para guardar en Google Drive', {
+            action: { label: 'Conectar', onClick: conectarDrive },
+          })
+          return
+        }
+
+        console.error('Drive: no se pudo guardar la colección', error)
+        toast.error('No se pudo guardar la colección en tu Google Drive')
       }
-
-      console.error('Drive: no se pudo guardar la colección', error)
-      toast.error('No se pudo guardar la colección en tu Google Drive')
-    } finally {
-      setGuardandoEnDrive(false)
-    }
+    })
   }
 
   return (

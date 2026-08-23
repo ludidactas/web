@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 const LogoLema = () => {
   return (
-    <Link className="logolema w-[60vw]" href="/inicio">
+    <Link className="logolema w-[60vw]" href="/">
       <div className="flex md:w-[48em] items-center gap-4">
         <Image className="w-10 md:w-24" src="/img/logo_sketchy.gif" alt={''} width={100} height={100} />
         <div className="font-medium text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">

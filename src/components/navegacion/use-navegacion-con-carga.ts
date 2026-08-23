@@ -16,11 +16,17 @@ export function useNavegacionConCarga() {
     })
   }
 
-  /** Wrapper de navegar listo para plugear en onClick={____} */
   const onClickNavegar = (href: string) => (e: MouseEvent) => {
     e.preventDefault()
     navegar(href)
   }
 
-  return { isPending, navegar, onClickNavegar }
+  return {
+    /** `true` si se activó una navegación y estamos esperando que responda */
+    isPending,
+    /** Navega al destino y activa `isPending` */
+    navegar,
+    /** Wrapper de navegar listo para plugear en `onClick={____}` */
+    onClickNavegar,
+  }
 }

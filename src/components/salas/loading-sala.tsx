@@ -48,7 +48,7 @@ export default function LoadingSala({ mensaje, overlay = false, error = false }:
           } as const
         }
       />
-      {mensaje && <p>{mensaje}</p>}
+      {mensaje && <p className="text-xl md:text-2xl">{mensaje}</p>}
       {error && botonRecargar}
     </div>
   )

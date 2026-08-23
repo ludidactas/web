@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  async redirects() {
+    return [{ source: '/inicio', destination: '/', permanent: true }]
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

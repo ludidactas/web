@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
-import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import {
@@ -32,15 +31,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { useNavegacionConCarga } from '@/components/navegacion/use-navegacion-con-carga'
+import { NavLink } from '@/components/navegacion/nav-link'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
-import LoadingSala from '@/components/salas/loading-sala'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Icon } from '@iconify/react'
 import { CirclePlus, Pencil, Trash2 } from 'lucide-react'
 import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
@@ -263,7 +260,6 @@ function FilaSala({
   onEliminar: (id: string) => Promise<void>
 }) {
   const nombre = sala.nombre || `Sala ${sala.id}`
-  const { isPending, onClickNavegar } = useNavegacionConCarga()
   const [renombrarAbierto, setRenombrarAbierto] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState(sala.nombre ?? '')
   const nuevoNombreValido = nuevoNombre.trim().length > 0
@@ -286,15 +282,13 @@ function FilaSala({
 
   return (
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
-      <Link
+      <NavLink
         href={`/salas/${sala.id}`}
-        onClick={onClickNavegar(`/salas/${sala.id}`)}
-        className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors flex items-center gap-2')}
+        overlayMensaje="Renderizando sala..."
+        className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
       >
         {nombre}
-        {isPending && <Icon icon="svg-spinners:6-dots-scale-middle" className="h-4 w-4 text-indigo-600" />}
-      </Link>
-      {isPending && <LoadingSala overlay mensaje="Renderizando sala..." />}
+      </NavLink>
       <div className={cn('flex items-center gap-1 pr-2')}>
         <Dialog
           open={renombrarAbierto}

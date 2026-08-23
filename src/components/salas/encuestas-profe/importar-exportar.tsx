@@ -38,7 +38,7 @@ const TITULOS: Record<Vista, string> = {
   importar: 'Importar preguntas',
 }
 
-const ICONO_DRIVE = 'logos:google-drive'
+const ICONO_DRIVE = 'ri:drive-fill'
 
 type ColeccionDrive = PresetColeccion & { contenido: string; preguntas: number }
 
@@ -373,39 +373,39 @@ export function ImportarExportar({
 
               {integracionGoogle && (
                 <>
-                {/* Mis colecciones en Drive */}
-                <p className="font-bold text-ld-violeta mt-2 flex items-center gap-1">
-                  Mis colecciones <Icon icon={ICONO_DRIVE} className="w-4 h-4" />
-                </p>
+                  {/* Mis colecciones en Drive */}
+                  <p className="font-bold text-ld-violeta mt-2 flex items-center gap-1">
+                    Mis colecciones <Icon icon={ICONO_DRIVE} className="w-4 h-4" />
+                  </p>
 
-                {!driveConectado ? (
-                  <button
-                    className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2"
-                    onClick={conectarDrive}
-                  >
-                    <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
-                  </button>
-                ) : misColecciones === null ? (
-                  <p className="text-xs text-slate-500">Leyendo tu Google Drive…</p>
-                ) : misColecciones.length === 0 ? (
-                  <p className="text-xs text-slate-500">Todavía no guardaste ninguna colección.</p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {misColecciones.map((coleccion) => (
-                      <button
-                        key={coleccion.archivo}
-                        className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
-                        onClick={() => importarDesdeDrive(coleccion)}
-                        disabled={importando}
-                      >
-                        <span className="font-semibold text-ld-violeta">{coleccion.nombre}</span>
-                        <span className="text-xs text-slate-500">
-                          {coleccion.preguntas} pregunta{coleccion.preguntas === 1 ? '' : 's'}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  {!driveConectado ? (
+                    <button
+                      className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2"
+                      onClick={conectarDrive}
+                    >
+                      <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
+                    </button>
+                  ) : misColecciones === null ? (
+                    <p className="text-xs text-slate-500">Leyendo tu Google Drive…</p>
+                  ) : misColecciones.length === 0 ? (
+                    <p className="text-xs text-slate-500">Todavía no guardaste ninguna colección.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {misColecciones.map((coleccion) => (
+                        <button
+                          key={coleccion.archivo}
+                          className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
+                          onClick={() => importarDesdeDrive(coleccion)}
+                          disabled={importando}
+                        >
+                          <span className="font-semibold text-ld-violeta">{coleccion.nombre}</span>
+                          <span className="text-xs text-slate-500">
+                            {coleccion.preguntas} pregunta{coleccion.preguntas === 1 ? '' : 's'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -503,7 +503,12 @@ export function GuardarEnDrive({
     setDialogoAbierto(false)
     setGuardando(true)
     try {
-      await guardarColeccionEnDrive(idSala, config?.nombre ?? idSala, nombreFinal, serializarColeccion(nombreFinal, encuestas))
+      await guardarColeccionEnDrive(
+        idSala,
+        config?.nombre ?? idSala,
+        nombreFinal,
+        serializarColeccion(nombreFinal, encuestas)
+      )
 
       alGuardar(nombreFinal)
       toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
@@ -565,9 +570,7 @@ export function GuardarEnDrive({
           </p>
         )}
         {!conectado && (
-          <p className="text-center text-sm text-slate-500">
-            Necesitamos tu permiso para guardar en tu Google Drive.
-          </p>
+          <p className="text-center text-sm text-slate-500">Necesitamos tu permiso para guardar en tu Google Drive.</p>
         )}
         <div className="flex gap-2">
           <DialogClose asChild>
@@ -582,10 +585,7 @@ export function GuardarEnDrive({
               <Icon icon={ICONO_DRIVE} /> {sobrescribe ? 'Sobrescribir' : 'Guardar'}
             </button>
           ) : (
-            <button
-              className="flex items-center gap-1 bg-ld-azul text-white px-4 py-2 rounded-full"
-              onClick={conectar}
-            >
+            <button className="flex items-center gap-1 bg-ld-azul text-white px-4 py-2 rounded-full" onClick={conectar}>
               <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
             </button>
           )}

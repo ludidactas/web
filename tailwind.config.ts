@@ -68,6 +68,7 @@ export default {
         // Gradiente de marca para fondos de página, con la opacidad ya incorporada.
         // Segundo color dejamos indigo-500 de Tailwind (no ld-violeta).
         'ld-gradiente-fondo': `linear-gradient(to right, rgb(0 176 210 / 0.7), rgb(99 102 241 / 0.7))`,
+        'ld-gradiente-solido': `linear-gradient(to right, rgb(0 176 210), rgb(99 102 241))`,
       },
       keyframes: {
         fadeIn: {
@@ -105,13 +106,12 @@ export default {
             boxShadow: '0 0 8px 2px rgba(111, 65, 203, 0.4)',
           },
         },
-
-
       },
       animation: {
         aparecer: 'fadeIn 0.5s ease-in-out',
         'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out', 'border-pulse': 'border-pulse 2s ease-in-out infinite',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        'border-pulse': 'border-pulse 2s ease-in-out infinite',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -120,5 +120,6 @@ export default {
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require('tailwindcss-animate')],
 } satisfies Config

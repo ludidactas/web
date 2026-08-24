@@ -8,10 +8,11 @@ import rehypeHighlight from 'rehype-highlight'
 // y las imágenes se vuelven a cargar en cada tecla.
 const remarkPlugins = [remarkMath]
 // `detect` adivina el lenguaje cuando el bloque no lo declara; sin esto un ``` pelado no se colorea.
-const rehypePlugins: PluggableList = [rehypeKatex, [rehypeHighlight, { detect: true }]]
+const rehypePlugins: PluggableList = [
+  [rehypeKatex, { output: 'mathml' }],
+  [rehypeHighlight, { detect: true }],
+]
 
-// `p` es un span en bloque y no un <p>: esto se renderiza dentro de un <h3>, que solo admite
-// contenido inline.
 const components: Components = {
   p: ({ node: _node, ...props }) => <span {...props} className="block" />,
   img: ({ node: _node, alt, ...props }) => (

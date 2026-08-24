@@ -1,3 +1,4 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { NumberInput } from '@/components/ui/number-input'
@@ -10,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { extractZodErrorMessages } from '@/wss/utils'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { GuiaFormulasDialog } from '../guia-formulas'
+import { GuiaMarkdownDialog } from '../guia-markdown'
 import { necesitaMarkdown, PreguntaMarkdown } from '../pregunta-markdown'
 
 export function AgregarPregunta() {
@@ -25,6 +28,7 @@ export function AgregarPregunta() {
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
+  const [mostrarDescripcion, setMostrarDescripcion] = useState(false)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
 
   // El alto de los textarea sigue al contenido: los colapsamos y reexpandimos al alto real del texto.
@@ -34,7 +38,7 @@ export function AgregarPregunta() {
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
     }
-  }, [pregunta, descripcion, open])
+  }, [pregunta, descripcion, open, mostrarDescripcion])
 
   const agregarRespuesta = () => {
     setOpciones((rs) => {
@@ -79,6 +83,7 @@ export function AgregarPregunta() {
         toast.success(`Encuesta creada!`)
         setPregunta('')
         setDescripcion('')
+        setMostrarDescripcion(false)
         setOpciones(['', ''])
         setAdmiteAportes(false)
         setAdmiteMultiplesVotos(false)
@@ -121,29 +126,61 @@ export function AgregarPregunta() {
         </div>
 
         {/* Body/Descripción -- acá va el markdown */}
-        <div>
-          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">
-            Descripción: <span className="text-sm font-normal text-ld-violeta/50">(opcional)</span>
-          </p>
-          <textarea
-            ref={descripcionRef}
-            className="w-full p-2 resize-none rounded overflow-hidden"
-            placeholder="Podés incrustar $fórmulas$, ![imágenes](url) y ```code blocks```"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            tabIndex={2}
-          />
-        </div>
+        <Accordion
+          type="single"
+          collapsible
+          value={mostrarDescripcion ? 'descripcion' : ''}
+          onValueChange={(v) => setMostrarDescripcion(v === 'descripcion')}
+        >
+          <AccordionItem value="descripcion" className="border-b-0">
+            <AccordionTrigger className="py-0 font-normal hover:no-underline [&>svg]:text-ld-violeta">
+              <p className="text-lg md:text-2xl text-ld-violeta py-2 font-bold">
+                Descripción: <span className="text-sm font-normal text-ld-violeta/50">(opcional)</span>
+              </p>
+            </AccordionTrigger>
+            <AccordionContent className="pb-0 pt-0">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-ld-violeta/60">
+                  Podés incrustar{' '}
+                  <GuiaFormulasDialog>
+                    <button type="button" className="underline">
+                      fórmulas
+                    </button>
+                  </GuiaFormulasDialog>{' '}
+                  e{' '}
+                  <GuiaMarkdownDialog>
+                    <button type="button" className="underline">
+                      imágenes
+                    </button>
+                  </GuiaMarkdownDialog>
+                  , y darle formato con{' '}
+                  <GuiaMarkdownDialog>
+                    <button type="button" className="underline">
+                      markdown
+                    </button>
+                  </GuiaMarkdownDialog>
+                  .
+                </p>
+                <textarea
+                  ref={descripcionRef}
+                  className="w-full p-2 resize-none rounded overflow-hidden"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  tabIndex={2}
+                />
 
-        {/* Vista previa de la descripción */}
-        {necesitaMarkdown(descripcion) && (
-          <div className="shrink-0">
-            <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
-            <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
-              <PreguntaMarkdown texto={descripcion} />
-            </div>
-          </div>
-        )}
+                {necesitaMarkdown(descripcion) && (
+                  <div className="shrink-0">
+                    <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
+                    <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
+                      <PreguntaMarkdown texto={descripcion} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Opciones */}
         <p className="text-lg md:text-2xl  mt-4 text-ld-violeta  font-bold">Opciones:</p>

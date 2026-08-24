@@ -112,7 +112,7 @@ export default function ContenidoIdentidad() {
               </div>
               <p className="text-justify my-10 leading-relaxed">
                 Profesional en Filosofía, Ilustradora y Desarrolladora front-end autodidacta. Participa del proyecto
-                desde el 2024, con la intención de trabajar por una transformación de los procesos de aprendizaje y de construcción de conocimiento. 
+                desde el 2024, con la intención de trabajar por una transformación de los procesos de aprendizaje y de construcción de conocimiento.
               </p>
               <div className="clear-right"></div>
             </div>
@@ -134,7 +134,7 @@ export default function ContenidoIdentidad() {
                 </div>
               </div>
               <p className={`text-justify my-10 leading-relaxed`}>
-                Desarrollador de software con vocación de profe. Sostiene la intención de tratar la enseñanza como un acto de amor, de nutrición y emancipación. 
+                Desarrollador de software con vocación de profe. Sostiene la intención de tratar la enseñanza como un acto de amor, de nutrición y emancipación.
                 Siente en este proyecto la sintetización honesta y orgánica de aquella intención.
               </p>
               <div className="clear-left"></div>
@@ -145,11 +145,11 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-indigo-200/60" />
 
       {/* Nuestra vision*/}
-      <div className="mt-10 lg:mt-20">
+      <div className="flex flex-col items-center my-10">
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
           <div className='mb-10 md:mb-0'>
-          <Title text='Nuestra Visión' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
+            <Title text='Nuestra Visión' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
           </div>
           {/* Texto */}
           <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -223,24 +223,25 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-orange-200/60" />
 
       {/* Juego */}
-      <div className='mt-10'/>
-      <Title data-aos="fade-left" text='El juego' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
-      <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
-        <p>
-          Ocupa un lugar central en nuestra propuesta. Entendemos{' '}
-          <span className="text-ld-azul font-bold lg:text-2xl">
-            el juego como germen de la educación y de la creatividad
-          </span>
-          , que ocurre en la naturaleza espontánea y consistentemente{' '}
-          <span className="text-ld-azul font-bold lg:text-2xl">con un rol didáctico:</span> cada especie juega como le
-          va a ser propio trabajar en su edad adulta. Y juego es también el proceso de ensayo y autoperfeccionamiento:
-          la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que practica, ensaya y
-          estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la performarce.{' '}
-        </p>
-        <p className="text-ld-violeta font-bold text-2xl pt-6">
-          El juego nos impulsa a la investigación, a aprender a aprender, independientemente de la forma que tome. Nos
-          muestra horizontes, que reclaman caminos.
-        </p>
+      <div className='flex flex-col items-center my-10'>
+        <Title data-aos="fade-left" text='El juego' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
+        <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
+          <p>
+            Ocupa un lugar central en nuestra propuesta. Entendemos{' '}
+            <span className="text-ld-azul font-bold lg:text-2xl">
+              el juego como germen de la educación y de la creatividad
+            </span>
+            , que ocurre en la naturaleza espontánea y consistentemente{' '}
+            <span className="text-ld-azul font-bold lg:text-2xl">con un rol didáctico:</span> cada especie juega como le
+            va a ser propio trabajar en su edad adulta. Y juego es también el proceso de ensayo y autoperfeccionamiento:
+            la actitud del ajedrecista, de la artista marcial, de un músico, de una gimnasta, que practica, ensaya y
+            estudia, a fin de cuentas, para la partida, el enfrentamiento, la improvisación o la performarce.{' '}
+          </p>
+          <p className="text-ld-violeta font-bold text-2xl pt-6">
+            El juego nos impulsa a la investigación, a aprender a aprender, independientemente de la forma que tome. Nos
+            muestra horizontes, que reclaman caminos.
+          </p>
+        </div>
       </div>
 
 
@@ -278,9 +279,8 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText={'text-violet-200/60'} />
 
       {/* Pie */}
-      {/* <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4"> */}
-      <div className={`${stylediv} text-center bg-white/80 mt-20 text-4xl`}>
-        <p className="p-0  text-[1.2rem] md:text-[1.5rem]">
+      <div className={`${stylediv} my-10 bg-white/80 text-center`}>
+        <p className="p-0 text-[1.2rem] md:text-[1.5rem]">
           {' '}
           Desde Ludidactas,{' '}
           <span className="text-ld-violeta font-bold text-2xl pt-6">

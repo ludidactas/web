@@ -83,9 +83,13 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       borrarListaPermitidos: () => socket?.emit('sala:permitidos_limpiar'),
       setNombrePermitido: (dni: string, nombre: string) => socket?.emit('sala:permitidos_nombre', { dni, nombre }),
       // Comando con ack: el caller (botón de exportar) necesita los datos ya para armar el archivo.
-      pedirPlanillaCompleta: async (): Promise<PlanillaCompleta> => {
+      // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
+      // atrás (así no arrastra invitados de encuentros anteriores a la exportación de la clase actual).
+      pedirPlanillaCompleta: async (minutos?: number): Promise<PlanillaCompleta> => {
         if (!socket) throw new Error('Sin conexión')
-        const res: Ack<PlanillaCompleta> = await socket.timeout(10000).emitWithAck('sala:pedir_planilla_completa')
+        const res: Ack<PlanillaCompleta> = await socket
+          .timeout(10000)
+          .emitWithAck('sala:pedir_planilla_completa', minutos)
         if (!res.ok) throw new Error(res.error)
         return res.data
       },

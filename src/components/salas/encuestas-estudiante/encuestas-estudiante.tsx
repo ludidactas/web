@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import LoadingSala from '../loading-sala'
+import { PreguntaMarkdown } from '../pregunta-markdown'
 import Cabeza from '/svg/dist/ilustraciones/cabezas.svg'
 import DibuEstudiante from '/svg/dist/ilustraciones/ups.svg'
 
@@ -182,6 +183,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
       {/* Header - Titulo y status */}
       <HeaderEncuestaEstudiante encuesta={encuesta} />
 
+      {/* Descripción */}
+      {encuesta.descripcion && (
+        <div className="mx-4 break-words text-left text-xs md:text-base text-slate-600">
+          <PreguntaMarkdown texto={encuesta.descripcion} />
+        </div>
+      )}
+
       {/* Opciones */}
       <ol className=" break-all text-xs mx-4 md:text-lg flex flex-col gap-2">
         {encuesta.opciones.map((opcion) => {
@@ -340,7 +348,9 @@ function HeaderEncuestaEstudiante({ encuesta }: { encuesta: EncuestaHidratadaEst
       {/* Icono */}
       <div className={cn('flex items-center text-indigo-500  gap-2 md:gap-4', !encuesta.puedoVotar && 'grayscale')}>
         <MessageCircleQuestionIcon className="w-10 h-10 md:w-16 md:h-16 self-start shrink-0" />
-        <h3 className="w-[90%] break-all text-xs md:text-xl font-bold text-cyan-500">{encuesta.pregunta}</h3>
+        <h3 className="w-[90%] break-words text-left text-xs md:text-xl font-bold text-cyan-500">
+          {encuesta.pregunta}
+        </h3>
       </div>
 
       {/* Status */}

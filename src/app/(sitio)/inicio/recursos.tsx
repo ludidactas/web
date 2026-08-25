@@ -28,7 +28,7 @@ export default function Recursos() {
         }
         two={<Imagenes />}
         btn={<BotonLink titulo={'Explorar Sala'} url={'/salas'} />}
-        scroll={<ArrowDownLd to="contactoini" />}
+        scroll={<ArrowDownLd to="propuestasini" />}
         espejado
       />
     </div>

@@ -41,7 +41,7 @@ const MenuMobile = () => {
           <DropdownMenuItem onSelect={handleItemClick}>
             <NavLink href="/identidad">Identidad</NavLink>
           </DropdownMenuItem>
-          <Separator className="my-1 border border-black border-dashed" />
+          {/* <Separator className="my-1 border border-black border-dashed" /> */}
           {/* <DropdownMenuItem onSelect={handleItemClick}>
             <Link href="/propuestas">Propuestas</Link>
           </DropdownMenuItem> */}

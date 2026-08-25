@@ -12,29 +12,29 @@ const CarouselConvocatoria = ({ children, className }: ComponentProps<typeof Car
     <CarouselContent className="items-center">
       {children && <CarouselItem className="p-8">{children}</CarouselItem>}
       <CarouselItem className="p-8">
-        <Image className="w-full " src={'/img/slide1.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide1.webp'} alt="Convocatoria - diapositiva 1" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide2.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide2.webp'} alt="Convocatoria - diapositiva 2" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide3.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide3.webp'} alt="Convocatoria - diapositiva 3" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide4.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide4.webp'} alt="Convocatoria - diapositiva 4" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide5.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide5.webp'} alt="Convocatoria - diapositiva 5" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide6.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide6.webp'} alt="Convocatoria - diapositiva 6" width={500} height={200}></Image>
       </CarouselItem>
 
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide7.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide7.webp'} alt="Convocatoria - diapositiva 7" width={500} height={200}></Image>
       </CarouselItem>
       <CarouselItem className="p-8 w-fit">
-        <Image className="w-full " src={'/img/slide8.webp'} alt={''} width={500} height={200}></Image>
+        <Image className="w-full " src={'/img/slide8.webp'} alt="Convocatoria - diapositiva 8" width={500} height={200}></Image>
       </CarouselItem>
     </CarouselContent>
     <CarouselPrevious className="bg-[#1e1e1e] flex items-center justify-center text-white dark:bg-white" />

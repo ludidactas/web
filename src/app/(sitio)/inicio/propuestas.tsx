@@ -52,6 +52,6 @@ export default function Propuestas() {
 
 const Imagenes = () => (
   <div>
-    <Image src="/img/PersoPropuestas.webp" alt="Personaje2" width={500} height={500} />
+    <Image src="/img/PersoPropuestas.webp" alt="Personaje2" width={587} height={584} />
   </div>
 )

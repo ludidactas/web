@@ -4,14 +4,18 @@ import { ComponentProps, useState } from 'react'
 import { AlignJustify } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@radix-ui/react-dropdown-menu'
+import { Icon } from '@iconify/react'
+import { NavLink } from '@/components/navegacion/nav-link'
+import { cn } from '@/lib/utils'
 
-//version props derivados existentes en Link
-const MenuLink = (props: ComponentProps<typeof Link>) => (
-  <Link
-    {...props}
-    className="p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black "
-  />
-)
+const MENU_LINK_CLASSNAME =
+  'p-2 text-xl rounded-md transform hover:rotate-6  hover:border-dashed hover:border-4 hover:border-black '
+
+//version props derivados existentes en Link, para los externos (no navegan dentro de la app)
+const MenuLink = (props: ComponentProps<typeof Link>) => <Link {...props} className={MENU_LINK_CLASSNAME} />
+
+//version props derivados existentes en NavLink, para los internos (con feedback de carga)
+const MenuNavLink = (props: ComponentProps<typeof NavLink>) => <NavLink {...props} className={MENU_LINK_CLASSNAME} />
 
 const MenuMobile = () => {
   const [open, setOpen] = useState(false)
@@ -35,7 +39,7 @@ const MenuMobile = () => {
           onClick={handleItemClick}
         >
           <DropdownMenuItem onSelect={handleItemClick}>
-            <Link href="/identidad">Identidad</Link>
+            <NavLink href="/identidad">Identidad</NavLink>
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
           {/* <DropdownMenuItem onSelect={handleItemClick}>
@@ -43,7 +47,7 @@ const MenuMobile = () => {
           </DropdownMenuItem> */}
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
-            <Link href="/salas">Sala</Link>
+            <NavLink href="/salas">Sala</NavLink>
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
@@ -67,11 +71,22 @@ const MenuMobile = () => {
 const MenuDesktop = () => (
   <div className="flex gap-4 bg-white/50 items-center mr-10">
     {/* Implementacion version props */}
-    <MenuLink href="/identidad"> Identidad </MenuLink>
+    <MenuNavLink href="/identidad">
+      {(isPending) => (
+        <span className={cn(isPending && 'animate-pulse duration-300')}>Identidad</span>
+        // Así podría ser con un ícono animado:
+        // <span className="inline-flex items-center gap-2">
+        //   Identidad
+        //   {isPending && <Icon icon="svg-spinners:3-dots-fade" className="h-5 w-5" />}
+        // </span>
+      )}
+    </MenuNavLink>
     {/* <p className="text-2xl">|</p>
     <MenuLink href="/propuestas"> Propuestas </MenuLink> */}
     <p className="text-2xl">|</p>
-    <MenuLink href="/salas"> Sala </MenuLink>
+    <MenuNavLink href="/salas">
+      {(isPending) => <span className={cn(isPending && 'animate-pulse duration-300')}>Sala</span>}
+    </MenuNavLink>
     <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}
     <MenuLink target="_blank" href="https://www.instagram.com/ludidactas/">

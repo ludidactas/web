@@ -14,9 +14,9 @@ const Portada = () => {
           height={1920}
         />
         <h3 className={`${titulo.className} text-xl mb-20 mx-10 md:text-2xl lg:text-3xl text-center lg:mx-80 lg:mb-10`}>
-          <span className="text-ld-azul lg:text-ld-azul-oscuro font-bold">Taller lúdico</span>,{' '}
-          <span className="text-ld-violeta lg:text-ld-violeta-oscuro font-bold">laboratorio didácto</span>,{' '}
-          <span className="text-ld-amarillo lg:text-ld-amarillo-oscuro font-bold">motor pedagógico</span>.
+          <span className="text-ld-violeta lg:text-ld-violeta-oscuro font-bold">Taller lúdico</span>,{' '}
+          <span className="text-ld-azul lg:text-ld-azul-oscuro  font-bold">laboratorio didácto</span>,{' '}
+          <span className="text-ld-magenta lg:text-ld-magenta font-bold">motor pedagógico</span>.
         </h3>
 
         <ArrowDownLd to="identidadini" />

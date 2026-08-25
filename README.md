@@ -75,3 +75,14 @@ https://github.com/7PH/powerglitch
 ffmpeg -framerate 4 -i logo%d.png -vf "format=rgba,split[s0][s1];[s0]palettegen=reserve_transparent=on:transparency_color=ffffff[p];[s1][p]paletteuse" -loop 0 logo.gif
 
 Reemplazar `logo` con lo que corresponda
+
+## CLS - Cumulative Layout Shift
+
+Para cualquier elemento que se resuelve de forma asíncrona (imagen, fuente, dato remoto), el espacio que reserva en el primer render tiene que coincidir con el espacio que va a ocupar una vez resuelto.
+
+Para imágenes puntualmente, el checklist es:
+
+- `width/height` (o fill + contenedor con tamaño fijo) tienen que reflejar la proporción real del archivo — son los que le dicen al navegador qué aspect-ratio reservar antes de que llegue un solo byte de la imagen.
+- Si el CSS fuerza una sola dimensión (w-_ sin h-_), agregar h-auto (o viceversa) para que la otra se calcule proporcionalmente en vez de quedar en un valor por defecto inconsistente.
+
+(hoy aprendí)

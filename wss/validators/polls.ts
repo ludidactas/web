@@ -8,8 +8,10 @@ import z from 'zod'
 interface _Encuesta {
   /** Id estático generado por el server */
   id: string
-  /** Texto de la pregunta */
+  /** Enunciado de la pregunta, en texto plano */
   pregunta: string
+  /** Cuerpo opcional de la pregunta, en markdown */
+  descripcion?: string
   /** Lista de opciones de respuesta para esta pregunta */
   opciones: Opcion[]
   /** Fecha y hora de creación */
@@ -40,6 +42,14 @@ const texto = (de_que: string) =>
 const textoOpcion = texto('opción')
 const textoPregunta = texto('pregunta')
 
+/** El cuerpo es opcional (las colecciones viejas no lo traen) y admite markdown, por eso es más largo. */
+const textoDescripcion = z
+  .string()
+  .trim()
+  .max(4000, 'La descripción no puede superar los 4000 caracteres')
+  .optional()
+  .transform((valor) => valor || undefined)
+
 const opcionSchema = z.object({
   id: z.string(),
   texto: textoOpcion,
@@ -54,6 +64,7 @@ const opcionConVotantes = opcionConCantidadVotos.extend({ votantes: z.array(z.st
 const encuestaBase = z.object({
   id: z.string(),
   pregunta: textoPregunta,
+  descripcion: textoDescripcion,
   opciones: z.array(opcionSchema),
   createdAt: z.string(),
   isOpen: z.boolean().default(true),
@@ -87,6 +98,7 @@ export const encuestaHidratadaProfe = encuestaConVotantes
 export const crearEncuesta = z
   .object({
     pregunta: textoPregunta,
+    descripcion: textoDescripcion,
     opciones: z.array(textoOpcion),
     admiteAportes: z.boolean().default(false),
     admiteMultiplesVotos: z.boolean().default(false),

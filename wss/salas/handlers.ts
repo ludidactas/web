@@ -31,13 +31,29 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * Arma la planilla completa de la sala a partir del estado durable del server: una fila por cada
  * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
  * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
+ *
+ * Si se pasa `minutos`, restringe las filas a los estudiantes que estuvieron conectados en algún
+ * momento de la ventana `[ahora - minutos, ahora]` (según el log de asistencia), para no arrastrar a
+ * la exportación a los invitados de encuentros anteriores que la guarda de "Limpiar" preserva en la
+ * planilla a propósito.
  */
-async function armarPlanillaCompleta(sala: Sala) {
-  const [estudiantes, nombresProvistos, encuestas] = await Promise.all([
+async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
+  const [estudiantesTotales, nombresProvistos, encuestas, asistencia] = await Promise.all([
     sala.listarEstudiantes(),
     sala.listaPermitidos().nombres(),
     profeSala(sala.id).then((profe) => profe.listarEncuestas()),
+    sala.asistencia(),
   ])
+
+  const estudiantes =
+    minutos && minutos > 0
+      ? estudiantesTotales.filter((estudiante) => {
+          const intervalos = asistencia[estudiante.userId] ?? []
+          const corte = Date.now() - minutos * 60_000
+          // Un intervalo abierto (fin: null) significa que sigue conectado: siempre entra.
+          return intervalos.some((intervalo) => intervalo.fin === null || intervalo.fin >= corte)
+        })
+      : estudiantesTotales
 
   const preguntas = encuestas.map((encuesta) => ({ id: encuesta.id, pregunta: encuesta.pregunta }))
 
@@ -89,9 +105,11 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
 
   // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
   // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
+  // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
+  // atrás (para no arrastrar invitados de encuentros anteriores que la planilla preserva a propósito).
   socket.on(
     'sala:pedir_planilla_completa',
-    conAck(socket)(async () => armarPlanillaCompleta(sala))
+    conAck(socket)(async (minutos?: number) => armarPlanillaCompleta(sala, minutos))
   )
 
   socket.on(

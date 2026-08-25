@@ -1,10 +1,12 @@
 {
   "img/ArrowUp.gif": "21e0c7f05cbbfa718649c8a581a58fd2764461f21792739eab35210813be5312",
-  "img/logo_sketchy.gif": "679167cada3559e9ae5c99d256d1747c7975f10785b674901f821c221cc10111",
+  "img/logo_sketchy.gif": "6763e1ff2386f26b459b1911c85c0e1ddb8b7628d9db5cd160a3f0197abfd4b2",
   "img/btnhover.gif": "6271e2e9e682049f572c62f27178cf3f16b72045c39240d536a3ebc5fc472faa",
   "img/lema_sketchy.gif": "c73c2b1dc1d40b3d4471a748cd340a7e3ca262cf2f002167f4e97ae72d688628",
   "img/btn.gif": "730076a32db28e686760e1c97c96aa8141e06dd64f1c45cd49344bb5de000821",
   "img/ArrowDown.gif": "83aed41f9749a0b320b4b63ed367a11b16587334d9139172c6ff9121ac7f54a3",
   "contenido/ProgramerIdle.gif": "887ab75da056f86dbd3d6e00deab38467510c38c9c5a7396093a250cf43559fc",
-  "contenido/ProgramerEmote.gif": "64c51710a1c97b4c982fe26328f45e105256f24f88dc54664717a20cb52c3fe6"
+  "contenido/ProgramerEmote.gif": "64c51710a1c97b4c982fe26328f45e105256f24f88dc54664717a20cb52c3fe6",
+  "desafios/CaminataDuende.gif": "586e646c538de96b1a3504a5271cd3b0dbe8e28face260badb550d5aa21b85c2",
+  "desafios/clones.gif": "95d2d5db85bccaa5394c6bd6ade66e2e38b9921e215f5dcd3f8205ba90406dce"
 }

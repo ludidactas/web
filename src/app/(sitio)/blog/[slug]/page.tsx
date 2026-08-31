@@ -27,7 +27,7 @@ export default async function Page({ params }: Props) {
   const { anterior, siguiente } = await obtenerPostsVecinos(slug)
 
   return (
-    <article className="flex flex-col w-full max-w-5xl bg-[#fcfcfc] p-6 my-4 md:my-24 gap-6">
+    <article className="flex flex-col w-full max-w-5xl bg-[#fcfcfc]/10 backdrop-blur-sm p-6 my-4 md:my-24 gap-6">
       <NavLinkPulso href="/blog" className="text-[#8b5cf6] font-bold hover:underline w-fit">
         ← Volver al blog
       </NavLinkPulso>

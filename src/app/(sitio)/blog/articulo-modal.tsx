@@ -39,7 +39,12 @@ export default function ArticuloModal({
             </DialogPrimitive.Overlay>
 
             <DialogPrimitive.Content asChild forceMount onOpenAutoFocus={(e) => e.preventDefault()}>
-              <motion.div className="fixed inset-0 z-50 overflow-y-auto p-4 py-10 md:p-10">
+              <motion.div
+                className="fixed inset-0 z-50 overflow-y-auto p-4 py-10 md:p-10"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) onCerrar()
+                }}
+              >
                 <motion.div
                   layoutId={`post-${post.slug}`}
                   transition={TRANSICION_IMAGEN}
@@ -56,7 +61,7 @@ export default function ArticuloModal({
                   <DialogPrimitive.Title className="sr-only">{post.meta.titulo}</DialogPrimitive.Title>
                   <DialogPrimitive.Description className="sr-only">{post.meta.resumen}</DialogPrimitive.Description>
 
-                  <DialogPrimitive.Close className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60">
+                  <DialogPrimitive.Close className="absolute right-4 top-4 z-20 hidden h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 md:flex">
                     <span className="sr-only">Cerrar</span>
                     <span aria-hidden>✕</span>
                   </DialogPrimitive.Close>
@@ -95,6 +100,11 @@ export default function ArticuloModal({
                       <div className="flex flex-col gap-4 text-lg leading-relaxed text-gray-800 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6 [&_hr]:my-2 [&_hr]:border-gray-300">
                         {post.contenido}
                       </div>
+
+                      <DialogPrimitive.Close className="mx-auto mt-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-black/60 md:hidden">
+                        <span className="sr-only">Cerrar</span>
+                        <span aria-hidden>✕</span>
+                      </DialogPrimitive.Close>
                     </motion.div>
                   )}
                 </motion.div>

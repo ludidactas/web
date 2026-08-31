@@ -19,9 +19,10 @@ export default function ContenidoBlog({
     <div className="flex flex-col my-4 md:my-20 w-full min-h-full">
       <div className="flex flex-col gap-10 my-4 md:my-10 px-6 md:px-16 text-xl">
         <Title text="Blog" color="text-ld-violeta" size="text-5xl md:text-7xl" />
-        <p>Después de un tiempo publicando en Medium, decidimos mudarnos a un espacio propio dentro de nuestro sitio.
-          Esto nos permite tener más control sobre el contenido y, de a poco, ir sumando funcionalidades pensadas para nuestra comunidad.</p>
-          <p>Próximamente estaremos sumando material nuevo. ¡Gracias por acompañarnos!</p>
+        <p>Decidimos mudar nuestras publicaciones a un espacio propio dentro de nuestro sitio.
+          Esto nos permite tener más autonomía sobre el contenido y, de a poco, ir sumando funcionalidades pensadas para nuestra comunidad.
+          Próximamente estaremos sumando material nuevo. </p>
+          <p>¡Gracias por acompañarnos!</p>
       </div>
 
       <div className="flex flex-col lg:flex-row items-start gap-8 px-6 md:px-16 pb-16 w-full">

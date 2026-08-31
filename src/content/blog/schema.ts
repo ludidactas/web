@@ -5,6 +5,7 @@ export const postMetaSchema = z.object({
   fecha: z.coerce.date(),
   resumen: z.string(),
   imagen: z.string().optional(),
+  twImagen: z.string().optional(),
   tags: z.array(z.string()).optional(),
 })
 

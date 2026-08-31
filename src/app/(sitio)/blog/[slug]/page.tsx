@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale'
 import { obtenerPost, obtenerPostsVecinos } from '@/lib/blog/posts'
 import { Title } from '@/components/custom/ld-title'
 import { NavLinkPulso } from '@/components/navegacion/nav-link-pulso'
+import { cn } from '@/lib/utils'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -39,7 +40,13 @@ export default async function Page({ params }: Props) {
 
       {meta.imagen && (
         <div className="relative w-full h-64 md:h-96 rounded-3xl overflow-hidden">
-          <Image src={meta.imagen} alt={meta.titulo} fill sizes="768px" className="object-cover" />
+          <Image
+            src={meta.imagen}
+            alt={meta.titulo}
+            fill
+            sizes="768px"
+            className={cn('object-cover', meta.twImagen)}
+          />
         </div>
       )}
 

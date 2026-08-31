@@ -48,7 +48,10 @@ export default function ArticuloCard({
               alt={meta.titulo}
               fill
               sizes={destacado ? '(min-width: 768px) 60vw, 100vw' : '(min-width: 768px) 40vw, 100vw'}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className={cn(
+                'object-cover transition-transform duration-500 group-hover:scale-105',
+                meta.twImagen
+              )}
             />
           </motion.div>
         ) : (

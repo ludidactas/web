@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { PostRenderizado } from '@/lib/blog/posts'
+import { cn } from '@/lib/utils'
 
 const TRANSICION_IMAGEN = { type: 'spring', visualDuration: 0.2, bounce: 0.15 } as const
 
@@ -78,7 +79,7 @@ export default function ArticuloModal({
                         alt={post.meta.titulo}
                         fill
                         sizes="768px"
-                        className="object-cover"
+                        className={cn('object-cover', post.meta.twImagen)}
                         priority
                       />
                     </motion.div>

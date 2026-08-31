@@ -4,6 +4,7 @@ import {
   Copy,
   Download,
   Eraser,
+  FileSpreadsheet,
   Link,
   ListCollapse,
   QrCode,
@@ -13,14 +14,14 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { PropsWithChildren, useRef, useState } from 'react'
+import { PropsWithChildren, useRef, useState, useTransition } from 'react'
 import { isEmpty } from 'remeda'
 import { QRCodeCanvas } from 'qrcode.react'
 import { toast } from 'sonner'
 
 import { titulo as fuenteTitulo } from '@/components/fonts'
 import getInitials, { getRandomColor } from '@/lib/avatarname'
-import { cn, exportarPlanilla } from '@/lib/utils'
+import { cn, exportarPlanilla, exportarPlanillaCompleta } from '@/lib/utils'
 
 import PanelConfigSala from './panel-config-sala'
 
@@ -42,31 +43,65 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { MetodosLogin } from '@/wss/validators/auth'
 
 export const ListaEstudiantes = () => {
-  const { limpiarEstudiantes } = useConexionProfe()
+  const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
+  const { lista: invitados, nombres: nombresInvitados } = storePermitidos()
   const [linkCopiado, setLinkCopiado] = useState(false)
+  const [exportandoPlanilla, startExportarPlanilla] = useTransition()
+  const [minutosVentana, setMinutosVentana] = useState(90)
 
   const { handleCopy, justCopied } = useClipboard()
 
   const tituloSala =
     configSala?.nombre?.trim() || (configSala?.nombre_profe ? `Sala de ${configSala.nombre_profe}` : 'Tu sala')
 
-  const handleExportToExcel = () => {
-    const datosParaExcel = estudiantes.map((e) => ({
-      Nombre: e.nombre || 'Sin nombre',
-      Email: e.email || 'Sin email',
-      DNI: e.dni || 'Sin DNI',
-    }))
+  // Export local: recuperar cuando haya cuentas "full"
+  // const handleExportToExcel = () => {
+  //   const datosParaExcel = estudiantes.map((e) => ({
+  //     Nombre: e.nombre || 'Sin nombre',
+  //     Email: e.email || 'Sin email',
+  //     DNI: e.dni || 'Sin DNI',
+  //   }))
 
-    exportarPlanilla(datosParaExcel)
-  }
+  //   exportarPlanilla(datosParaExcel)
+  // }
+
+  /** Exporta la planilla completa desde el estado del servidor: incluye a quienes ya no están
+   * conectados (o fueron "limpiados" del store del FE) y una columna por cada pregunta con la
+   * respuesta de cada estudiante. A diferencia de `handleExportToExcel`, no depende de lo que este
+   * navegador haya visto en la sesión actual. */
+  const handleExportarPlanillaCompleta = () =>
+    startExportarPlanilla(async () => {
+      try {
+        const planilla = await pedirPlanillaCompleta(minutosVentana)
+
+        if (!configSala) return
+
+        if (planilla.filas.length === 0) {
+          toast.info(
+            estudiantes.length === 0
+              ? 'Todavía no hay estudiantes registrados en esta sala'
+              : `Nadie estuvo conectado en los últimos ${minutosVentana} minutos`
+          )
+          return
+        }
+
+        exportarPlanillaCompleta(planilla, configSala)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'No se pudo generar la planilla')
+      }
+    })
 
   const datosEstudiantes = estudiantes
-    .map((e) => (e.email ? `${e.nombre} (${e.email})` : `${e.nombre} (${e.dni})`))
+    .map((e) => {
+      const identificador = e.email || e.dni
+      return identificador ? `${e.nombre} (${identificador})` : e.nombre
+    })
     .join('\n')
 
   return (
@@ -169,7 +204,12 @@ export const ListaEstudiantes = () => {
                   </div>
                   {/* Nombre, email y DNI */}
                   <div className="flex flex-col">
-                    <span>{e.nombre}</span>
+                    <span className="flex items-center gap-1.5">
+                      {e.nombre}
+                      {nombresInvitados[e.userId] && (
+                        <span className="text-xs text-slate-400">– {nombresInvitados[e.userId]}</span>
+                      )}
+                    </span>
                     {e.dni && <span className="text-teal-500">{e.dni}</span>}
                     {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
                   </div>
@@ -183,22 +223,47 @@ export const ListaEstudiantes = () => {
           )}
         </div>
         <div className={cn('flex justify-end gap-2 mb-3 text-ld-violeta-oscuro')}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                )}
-                onClick={limpiarEstudiantes}
-                disabled={estudiantes.length === 0}
-              >
-                <Eraser size={14} /> Limpiar
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">Limpiá la lista de participantes conectados</p>
-            </TooltipContent>
-          </Tooltip>
+          <Dialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                    )}
+                    disabled={estudiantes.length === 0}
+                  >
+                    <Eraser size={14} /> Limpiar
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Limpiá la lista de participantes</p>
+              </TooltipContent>
+            </Tooltip>
+            <DialogContent className="flex flex-col items-center">
+              <DialogHeader>
+                <DialogTitle className="text-center leading-6">¿Limpiar la lista de participantes?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-500 text-center">
+                Se van a quitar de la lista los estudiantes desconectados.
+                {invitados.length > 0 && ` Los ${invitados.length} invitados no se van a borrar.`}
+              </p>
+              <DialogFooter className="flex-row justify-center gap-2">
+                <DialogClose>
+                  <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button
+                    className="flex items-center gap-1 bg-rose-700 text-white px-4 py-2 rounded-full text-sm"
+                    onClick={limpiarEstudiantes}
+                  >
+                    <Eraser size={14} /> Limpiar
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -217,7 +282,8 @@ export const ListaEstudiantes = () => {
               <p className="text-xs">Copiá la lista de participantes</p>
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
+          {/* Cuando tengamos cuentas "full" volvemos a habilitar expor */}
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className={cn(
@@ -232,7 +298,59 @@ export const ListaEstudiantes = () => {
             <TooltipContent>
               <p className="text-xs">Exportá la lista a Excel</p>
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
+          <Dialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                    )}
+                    disabled={exportandoPlanilla || estudiantes.length === 0}
+                  >
+                    <FileSpreadsheet size={14} /> {exportandoPlanilla ? 'Generando...' : 'Exportar'}
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Exportá la lista a Excel</p>
+              </TooltipContent>
+            </Tooltip>
+            <DialogContent className="flex flex-col items-center gap-3">
+              <DialogHeader>
+                <DialogTitle className="text-center leading-6">Exportar planilla</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-500 text-center">
+                ¿Cuántos minutos hacia atrás abarca la clase? Solo se van a incluir en la planilla los
+                participantes que estuvieron conectados en algún momento de ese intervalo.
+              </p>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                Minutos
+                <input
+                  type="number"
+                  min={1}
+                  value={minutosVentana}
+                  onChange={(e) => setMinutosVentana(Number(e.target.value))}
+                  className="w-20 border rounded-lg px-2 py-1 text-center"
+                />
+              </label>
+              <DialogFooter className="flex-row justify-center gap-2">
+                <DialogClose>
+                  <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button
+                    className="flex items-center gap-1 bg-ld-violeta-oscuro text-white px-4 py-2 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleExportarPlanillaCompleta}
+                    disabled={!minutosVentana || minutosVentana <= 0}
+                  >
+                    <FileSpreadsheet size={14} /> Exportar
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

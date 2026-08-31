@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io-client'
 
+import type { Ack } from '@/wss/middleware/error-handling'
 import { EncuestaConVotos } from '@/wss/validators/polls'
 import { overlayEncuestaStore } from '../stores/overlay-encuestas-store'
 
@@ -24,6 +25,17 @@ export default function overlayEncuestasHandlers(socket: Socket | null) {
           store.clear()
         }
       })
+
+      socket
+        .emitWithAck('poll:pedir_enfocada')
+        .then((res: Ack<EncuestaConVotos | null>) => {
+          if (res.ok) {
+            if (res.data) store.set(res.data)
+          } else {
+            console.error('Error pidiendo la encuesta enfocada:', res.error)
+          }
+        })
+        .catch((err) => console.error('Error pidiendo la encuesta enfocada:', err))
     },
 
     acciones: {},

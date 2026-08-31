@@ -3,11 +3,37 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
-const parsear = (texto: string) =>
-  texto
-    .split(/[\n,]/)
-    .map((s) => s.trim())
-    .filter(Boolean)
+export type InvitadoCSV = { dni: string; nombre?: string }
+
+const esEncabezado = (celda: string, nombre: string) => celda.trim().toLowerCase() === nombre
+
+/** Parsea un CSV de DNI (+ Nombre opcional), en cualquier orden de columnas, salteando el encabezado si lo detecta. */
+const parsearCSV = (texto: string): InvitadoCSV[] => {
+  const filas = texto
+    .split(/\r?\n/)
+    .filter((linea) => linea.trim())
+    .map((linea) => {
+      const delimitador = linea.includes(';') && !linea.includes(',') ? ';' : ','
+      return linea.split(delimitador).map((celda) => celda.trim())
+    })
+
+  if (filas.length === 0) return []
+
+  const [primera] = filas
+  const idxDni = primera.findIndex((celda) => esEncabezado(celda, 'dni'))
+  const idxNombre = primera.findIndex((celda) => esEncabezado(celda, 'nombre'))
+  const tieneEncabezado = idxDni !== -1 || idxNombre !== -1
+
+  const colDni = idxDni !== -1 ? idxDni : 0
+  const colNombre = idxNombre !== -1 ? idxNombre : primera.length > 1 ? 1 : -1
+
+  return (tieneEncabezado ? filas.slice(1) : filas)
+    .map((celdas) => ({
+      dni: (celdas[colDni] ?? '').replace(/\D/g, ''),
+      nombre: colNombre !== -1 ? celdas[colNombre]?.trim() || undefined : undefined,
+    }))
+    .filter((invitado) => invitado.dni)
+}
 
 //formulario agregar invitados
 
@@ -74,7 +100,7 @@ export function ListaPermitidosForm({
   nombres: Record<string, string>
   onRemover: (dni: string) => void
   onBorrar: () => void
-  onAgregarCSV: (nuevos: string[]) => void
+  onAgregarCSV: (nuevos: InvitadoCSV[]) => void
 }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -82,7 +108,7 @@ export function ListaPermitidosForm({
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => onAgregarCSV(parsear(ev.target?.result as string))
+    reader.onload = (ev) => onAgregarCSV(parsearCSV(ev.target?.result as string))
     reader.readAsText(file)
     e.target.value = ''
   }

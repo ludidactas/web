@@ -1,27 +1,44 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { NumberInput } from '@/components/ui/number-input'
 import { crearEncuesta } from '@/wss/validators/polls'
 import { CirclePlus, Infinity, Send } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { extractZodErrorMessages } from '@/wss/utils'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { GuiaFormulasDialog } from '../guia-formulas'
+import { GuiaMarkdownDialog } from '../guia-markdown'
+import { necesitaMarkdown, PreguntaMarkdown } from '../pregunta-markdown'
 
 export function AgregarPregunta() {
   const { crear } = useConexionProfe()
 
   const [open, setOpen] = useState(false)
   const [pregunta, setPregunta] = useState('')
+  const [descripcion, setDescripcion] = useState('')
   const [opciones, setOpciones] = useState<string[]>(['', ''])
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const preguntaRef = useRef<HTMLTextAreaElement>(null)
+  const descripcionRef = useRef<HTMLTextAreaElement>(null)
   const [admiteAportes, setAdmiteAportes] = useState<boolean | 'indeterminate'>(false)
   const [admiteMultiplesVotos, setAdmiteMultiplesVotos] = useState<boolean | 'indeterminate'>(false)
   const [maxMultiplesVotos, setMaxMultiplesVotos] = useState<number | null>(null)
+  const [mostrarDescripcion, setMostrarDescripcion] = useState(false)
   // const [crearSinPublicar, setCrearSinPublicar] = useState<boolean | 'indeterminate'>(false)
+
+  // El alto de los textarea sigue al contenido: los colapsamos y reexpandimos al alto real del texto.
+  useEffect(() => {
+    for (const el of [preguntaRef.current, descripcionRef.current]) {
+      if (!el) continue
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+  }, [pregunta, descripcion, open, mostrarDescripcion])
 
   const agregarRespuesta = () => {
     setOpciones((rs) => {
@@ -50,6 +67,7 @@ export function AgregarPregunta() {
     error,
   } = crearEncuesta.safeParse({
     pregunta,
+    descripcion,
     opciones,
     admiteAportes,
     admiteMultiplesVotos,
@@ -64,6 +82,8 @@ export function AgregarPregunta() {
       .then(() => {
         toast.success(`Encuesta creada!`)
         setPregunta('')
+        setDescripcion('')
+        setMostrarDescripcion(false)
         setOpciones(['', ''])
         setAdmiteAportes(false)
         setAdmiteMultiplesVotos(false)
@@ -86,17 +106,18 @@ export function AgregarPregunta() {
         </DialogTrigger>
       </div>
 
-      <DialogContent className="flex flex-col w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto rounded-xl bg-[#f2ebff] p-2 sm:p-8 gap-2 sm:max-w-lg md:max-w-xl">
+      <DialogContent className="flex flex-col w-[95vw] sm:w-full top-[5vh] translate-y-0 max-h-[90vh] overflow-y-auto rounded-xl bg-[#f2ebff] p-2 sm:p-8 gap-2 sm:max-w-lg md:max-w-xl">
         <DialogClose className="absolute right-4 top-4">
           <Icon className="w-6 h-6 text-ld-violeta" icon={'material-symbols:close-rounded'} />
         </DialogClose>
         <DialogTitle className="text-ld-violeta text-center text-xl md:text-3xl">Agregar pregunta</DialogTitle>
 
-        {/* Pregunta */}
+        {/* Enunciado */}
         <div>
-          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Pregunta:</p>
+          <p className="text-lg md:text-2xl  text-ld-violeta py-2 font-bold">Enunciado:</p>
           <textarea
-            className="w-full p-2 resize-none rounded"
+            ref={preguntaRef}
+            className="w-full p-2 resize-none rounded overflow-hidden"
             placeholder="Haz tu pregunta..."
             value={pregunta}
             onChange={(e) => setPregunta(e.target.value)}
@@ -104,9 +125,66 @@ export function AgregarPregunta() {
           />
         </div>
 
+        {/* Body/Descripción -- acá va el markdown */}
+        <Accordion
+          type="single"
+          collapsible
+          value={mostrarDescripcion ? 'descripcion' : ''}
+          onValueChange={(v) => setMostrarDescripcion(v === 'descripcion')}
+        >
+          <AccordionItem value="descripcion" className="border-b-0">
+            <AccordionTrigger className="py-0 font-normal hover:no-underline [&>svg]:text-ld-violeta">
+              <p className="text-lg md:text-2xl text-ld-violeta py-2 font-bold">
+                Descripción: <span className="text-sm font-normal text-ld-violeta/50">(opcional)</span>
+              </p>
+            </AccordionTrigger>
+            <AccordionContent className="pb-0 pt-0">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-ld-violeta/60">
+                  Podés incrustar{' '}
+                  <GuiaFormulasDialog>
+                    <button type="button" className="underline">
+                      fórmulas
+                    </button>
+                  </GuiaFormulasDialog>{' '}
+                  e{' '}
+                  <GuiaMarkdownDialog>
+                    <button type="button" className="underline">
+                      imágenes
+                    </button>
+                  </GuiaMarkdownDialog>
+                  , y darle formato con{' '}
+                  <GuiaMarkdownDialog>
+                    <button type="button" className="underline">
+                      markdown
+                    </button>
+                  </GuiaMarkdownDialog>
+                  .
+                </p>
+                <textarea
+                  ref={descripcionRef}
+                  className="w-full p-2 resize-none rounded overflow-hidden"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  tabIndex={2}
+                />
+
+                {necesitaMarkdown(descripcion) && (
+                  <div className="shrink-0">
+                    <p className="text-xs text-ld-violeta/60 py-1">Vista previa:</p>
+                    <div className="w-full min-h-10 p-2 rounded bg-white text-sm">
+                      <PreguntaMarkdown texto={descripcion} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
         {/* Opciones */}
         <p className="text-lg md:text-2xl  mt-4 text-ld-violeta  font-bold">Opciones:</p>
-        <div className="flex flex-col gap-1 overflow-y-auto">
+        <div className="flex flex-col gap-1 shrink-0 overflow-y-auto">
           {opciones.length === 0 && <p className="text-gray-400">No hay opciones</p>}
 
           {opciones.length > 0 &&
@@ -118,7 +196,7 @@ export function AgregarPregunta() {
                   type="text"
                   value={respuesta}
                   onChange={(e) => actualizarRespuesta(index, e.target.value)}
-                  tabIndex={index + 2}
+                  tabIndex={index + 3}
                   ref={(el) => {
                     inputRefs.current[index] = el
                   }}
@@ -139,7 +217,7 @@ export function AgregarPregunta() {
         <button
           className="flex items-center self-center w-fit font-semibold gap-2  text-white px-2 py-2 rounded-full"
           onClick={agregarRespuesta}
-          tabIndex={opciones.length + 2}
+          tabIndex={opciones.length + 3}
         >
           <CirclePlus className="text-ld-violeta font-bold hover:scale-105" size={30} />
         </button>
@@ -194,7 +272,7 @@ export function AgregarPregunta() {
               disabled={!success}
               className="flex place-content-center mt-4 items-center font-semibold gap-2 rounded-full text-white px-2 md:px-4 py-2 bg-emerald-500 disabled:bg-slate-300 disabled:text-slate-500"
               onClick={postearPregunta}
-              tabIndex={opciones.length + 2}
+              tabIndex={opciones.length + 3}
             >
               <Send size={20} /> Enviar pregunta
             </button>

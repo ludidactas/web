@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
-import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import {
@@ -32,6 +31,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { NavLink } from '@/components/navegacion/nav-link'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
@@ -95,6 +95,7 @@ function FormCrearSala() {
               solo_invitados: form.soloInvitados,
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
+              nombresPermitidos: form.nombres,
             },
           }),
           delay(CARGA_MINIMA_MS),
@@ -190,7 +191,7 @@ function FormCrearSala() {
                         nombres={form.nombres}
                         onRemover={(dni) => setForm((f) => ({ ...f, lista: f.lista.filter((d) => d !== dni) }))}
                         onBorrar={() => setForm((f) => ({ ...f, lista: [], nombres: {} }))}
-                        onAgregarCSV={(nuevos) => nuevos.forEach((d) => agregarALista(d))}
+                        onAgregarCSV={(nuevos) => nuevos.forEach(({ dni, nombre }) => agregarALista(dni, nombre))}
                       />
                     </div>
                   </div>
@@ -281,12 +282,13 @@ function FilaSala({
 
   return (
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
-      <Link
+      <NavLink
         href={`/salas/${sala.id}`}
+        overlayMensaje="Renderizando sala..."
         className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
       >
         {nombre}
-      </Link>
+      </NavLink>
       <div className={cn('flex items-center gap-1 pr-2')}>
         <Dialog
           open={renombrarAbierto}

@@ -10,6 +10,7 @@ import profeUps from '@/svg/dist/ilustraciones/ProfeUps.svg'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
+import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { EncuestaHidratadaProfe } from '@/wss/validators/polls'
 import { Icon, Icon as Iconito } from '@iconify/react'
 import { AccordionItem, AccordionTrigger } from '@radix-ui/react-accordion'
@@ -18,6 +19,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { CircleUserRound, Copy, MessageCircleQuestionIcon, SquareCheckBig } from 'lucide-react'
 import { PropsWithChildren, useState } from 'react'
+import { PreguntaMarkdown } from '../pregunta-markdown'
 import { useDebounceValue } from 'usehooks-ts'
 import { AccionesToggle } from './accionesToggle'
 import { AvanzarEstado, ESTADOS_ENCUESTA, estadoEncuesta } from './avanzar-estado'
@@ -79,12 +81,14 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
               'data-[state=open]:rounded-b-none'
             )}
           >
-            <div className="flex gap-4 justify-between items-center ">
-              <div className="flex items-center gap-2">
+            <div className="flex w-full gap-4 justify-between items-center ">
+              <div className="flex flex-1 min-w-0 items-center gap-2">
                 <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
-                <h3 className="text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
+                <h3 className="w-full text-xs md:text-base text-left break-words font-bold">
+                  {encuesta.pregunta}
+                </h3>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex shrink-0 items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
                   <div className="flex items-center gap-2 text-indigo-500 ">
                     <Tooltip>
@@ -139,6 +143,12 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
                 {encuesta.maxMultiplesVotos ? `hasta ${encuesta.maxMultiplesVotos}` : 'varias'} opciones
                 <Icon icon={'mingcute:check-fill'} />
               </p>
+            )}
+            {/* Descripción */}
+            {encuesta.descripcion && (
+              <div className="w-full pt-2 border-t border-ld-azul/20 text-xs md:text-sm text-left break-words text-ld-azul/90">
+                <PreguntaMarkdown texto={encuesta.descripcion} />
+              </div>
             )}
           </AccordionTrigger>
 
@@ -209,6 +219,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 /** @todo: cambiar para recibir nombres con avatares como la lista de participantes? */
 function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes: string[] }) {
   const [open, setOpen] = useState(false)
+  const { items: estudiantes } = storeEstudiantes()
+
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger onClick={() => setOpen(true)}>{children}</TooltipTrigger>
@@ -216,10 +228,12 @@ function TooltipVotantes({ children, votantes }: PropsWithChildren & { votantes:
         <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
           {votantes.length === 0 && <p className="text-sm text-slate-400 bg-transparent">Nadie votó todavía</p>}
           {votantes.length > 0 &&
-            votantes.map((nombre) => (
-              <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={nombre}>
+            votantes.map((userId) => (
+              <div className="flex gap-2 items-center p-1 rounded-md hover:bg-[#d9f3f8]" key={userId}>
                 <CircleUserRound className="w-4 h-4 text-ld-azul-oscuro" />
-                <p className="text-sm text-ld-azul-oscuro">{nombre}</p>
+                <p className="text-sm text-ld-azul-oscuro">
+                  {estudiantes.find((e) => e.userId === userId)?.nombre ?? userId}
+                </p>
               </div>
             ))}
         </div>

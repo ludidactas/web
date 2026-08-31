@@ -2,6 +2,10 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import * as XLSX from 'xlsx'
 
+import { MetodosLogin } from '@/wss/validators/auth'
+import type { PlanillaCompleta } from '@/wss-cli/handlers/profe-sala-activa-handlers'
+import { ConfigSala } from '@/wss/validators/salas'
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -87,4 +91,60 @@ export function exportarPlanilla(datos: any[]) {
 
   // Descarga el archivo
   XLSX.writeFile(wb, nombreArchivo)
+}
+
+/**
+ * Exporta una planilla con columnas definidas explícitamente (a diferencia de `exportarPlanilla`,
+ * que infiere las columnas de las claves fijas Nombre/Email/DNI). La usamos cuando el set de
+ * columnas es dinámico, como la planilla completa que agrega una columna por pregunta de la sala.
+ *
+ * @param filas Una fila por estudiante; cada valor se busca por `columnas[].key`.
+ * @param columnas Columnas a incluir, en orden, con el encabezado a mostrar.
+ * @param nombreArchivo Nombre con el que se descarga (incluí la extensión, p. ej. `'planilla.xlsx'`).
+ */
+export function exportarPlanillaConColumnas(
+  filas: Record<string, string>[],
+  columnas: { key: string; header: string }[],
+  nombreArchivo: string
+) {
+  const wb = XLSX.utils.book_new()
+
+  const aoa = [columnas.map((c) => c.header), ...filas.map((fila) => columnas.map((c) => fila[c.key] ?? ''))]
+  const ws = XLSX.utils.aoa_to_sheet(aoa)
+
+  const maxWidth = 50
+  ws['!cols'] = columnas.map((c) => ({
+    wch: Math.min(Math.max(c.header.length, ...filas.map((f) => (f[c.key] ?? '').length), 10), maxWidth),
+  }))
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Estudiantes')
+  XLSX.writeFile(wb, nombreArchivo)
+}
+
+/**
+ * Arma y descarga la planilla completa (estado del servidor: incluye desconectados y respuestas por
+ * pregunta). Decide las columnas según el método de login de la sala: en sala anónima el id YA es
+ * el nombre (columna Nombre redundante); "Nombre provisto" solo aplica a sala por DNI, que es el
+ * único método con lista de invitados precargada.
+ */
+export function exportarPlanillaCompleta(planilla: PlanillaCompleta, config: ConfigSala) {
+  const esSalaAnonima = config.metodo_login === MetodosLogin.Nombre
+  const esSalaDni = config.metodo_login === MetodosLogin.DNI
+
+  const columnas = [
+    { key: 'id', header: 'ID' },
+    ...(esSalaAnonima ? [] : [{ key: 'nombre', header: 'Nombre' }]),
+    ...(esSalaDni ? [{ key: 'nombreProvisto', header: 'Nombre provisto' }] : []),
+    ...planilla.preguntas.map((pregunta) => ({ key: pregunta.id, header: pregunta.pregunta })),
+  ]
+
+  const filas = planilla.filas.map((fila) => ({
+    id: fila.dni || fila.email || fila.userId,
+    nombre: fila.nombre || 'Sin nombre',
+    nombreProvisto: fila.nombreProvisto || '',
+    ...fila.respuestas,
+  }))
+
+  const fecha = new Date().toISOString().split('T')[0]
+  exportarPlanillaConColumnas(filas, columnas, `planilla_${aSlug(config.nombre ?? config.nombre_profe)}_${fecha}.xlsx`)
 }

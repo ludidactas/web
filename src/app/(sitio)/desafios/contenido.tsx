@@ -14,7 +14,7 @@ export default function ContenidoDesafios({ desafios }: { desafios: Desafio[] })
             width={583}
             height={356}
             src={'/desafios/JornadasLogo.png'}
-            alt={''}
+            alt="Logo Jornadas de Recreación"
           />
           <Title
             className=""

@@ -4,6 +4,7 @@ import { Sala } from '../salas/app'
 import { MetodosLogin } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import { WssEstudianteSession } from '../validators/session'
+import { normalizarTexto } from '../utils'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
 // Si no está seteada, tiramos un error para que no arranque el server.
@@ -71,10 +72,10 @@ export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstud
       break
 
     case MetodosLogin.Nombre:
-      // El nombre (identidad) no puede estar ya en uso por otro cliente CONECTADO en la sala.
-      // (La planilla ahora incluye desconectados; un nombre liberado puede reutilizarse.)
+      // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login.
+      const nombreNormalizado = normalizarTexto(session.userId)
       const enUso = (await sala.listarEstudiantes()).some(
-        (s) => s.conectado && s.userId === session.userId && s.clientId !== session.clientId
+        (s) => normalizarTexto(s.userId) === nombreNormalizado && s.clientId !== session.clientId
       )
       if (enUso)
         throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)

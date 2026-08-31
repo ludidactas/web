@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { NavLinkPulso } from '@/components/navegacion/nav-link-pulso'
 import type { Post } from '@/lib/blog/posts'
 
 export default function PanelArchivo({ posts }: { posts: Post[] }) {
@@ -42,9 +42,9 @@ export default function PanelArchivo({ posts }: { posts: Post[] }) {
             <ul className="flex flex-col gap-1">
               {postsDelAnio.map((post) => (
                 <li key={post.slug}>
-                  <Link href={`/blog/${post.slug}`} className="text-sm text-gray-700 hover:text-[#8b5cf6] hover:underline">
+                  <NavLinkPulso href={`/blog/${post.slug}`} className="text-sm text-gray-700 hover:text-[#8b5cf6] hover:underline">
                     {post.meta.titulo}
-                  </Link>
+                  </NavLinkPulso>
                 </li>
               ))}
             </ul>

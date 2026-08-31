@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { NavLinkPulso } from '@/components/navegacion/nav-link-pulso'
 import { cn } from '@/lib/utils'
 
 export default function Paginacion({ paginaActual, totalPaginas }: { paginaActual: number; totalPaginas: number }) {
@@ -9,7 +9,7 @@ export default function Paginacion({ paginaActual, totalPaginas }: { paginaActua
   return (
     <nav className="flex gap-2 flex-wrap justify-center" aria-label="Paginación del blog">
       {paginas.map((pagina) => (
-        <Link
+        <NavLinkPulso
           key={pagina}
           href={pagina === 1 ? '/blog' : `/blog?pagina=${pagina}`}
           aria-current={pagina === paginaActual ? 'page' : undefined}
@@ -19,7 +19,7 @@ export default function Paginacion({ paginaActual, totalPaginas }: { paginaActua
           )}
         >
           {pagina}
-        </Link>
+        </NavLinkPulso>
       ))}
     </nav>
   )

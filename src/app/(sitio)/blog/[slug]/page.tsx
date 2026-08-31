@@ -1,11 +1,11 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { obtenerPost, obtenerPostsVecinos } from '@/lib/blog/posts'
 import { Title } from '@/components/custom/ld-title'
+import { NavLinkPulso } from '@/components/navegacion/nav-link-pulso'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -28,9 +28,9 @@ export default async function Page({ params }: Props) {
 
   return (
     <article className="flex flex-col w-full max-w-5xl bg-[#fcfcfc] p-6 my-24 gap-6">
-      <Link href="/blog" className="text-[#8b5cf6] font-bold hover:underline w-fit">
+      <NavLinkPulso href="/blog" className="text-[#8b5cf6] font-bold hover:underline w-fit">
         ← Volver al blog
-      </Link>
+      </NavLinkPulso>
 
       <div className="flex flex-col gap-2">
         <h1 className="text-4xl md:text-5xl text-ld-violeta">{meta.titulo}</h1>
@@ -48,26 +48,26 @@ export default async function Page({ params }: Props) {
       </div>
 
       <div className="flex flex-col gap-4 border-t pt-6">
-        <Link href="/blog" className="text-[#8b5cf6] font-bold hover:underline w-fit">
+        <NavLinkPulso href="/blog" className="text-[#8b5cf6] font-bold hover:underline w-fit">
           ← Volver al blog
-        </Link>
+        </NavLinkPulso>
 
         <div className="flex items-center justify-between gap-4">
           {anterior ? (
-            <Link href={`/blog/${anterior.slug}`} className="text-[#8b5cf6] font-bold hover:underline w-fit">
+            <NavLinkPulso href={`/blog/${anterior.slug}`} className="text-[#8b5cf6] font-bold hover:underline w-fit">
               ← Leer anterior: {anterior.meta.titulo}
-            </Link>
+            </NavLinkPulso>
           ) : (
             <span />
           )}
 
           {siguiente && (
-            <Link
+            <NavLinkPulso
               href={`/blog/${siguiente.slug}`}
               className="text-[#8b5cf6] font-bold hover:underline w-fit text-right"
             >
               Leer siguiente: {siguiente.meta.titulo} →
-            </Link>
+            </NavLinkPulso>
           )}
         </div>
       </div>

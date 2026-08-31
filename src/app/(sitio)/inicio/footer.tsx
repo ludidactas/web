@@ -8,8 +8,12 @@ import lemaSketchy from '@/img/lema_sketchy.gif'
 
 export default function Footer() {
   return (
-    <>
-      <ShapeDividerWaves top colorText="text-indigo-300/50" />
+    <footer className="relative">
+      <ShapeDividerWaves
+        top
+        colorText="text-indigo-300/50"
+        classname="absolute inset-x-0 bottom-full z-10 pointer-events-none"
+      />
       <div className="flex flex-col items-center text-center bg-indigo-300/50">
         <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center gap-4 pt-10">
           <div className="flex flex-col items-center gap-2">
@@ -35,6 +39,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </>
+    </footer>
   )
 }

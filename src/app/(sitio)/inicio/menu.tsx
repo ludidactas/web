@@ -57,9 +57,7 @@ const MenuMobile = () => {
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
-            <Link target="_blank" href="https://ludidactas.medium.com/">
-              Blog
-            </Link>
+            <Link href="/blog">Blog</Link>
             <Separator className="my-1 border border-black border-dashed" />
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -93,9 +91,7 @@ const MenuDesktop = () => (
       Contacto
     </MenuLink>
     <p className="text-2xl">|</p>
-    <MenuLink target="_blank" href="https://ludidactas.medium.com/">
-      Blog
-    </MenuLink>
+    <MenuLink href="/blog"> Blog </MenuLink>
   </div>
 )
 

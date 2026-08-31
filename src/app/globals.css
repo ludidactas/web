@@ -129,6 +129,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* El fade-left/fade-right de AOS en las cards del blog es solo para mobile */
+@media (min-width: 768px) {
+  .blog-card-aos[data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

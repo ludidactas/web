@@ -143,7 +143,7 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-indigo-200/60" />
 
       {/* Nuestra vision*/}
-      <div className="mt-10 lg:mt-20">
+      <div className="flex flex-col items-center my-10">
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
           <div className="mb-10 md:mb-0">
@@ -275,9 +275,8 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText={'text-violet-200/60'} />
 
       {/* Pie */}
-      {/* <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4"> */}
-      <div className={`${stylediv} text-center bg-white/80 mt-20 text-4xl`}>
-        <p className="p-0  text-[1.2rem] md:text-[1.5rem]">
+      <div className={`${stylediv} my-10 bg-white/80 text-center`}>
+        <p className="p-0 text-[1.2rem] md:text-[1.5rem]">
           {' '}
           Desde Ludidactas,{' '}
           <span className="text-ld-violeta font-bold text-2xl pt-6">

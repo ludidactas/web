@@ -10,6 +10,17 @@ function slugDesdeUrl(): string | null {
   return window.location.pathname.match(/^\/blog\/([^/]+)\/?$/)?.[1] ?? null
 }
 
+// Función aparte (no un for dentro del componente) porque un for clásico ahí
+// confunde el análisis de eslint-plugin-react-hooks@5 y marca useState/useEffect
+// como si estuvieran en un loop.
+function agruparEnFilas<T>(items: T[], porFila: number): T[][] {
+  const filas: T[][] = []
+  for (let i = 0; i < items.length; i += porFila) {
+    filas.push(items.slice(i, i + porFila))
+  }
+  return filas
+}
+
 export default function BlogGrid({ posts }: { posts: PostRenderizado[] }) {
   const [slugAbierto, setSlugAbierto] = useState<string | null>(null)
 
@@ -28,6 +39,10 @@ export default function BlogGrid({ posts }: { posts: PostRenderizado[] }) {
     return () => window.removeEventListener('popstate', alNavegarHistorial)
   }, [posts])
 
+  // Usamos pushState directo (no router.push de next/navigation) a propósito:
+  // solo queremos cambiar la URL visible para el modal, sin disparar el ciclo
+  // de navegación de Next (que re-renderiza la ruta). abrir()/cerrar() ya
+  // controlan el estado del modal, así que una navegación real es innecesaria.
   function abrir(slug: string) {
     window.history.pushState(null, '', `/blog/${slug}`)
     setSlugAbierto(slug)
@@ -38,10 +53,7 @@ export default function BlogGrid({ posts }: { posts: PostRenderizado[] }) {
     setSlugAbierto(null)
   }
 
-  const filas: PostRenderizado[][] = []
-  for (let i = 0; i < posts.length; i += 2) {
-    filas.push(posts.slice(i, i + 2))
-  }
+  const filas = agruparEnFilas(posts, 2)
 
   const postAbierto = posts.find((post) => post.slug === slugAbierto) ?? null
 

@@ -18,7 +18,7 @@ import {
 import LoadingSala from '../loading-sala'
 import { PanelConfigOverlay } from './panel-config-overlay'
 import { AgregarPregunta } from './agregar-pregunta'
-import { GuardarEnDrive, ImportarExportar } from './importar-exportar'
+import { ImportarExportar } from './importar-exportar'
 import { ListaEncuestas } from './lista-encuestas'
 import { ListaEstudiantes } from './lista-estudiantes'
 import { Status } from './status'
@@ -40,7 +40,6 @@ export default function EncuestasProfe({
   const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
-  const [coleccionAbierta, setColeccionAbierta] = useState<string | null>(null)
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused)
 
@@ -109,19 +108,8 @@ export default function EncuestasProfe({
                   </h1>
                   <div className="flex flex-col gap-2 py-4">
                     <AgregarPregunta />
-                    <ImportarExportar
-                      integracionGoogle={integracionGoogle}
-                      driveConectado={driveConectado}
-                      alImportar={setColeccionAbierta}
-                    />
-                    <BorrarTodo alBorrar={() => setColeccionAbierta(null)} />
-                    {integracionGoogle && (
-                      <GuardarEnDrive
-                        driveConectado={driveConectado}
-                        abierta={coleccionAbierta}
-                        alGuardar={setColeccionAbierta}
-                      />
-                    )}
+                    <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
+                    <BorrarTodo />
                   </div>
                 </div>
                 <ListaEncuestas />
@@ -154,19 +142,8 @@ export default function EncuestasProfe({
               <div className="flex flex-col gap-2">
                 {/* Boton agregar pregunta */}
                 <AgregarPregunta />
-                <ImportarExportar
-                  integracionGoogle={integracionGoogle}
-                  driveConectado={driveConectado}
-                  alImportar={setColeccionAbierta}
-                />
-                <BorrarTodo alBorrar={() => setColeccionAbierta(null)} />
-                {integracionGoogle && (
-                  <GuardarEnDrive
-                    driveConectado={driveConectado}
-                    abierta={coleccionAbierta}
-                    alGuardar={setColeccionAbierta}
-                  />
-                )}
+                <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
+                <BorrarTodo />
               </div>
             </div>
             <ListaEncuestas />
@@ -254,14 +231,13 @@ export default function EncuestasProfe({
 }
 
 /** Botón con confirmación para eliminar todas las preguntas de la sala. */
-function BorrarTodo({ alBorrar }: { alBorrar: () => void }) {
+function BorrarTodo() {
   const { borrar } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
 
   const borrarTodo = () => {
     const cantidad = encuestas.length
     encuestas.forEach((encuesta) => borrar(encuesta.id))
-    alBorrar()
     toast.success(`${cantidad} pregunta${cantidad === 1 ? '' : 's'} eliminada${cantidad === 1 ? '' : 's'}`)
   }
 

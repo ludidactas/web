@@ -18,6 +18,11 @@ type SalaDrive = {
 
 const TERMINO_ADMITIDO = /^[A-Za-z0-9_-]+$/
 
+/**
+ * Verifica que un valor sea seguro para interpolar en el string de query (`q`) de la
+ * Drive API, que no soporta parámetros bindeados. Cualquier valor que llegue de afuera
+ * (salaId, nombre de colección) pasa por acá antes de terminar en la query.
+ */
 function validar(termino: string) {
   if (!TERMINO_ADMITIDO.test(termino)) {
     throw new Error(`Término no admitido en una consulta a Drive: ${termino}`)
@@ -25,12 +30,14 @@ function validar(termino: string) {
   return termino
 }
 
+/** Arma la cláusula `q` que matchea archivos por sus `appProperties` (los metadatos custom que usamos para "taggear" carpetas/archivos con la sala/colección a la que pertenecen). */
 function condicionPropiedades(propiedades: PropiedadesApp) {
   return Object.entries(propiedades)
     .map(([clave, valor]) => `appProperties has { key='${validar(clave)}' and value='${validar(valor)}' }`)
     .join(' and ')
 }
 
+/** Pagina sobre `files.list` hasta agotar `nextPageToken` y devuelve todos los archivos que matchean. */
 async function listarArchivos(api: drive_v3.Drive, propiedades: PropiedadesApp, mimeType: string) {
   const q = `${condicionPropiedades(propiedades)} and mimeType='${mimeType}' and trashed=false`
   const archivos: ArchivoDrive[] = []
@@ -51,11 +58,13 @@ async function listarArchivos(api: drive_v3.Drive, propiedades: PropiedadesApp, 
   return archivos
 }
 
+/** Como `listarArchivos`, pero se queda con el primer resultado (asume que las `propiedades` identifican a lo sumo un archivo). */
 async function buscarArchivo(api: drive_v3.Drive, propiedades: PropiedadesApp, mimeType: string) {
   const [primero] = await listarArchivos(api, propiedades, mimeType)
   return primero ?? null
 }
 
+/** Idempotente: si ya existe un archivo con esas `appProperties` lo devuelve, si no lo crea. */
 async function buscarOCrear(api: drive_v3.Drive, datos: ArchivoNuevo) {
   const encontrado = await buscarArchivo(api, datos.appProperties, datos.mimeType)
   if (encontrado) return encontrado
@@ -70,6 +79,12 @@ function propiedadesCarpeta(salaId: string, recurso: 'sala' | 'colecciones') {
   return { ludidactasSala: salaId, recurso }
 }
 
+/**
+ * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombre}/Colecciones`
+ * de `salaId` en el Drive del usuario autenticado. La jerarquía completa se busca/crea
+ * de a un nivel por `appProperties`, no por nombre, para tolerar que el usuario la
+ * renombre a mano sin romper las búsquedas futuras.
+ */
 async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
   const raiz = await buscarOCrear(api, {
     name: 'Ludidactas',
@@ -100,6 +115,11 @@ function propiedadesColeccion(salaId: string, nombre: string) {
   return { ...propiedadesDeSala(salaId), coleccion: aSlug(nombre) }
 }
 
+/**
+ * Trae el contenido de todas las colecciones de preguntas (YAML) guardadas en Drive
+ * para `salaId`. No verifica que `salaId` pertenezca al usuario autenticado: opera
+ * sobre lo que encuentre taggeado con ese id en el Drive del caller.
+ */
 export async function leerColecciones(api: drive_v3.Drive, salaId: string): Promise<ColeccionPreguntasEnDrive[]> {
   const archivos = await listarArchivos(api, propiedadesDeSala(salaId), MIME_YAML)
 
@@ -111,6 +131,12 @@ export async function leerColecciones(api: drive_v3.Drive, salaId: string): Prom
   )
 }
 
+/**
+ * Guarda `contenido` como una colección de preguntas en Drive, identificada por
+ * `salaId` + slug de `nombre` vía `appProperties`. Si ya existe una colección con ese
+ * nombre (mismo slug) la sobrescribe en lugar de duplicarla; si no, crea la carpeta
+ * `Ludidactas/Sala - {nombreSala}/Colecciones` (si hace falta) y el archivo ahí.
+ */
 export async function guardarColeccion(api: drive_v3.Drive, sala: SalaDrive, nombre: string, contenido: string) {
   const propiedades = propiedadesColeccion(sala.salaId, nombre)
   const existente = await buscarArchivo(api, propiedades, MIME_YAML)

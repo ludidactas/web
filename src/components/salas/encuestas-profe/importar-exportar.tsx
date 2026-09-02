@@ -1,10 +1,20 @@
 'use client'
 
 import { Icon } from '@iconify/react'
-import { useEffect, useRef, useState } from 'react'
+
+import { useParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { conectarConDrive } from '@/lib/google/conexion'
+import {
+  ColeccionPreguntasEnDrive,
+  DriveNoConectado,
+  guardarColeccion as guardarColeccionEnDrive,
+  leerColecciones as leerColeccionesDeDrive,
+} from '@/lib/google/recursos-colecciones'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
+import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { extractZodErrorMessages } from '@/wss/utils'
 import { crearEncuesta } from '@/wss/validators/polls'
@@ -15,8 +25,9 @@ import {
   obtenerPresets,
   parsearColeccion,
   PresetColeccion,
+  serializarColeccion,
 } from './colecciones-io'
-import { aSlug } from '@/lib/utils'
+import { aSlug, cn } from '@/lib/utils'
 
 type Vista = 'menu' | 'exportar' | 'importar'
 
@@ -26,23 +37,90 @@ const TITULOS: Record<Vista, string> = {
   importar: 'Importar preguntas',
 }
 
+const ICONO_DRIVE = 'ri:drive-fill'
+
+type ColeccionDrive = PresetColeccion & { contenido: string; preguntas: number }
+
+function aColeccionDrive({ archivo, contenido }: ColeccionPreguntasEnDrive): ColeccionDrive {
+  try {
+    const { nombre, preguntas } = parsearColeccion(contenido)
+    return { archivo, contenido, nombre: nombre ?? archivo, preguntas: preguntas.length }
+  } catch {
+    return { archivo, contenido, nombre: archivo, preguntas: 0 }
+  }
+}
+
 /** UI para importar/exportar -- pendiente revisar/mejorar @comomaraleja */
-export function ImportarExportar() {
+export function ImportarExportar({
+  integracionGoogle,
+  driveConectado: conectadoInicial,
+}: {
+  integracionGoogle: boolean
+  driveConectado: boolean
+}) {
   const { crear } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
+  const config = storeConfig((estado) => estado.config)
 
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [vista, setVista] = useState<Vista>('menu')
   const [nombre, setNombre] = useState('Colección de preguntas')
   const [presets, setPresets] = useState<PresetColeccion[]>([])
   const [url, setUrl] = useState('')
-  const [importando, setImportando] = useState(false)
+  const [importando, iniciarImportacion] = useTransition()
+  const [guardandoEnDrive, iniciarGuardado] = useTransition()
   const inputArchivo = useRef<HTMLInputElement>(null)
+
+  const { idSala } = useParams<{ idSala: string }>()
+  const [misColecciones, setMisColecciones] = useState<ColeccionDrive[] | null>(null)
+  const [driveConectado, setDriveConectado] = useState(conectadoInicial)
 
   // Cargamos los presets disponibles al entrar a la vista de importar
   useEffect(() => {
     if (vista === 'importar' && presets.length === 0) obtenerPresets().then(setPresets)
   }, [vista, presets.length])
+
+  // `driveConectado` se corrige acá con la respuesta real del server (409 → no conectado), ya que el valor
+  // inicial (`conectadoInicial`, de la sesión) puede haber quedado desactualizada si el grant se revocó.
+  const leerDrive = useCallback(
+    () =>
+      leerColeccionesDeDrive(idSala)
+        .then((colecciones) => {
+          setMisColecciones(colecciones.map(aColeccionDrive))
+          setDriveConectado(true)
+        })
+        .catch((error: unknown) => {
+          if (!(error instanceof DriveNoConectado)) {
+            console.error('Drive: no se pudieron leer las colecciones', error)
+          }
+          setMisColecciones([])
+          setDriveConectado(false)
+        }),
+    [idSala]
+  )
+
+  // Las colecciones existentes también alimentan la vista de exportar (aviso de sobrescritura).
+  useEffect(() => {
+    if (integracionGoogle && driveConectado && vista !== 'menu' && misColecciones === null) leerDrive()
+  }, [integracionGoogle, driveConectado, vista, misColecciones, leerDrive])
+
+  const coleccionesExistentes = misColecciones?.map((coleccion) => coleccion.nombre) ?? []
+
+  const nombreFinal = nombre.trim()
+
+  const sobrescribeEnDrive =
+    nombreFinal.length > 0 && coleccionesExistentes.some((otro) => aSlug(otro) === aSlug(nombreFinal))
+
+  const verificandoDrive = driveConectado && misColecciones === null
+
+  // Tras el popup de consentimiento, invalidamos el cache de colecciones para que el efecto de arriba las recargue.
+  const conectarDrive = () => {
+    conectarConDrive().then((conectado) => {
+      if (!conectado) return
+      setDriveConectado(true)
+      setMisColecciones(null)
+    })
+  }
 
   // Al cerrar el drawer, volvemos siempre al menú principal
   const alCambiarDrawer = (abierto: boolean) => {
@@ -134,18 +212,9 @@ export function ImportarExportar() {
       toast.error(error instanceof Error ? error.message : 'No se pudo leer la colección')
       return
     }
+    if (sobre.nombre) setNombre(sobre.nombre)
     setVista('menu')
     await importarPreguntas(sobre.preguntas)
-  }
-
-  /** Envuelve la ejecución de una función con el estado de carga (activa al iniciar, desactiva al finalizar). */
-  const correr = async (fn: () => Promise<void>) => {
-    setImportando(true)
-    try {
-      await fn()
-    } finally {
-      setImportando(false)
-    }
   }
 
   /** Función para consumir un archivo de texto subido por el usuario. */
@@ -153,12 +222,12 @@ export function ImportarExportar() {
     const archivo = evento.target.files?.[0]
     evento.target.value = '' // permite re-elegir el mismo archivo
     if (!archivo) return
-    correr(async () => procesarTexto(await archivo.text()))
+    iniciarImportacion(async () => procesarTexto(await archivo.text()))
   }
 
   /** Descarga desde una URL/preset y delega a procesarTexto; aísla los errores de red. */
   const importarDesdeArchivoRemoto = (archivo: string) =>
-    correr(async () => {
+    iniciarImportacion(async () => {
       let texto: string
       try {
         texto = await obtenerColeccionDesdeUrl(archivo)
@@ -169,9 +238,45 @@ export function ImportarExportar() {
       await procesarTexto(texto)
     })
 
+  const importarDesdeDrive = (coleccion: ColeccionDrive) =>
+    iniciarImportacion(async () => procesarTexto(coleccion.contenido))
+
   /** Función para consumir un archivo de texto provisto por URL */
   const importarUrl = () => {
     if (url.trim()) importarDesdeArchivoRemoto(url.trim())
+  }
+
+  /** Guarda las preguntas de la sala como una colección en el Drive del profe. */
+  const guardarEnDrive = () => {
+    if (!nombreFinal) return
+
+    iniciarGuardado(async () => {
+      try {
+        await guardarColeccionEnDrive(
+          idSala,
+          config?.nombre ?? idSala,
+          nombreFinal,
+          serializarColeccion(nombreFinal, encuestas)
+        )
+
+        setMisColecciones(null) // refresca la lista para que el aviso de sobrescritura quede al día
+        toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
+        setNombre('')
+        setVista('menu')
+        setDrawerAbierto(false)
+      } catch (error) {
+        if (error instanceof DriveNoConectado) {
+          setDriveConectado(false)
+          toast.info('Necesitamos tu permiso para guardar en Google Drive', {
+            action: { label: 'Conectar', onClick: conectarDrive },
+          })
+          return
+        }
+
+        console.error('Drive: no se pudo guardar la colección', error)
+        toast.error('No se pudo guardar la colección en tu Google Drive')
+      }
+    })
   }
 
   return (
@@ -208,7 +313,7 @@ export function ImportarExportar() {
           {vista === 'menu' && (
             <>
               <p className="text-center">
-                Puedes exportar la lista de preguntas que creaste o importar una lista de preguntas en formato yaml.
+                Podés exportar la lista de preguntas que creaste o importar una lista de preguntas en formato yaml.
                 También hemos creado colecciones de ejemplo listas para usar.{' '}
               </p>
 
@@ -253,6 +358,38 @@ export function ImportarExportar() {
               >
                 <Icon icon="mdi:download" /> Descargar YAML
               </button>
+
+              {integracionGoogle && (
+                <>
+                  {sobrescribeEnDrive && (
+                    <p className="flex items-center gap-1 text-center text-sm text-amber-600">
+                      <Icon icon="mdi:alert-outline" className="shrink-0" />
+                      Ya tenés una colección con este nombre. Si guardás, la vas a sobrescribir.
+                    </p>
+                  )}
+                  {!driveConectado ? (
+                    <button
+                      className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2"
+                      onClick={conectarDrive}
+                    >
+                      <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
+                    </button>
+                  ) : (
+                    <button
+                      className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2 disabled:bg-slate-300"
+                      onClick={guardarEnDrive}
+                      disabled={!nombreFinal || guardandoEnDrive || verificandoDrive}
+                      title="Guardar estas preguntas como una colección en tu Google Drive"
+                    >
+                      <Icon
+                        icon={guardandoEnDrive || verificandoDrive ? 'mdi:loading' : ICONO_DRIVE}
+                        className={cn((guardandoEnDrive || verificandoDrive) && 'animate-spin')}
+                      />
+                      {sobrescribeEnDrive ? 'Sobrescribir en Drive' : 'Guardar en Drive'}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -298,6 +435,44 @@ export function ImportarExportar() {
                   <Icon icon="mdi:cloud-download" /> Cargar
                 </button>
               </div>
+
+              {integracionGoogle && (
+                <>
+                  {/* Mis colecciones en Drive */}
+                  <p className="font-bold text-ld-violeta mt-2 flex items-center gap-1">
+                    Mis colecciones <Icon icon={ICONO_DRIVE} className="w-4 h-4" />
+                  </p>
+
+                  {!driveConectado ? (
+                    <button
+                      className="flex items-center justify-center gap-2 rounded-full bg-ld-azul text-white px-4 py-2"
+                      onClick={conectarDrive}
+                    >
+                      <Icon icon={ICONO_DRIVE} /> Conectar con Google Drive
+                    </button>
+                  ) : misColecciones === null ? (
+                    <p className="text-xs text-slate-500">Leyendo tu Google Drive…</p>
+                  ) : misColecciones.length === 0 ? (
+                    <p className="text-xs text-slate-500">Todavía no guardaste ninguna colección.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {misColecciones.map((coleccion) => (
+                        <button
+                          key={coleccion.archivo}
+                          className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
+                          onClick={() => importarDesdeDrive(coleccion)}
+                          disabled={importando}
+                        >
+                          <span className="font-semibold text-ld-violeta">{coleccion.nombre}</span>
+                          <span className="text-xs text-slate-500">
+                            {coleccion.preguntas} pregunta{coleccion.preguntas === 1 ? '' : 's'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Presets */}
               {presets.length > 0 && (

@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthConfig } from 'next-auth'
+import NextAuth, { NextAuthConfig, Session } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
 import type { OIDCConfig } from 'next-auth/providers'
@@ -66,15 +66,20 @@ const credencialesMock = Credentials({
   },
 })
 
-const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock] : [Google]
+const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock, Google] : [Google]
 
 // Gate de prod:
 // ID del provider "principal" que dispara el botón de login de la UI
 // (`signIn(proveedorLogin)`). En dev apunta al IdP falso; en prod, a Google. El
 // mock de credenciales se invoca solo desde tests.
-export const proveedorLogin = esDesarrollo ? 'idp-dev' : 'google'
+export const proveedorLogin = 'google'
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+// Payload que entiende el `trigger: 'update'` del callback `jwt` de abajo.
+// Canal interno para pedirle al callback que borre el
+// refresh token. Solo `desconectarDrive()` debe construir uno de estos.
+type SeñalJwt = { driveRefreshToken: null }
+
+const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers,
   pages: {
     signIn: '/login',
@@ -83,12 +88,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, trigger, session }) {
       // Info que va al token:
       if (user?.email) {
         token.email = user.email
         token.name = user.name
         token.picture = user.image
+      }
+      // Capturamos el refresh token
+      if (account?.provider === 'google' && account.refresh_token) {
+        token.driveRefreshToken = account.refresh_token
+      }
+      // Si el usuario revoca el acceso a Drive, lo borramos (ver `SeñalJwt`/`desconectarDrive`)
+      if (trigger === 'update' && session && 'driveRefreshToken' in (session as Partial<SeñalJwt>)) {
+        delete token.driveRefreshToken
       }
       return token
     },
@@ -99,6 +112,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.name = token.name
         session.user.image = token.picture
       }
+      session.driveConectado = typeof token.driveRefreshToken === 'string'
       return session
     },
     async authorized({ auth }) {
@@ -107,3 +121,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 })
+
+export { handlers, signIn, signOut, auth }
+
+/**
+ * Desconecta Drive de la sesión actual: borra el `driveRefreshToken` guardado en el JWT
+ * (usado cuando Google invalida el grant, ver `responderError` en `server/google/cliente.ts`).
+ */
+export async function desconectarDrive() {
+  const señal: SeñalJwt = { driveRefreshToken: null }
+  await unstable_update(señal as Partial<Session>)
+}

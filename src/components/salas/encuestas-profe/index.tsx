@@ -30,7 +30,13 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
-export default function EncuestasProfe() {
+export default function EncuestasProfe({
+  integracionGoogle,
+  driveConectado,
+}: {
+  integracionGoogle: boolean
+  driveConectado: boolean
+}) {
   const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
@@ -102,7 +108,7 @@ export default function EncuestasProfe() {
                   </h1>
                   <div className="flex flex-col gap-2 py-4">
                     <AgregarPregunta />
-                    <ImportarExportar />
+                    <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
                     <BorrarTodo />
                   </div>
                 </div>
@@ -136,7 +142,7 @@ export default function EncuestasProfe() {
               <div className="flex flex-col gap-2">
                 {/* Boton agregar pregunta */}
                 <AgregarPregunta />
-                <ImportarExportar />
+                <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
                 <BorrarTodo />
               </div>
             </div>

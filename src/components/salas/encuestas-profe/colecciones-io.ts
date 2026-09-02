@@ -16,6 +16,8 @@ export interface PresetColeccion {
 export function encuestaAPregunta(encuesta: EncuestaHidratadaProfe): PreguntaColeccion {
   return {
     pregunta: encuesta.pregunta,
+    // Omitida si no tiene, para no ensuciar el YAML con `descripcion: null`.
+    ...(encuesta.descripcion ? { descripcion: encuesta.descripcion } : {}),
     opciones: encuesta.opciones.map((opcion) => opcion.texto),
     admiteAportes: encuesta.admiteAportes,
     admiteMultiplesVotos: encuesta.admiteMultiplesVotos,

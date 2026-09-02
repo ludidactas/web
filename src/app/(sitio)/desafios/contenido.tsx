@@ -1,6 +1,5 @@
 'use client'
 import { Title } from '@/components/custom/ld-title'
-import ShapeDividerWaves from '../custom/shape-divider'
 import { DesafioCard } from './desafio-card'
 import type { Desafio } from './datos'
 import Image from 'next/image'
@@ -9,14 +8,13 @@ export default function ContenidoDesafios({ desafios }: { desafios: Desafio[] })
   return (
     <>
       <div className="flex flex-col w-full min-h-screen bg-indigo-300">
-        <ShapeDividerWaves bottom colorText={'text-white'} />
         <div className="flex my-10 px-2 md:px-20 gap-6">
           <Image
             className="w-24 h-auto md:w-[300px]"
             width={583}
             height={356}
             src={'/desafios/JornadasLogo.png'}
-            alt={''}
+            alt="Logo Jornadas de Recreación"
           />
           <Title
             className=""

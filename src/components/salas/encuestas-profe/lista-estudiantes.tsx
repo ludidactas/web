@@ -53,6 +53,7 @@ export const ListaEstudiantes = () => {
   const { lista: invitados, nombres: nombresInvitados } = storePermitidos()
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
+  const [minutosVentana, setMinutosVentana] = useState(90)
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -77,10 +78,16 @@ export const ListaEstudiantes = () => {
   const handleExportarPlanillaCompleta = () =>
     startExportarPlanilla(async () => {
       try {
-        const planilla = await pedirPlanillaCompleta()
+        const planilla = await pedirPlanillaCompleta(minutosVentana)
 
-        if (planilla.filas.length === 0 || !configSala) {
-          toast.info('Todavía no hay estudiantes registrados en esta sala')
+        if (!configSala) return
+
+        if (planilla.filas.length === 0) {
+          toast.info(
+            estudiantes.length === 0
+              ? 'Todavía no hay estudiantes registrados en esta sala'
+              : `Nadie estuvo conectado en los últimos ${minutosVentana} minutos`
+          )
           return
         }
 
@@ -292,22 +299,58 @@ export const ListaEstudiantes = () => {
               <p className="text-xs">Exportá la lista a Excel</p>
             </TooltipContent>
           </Tooltip> */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                )}
-                onClick={handleExportarPlanillaCompleta}
-                disabled={exportandoPlanilla}
-              >
-                <FileSpreadsheet size={14} /> {exportandoPlanilla ? 'Generando...' : 'Exportar'}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">Exportá la lista a Excel</p>
-            </TooltipContent>
-          </Tooltip>
+          <Dialog>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                    )}
+                    disabled={exportandoPlanilla || estudiantes.length === 0}
+                  >
+                    <FileSpreadsheet size={14} /> {exportandoPlanilla ? 'Generando...' : 'Exportar'}
+                  </button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">Exportá la lista a Excel</p>
+              </TooltipContent>
+            </Tooltip>
+            <DialogContent className="flex flex-col items-center gap-3">
+              <DialogHeader>
+                <DialogTitle className="text-center leading-6">Exportar planilla</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-slate-500 text-center">
+                ¿Cuántos minutos hacia atrás abarca la clase? Solo se van a incluir en la planilla los
+                participantes que estuvieron conectados en algún momento de ese intervalo.
+              </p>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                Minutos
+                <input
+                  type="number"
+                  min={1}
+                  value={minutosVentana}
+                  onChange={(e) => setMinutosVentana(Number(e.target.value))}
+                  className="w-20 border rounded-lg px-2 py-1 text-center"
+                />
+              </label>
+              <DialogFooter className="flex-row justify-center gap-2">
+                <DialogClose>
+                  <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button
+                    className="flex items-center gap-1 bg-ld-violeta-oscuro text-white px-4 py-2 rounded-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleExportarPlanillaCompleta}
+                    disabled={!minutosVentana || minutosVentana <= 0}
+                  >
+                    <FileSpreadsheet size={14} /> Exportar
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

@@ -12,8 +12,6 @@ import PjCarousel from '@/svg/components/pjCarousel'
 import ShapeDividerWaves from '../custom/shape-divider'
 import { Title } from '@/components/custom/ld-title'
 
-
-
 export default function ContenidoIdentidad() {
   const stylediv =
     'w-[90vw] max-w-[1080px] pb-12 md:text-[1.6rem] space-y-4 flex flex-col items-center gap-8 mt-10 text-center'
@@ -23,7 +21,7 @@ export default function ContenidoIdentidad() {
         {/* El proyecto */}
         <div className={`${stylediv}`}>
           {/* Titulo */}
-          <Title text='El Proyecto' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
+          <Title text="El Proyecto" color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
           {/* Texto */}
           <p>
             La visión del proyecto es la formación de un motor pedagógico para el{' '}
@@ -42,9 +40,9 @@ export default function ContenidoIdentidad() {
           </p>
           <p>
             La propuesta pedagógica gira alrededor de{' '}
-            <span className="text-ld-azul font-bold">la práctica y la técnica para el juego</span>, quitando el foco
-            de la utilidad, la deriva, la ganancia. Y configura los medios de manera que que haya lugar para todo el
-            mundo, para un crecimiento rizomático, nodal, sostenible.
+            <span className="text-ld-azul font-bold">la práctica y la técnica para el juego</span>, quitando el foco de
+            la utilidad, la deriva, la ganancia. Y configura los medios de manera que que haya lugar para todo el mundo,
+            para un crecimiento rizomático, nodal, sostenible.
           </p>
         </div>
 
@@ -65,11 +63,9 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves top colorText="text-indigo-200/60" />
       <div className="bg-indigo-200/60 w-screen flex flex-col items-center gap-4">
         <div className={`${stylediv}`}>
-
-          <Title text='El Equipo' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
+          <Title text="El Equipo" color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
 
           <div className="flex flex-col gap-8 items-center justify-center">
-
             {/* Vlad */}
             <div className="flex flex-col md:block md:relative items-center">
               <div className="flex flex-col justify-center items-center float-left md:[shape-outside:circle(50%)] [shape-margin:0.05rem] md:mr-12 hover:scale-110 hover:-rotate-3">
@@ -80,10 +76,10 @@ export default function ContenidoIdentidad() {
                   src={'/img/Vlad.webp'}
                   height={200}
                   width={200}
-                  alt=""
+                  alt="Vladimir"
                 />
-                <div className='md:w-80 -translate-y-7'>
-                  <Title data-aos="fade-right" text='Vladimir' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
+                <div className="md:w-80 -translate-y-7">
+                  <Title data-aos="fade-right" text="Vladimir" color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
               <p className={`text-justify my-6 leading-relaxed`}>
@@ -104,15 +100,16 @@ export default function ContenidoIdentidad() {
                   src={'/img/Aleja.webp'}
                   height={200}
                   width={200}
-                  alt="Team member 2"
+                  alt="Alejandra"
                 />
-                <div className='md:w-80 -translate-y-7'>
-                  <Title data-aos="fade-left" className='md:w-80 -translate-y-7' text='Alejandra' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
+                <div className="md:w-80 -translate-y-7">
+                  <Title data-aos="fade-left" text="Alejandra" color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
               <p className="text-justify my-10 leading-relaxed">
                 Profesional en Filosofía, Ilustradora y Desarrolladora front-end autodidacta. Participa del proyecto
-                desde el 2024, con la intención de trabajar por una transformación de los procesos de aprendizaje y de construcción de conocimiento. 
+                desde el 2024, con la intención de trabajar por una transformación de los procesos de aprendizaje y de
+                construcción de conocimiento.
               </p>
               <div className="clear-right"></div>
             </div>
@@ -127,15 +124,16 @@ export default function ContenidoIdentidad() {
                   src={'/img/Jere.webp'}
                   height={200}
                   width={200}
-                  alt=""
+                  alt="Jeremías"
                 />
-                <div className='md:w-80 -translate-y-7'>
-                  <Title data-aos="fade-right" text='Jeremías' color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
+                <div className="md:w-80 -translate-y-7">
+                  <Title data-aos="fade-right" text="Jeremías" color={'text-[#55B7D4]'} size={'text-5xl md:text-7xl'} />
                 </div>
               </div>
               <p className={`text-justify my-10 leading-relaxed`}>
-                Desarrollador de software con vocación de profe. Sostiene la intención de tratar la enseñanza como un acto de amor, de nutrición y emancipación. 
-                Siente en este proyecto la sintetización honesta y orgánica de aquella intención.
+                Desarrollador de software con vocación de profe. Sostiene la intención de tratar la enseñanza como un
+                acto de amor, de nutrición y emancipación. Siente en este proyecto la sintetización honesta y orgánica
+                de aquella intención.
               </p>
               <div className="clear-left"></div>
             </div>
@@ -145,11 +143,11 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-indigo-200/60" />
 
       {/* Nuestra vision*/}
-      <div className="mt-10 lg:mt-20">
+      <div className="flex flex-col items-center my-10">
         <div className={`${stylediv} text-center`}>
           {/* Titulo */}
-          <div className='mb-10 md:mb-0'>
-          <Title text='Nuestra Visión' color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
+          <div className="mb-10 md:mb-0">
+            <Title text="Nuestra Visión" color={'text-ld-violeta'} size={'text-5xl md:text-7xl'} />
           </div>
           {/* Texto */}
           <p>Nos reconocemos en una época que pide regeneración.</p>
@@ -223,8 +221,8 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText="text-orange-200/60" />
 
       {/* Juego */}
-      <div className='mt-10'/>
-      <Title data-aos="fade-left" text='El juego' color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
+      <div className="mt-10" />
+      <Title data-aos="fade-left" text="El juego" color={'text-ld-azul'} size={'text-5xl md:text-7xl'} />
       <div data-aos="fade-up" data-aos-duration="2000" className={`${stylediv} px-16 text-center rounded-xl`}>
         <p>
           Ocupa un lugar central en nuestra propuesta. Entendemos{' '}
@@ -242,7 +240,6 @@ export default function ContenidoIdentidad() {
           muestra horizontes, que reclaman caminos.
         </p>
       </div>
-
 
       {/* Secciones con titulo + dibujo + texto */}
       <ShapeDividerWaves top colorText={'text-violet-200/60'} />
@@ -278,9 +275,8 @@ export default function ContenidoIdentidad() {
       <ShapeDividerWaves bottom colorText={'text-violet-200/60'} />
 
       {/* Pie */}
-      {/* <div className="w-[90vw] md:w-[60vw] max-w-[1080px] flex flex-col gap-4 my-4"> */}
-      <div className={`${stylediv} text-center bg-white/80 mt-20 text-4xl`}>
-        <p className="p-0  text-[1.2rem] md:text-[1.5rem]">
+      <div className={`${stylediv} my-10 bg-white/80 text-center`}>
+        <p className="p-0 text-[1.2rem] md:text-[1.5rem]">
           {' '}
           Desde Ludidactas,{' '}
           <span className="text-ld-violeta font-bold text-2xl pt-6">
@@ -317,7 +313,9 @@ const TituloYDosColumnas = ({ titulo, children, invertido = false }: TituloYDosC
     </h1>
 
     <div
-      className={`flex text-sm md:text-xl flex-col lg:grid lg:grid-cols-2 lg:grid-rows-none gap-4 items-center ${invertido ? '[direction:rtl]' : ''}`}
+      className={`flex text-sm md:text-xl flex-col lg:grid lg:grid-cols-2 lg:grid-rows-none gap-4 items-center ${
+        invertido ? '[direction:rtl]' : ''
+      }`}
     >
       {children}
     </div>

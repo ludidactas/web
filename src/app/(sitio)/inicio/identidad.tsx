@@ -45,6 +45,6 @@ export default function Identidad() {
 
 const Imagenes = () => (
   <div className="mt-10 md:mt-0">
-    <Image src="/img/PersoIdentidad.webp" alt="Personaje1" width={500} height={500} />
+    <Image src="/img/PersoIdentidad.webp" alt="Personaje1" width={735} height={938} />
   </div>
 )

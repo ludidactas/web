@@ -1,3 +1,6 @@
+@import 'katex/dist/katex.min.css';
+@import 'highlight.js/styles/github.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -124,6 +127,15 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* El fade-left/fade-right de AOS en las cards del blog es solo para mobile */
+@media (min-width: 768px) {
+  .blog-card-aos[data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 @layer base {

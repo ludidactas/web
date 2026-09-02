@@ -10,7 +10,7 @@ export default function Propuestas() {
   return (
     <div className="propuestasini bg-indigo-300/50">
       <Pantalla
-        title={<Title radius={2} text={'Propuestas'} color={'text-ld-azul'} size={'text-4xl md:text-7xl'}/>}
+        title={<Title radius={2} text={'Propuestas'} color={'text-ld-azul'} size={'text-4xl md:text-7xl'} />}
         one={
           <div className="flex flex-col md:max-w-[45vw] items-center gap-2 text-sm md:text-[1em]">
             <p>
@@ -44,7 +44,7 @@ export default function Propuestas() {
         }
         two={<Imagenes />}
         btn={<BotonLink titulo={'Proximamente...'} url={''} />}
-        scroll={<ArrowDownLd to="recursosini" />}
+        scroll={<ArrowDownLd to="contactoini" />}
       />
     </div>
   )
@@ -52,6 +52,6 @@ export default function Propuestas() {
 
 const Imagenes = () => (
   <div>
-    <Image src="/img/PersoPropuestas.webp" alt="Personaje2" width={500} height={500} />
+    <Image src="/img/PersoPropuestas.webp" alt="Personaje2" width={587} height={584} />
   </div>
 )

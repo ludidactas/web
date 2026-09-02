@@ -36,6 +36,6 @@ export default function Contacto() {
 
 const Imagenes = () => (
   <div>
-    <Image src="/img/PersoContacto.webp" alt="Personaje4" width={500} height={500} />
+    <Image src="/img/PersoContacto.webp" alt="Personaje4" width={1021} height={518} />
   </div>
 )

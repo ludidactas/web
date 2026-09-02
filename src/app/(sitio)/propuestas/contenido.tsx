@@ -134,7 +134,7 @@ const LineasModulo = () => {
               'Orientada a la comunidad educativa en general, principalmente a personas implicadas en el aspecto regenerativo/reflexivo del proyecto.',
               'Expresada en encuentros, charlas, conversatorios y escritos',
             ]}
-            btn={<BotonLink titulo={'Ver Blog'} url={"https://ludidactas.medium.com/"} />}
+            btn={<BotonLink titulo={'Ver Blog'} url={'/blog'} />}
             imagen={PedagogiaIlus}
           />
         </div>
@@ -185,7 +185,7 @@ const LogoTec = ({ nombre, url, descripcion }: { nombre: string; url: string; de
           className="p-4 hover:outline-8 hover:outline-dashed hover:outline-ld-azul/50 rounded-xl"
           onClick={() => setOpen(!open)}
         >
-          <Image className="w-20 h-20 lg:w-full lg:h-full " src={url} width={100} height={100} alt="" />
+          <Image className="w-20 h-20 lg:w-full lg:h-full " src={url} width={100} height={100} alt={nombre} />
         </TooltipTrigger>
         <TooltipContent className="bg-black text-center text-white w-[20em] p-5">
           <h1 className="text-2xl pb-2 text-ld-azul-oscuro">{nombre}</h1>

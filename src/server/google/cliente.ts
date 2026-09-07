@@ -34,7 +34,12 @@ export async function clienteDrive(request: Request) {
   if (!clientId || !clientSecret) throw new Error('Faltan AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET')
   if (!secret) throw new Error('Falta AUTH_SECRET')
 
-  const token = await getToken({ req: request, secret })
+  // `getToken` no infiere sola si la cookie de sesión tiene el prefijo `__Secure-` (con el que
+  // Auth.js la crea en producción, sobre HTTPS): hay que decírselo explícitamente con la misma
+  // regla que usa Auth.js para decidirlo al crearla (`useSecureCookies` en @auth/core/lib/init.js),
+  // o en producción nunca encuentra la cookie real y devuelve `null` como si no hubiera sesión.
+  const secureCookie = new URL(request.url).protocol === 'https:'
+  const token = await getToken({ req: request, secret, secureCookie })
   if (typeof token?.driveRefreshToken !== 'string') {
     console.warn('Drive: sin driveRefreshToken en el JWT de sesión', { email: token?.email ?? null })
     throw new SinConexionDrive()

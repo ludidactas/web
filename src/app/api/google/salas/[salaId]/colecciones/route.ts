@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: Parametros) {
     const api = await clienteDrive(request)
     return NextResponse.json({ colecciones: await leerColecciones(api, salaId) })
   } catch (e) {
-    return responderError(e)
+    return responderError(e, { ruta: 'GET colecciones', salaId, email: (await auth())?.user?.email })
   }
 }
 
@@ -55,6 +55,6 @@ export async function POST(request: Request, { params }: Parametros) {
     await guardarColeccion(await clienteDrive(request), { salaId, nombreSala }, nombre, contenido)
     return new NextResponse(null, { status: 204 })
   } catch (e) {
-    return responderError(e)
+    return responderError(e, { ruta: 'POST colecciones', salaId, email: (await auth())?.user?.email })
   }
 }

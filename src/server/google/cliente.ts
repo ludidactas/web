@@ -35,7 +35,10 @@ export async function clienteDrive(request: Request) {
   if (!secret) throw new Error('Falta AUTH_SECRET')
 
   const token = await getToken({ req: request, secret })
-  if (typeof token?.driveRefreshToken !== 'string') throw new SinConexionDrive()
+  if (typeof token?.driveRefreshToken !== 'string') {
+    console.warn('Drive: sin driveRefreshToken en el JWT de sesión', { email: token?.email ?? null })
+    throw new SinConexionDrive()
+  }
 
   const oauth = new auth.OAuth2({ clientId, clientSecret })
   oauth.setCredentials({ refresh_token: token.driveRefreshToken })
@@ -62,14 +65,18 @@ function driveNoConectado() {
   return NextResponse.json({ error: 'Drive no está conectado' }, { status: 409 })
 }
 
-export async function responderError(e: unknown) {
-  if (e instanceof SinConexionDrive) return driveNoConectado()
+export async function responderError(e: unknown, contexto?: Record<string, unknown>) {
+  if (e instanceof SinConexionDrive) {
+    console.warn('Drive: 409 (nunca conectó Drive)', contexto)
+    return driveNoConectado()
+  }
 
   if (esGrantInvalido(e)) {
+    console.warn('Drive: 409 (invalid_grant, Google revocó o expiró el token)', contexto, e)
     await desconectarDrive()
     return driveNoConectado()
   }
 
-  console.error('Drive: error contra la API de Google', e)
+  console.error('Drive: error contra la API de Google', contexto, e)
   return NextResponse.json({ error: e instanceof Error ? e.message : 'Error desconocido' }, { status: 502 })
 }

@@ -134,7 +134,7 @@ const LineasModulo = () => {
               'Orientada a la comunidad educativa en general, principalmente a personas implicadas en el aspecto regenerativo/reflexivo del proyecto.',
               'Expresada en encuentros, charlas, conversatorios y escritos',
             ]}
-            btn={<BotonLink titulo={'Ver Blog'} url={"https://ludidactas.medium.com/"} />}
+            btn={<BotonLink titulo={'Ver Blog'} url={'/blog'} />}
             imagen={PedagogiaIlus}
           />
         </div>

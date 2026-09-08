@@ -8,6 +8,7 @@ import { PasaporteEstudiante } from '@/wss/validators/auth'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import estudianteSalaHandlers from '../handlers/estudiante-sala-handlers'
 import estudianteEncuestasHandlers from '../handlers/estudiante-encuestas-handlers'
+import estudianteGoHandlers from '../handlers/estudiante-go-handlers'
 
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
@@ -28,6 +29,7 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
       base: baseSalaHandlers(socket),
       sala: estudianteSalaHandlers(socket),
       encuestas: estudianteEncuestasHandlers(socket),
+      go: estudianteGoHandlers(socket),
     }),
     [socket]
   )
@@ -38,12 +40,14 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     handlers.base.montar()
     handlers.sala.montar()
     handlers.encuestas.montar()
+    handlers.go.montar()
 
     // ...y al desmontar el componente, los desmontamos también.
     return () => {
       handlers.base.desmontar()
       handlers.sala.desmontar()
       handlers.encuestas.desmontar()
+      handlers.go.desmontar()
     }
   }, [socket])
 
@@ -69,6 +73,7 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     ...handlers.base.acciones,
     ...handlers.sala.acciones,
     ...handlers.encuestas.acciones,
+    ...handlers.go.acciones,
     nombre: auth.nombre,
   }
 }

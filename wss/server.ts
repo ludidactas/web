@@ -3,6 +3,7 @@ import { conErrorLogging } from './middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
+import { handlersGoEstudiante } from './go/handlers'
 import { handlersEncuestasEstudiante, handlersEncuestasOverlay } from './polls/handlers'
 import { handlersAdmin, handlersGestionSalasProfe, handlersSalaEstudiante, handlersSalaPublico } from './salas/handlers'
 import { RolSala } from './validators/auth'
@@ -26,6 +27,7 @@ io.use(conErrorLogging)
     else if (socket.data.session.rol === RolSala.Estudiante) {
       await handlersSalaEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
       await handlersEncuestasEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
+      await handlersGoEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
     }
 
     // Profe: requiere sesión de profe válida. Los handlers de operación (incluidas encuestas) se

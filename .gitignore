@@ -46,3 +46,6 @@ next-env.d.ts
 
 test-results
 playwright-report
+
+# datos de prueba para dev
+public/ejemplos-dev/*

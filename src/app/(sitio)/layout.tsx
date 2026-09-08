@@ -6,9 +6,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <Textura>
       <Topbar />
-      <div className="flex flex-col items-center ">
-        {children}
-        </div>
+      <div className="relative flex flex-col items-center w-full overflow-x-hidden">{children}</div>
       <Footer />
     </Textura>
   )

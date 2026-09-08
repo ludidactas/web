@@ -19,7 +19,7 @@ interface LdFixtures {
   setupSala: (
     profe: LoginUser,
     config?: ConfigCreacionSala
-  ) => Promise<{ sala: Page; estudiante: (estudiante: LoginEstudiante) => Promise<Page> }>
+  ) => Promise<{ sala: Page; idSala: string; estudiante: (estudiante: LoginEstudiante) => Promise<Page> }>
 }
 
 /**
@@ -52,6 +52,7 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   // Vamos a la gestión de salas y abrimos el flujo de "Crear sala"
   await profePage.goto('/salas')
   await profePage.getByRole('button', { name: 'Crear sala' }).click()
+  await profePage.getByPlaceholder('Ingresa el nombre de la sala').fill(`Sala de prueba ${Date.now()}`)
 
   if (config.metodo_login === MetodosLogin.DNI) {
     await profePage.getByText('DNI obligatorio').click()
@@ -61,8 +62,8 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
     }
   }
 
-  await profePage.getByRole('button', { name: 'Crear' }).click()
-  await profePage.waitForURL(/\/salas\/.+/)
+  await profePage.getByRole('button', { name: 'Crear e ingresar', exact: true }).click()
+  await profePage.waitForURL(/\/salas\/.+/, { timeout: 20_000 })
 
   // El link público del estudiante es /sala/<id>/ con el mismo id que la URL de operación
   const idSala = new URL(profePage.url()).pathname.split('/').filter(Boolean).pop()
@@ -88,6 +89,7 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
 
   return {
     sala: profePage,
+    idSala,
     estudiante,
   }
 }

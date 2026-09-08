@@ -33,7 +33,7 @@ import {
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { NavLink } from '@/components/navegacion/nav-link'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
-import { StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -72,16 +72,16 @@ function FormCrearSala() {
   const [form, setForm] = useState<FormState>(FORM_INICIAL)
   const [creando, startCreacion] = useTransition()
 
-  const conectando = estado === StatusDeConexion.Conectando
+  const cargandoConexion = statusesDeCarga.includes(estado)
   const pideDni = form.metodoLogin === MetodosLogin.DNI
   const nombreValido = form.nombre.trim().length > 0
-  const razonDisabled = conectando
+  const razonDisabled = cargandoConexion
     ? 'Conectando...'
     : creando
-    ? 'Creando la sala...'
-    : !nombreValido
-    ? 'Ingresá un nombre para la sala'
-    : null
+      ? 'Creando la sala...'
+      : !nombreValido
+        ? 'Ingresá un nombre para la sala'
+        : null
 
   const handleCrear = () => {
     if (razonDisabled) return
@@ -213,7 +213,7 @@ function FormCrearSala() {
               onClick={handleCrear}
               disabled={!!razonDisabled}
             >
-              {creando ? 'Creando...' : conectando ? 'Conectando...' : 'Crear e ingresar'}
+              {creando ? 'Creando...' : cargandoConexion ? 'Conectando...' : 'Crear e ingresar'}
             </button>
           </span>
         </TooltipTrigger>

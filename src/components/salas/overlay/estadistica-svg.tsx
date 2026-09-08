@@ -1,5 +1,5 @@
 'use client'
-import { Outlined } from '@/components/fx/filtros'
+import { Outlined, OutlinedEnForeignObject } from '@/components/fx/filtros'
 import useScrambleText from '@/components/hooks/use-scramble-text'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useConexionOverlay } from '@/wss-cli/providers/wss-overlay-context'
@@ -110,28 +110,32 @@ export function EncuestaSVG({ encuesta, config }: { encuesta: EncuestaConVotos; 
     >
       <svg className="w-full" viewBox={`0 0 1000 ${svgHeight}`}>
         {/* Título de la encuesta */}
-        <foreignObject x="20" y="0" width="960" height={titleHeight}>
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
-            <Outlined outlineColor={colorContorno} radius={2.5} className="block w-full px-1">
-              <div
-                style={{
-                  color: colorTexto,
-                  fontSize: `${tituloFontSize}px`,
-                  fontWeight: 'bold',
-                  lineHeight: TITULO_LINE_HEIGHT,
-                  overflow: 'hidden',
-                  display: '-webkit-box',
-                  WebkitLineClamp: tituloLineas,
-                  WebkitBoxOrient: 'vertical',
-                  wordBreak: 'break-word',
-                  width: '100%',
-                }}
-              >
-                {encuesta.pregunta}
-              </div>
-            </Outlined>
+        <OutlinedEnForeignObject
+          x={20}
+          y={0}
+          width={960}
+          height={titleHeight}
+          outlineColor={colorContorno}
+          radius={2.5}
+          className="block w-full px-1"
+        >
+          <div
+            style={{
+              color: colorTexto,
+              fontSize: `${tituloFontSize}px`,
+              fontWeight: 'bold',
+              lineHeight: TITULO_LINE_HEIGHT,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: tituloLineas,
+              WebkitBoxOrient: 'vertical',
+              wordBreak: 'break-word',
+              width: '100%',
+            }}
+          >
+            {encuesta.pregunta}
           </div>
-        </foreignObject>
+        </OutlinedEnForeignObject>
 
         {/* Barras */}
         {ops.map((op) => (
@@ -269,28 +273,32 @@ function BarraEstadistica({
       />
 
       {/* Etiqueta del texto de la respuesta -- fila superior, ancho completo */}
-      <foreignObject x={0} y={0} width={FIN_BARRA} height={ALTO_ETIQUETA}>
-        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
-          <Outlined outlineColor={colorContorno} radius={2} className="block w-full px-1">
-            <div
-              style={{
-                color: colorTexto,
-                fontSize: '16px',
-                fontWeight: '500',
-                lineHeight: 1.3,
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: 'vertical',
-                wordBreak: 'break-word',
-                width: '100%',
-              }}
-            >
-              {scrambledText}
-            </div>
-          </Outlined>
+      <OutlinedEnForeignObject
+        x={0}
+        y={0}
+        width={FIN_BARRA}
+        height={ALTO_ETIQUETA}
+        outlineColor={colorContorno}
+        radius={2}
+        className="block w-full px-1"
+      >
+        <div
+          style={{
+            color: colorTexto,
+            fontSize: '16px',
+            fontWeight: '500',
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical',
+            wordBreak: 'break-word',
+            width: '100%',
+          }}
+        >
+          {scrambledText}
         </div>
-      </foreignObject>
+      </OutlinedEnForeignObject>
 
       {/* Valor y porcentaje -- a la derecha de la barra (que siempre termina en FIN_BARRA) */}
       <foreignObject x={X_VALOR} y={yValor} width={ANCHO_VALOR} height={altoValor}>
@@ -324,6 +332,8 @@ function BarraEstadistica({
           </Outlined>
         </div>
       </foreignObject>
+      {/* nota: esta caja combina dos Outlined lado a lado dentro del mismo foreignObject; se deja
+          con la forma manual porque OutlinedEnForeignObject asume un solo Outlined por foreignObject. */}
     </g>
   )
 }

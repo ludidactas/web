@@ -17,6 +17,7 @@ vi.mock('@/app/auth', () => ({
   desconectarDrive: vi.fn(),
 }))
 
+import { auth, drive } from '@googleapis/drive'
 import { desconectarDrive } from '@/app/auth'
 import { getToken } from 'next-auth/jwt'
 
@@ -42,11 +43,17 @@ afterEach(() => {
 })
 
 describe('clienteDrive', () => {
-  it('retorna cliente cuando el JWT tiene driveRefreshToken', async () => {
+  it('cablea credentials y config de red al construir el cliente', async () => {
     vi.mocked(getToken).mockResolvedValue({ driveRefreshToken: 'refresh-tok' } as any)
-    const api = await clienteDrive(requestFake())
-    expect(api).toBeDefined()
-    expect(api.files).toBeDefined()
+    await clienteDrive(requestFake())
+
+    expect(auth.OAuth2).toHaveBeenCalledWith({ clientId: 'test-id', clientSecret: 'test-secret' })
+    expect(auth.OAuth2.prototype.setCredentials).toHaveBeenCalledWith({ refresh_token: 'refresh-tok' })
+    expect(drive).toHaveBeenCalledWith(expect.objectContaining({
+      version: 'v3',
+      timeout: 20_000,
+      retryConfig: { retry: 3, retryDelay: 500 },
+    }))
   })
 
   it('lanza SinConexionDrive sin refresh token', async () => {

@@ -9,17 +9,13 @@
     "e2e": "bunx playwright test",
     "lint": "next lint",
     "svgo": "bun run scripts/reembed-webp.ts && svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
-    "svgo:reembed": "bun run scripts/reembed-webp.ts",
     "expose": "next dev -H 0.0.0.0",
     "idp:dev": "bun run scripts/idp-dev.ts",
-    "idp:check": "bun run scripts/check-idp-login.ts",
     "wss:start": "bun run wss/server.ts",
     "wss:dev": "NODE_ENV=development nodemon --watch wss --exec bun run wss/server.ts",
     "wss:server": "bun i && pm2 delete wss; pm2 start ecosystem.config.js",
     "wss:reset-db": "redis-cli flushdb",
-    "wss:salas": "bun run wss/scripts/listar-salas.ts",
-    "wss:inspeccionar": "bun run wss/scripts/inspeccionar-sala.ts",
-    "images:optimize": "bun run scripts/optimize-images.ts"
+    "test": "vitest"
   },
   "dependencies": {
     "@googleapis/drive": "^21.0.0",
@@ -112,6 +108,7 @@
     "postcss": "^8",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.0"
   }
 }

@@ -178,7 +178,7 @@ export function TableroGo({
         </g>
       )}
 
-      <rect x={0} y={0} width={lado} height={lado} fill="#dcb35c" rx={8} />
+      <rect x={0} y={0} width={lado} height={lado} fill="#FFE8B7" rx={8} />
 
       {/* Líneas de la grilla */}
       {Array.from({ length: tamaño }, (_, i) => (

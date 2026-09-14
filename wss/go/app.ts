@@ -45,7 +45,8 @@ export async function broadcastPartida(partida: Partida) {
   await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
 }
 
-/** Compañeros conectados de la sala (para `userId`), con si están o no disponibles para desafiar (ya en una partida). */
+/** Compañeros conectados de la sala (para `userId`), con si están o no disponibles para desafiar (ya
+ * en una partida) y, en ese caso, contra quién (para mostrarlo, ej: en la lista de participantes). */
 async function calcularRivalesDisponibles(idSala: string, userId: string) {
   const sala = await Salas.get(idSala)
   const estudiantes = await sala.listarEstudiantes()
@@ -54,19 +55,22 @@ async function calcularRivalesDisponibles(idSala: string, userId: string) {
   return Promise.all(
     conectados.map(async (e) => {
       const partidaId = await db.getPartidaActiva(idSala, e.userId)
-      return { userId: e.userId, nombre: e.nombre, enPartida: partidaId !== null, partidaId }
+      const partida = partidaId ? await db.getPartida(idSala, partidaId) : null
+      const rival = partida ? rivalDe(partida, e.userId) : null
+      return { userId: e.userId, nombre: e.nombre, enPartida: partidaId !== null, partidaId, rival }
     })
   )
 }
 
 /**
- * Avisa a cada estudiante conectado de la sala que la disponibilidad de rivales cambió (alguien
- * entró o salió de una partida), empujándole su lista recalculada. Se dispara en cada transición que
- * afecta el flag `enPartida` (desafío creado, rechazado, o partida terminada) para que "la sala" se
- * actualice en vivo sin esperar a que cada cliente la vuelva a pedir.
+ * Avisa a cada estudiante conectado de la sala (y al profe, que también puede desafiar) que la
+ * disponibilidad de rivales cambió (alguien entró o salió de una partida), empujándole su lista
+ * recalculada. Se dispara en cada transición que afecta el flag `enPartida` (desafío creado,
+ * rechazado, o partida terminada) para que "la sala" se actualice en vivo sin esperar a que cada
+ * cliente la vuelva a pedir.
  */
 export async function avisarRivalesActualizados(idSala: string) {
-  const sockets = await io.in(`sala:${idSala}:estudiantes`).fetchSockets()
+  const sockets = await io.in([`sala:${idSala}:estudiantes`, `sala:${idSala}:profe`]).fetchSockets()
   await Promise.all(
     sockets.map(async (s) => {
       const rivales = await calcularRivalesDisponibles(idSala, s.data.session.userId)

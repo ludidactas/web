@@ -9,8 +9,15 @@ interface GoState {
   partida: Partida | null
   /** Desafíos entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
   desafios: Partida[]
-  /** Compañeros conectados, con si están o no disponibles para desafiar (ya en una partida). */
-  rivales: Array<{ userId: string; nombre: string; enPartida: boolean; partidaId: string | null }>
+  /** Compañeros conectados, con si están o no disponibles para desafiar (ya en una partida) y, en ese
+   * caso, contra quién. */
+  rivales: Array<{
+    userId: string
+    nombre: string
+    enPartida: boolean
+    partidaId: string | null
+    rival: { userId: string; nombre: string } | null
+  }>
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
   observando: Partida | null
   marcarInicializado: () => void

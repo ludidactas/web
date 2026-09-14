@@ -1,28 +1,18 @@
+import { Socket } from 'socket.io'
 import { conAck, conErrorHandling } from '../middleware/error-handling'
-import { SocketEstudiante } from '../middleware/roles'
+import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarRivalesActualizados, estudianteGo, salaGoRoom } from './app'
 import { Partida, partidaIdSchema } from '../validators/go'
 
 /**
- * Handlers de Go del estudiante, ligados a la sala a la que se conectó. Cada estudiante puede tener
- * a lo sumo una partida activa (pendiente o en curso) por sala a la vez.
+ * Registra los comandos de Go de una conexión bajo una identidad (`userId`/`nombre`) dada. La
+ * identidad es lo único que distingue quién juega: estudiante y profe comparten exactamente la misma
+ * mecánica (desafiar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
  */
-export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: string) => {
+async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
   const ack = conAck(socket)
-  const safe = conErrorHandling(socket)
-  const { userId, nombre } = socket.data.session
   const go = await estudianteGo(idSala, userId)
-
-  // Al desconectar, si no le queda otro socket vivo (multi-pestaña), avisamos a la sala que dejó de
-  // estar disponible como rival. Al conectar avisamos siempre, más abajo, así reaparece en vivo.
-  socket.on(
-    'disconnect',
-    safe(async () => {
-      const sala = await Salas.get(idSala)
-      if (!(await sala.sigueConectado(userId, socket.id))) await avisarRivalesActualizados(idSala)
-    })
-  )
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
   function seguir(partida: Partida | null) {
@@ -92,7 +82,39 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
     'go:abandonar',
     ack(async (payload: unknown) => go.abandonar(payload))
   )
+}
+
+/**
+ * Handlers de Go del estudiante, ligados a la sala a la que se conectó. Cada estudiante puede tener
+ * a lo sumo una partida activa (pendiente o en curso) por sala a la vez.
+ */
+export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: string) => {
+  const safe = conErrorHandling(socket)
+  const { userId, nombre } = socket.data.session
+
+  // Al desconectar, si no le queda otro socket vivo (multi-pestaña), avisamos a la sala que dejó de
+  // estar disponible como rival. Al conectar avisamos siempre, más abajo, así reaparece en vivo.
+  socket.on(
+    'disconnect',
+    safe(async () => {
+      const sala = await Salas.get(idSala)
+      if (!(await sala.sigueConectado(userId, socket.id))) await avisarRivalesActualizados(idSala)
+    })
+  )
+
+  await registrarComandosGo(socket, idSala, userId, nombre)
 
   // Recién conectado (o reconectado): avisamos a la sala que apareció como rival disponible.
   await avisarRivalesActualizados(idSala)
+}
+
+/**
+ * Handlers de Go del profe: puede desafiar y jugar contra los estudiantes de su sala bajo su propia
+ * identidad (el email, igual que en el resto de la sesión de profe). A diferencia del estudiante, no
+ * es un rival disponible para nadie (no aparece en `sala.listarEstudiantes()`), así que no hace falta
+ * avisar a la sala cuando se conecta o desconecta.
+ */
+export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
+  const { userId, nombre } = socket.data.session
+  await registrarComandosGo(socket, idSala, userId, nombre)
 }

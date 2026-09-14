@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "e2e": "bunx playwright test",
+    "test:unit": "bun test wss",
     "lint": "next lint",
     "svgo": "bun run scripts/reembed-webp.ts && svgo --config=svgo.config.js --folder=svg/src --output=svg/dist --pretty --recursive",
     "svgo:reembed": "bun run scripts/reembed-webp.ts",
@@ -99,6 +100,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/aos": "^3.0.7",
+    "@types/bun": "^1.4.2",
     "@types/ioredis": "^5.0.0",
     "@types/node": "^20",
     "@types/p5": "^1.7.6",

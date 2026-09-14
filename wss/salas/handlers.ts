@@ -4,6 +4,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
 import { handlersEncuestasProfe } from '../polls/handlers'
+import { handlersGoProfe } from '../go/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { configCreacionSala } from '../validators/salas'
@@ -159,6 +160,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
   )
 
   await handlersEncuestasProfe(socket, sala)
+  await handlersGoProfe(socket, sala.id)
 
   await emitirAbierta(socket, sala)
 }

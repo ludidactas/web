@@ -7,6 +7,7 @@ import {
   FileSpreadsheet,
   Link,
   ListCollapse,
+  Play,
   QrCode,
   School,
   Settings,
@@ -43,14 +44,16 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
+import { storeGo } from '@/wss-cli/stores/go-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { MetodosLogin } from '@/wss/validators/auth'
 
-export const ListaEstudiantes = () => {
-  const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
+export const ListaEstudiantes = ({ modo = 'encuestas' }: { modo?: 'encuestas' | 'go' }) => {
+  const { limpiarEstudiantes, pedirPlanillaCompleta, desafiar } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
   const { lista: invitados, nombres: nombresInvitados } = storePermitidos()
+  const { rivales, partida: partidaPropia } = storeGo()
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
   const [minutosVentana, setMinutosVentana] = useState(90)
@@ -214,9 +217,38 @@ export const ListaEstudiantes = () => {
                     {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
                   </div>
 
-                  <TooltipVotosEstudiante userId={e.userId}>
-                    <ListCollapse className="ml-auto cursor-pointer text-gray-500 hover:text-cyan-500" />
-                  </TooltipVotosEstudiante>
+                  <div className="ml-auto flex items-center gap-2">
+                    {modo === 'go' && e.conectado && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
+                            disabled={!!partidaPropia || !!rivales.find((r) => r.userId === e.userId)?.enPartida}
+                            onClick={() =>
+                              desafiar(e.userId).catch((err) =>
+                                toast.error(err instanceof Error ? err.message : 'No se pudo desafiar')
+                              )
+                            }
+                          >
+                            <Play size={18} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Desafiar a {e.nombre} a Go</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {modo === 'go' ? (
+                      <TooltipPartidaEstudiante userId={e.userId} conectado={e.conectado}>
+                        <ListCollapse className="cursor-pointer text-gray-500 hover:text-cyan-500" />
+                      </TooltipPartidaEstudiante>
+                    ) : (
+                      <TooltipVotosEstudiante userId={e.userId}>
+                        <ListCollapse className="cursor-pointer text-gray-500 hover:text-cyan-500" />
+                      </TooltipVotosEstudiante>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -582,6 +614,30 @@ export const ListaMobile = ({ children }: PropsWithChildren) => {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+/** Con quién está jugando (o no) cada estudiante en Go, en vez de sus votos de encuestas. La info sale
+ * de `rivales` (la misma que alimenta "Elegí un rival"), que solo cubre a los conectados. */
+function TooltipPartidaEstudiante({
+  children,
+  userId,
+  conectado,
+}: PropsWithChildren & { userId: string; conectado: boolean }) {
+  const { rivales } = storeGo()
+  const info = rivales.find((r) => r.userId === userId)
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent>
+        <p className="text-xs">
+          {!conectado && 'Estudiante desconectado'}
+          {conectado && !info?.enPartida && 'No está jugando ninguna partida'}
+          {conectado && info?.enPartida && `Jugando contra ${info.rival?.nombre ?? '…'}`}
+        </p>
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

@@ -1,3 +1,4 @@
+import { ReactNode } from 'react'
 import { LdSvg } from '@/components/custom/ld-svg'
 import EncuestasIcon from '@/svg/dist/encuestas/EncuestasTitulo.svg'
 import Conectado from '@/svg/dist/ui/Conectado.svg'
@@ -6,16 +7,25 @@ import SalaHeader from '@/svg/dist/encuestas/EncuestasEstIcon.svg'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 
-export function Status() {
+const BANNER_ENCUESTAS_DESKTOP = <LdSvg className="w-[1000px] max-w-full h-auto" SvgComponent={EncuestasIcon} />
+const BANNER_ENCUESTAS_MOBILE = <LdSvg className="w-[350px]" SvgComponent={SalaHeader} />
+
+/** Título + tagline del modo actual (Encuestas, Go, ...), arriba de todo. Por defecto es el de
+ * Encuestas; cada modo puede pisarlo con su propio banner (ver `GoProfePage`). */
+export function Status({
+  banner = BANNER_ENCUESTAS_DESKTOP,
+  bannerMobile = BANNER_ENCUESTAS_MOBILE,
+}: {
+  banner?: ReactNode
+  bannerMobile?: ReactNode
+} = {}) {
   const { estado } = useConexionProfe()
   return (
     <>
       {/* Desktop */}
       <div className="hidden md:flex md:flex-col mt-4 p-4 rounded-xl">
         <div className="flex justify-between items-center mx-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <LdSvg className="w-[1000px] max-w-full h-auto" SvgComponent={EncuestasIcon} />
-          </div>
+          <div className="flex items-center gap-2 min-w-0">{banner}</div>
 
           {estado === StatusDeConexion.Conectado ? (
             <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl">
@@ -28,7 +38,7 @@ export function Status() {
       </div>
       {/* Mobile */}
       <div className="flex flex-col md:hidden mt-4 p-4 rounded-xl">
-        <LdSvg className="w-[350px]" SvgComponent={SalaHeader} />
+        {bannerMobile}
 
         {estado === StatusDeConexion.Conectado ? (
           <span className="text-emerald-500 font-bold animate-pulse text-xs md:text-xl self-end">

@@ -101,7 +101,7 @@ function FormCrearSala() {
           delay(CARGA_MINIMA_MS),
         ])
         toast.success('Sala creada con éxito')
-        router.push(`/salas/${idSala}`)
+        router.push(`/salas/${idSala}/encuestas`)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
       }
@@ -283,7 +283,7 @@ function FilaSala({
   return (
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
       <NavLink
-        href={`/salas/${sala.id}`}
+        href={`/salas/${sala.id}/encuestas`}
         overlayMensaje="Renderizando sala..."
         className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
       >
@@ -422,7 +422,7 @@ export default function SalasPageClient() {
 
   return (
     <SidebarProvider
-      className="flex-none sm:flex-1 flex-col sm:flex-row px-0 my-0 sm:px-20 sm:my-6 rounded-xl -mt-4 sm:mt-0"
+      className="flex-none sm:flex-1 flex-col sm:flex-row rounded-xl -mt-4 "
       style={{ minHeight: 0 }}
     >
       <Sidebar

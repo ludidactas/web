@@ -63,10 +63,11 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   }
 
   await profePage.getByRole('button', { name: 'Crear e ingresar', exact: true }).click()
-  await profePage.waitForURL(/\/salas\/.+/, { timeout: 20_000 })
+  // La URL de operación es /salas/<id>/encuestas: el id es el segundo segmento, no el último.
+  await profePage.waitForURL(/\/salas\/.+\/encuestas/, { timeout: 20_000 })
 
   // El link público del estudiante es /sala/<id>/ con el mismo id que la URL de operación
-  const idSala = new URL(profePage.url()).pathname.split('/').filter(Boolean).pop()
+  const idSala = new URL(profePage.url()).pathname.split('/').filter(Boolean)[1]
   if (!idSala) throw new Error('No se pudo obtener el id de la sala')
   const fullUrl = `/sala/${idSala}/`
 

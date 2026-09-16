@@ -78,7 +78,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
   socket.data.salaActiva = sala.id
-  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`])
+  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`, `sala:${sala.id}:${socket.data.session.userId}`])
   console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
   socket.on(

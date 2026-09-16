@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, Link, Search, Settings } from 'lucide-react'
+import { useParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import useClipboard from '@/components/hooks/use-clipboard'
@@ -16,6 +17,7 @@ import {
   EstadisticaSvgConfig,
 } from '@/components/salas/overlay/estadistica-svg-config'
 import LoadingSala from '../loading-sala'
+import { TabsTriggerLink } from '../tabs-trigger-link'
 import { PanelConfigOverlay } from './panel-config-overlay'
 import { AgregarPregunta } from './agregar-pregunta'
 import { ImportarExportar } from './importar-exportar'
@@ -40,6 +42,7 @@ export default function EncuestasProfe({
   const { estado, WssDebugPanel, error, actualizarConfig } = useConexionProfe()
   const { items: encuestas } = storeEncuestasProfe()
   const { config: configSala } = storeConfig()
+  const { idSala } = useParams<{ idSala: string }>()
 
   const encuestaEnfocada = encuestas.find((e) => e.isFocused)
 
@@ -91,10 +94,11 @@ export default function EncuestasProfe({
         {estado === StatusDeConexion.Conectado && (
           <Tabs defaultValue="preguntas">
             <TabsList className="rounded-none w-full bg-ld-violeta text-white">
-              <TabsTrigger className="text-xs" value="preguntas">
-                Preguntas
+              <TabsTrigger className="text-xs flex-1" value="preguntas">
+                Encuestas
               </TabsTrigger>
-              <TabsTrigger className="text-xs" value="participantes">
+              <TabsTriggerLink href={`/salas/${idSala}/go`}>Go</TabsTriggerLink>
+              <TabsTrigger className="text-xs flex-1" value="participantes">
                 Participantes
               </TabsTrigger>
             </TabsList>
@@ -106,7 +110,7 @@ export default function EncuestasProfe({
                     <Icon icon={'fluent:chat-bubbles-question-16-regular'} />
                     Preguntas
                   </h1>
-                  <div className="flex flex-col gap-2 py-4">
+                  <div className="flex flex-row gap-2 py-4">
                     <AgregarPregunta />
                     <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
                     <BorrarTodo />
@@ -139,8 +143,9 @@ export default function EncuestasProfe({
                   Preguntas
                 </h1>
               </div>
-              <div className="flex flex-col gap-2">
-                {/* Boton agregar pregunta */}
+
+                {/* Botones  */}
+              <div className="flex flex-row md:flex-col gap-4">
                 <AgregarPregunta />
                 <ImportarExportar integracionGoogle={integracionGoogle} driveConectado={driveConectado} />
                 <BorrarTodo />
@@ -251,7 +256,7 @@ function BorrarTodo() {
             title="Eliminar todas las preguntas de esta sala"
           >
             <Icon icon="mdi:trash-can" className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
+            <span className="hidden md:block whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
               Borrar todo
             </span>
           </button>

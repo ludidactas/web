@@ -36,6 +36,7 @@ export function Status({
           )}
         </div>
       </div>
+      
       {/* Mobile */}
       <div className="flex flex-col md:hidden mt-4 p-4 rounded-xl">
         {bannerMobile}

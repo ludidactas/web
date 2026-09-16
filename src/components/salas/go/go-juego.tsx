@@ -51,7 +51,7 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
     return <BuscarRival rivales={rivales} onRefrescar={pedirRivales} onDesafiar={desafiar} onObservar={observar} />
 
   if (partida.estado === 'pendiente')
-    return <EsperandoRival partida={partida} userId={userId} abandonar={abandonar} />
+    return <EsperandoRival partida={partida} userId={userId} rechazar={rechazar} />
 
   return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} />
 }
@@ -169,11 +169,11 @@ function BuscarRival({
 function EsperandoRival({
   partida,
   userId,
-  abandonar,
+  rechazar,
 }: {
   partida: NonNullable<ReturnType<typeof storeGo.getState>['partida']>
   userId: string
-  abandonar: AccionesGo['abandonar']
+  rechazar: AccionesGo['rechazar']
 }) {
   const soyNegro = partida.negro.userId === userId
   const rival = soyNegro ? partida.blanco : partida.negro
@@ -183,7 +183,7 @@ function EsperandoRival({
       <p className="text-lg">Esperando a que {rival.nombre} acepte el desafío...</p>
       <button
         className="text-sm underline text-slate-500"
-        onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
+        onClick={() => rechazar(partida.id).catch((e) => toast.error(e.message))}
       >
         Cancelar
       </button>

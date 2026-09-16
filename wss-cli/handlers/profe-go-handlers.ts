@@ -49,9 +49,13 @@ export default function profeGoHandlers(socket: Socket | null) {
       pedirRivales: async () => store.setRivales(await conAck('go:rivales')),
       desafiar: (rivalId: string, tamaño: TamañoTablero = 9) => conAckPartida('go:desafiar', { rivalId, tamaño }),
       aceptar: (partidaId: string) => conAckPartida('go:aceptar', { partidaId }),
+      // También sirve para cancelar un desafío propio todavía pendiente: el server trata ambos casos
+      // igual (termina la partida pendiente y avisa al otro jugador por `go:desafio_rechazado`), así
+      // que acá limpiamos tanto la lista de entrantes como `partida` si es la que estábamos esperando.
       rechazar: async (partidaId: string) => {
         await conAck<void>('go:rechazar', { partidaId })
         store.quitarDesafio(partidaId)
+        if (storeGo.getState().partida?.id === partidaId) store.set(null)
       },
       jugar: (partidaId: string, x: number, y: number) => conAckPartida('go:jugar', { partidaId, x, y }),
       pasar: (partidaId: string) => conAckPartida('go:pasar', { partidaId }),

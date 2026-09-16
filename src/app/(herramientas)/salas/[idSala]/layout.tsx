@@ -47,7 +47,7 @@ export default async function SalaLayout({
 
         <div className="w-full" />
       </div>
-      <SalaFloatingNav idSala={idSala} />
+      <SalaFloatingNav idSala={idSala} className="hidden md:flex" />
     </ConexionProfeProvider>
   )
 }

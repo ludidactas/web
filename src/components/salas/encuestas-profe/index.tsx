@@ -82,7 +82,7 @@ export default function EncuestasProfe({
 
   return (
     <>
-      <WssDebugPanel />
+      {/* <WssDebugPanel /> */}
       <Status />
 
       {/* VISTA MOBILE */}

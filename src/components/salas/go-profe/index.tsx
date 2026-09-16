@@ -17,11 +17,11 @@ const BannerGo = ({ className }: { className: string }) => (
   <div className="flex items-center gap-3 md:gap-4">
     {/* Relación de aspecto real de GoIlustracion.png (1609x1147) */}
     <Image src="/img/GoIlustracion.png" alt="" width={1609} height={1147} className={className} />
-    <div className='flex flex-col'>
-    <Outlined outlineColor="white" className="text-ld-violeta rotate-3 text-5xl md:text-7xl">
-      Go!
-    </Outlined>
-    <p className='text-2xl font-bold'>Sumérgete en el mundo del Go jugando con los participantes</p>
+    <div className="flex flex-col">
+      <Outlined outlineColor="white" className="text-ld-violeta rotate-3 text-5xl md:text-7xl">
+        Go!
+      </Outlined>
+      <p className="text-2xl font-bold">Sumérgete en el mundo del Go jugando con los participantes</p>
     </div>
   </div>
 )
@@ -48,9 +48,13 @@ export default function GoProfePage() {
 
   return (
     <>
-      <WssDebugPanel />
+      {/* <WssDebugPanel /> */}
       <Status
-        banner={<Outlined radius={3} outlineColor='white'><BannerGo className="md:w-72 h-auto" /></Outlined>}
+        banner={
+          <Outlined radius={3} outlineColor="white">
+            <BannerGo className="md:w-72 h-auto" />
+          </Outlined>
+        }
         bannerMobile={<BannerGo className="w-14 h-auto" />}
       />
 
@@ -68,16 +72,13 @@ export default function GoProfePage() {
             </TabsList>
 
             <TabsContent value="go">
-               <h1 className="flex gap-2 text-3xl font-medium text-ld-azul">
-                    <Grid3x3 />
-                    Go
-                  </h1>
+              <h1 className="flex gap-2 text-3xl font-medium text-ld-azul">
+                <Grid3x3 />
+                Go
+              </h1>
               <div className="flex flex-col bg-white">
-                
-                 
-                  <div className="w-full pt-4">
-                    <GoProfe />
-                  
+                <div className="w-full pt-4">
+                  <GoProfe />
                 </div>
               </div>
             </TabsContent>

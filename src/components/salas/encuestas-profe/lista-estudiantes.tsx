@@ -109,7 +109,7 @@ export const ListaEstudiantes = ({ modo = 'encuestas' }: { modo?: 'encuestas' | 
 
   return (
     <div className="relative flex flex-col h-full">
-      <DebugPanel classNames={{ button: 'absolute ' }} data={estudiantes} title="Estudiantes en sala" />
+      {/* <DebugPanel classNames={{ button: 'absolute ' }} data={estudiantes} title="Estudiantes en sala" /> */}
 
       {/* Header: título + acciones (link, QR, config) */}
       <div className={cn('flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3')}>
@@ -354,8 +354,8 @@ export const ListaEstudiantes = ({ modo = 'encuestas' }: { modo?: 'encuestas' | 
                 <DialogTitle className="text-center leading-6">Exportar planilla</DialogTitle>
               </DialogHeader>
               <p className="text-sm text-slate-500 text-center">
-                ¿Cuántos minutos hacia atrás abarca la clase? Solo se van a incluir en la planilla los
-                participantes que estuvieron conectados en algún momento de ese intervalo.
+                ¿Cuántos minutos hacia atrás abarca la clase? Solo se van a incluir en la planilla los participantes que
+                estuvieron conectados en algún momento de ese intervalo.
               </p>
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 Minutos

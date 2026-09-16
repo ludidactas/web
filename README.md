@@ -63,6 +63,17 @@ Cómo se verifica el login:
 - Correr el proyecto next en otra terminal con `bun/npm dev`
 - Los tests se corren con `bun/npm e2e` (de end-to-end)
 
+### WSS con Docker (alternativa a los dos pasos de arriba)
+
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+
+- Levantar todo: `docker compose up --build -d`
+- Ver logs: `docker compose logs -f wss`
+- Apagar todo (y borrar los datos de Redis de la prueba, es efímero a propósito): `docker compose down`
+- Después de tocar código en `wss/`, hay que reconstruir la imagen: `docker compose up --build -d` de nuevo (no tiene hot-reload)
+
+El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup (correr Next en otra terminal) es igual.
+
 ## Checkear
 
 https://www.svgator.com/

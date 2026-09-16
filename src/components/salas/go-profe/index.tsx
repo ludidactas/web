@@ -21,7 +21,7 @@ const BannerGo = ({ className }: { className: string }) => (
       <Outlined outlineColor="white" className="text-ld-violeta rotate-3 text-5xl md:text-7xl">
         Go!
       </Outlined>
-      <p className="text-2xl font-bold">Sumérgete en el mundo del Go jugando con los participantes</p>
+      <p className="text-2xl font-bold">Sumergite en el mundo del Go jugando con los participantes</p>
     </div>
   </div>
 )

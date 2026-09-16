@@ -42,7 +42,7 @@ export function ListaEncuestas() {
   if (confirmadoVacio && posibleVacio)
     return (
       <div className="flex flex-col flex-1 min-h-0 justify-center items-center grayscale">
-        <p className="text-center text-slate-500 text-xl m-4"> ¡Aún no haz hecho ninguna pregunta!</p>
+        <p className="text-center text-slate-500 text-xl m-4"> ¡Todavía no hiciste ninguna pregunta!</p>
         <LdSvg className="max-w-[75%] max-h-full w-auto h-auto" SvgComponent={profeUps} />
       </div>
     )

@@ -1,13 +1,15 @@
 'use client'
 
-import Image from 'next/image'
+import LdGo from '@/components/custom/ld-go'
 import { Grid3x3, Search } from 'lucide-react'
+import { useParams } from 'next/navigation'
 import { Outlined } from '@/components/fx/filtros'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import LoadingSala from '../loading-sala'
-import { ListaEstudiantes } from '../encuestas-profe/lista-estudiantes'
-import { Status } from '../encuestas-profe/status'
-import GoProfe from '../go/go-profe'
+import LoadingSala from '../../loading-sala'
+import { ListaEstudiantes } from '../../encuestas-profe/lista-estudiantes'
+import { Status } from '../../encuestas-profe/status'
+import { TabsTriggerLink } from '../../tabs-trigger-link'
+import GoProfe from './go-profe'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
@@ -15,13 +17,12 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 /** Título del modo Go, mismo lugar que el banner de Encuestas: ilustración + nombre con contorno. */
 const BannerGo = ({ className }: { className: string }) => (
   <div className="flex items-center gap-3 md:gap-4">
-    {/* Relación de aspecto real de GoIlustracion.png (1609x1147) */}
-    <Image src="/img/GoIlustracion.png" alt="" width={1609} height={1147} className={className} />
+    <LdGo className={className} />
     <div className='flex flex-col'>
-    <Outlined outlineColor="white" className="text-ld-violeta rotate-3 text-5xl md:text-7xl">
-      Go!
+    <Outlined outlineColor="white" >
+      <p className="text-ld-violeta sm:rotate-3 text-5xl md:text-7xl">Go!</p>
+    <p className='text-black text-2xl font-bold'>Sumérgete en el mundo del Go!</p>
     </Outlined>
-    <p className='text-2xl font-bold'>Sumérgete en el mundo del Go jugando con los participantes</p>
     </div>
   </div>
 )
@@ -33,6 +34,7 @@ const BannerGo = ({ className }: { className: string }) => (
 export default function GoProfePage() {
   const { estado, WssDebugPanel, error } = useConexionProfe()
   const { config: configSala } = storeConfig()
+  const { idSala } = useParams<{ idSala: string }>()
 
   if (statusesDeCarga.includes(estado)) {
     return <LoadingSala overlay mensaje="Conectando..." />
@@ -51,7 +53,7 @@ export default function GoProfePage() {
       <WssDebugPanel />
       <Status
         banner={<Outlined radius={3} outlineColor='white'><BannerGo className="md:w-72 h-auto" /></Outlined>}
-        bannerMobile={<BannerGo className="w-14 h-auto" />}
+        bannerMobile={<BannerGo className="w-40 h-auto" />}
       />
 
       {/* VISTA MOBILE */}
@@ -59,22 +61,24 @@ export default function GoProfePage() {
         {estado === StatusDeConexion.Conectado && (
           <Tabs defaultValue="go">
             <TabsList className="rounded-none w-full bg-ld-violeta text-white">
-              <TabsTrigger className="text-xs" value="go">
+              <TabsTriggerLink href={`/salas/${idSala}/encuestas`}>Encuestas</TabsTriggerLink>
+              <TabsTrigger className="text-xs flex-1" value="go">
                 Go
               </TabsTrigger>
-              <TabsTrigger className="text-xs" value="participantes">
+              <TabsTrigger className="text-xs flex-1" value="participantes">
                 Participantes
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="go">
-               <h1 className="flex gap-2 text-3xl font-medium text-ld-azul">
+               
+              <div className="flex flex-col items-center p-6 h-screen bg-white">
+
+                <h1 className="flex gap-2 items-center text-3xl font-medium text-ld-violeta-oscuro">
                     <Grid3x3 />
-                    Go
+                    Partidas
                   </h1>
-              <div className="flex flex-col bg-white">
-                
-                 
+    
                   <div className="w-full pt-4">
                     <GoProfe />
                   

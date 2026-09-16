@@ -108,7 +108,7 @@ function BuscarRival({
 
   return (
     <div className="flex flex-col gap-4 items-center max-w-md mx-auto">
-      <h2 className="text-xl font-bold">Elegí un rival</h2>
+      <h2 className="text-xl font-bold">Elegí un rival y un tamaño de tablero</h2>
 
       <div className="flex gap-2 text-sm">
         {TAMAÑOS_TABLERO.map((t) => (
@@ -216,9 +216,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
-        <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: RELLENO[partida.turno] }}>
+        <p className="flex items-center gap-2 text-sm font-semibold bg-ld-violeta" style={{ color: RELLENO[partida.turno] }}>
           <span
-            className="inline-block h-3 w-3 rounded-full border border-slate-400"
+            className="inline-block h-3 w-3 rounded-full border"
             style={{ backgroundColor: RELLENO[partida.turno] }}
           />
           Juega {partida.turno === NEGRO ? partida.negro.nombre : partida.blanco.nombre}

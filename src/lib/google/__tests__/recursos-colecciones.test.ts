@@ -1,12 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, mock } from 'bun:test'
 
 import { DriveNoConectado, guardarColeccion, leerColecciones } from '../recursos-colecciones'
 
-const fetchMock = vi.fn()
-vi.stubGlobal('fetch', fetchMock)
+const fetchMock = mock()
+globalThis.fetch = fetchMock as any
 
 afterEach(() => {
-  vi.restoreAllMocks()
+  fetchMock.mockClear()
 })
 
 function respuesta(status: number, body?: unknown) {
@@ -33,17 +33,17 @@ describe('leerColecciones', () => {
 
   it('lanza DriveNoConectado en 409', async () => {
     fetchMock.mockReturnValue(respuesta(409))
-    await expect(leerColecciones('sala-1')).rejects.toThrow(DriveNoConectado)
+    expect(leerColecciones('sala-1')).rejects.toThrow(DriveNoConectado)
   })
 
   it('lanza Error con mensaje del server en otro status', async () => {
     fetchMock.mockReturnValue(respuesta(500, { error: 'Error interno' }))
-    await expect(leerColecciones('sala-1')).rejects.toThrow('Error interno')
+    expect(leerColecciones('sala-1')).rejects.toThrow('Error interno')
   })
 
   it('lanza Error genérico si el body no tiene error', async () => {
     fetchMock.mockReturnValue(respuesta(500, {}))
-    await expect(leerColecciones('sala-1')).rejects.toThrow('La app respondió 500')
+    expect(leerColecciones('sala-1')).rejects.toThrow('La app respondió 500')
   })
 })
 
@@ -69,7 +69,7 @@ describe('guardarColeccion', () => {
 
   it('lanza DriveNoConectado en 409', async () => {
     fetchMock.mockReturnValue(respuesta(409))
-    await expect(
+    expect(
       guardarColeccion('sala-1', 'Mi Sala', 'col', 'yaml')
     ).rejects.toThrow(DriveNoConectado)
   })

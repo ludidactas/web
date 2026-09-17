@@ -1,23 +1,27 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 
-vi.mock('@googleapis/drive', () => {
-  const OAuth2 = vi.fn()
-  OAuth2.prototype.setCredentials = vi.fn()
-  return {
-    auth: { OAuth2 },
-    drive: vi.fn().mockReturnValue({ files: {} }),
-  }
-})
+const oauth2Spy = mock()
+const setCredentialsMock = mock()
 
-vi.mock('next-auth/jwt', () => ({
-  getToken: vi.fn(),
+mock.module('@googleapis/drive', () => ({
+  auth: {
+    OAuth2: class {
+      constructor(...args: any[]) { oauth2Spy(...args) }
+      setCredentials = setCredentialsMock
+    },
+  },
+  drive: mock(() => ({ files: {} })),
 }))
 
-vi.mock('@/app/auth', () => ({
-  desconectarDrive: vi.fn(),
+mock.module('next-auth/jwt', () => ({
+  getToken: mock(),
 }))
 
-import { auth, drive } from '@googleapis/drive'
+mock.module('@/app/auth', () => ({
+  desconectarDrive: mock(),
+}))
+
+import { drive } from '@googleapis/drive'
 import { desconectarDrive } from '@/app/auth'
 import { getToken } from 'next-auth/jwt'
 
@@ -35,20 +39,24 @@ function requestFake(url = 'http://localhost:3000/api/google/test') {
 
 beforeEach(() => {
   Object.assign(process.env, ENV_BASE)
+  ;(getToken as any).mockClear()
+  ;(desconectarDrive as any).mockClear()
+  oauth2Spy.mockClear()
+  setCredentialsMock.mockClear()
+  ;(drive as any).mockClear()
 })
 
 afterEach(() => {
-  vi.restoreAllMocks()
   for (const key of Object.keys(ENV_BASE)) delete process.env[key]
 })
 
 describe('clienteDrive', () => {
   it('cablea credentials y config de red al construir el cliente', async () => {
-    vi.mocked(getToken).mockResolvedValue({ driveRefreshToken: 'refresh-tok' } as any)
+    ;(getToken as any).mockResolvedValue({ driveRefreshToken: 'refresh-tok' })
     await clienteDrive(requestFake())
 
-    expect(auth.OAuth2).toHaveBeenCalledWith({ clientId: 'test-id', clientSecret: 'test-secret' })
-    expect(auth.OAuth2.prototype.setCredentials).toHaveBeenCalledWith({ refresh_token: 'refresh-tok' })
+    expect(oauth2Spy).toHaveBeenCalledWith({ clientId: 'test-id', clientSecret: 'test-secret' })
+    expect(setCredentialsMock).toHaveBeenCalledWith({ refresh_token: 'refresh-tok' })
     expect(drive).toHaveBeenCalledWith(expect.objectContaining({
       version: 'v3',
       timeout: 20_000,
@@ -57,27 +65,27 @@ describe('clienteDrive', () => {
   })
 
   it('lanza SinConexionDrive sin refresh token', async () => {
-    vi.mocked(getToken).mockResolvedValue({ email: 'x@x.com' } as any)
-    await expect(clienteDrive(requestFake())).rejects.toThrow('Drive no está conectado')
+    ;(getToken as any).mockResolvedValue({ email: 'x@x.com' })
+    expect(clienteDrive(requestFake())).rejects.toThrow('Drive no está conectado')
   })
 
   it('lanza SinConexionDrive con getToken null', async () => {
-    vi.mocked(getToken).mockResolvedValue(null)
-    await expect(clienteDrive(requestFake())).rejects.toThrow('Drive no está conectado')
+    ;(getToken as any).mockResolvedValue(null)
+    expect(clienteDrive(requestFake())).rejects.toThrow('Drive no está conectado')
   })
 
   it('lanza si falta AUTH_GOOGLE_ID', async () => {
     delete process.env.AUTH_GOOGLE_ID
-    await expect(clienteDrive(requestFake())).rejects.toThrow('Faltan AUTH_GOOGLE_ID')
+    expect(clienteDrive(requestFake())).rejects.toThrow('Faltan AUTH_GOOGLE_ID')
   })
 
   it('lanza si falta AUTH_SECRET', async () => {
     delete process.env.AUTH_SECRET
-    await expect(clienteDrive(requestFake())).rejects.toThrow('Falta AUTH_SECRET')
+    expect(clienteDrive(requestFake())).rejects.toThrow('Falta AUTH_SECRET')
   })
 
   it('usa secureCookie para URLs https', async () => {
-    vi.mocked(getToken).mockResolvedValue({ driveRefreshToken: 'tok' } as any)
+    ;(getToken as any).mockResolvedValue({ driveRefreshToken: 'tok' })
     await clienteDrive(requestFake('https://ludidactas.com/api/test'))
     expect(getToken).toHaveBeenCalledWith(
       expect.objectContaining({ secureCookie: true })
@@ -87,7 +95,7 @@ describe('clienteDrive', () => {
 
 describe('responderError', () => {
   async function obtenerSinConexionDrive() {
-    vi.mocked(getToken).mockResolvedValue({ email: 'x@x.com' } as any)
+    ;(getToken as any).mockResolvedValue({ email: 'x@x.com' })
     try {
       await clienteDrive(requestFake())
       throw new Error('no debería llegar acá')

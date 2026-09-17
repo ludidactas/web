@@ -16,6 +16,10 @@ const GLOW_MARGEN = 10
  * turno) usen la misma paleta que el tablero en vez de repetir los hex a mano. */
 export const RELLENO: Record<number, string> = { [NEGRO]: '#1a1a1a', [BLANCO]: '#f5f5f5' }
 
+/** Piedra blanca marcada como muerta: a la opacidad reducida, el casi-blanco de `RELLENO[BLANCO]`
+ * se pierde contra el fondo claro, así que para ese caso puntual usamos un gris más oscuro. */
+const BLANCO_MUERTA = '#94a3b8'
+
 interface Punto {
   x: number
   y: number
@@ -224,7 +228,7 @@ export function TableroGo({
                 width={CELDA * 0.64}
                 height={CELDA * 0.64}
                 fill={RELLENO[color]}
-                opacity={0.3}
+                opacity={0.5}
                 pointerEvents="none"
               />
             )
@@ -255,6 +259,7 @@ export function TableroGo({
           const esVivo = vivo?.[y]?.[x] ?? false
           const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
           const opacidad = esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1
+          const color = muerta && valor === BLANCO ? BLANCO_MUERTA : RELLENO[valor]
 
           return (
             <circle
@@ -262,7 +267,7 @@ export function TableroGo({
               cx={coordenadas(x)}
               cy={coordenadas(y)}
               r={CELDA * 0.46}
-              fill={RELLENO[valor]}
+              fill={color}
               stroke="#1a1a1a"
               strokeWidth={valor === NEGRO ? 0 : 1}
               opacity={opacidad}

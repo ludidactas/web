@@ -16,14 +16,14 @@ export function BannerSalaEstudiante({
 }) {
   return (
     <div className="flex items-center gap-8">
-      <Outlined outlineColor="white" className="flex rounded-full">
+      <Outlined radius={3} outlineColor="white" className="flex rounded-full">
         {icono}
       </Outlined>
 
       <div className="items-center justfy-center">
-        <Outlined outlineColor="white" className="flex flex-col sm:block">
-          <p className="text-ld-violeta text-4xl md:text-6xl">{titulo}</p>
-          <p className="text-xs md:text-2xl text-black">{subtitulo}</p>
+        <Outlined radius={4} outlineColor="white" className="flex flex-col sm:block">
+          <p className="text-ld-violeta text-4xl md:text-7xl rotate-3">{titulo}</p>
+          <p className="text-xs md:text-3xl text-black">{subtitulo}</p>
           {aviso}
         </Outlined>
       </div>

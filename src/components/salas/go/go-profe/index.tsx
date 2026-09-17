@@ -103,8 +103,8 @@ export default function GoProfePage() {
         {estado === StatusDeConexion.Conectado && (
           <div className="w-3/5 min-w-0 flex flex-col bg-white gap-2 rounded-xl box-content overflow-y-auto">
             <div className="flex items-center p-6 justify-center rounded-t-xl">
-              <h1 className="flex gap-2 text-5xl font-medium text-ld-violeta-oscuro">
-                <Grid3x3 size={40} />
+              <h1 className="flex gap-2 items-center text-5xl font-medium text-ld-violeta-oscuro">
+                <Grid3x3 className='-rotate-3 w-12 h-12' size={40} />
                 Partidas
               </h1>
             </div>

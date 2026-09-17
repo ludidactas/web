@@ -9,7 +9,6 @@ import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-c
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { ConexionPublicProvider } from '@/wss-cli/providers/wss-public-context'
 import GoEstudiante from './go-estudiante'
-import { AvisoInvitado } from '../../encuestas-estudiante/encuestas-estudiante'
 import { BannerSalaEstudiante } from '../../banner-sala-estudiante'
 import { Icon } from '@iconify/react/dist/iconify.js'
 

@@ -29,7 +29,9 @@ export default async function SalaLayout({
         className="text-xs sm:text-lg w-fit h-fit p-2 sm:border-4 hover:border-dashed rounded-2xl hover:transform hover:rotate-3  text-indigo-600 border-indigo-600"
       >
         <Icon icon="mingcute:back-2-fill" className="sm:hidden w-5 h-5" />
-        <span className="hidden sm:inline">Volver a Salas</span>
+        <span className="hidden sm:flex gap-2 items-center">
+          <Icon icon={"bx:arrow-back"}/>
+          Volver a Salas</span>
       </Link>
       <SignOut />
     </div>

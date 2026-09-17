@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { BLANCO, calcularPuntaje, NEGRO, RELLENO, TableroGo } from './tablero-go'
+import { Outlined } from '@/components/fx/filtros'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
@@ -35,7 +37,10 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
 
   // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
   // (mostrar el buscador de rivales de entrada parpadea si después resulta que sí había una).
-  if (!inicializado) return <p className="text-slate-500 text-sm">Cargando…</p>
+  if (!inicializado) return <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
+    <Icon className='w-10 h-10' icon={"eos-icons:bubble-loading"}/>
+    Cargando…
+    </p>
 
   if (desafios.length > 0) return <DesafiosEntrantes desafios={desafios} aceptar={aceptar} rechazar={rechazar} />
 
@@ -216,7 +221,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
-        <p className="flex items-center gap-2 text-sm font-semibold bg-ld-violeta" style={{ color: RELLENO[partida.turno] }}>
+        <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: RELLENO[partida.turno] }}>
           <span
             className="inline-block h-3 w-3 rounded-full border"
             style={{ backgroundColor: RELLENO[partida.turno] }}
@@ -259,14 +264,19 @@ function BannerResultado({
   const colorGanador =
     partida.ganadorUserId === null ? null : partida.ganadorUserId === partida.negro.userId ? NEGRO : BLANCO
 
+  const titulo = colorGanador === null ? 'Empate' : `Ganó ${colorGanador === NEGRO ? 'Negro' : 'Blanco'}`
+  const h2 = (
+    <h2
+      className="text-xl sm:text-2xl font-bold"
+      style={colorGanador !== null ? { color: RELLENO[colorGanador] } : undefined}
+    >
+      {titulo}
+    </h2>
+  )
+
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      <h2
-        className="text-xl sm:text-2xl font-bold"
-        style={colorGanador !== null ? { color: RELLENO[colorGanador] } : undefined}
-      >
-        {colorGanador === null ? 'Empate' : `Ganó ${colorGanador === NEGRO ? 'Negro' : 'Blanco'}`}
-      </h2>
+      {colorGanador === BLANCO ? <Outlined outlineColor="negro">{h2}</Outlined> : h2}
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
@@ -325,12 +335,12 @@ function PartidaEnCurso({
     () =>
       partida.estado === 'contando'
         ? calcularPuntaje(
-            partida.tablero,
-            partida.tamaño,
-            partida.removidas,
-            partida.capturasNegras,
-            partida.capturasBlancas
-          )
+          partida.tablero,
+          partida.tamaño,
+          partida.removidas,
+          partida.capturasNegras,
+          partida.capturasBlancas
+        )
         : null,
     [
       partida.estado,
@@ -343,30 +353,42 @@ function PartidaEnCurso({
   )
 
   return (
-    <div className="flex flex-col gap-4 items-center w-full px-2">
-      <div className="flex items-center gap-4 text-sm">
-        <span>
-          Vos: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
-        </span>
-        <span>Rival: {rival.nombre}</span>
-      </div>
+    <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
+        <div className="flex flex-col items-center gap-2 text-md mb-2">
+          <span>
+            Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
+          </span>
+          <span>Rival: <span className='font-bold'>{rival.nombre}</span></span>
+        </div>
 
-      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
+        {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
-      {partida.estado === 'jugando' && (
-        <p
-          className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
-          style={{
-            color: RELLENO[partida.turno],
-          }}
-        >
-          <span
-            className="inline-block h-3 w-3 rounded-full border border-slate-400"
-            style={{ backgroundColor: RELLENO[partida.turno] }}
-          />
-          Juega {partida.turno === NEGRO ? 'negro' : 'blanco'} — {esMiTurno ? 'tu turno' : rival.nombre}
-        </p>
-      )}
+        {partida.estado === 'jugando' && (
+          <p
+            className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
+            style={{
+              color: RELLENO[partida.turno],
+            }}
+          >
+            {partida.turno === BLANCO ? (
+              <Outlined radius={2} outlineColor="negro" className="flex items-center gap-2">
+                <span
+                  className="inline-block h-3 w-3 rounded-full border border-slate-400"
+                  style={{ backgroundColor: RELLENO[partida.turno] }}
+                />
+                Juega blanco — {esMiTurno ? 'tu turno' : rival.nombre}
+              </Outlined>
+            ) : (
+              <>
+                <span
+                  className="inline-block h-3 w-3 rounded-full border border-slate-400"
+                  style={{ backgroundColor: RELLENO[partida.turno] }}
+                />
+                Juega negro — {esMiTurno ? 'tu turno' : rival.nombre}
+              </>
+            )}
+          </p>
+        )}
 
       {partida.estado === 'contando' && conteoEnVivo && (
         <div className="text-sm text-slate-600 text-center">

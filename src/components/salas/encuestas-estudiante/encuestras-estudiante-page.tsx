@@ -12,6 +12,7 @@ import { BtnAuth } from '@/components/ui/btn-auth'
 import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-context'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { ConexionPublicProvider } from '@/wss-cli/providers/wss-public-context'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 export default function EncuestasEstudiantePage({
   idSala,
@@ -39,7 +40,7 @@ export default function EncuestasEstudiantePage({
         setIngresado(false)
       }}
     >
-      Salir
+      <Icon icon={'hugeicons:logout-01'}/>
     </BtnAuth>
   )
 

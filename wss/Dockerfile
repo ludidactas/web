@@ -1,7 +1,7 @@
 # Build context = raíz del repo (necesita package.json/lockfile de raíz).
 # npm instala (matchea 1:1 el package-lock.json, sin la migración a bun.lock que
 # rompe en resolver paquetes con alias @npm: del lockfile); bun solo corre el server.
-FROM node:20-slim AS deps
+FROM node:22-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev

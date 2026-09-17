@@ -12,6 +12,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY wss ./wss
 
 ENV NODE_ENV=production
-EXPOSE 3005
+
+# Documentativo: el puerto real lo decide la env var PORT en runtime (default 3005,
+# ver wss/server.ts). Este ARG solo permite que Coolify detecte el puerto correcto
+# por instancia si se buildea con --build-arg PORT=<otro>.
+ARG PORT=3005
+EXPOSE ${PORT}
 
 CMD ["bun", "run", "wss/server.ts"]

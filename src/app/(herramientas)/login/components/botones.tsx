@@ -1,7 +1,6 @@
 import { accionSignIn, accionSignOut } from './botones-actions'
 import { BtnAuth } from '@/components/ui/btn-auth'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import { LogOut } from 'lucide-react'
 
 export function SignIn({ redirectTo }: { redirectTo: string }) {
   return (

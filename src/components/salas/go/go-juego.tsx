@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { BLANCO, calcularPuntaje, NEGRO, RELLENO, TableroGo } from './tablero-go'
 import { Outlined } from '@/components/fx/filtros'
+import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
@@ -117,15 +118,16 @@ function BuscarRival({
 
       <div className="flex gap-2 text-sm">
         {TAMAÑOS_TABLERO.map((t) => (
-          <button
-            key={t}
-            className={cn(
-              'px-3 py-1 rounded-full border',
-              tamaño === t && 'bg-indigo-500 text-white border-indigo-500'
-            )}
-            onClick={() => setTamaño(t)}
-          >
-            {t}x{t}
+          <button key={t} onClick={() => setTamaño(t)}>
+            <Boton
+              color={tamaño === t ? '#6366f1' : '#ccb2ff'}
+              shadowColor={tamaño === t ? '#4338ca' : '#6b34a4'}
+              classNames={{ root: 'flex items-center justify-center w-16 h-9 hover:scale-105 transition-transform' }}
+            >
+              <span className={cn('text-xs font-bold', tamaño === t ? 'text-white' : 'text-black')}>
+                {t}x{t}
+              </span>
+            </Boton>
           </button>
         ))}
       </div>

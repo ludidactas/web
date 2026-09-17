@@ -6,7 +6,7 @@ salas:
 inspeccionar:
 	bun run wss/scripts/inspeccionar-sala.ts
 
-simular:
+simular-estudiantes:
 	bun run wss/scripts/simular-estudiantes.ts
 
 idp-check:

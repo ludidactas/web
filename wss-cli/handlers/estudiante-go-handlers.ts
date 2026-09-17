@@ -1,6 +1,7 @@
 import type { Ack } from '@/wss/middleware/error-handling'
 import { Partida, TamañoTablero } from '@/wss/validators/go'
 import { Socket } from 'socket.io-client'
+import { toast } from 'sonner'
 import { storeGo } from '../stores/go-store'
 
 /** Espejo cliente de `handlersGoEstudiante`. */
@@ -23,6 +24,26 @@ export default function estudianteGoHandlers(socket: Socket | null) {
     const partida = await conAck<Partida>(evento, payload)
     store.set(partida)
     return partida
+  }
+
+  /**
+   * Pide `go:mi_partida` con reintentos: justo al conectar, el socket puede emitirlo antes de que el
+   * server termine de registrar ese listener (queda cableado después de otros handlers de la sala), en
+   * cuyo caso el evento se pierde y el ack tarda los 5s completos en expirar. Sin reintento, esa única
+   * falla dejaba al store en "sin partida" para siempre (hasta el próximo refresh), botando al
+   * estudiante de una partida en curso.
+   */
+  async function pedirMiPartidaConReintentos() {
+    const intentos = 3
+    for (let i = 0; i < intentos; i++) {
+      try {
+        store.set(await conAck<Partida | null>('go:mi_partida'))
+        return
+      } catch {
+        if (i === intentos - 1) toast.error('No pudimos recuperar tu partida en curso. Refrescá la página.')
+        else await new Promise((r) => setTimeout(r, 1000))
+      }
+    }
   }
 
   return {
@@ -51,7 +72,7 @@ export default function estudianteGoHandlers(socket: Socket | null) {
       // Al conectar, pedimos si ya tenemos una partida en curso (soporta reconexión/refresh). Hasta
       // que esto resuelve, `inicializado` queda en false para que la UI muestre un loading en vez de
       // asumir "no hay partida" y mostrar por un instante el buscador de rivales.
-      conAck<Partida | null>('go:mi_partida').then(store.set).finally(store.marcarInicializado)
+      pedirMiPartidaConReintentos().finally(store.marcarInicializado)
     },
 
     acciones: {

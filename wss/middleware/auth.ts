@@ -8,10 +8,10 @@ import { normalizarTexto } from '../utils'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
 // Si no está seteada, tiramos un error para que no arranque el server.
-const secret = process.env.NEXTAUTH_SECRET
+const secret = process.env.JWT_SECRET
 const ADMINS = process.env.POLLS_ADMINS?.split(',').map((email) => email.trim())
 if (!secret || !ADMINS) {
-  console.error('Error: NEXTAUTH_SECRET o POLLS_ADMINS no están seteadas.')
+  console.error('Error: JWT_SECRET o POLLS_ADMINS no están seteadas.')
   process.exit(1)
 }
 

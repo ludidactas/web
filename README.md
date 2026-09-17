@@ -57,7 +57,7 @@ Cómo se verifica el login:
 
 - Agregar las variables locales necesarias:
 
-  - NEXTAUTH_SECRET= $(`openssl rand -base64 32`)
+  - JWT_SECRET= $(`openssl rand -base64 32`) (mismo valor que usa Next para firmar el token que le pasa al wss, ver `src/server/token_wss.ts`)
   - POLLS_ADMINS= $un_mail
 
 - Correr el proyecto next en otra terminal con `bun/npm dev`
@@ -65,7 +65,7 @@ Cómo se verifica el login:
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `JWT_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`

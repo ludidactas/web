@@ -86,7 +86,7 @@ export const conexionWss = create<Estado>((set, get) => ({
     set({ status: StatusDeConexion.Conectando, error: null, _conexionActualId: miId })
 
     try {
-      // Handshake (crea el socket y lo retorna)
+      // Handshake (crea el socket y lo devuelve)
       const sock = await handshake(auth)
 
       // Si hubo un cleanup (StrictMode, desconexión manual) mientras el handshake estaba en vuelo,

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { io } from '../server'
 import { Salas } from '../salas/app'
 import {
-  desafioSchema,
+  invitacionSchema,
   EstadoPartida,
   jugadaSchema,
   JugadorPartida,
@@ -35,7 +35,7 @@ function colorDe(partida: Partida, userId: string): 1 | 2 {
   throw new Error('No sos parte de esta partida')
 }
 
-function rivalDe(partida: Partida, userId: string): JugadorPartida {
+function contrincanteDe(partida: Partida, userId: string): JugadorPartida {
   return partida.negro.userId === userId ? partida.blanco : partida.negro
 }
 
@@ -45,9 +45,9 @@ export async function broadcastPartida(partida: Partida) {
   await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
 }
 
-/** Compañeros conectados de la sala (para `userId`), con si están o no disponibles para desafiar (ya
+/** Compañeros conectados de la sala (para `userId`), con si están o no disponibles para invitar (ya
  * en una partida) y, en ese caso, contra quién (para mostrarlo, ej: en la lista de participantes). */
-async function calcularRivalesDisponibles(idSala: string, userId: string) {
+async function calcularContrincantesDisponibles(idSala: string, userId: string) {
   const sala = await Salas.get(idSala)
   const estudiantes = await sala.listarEstudiantes()
   const conectados = estudiantes.filter((e) => e.conectado && e.userId !== userId)
@@ -56,25 +56,25 @@ async function calcularRivalesDisponibles(idSala: string, userId: string) {
     conectados.map(async (e) => {
       const partidaId = await db.getPartidaActiva(idSala, e.userId)
       const partida = partidaId ? await db.getPartida(idSala, partidaId) : null
-      const rival = partida ? rivalDe(partida, e.userId) : null
-      return { userId: e.userId, nombre: e.nombre, enPartida: partidaId !== null, partidaId, rival }
+      const contrincante = partida ? contrincanteDe(partida, e.userId) : null
+      return { userId: e.userId, nombre: e.nombre, enPartida: partidaId !== null, partidaId, contrincante }
     })
   )
 }
 
 /**
- * Avisa a cada estudiante conectado de la sala (y al profe, que también puede desafiar) que la
- * disponibilidad de rivales cambió (alguien entró o salió de una partida), empujándole su lista
- * recalculada. Se dispara en cada transición que afecta el flag `enPartida` (desafío creado,
- * rechazado, o partida terminada) para que "la sala" se actualice en vivo sin esperar a que cada
+ * Avisa a cada estudiante conectado de la sala (y al profe, que también puede invitar) que la
+ * disponibilidad de contrincantes cambió (alguien entró o salió de una partida), empujándole su lista
+ * recalculada. Se dispara en cada transición que afecta el flag `enPartida` (invitación creada,
+ * rechazada, o partida terminada) para que "la sala" se actualice en vivo sin esperar a que cada
  * cliente la vuelva a pedir.
  */
-export async function avisarRivalesActualizados(idSala: string) {
+export async function avisarContrincantesActualizados(idSala: string) {
   const sockets = await io.in([`sala:${idSala}:estudiantes`, `sala:${idSala}:profe`]).fetchSockets()
   await Promise.all(
     sockets.map(async (s) => {
-      const rivales = await calcularRivalesDisponibles(idSala, s.data.session.userId)
-      s.emit('go:rivales_actualizados', rivales)
+      const contrincantes = await calcularContrincantesDisponibles(idSala, s.data.session.userId)
+      s.emit('go:contrincantes_actualizados', contrincantes)
     })
   )
 }
@@ -94,19 +94,19 @@ export async function estudianteGo(idSala: string, userId: string) {
     return assertPartidaExiste(idSala, partidaId)
   }
 
-  async function desafiar(payload: unknown, nombre: string) {
-    const { rivalId, tamaño } = desafioSchema.parse(payload)
+  async function invitar(payload: unknown, nombre: string) {
+    const { contrincanteId, tamaño } = invitacionSchema.parse(payload)
 
-    if (rivalId === userId) throw new Error('No podés desafiarte a vos mismo')
+    if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
     const existente = await miPartida()
     if (existente && existente.estado !== EstadoPartida.Terminada) throw new Error('Ya tenés una partida en curso')
 
     const sala = await Salas.get(idSala)
     const estudiantes = await sala.listarEstudiantes()
-    const rival = estudiantes.find((e) => e.userId === rivalId)
-    if (!rival || !rival.conectado) throw new Error('Ese rival no está disponible')
-    if (await db.getPartidaActiva(idSala, rivalId)) throw new Error('Ese rival ya está en una partida')
+    const contrincante = estudiantes.find((e) => e.userId === contrincanteId)
+    if (!contrincante || !contrincante.conectado) throw new Error('Ese contrincante no está disponible')
+    if (await db.getPartidaActiva(idSala, contrincanteId)) throw new Error('Ese contrincante ya está en una partida')
 
     const id = randomUUID().split('-')[0]
     const partida: Partida = {
@@ -114,7 +114,7 @@ export async function estudianteGo(idSala: string, userId: string) {
       salaId: idSala,
       tamaño,
       negro: { userId, nombre },
-      blanco: { userId: rivalId, nombre: rival.nombre },
+      blanco: { userId: contrincanteId, nombre: contrincante.nombre },
       tablero: motor.tableroVacio(tamaño),
       turno: motor.NEGRO,
       capturasNegras: 0,
@@ -134,12 +134,12 @@ export async function estudianteGo(idSala: string, userId: string) {
     await db.guardarPartida(partida)
     await db.registrarPartida(idSala, id)
     await db.setPartidaActiva(idSala, userId, id)
-    await db.setPartidaActiva(idSala, rivalId, id)
+    await db.setPartidaActiva(idSala, contrincanteId, id)
 
-    console.log(`🎲 Desafío de Go creado: ${nombre} (negro) vs ${rival.nombre} (blanco), partida ${id}`)
+    console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
 
-    io.to(`sala:${idSala}:${rivalId}`).emit('go:desafio', partida)
-    await avisarRivalesActualizados(idSala)
+    io.to(`sala:${idSala}:${contrincanteId}`).emit('go:invitacion', partida)
+    await avisarContrincantesActualizados(idSala)
 
     return partida
   }
@@ -148,8 +148,8 @@ export async function estudianteGo(idSala: string, userId: string) {
     const { partidaId } = partidaIdSchema.parse(payload)
     const partida = await assertPartidaExiste(idSala, partidaId)
     assertEsJugador(partida, userId)
-    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Ese desafío ya no está pendiente')
-    if (partida.blanco.userId !== userId) throw new Error('Solo el desafiado puede aceptar')
+    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
+    if (partida.blanco.userId !== userId) throw new Error('Solo el invitado puede aceptar')
 
     partida.estado = EstadoPartida.Jugando
     await db.guardarPartida(partida)
@@ -161,14 +161,14 @@ export async function estudianteGo(idSala: string, userId: string) {
     const { partidaId } = partidaIdSchema.parse(payload)
     const partida = await assertPartidaExiste(idSala, partidaId)
     assertEsJugador(partida, userId)
-    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Ese desafío ya no está pendiente')
+    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
 
     await db.limpiarPartidaActiva(idSala, partida.negro.userId)
     await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
-    const otro = rivalDe(partida, userId)
-    io.to(`sala:${idSala}:${otro.userId}`).emit('go:desafio_rechazado', { partidaId })
-    await avisarRivalesActualizados(idSala)
+    const otro = contrincanteDe(partida, userId)
+    io.to(`sala:${idSala}:${otro.userId}`).emit('go:invitacion_rechazada', { partidaId })
+    await avisarContrincantesActualizados(idSala)
   }
 
   async function jugar(payload: unknown) {
@@ -274,7 +274,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     assertEsJugador(partida, userId)
     if (partida.estado === EstadoPartida.Terminada) throw new Error('La partida ya terminó')
 
-    const otro = rivalDe(partida, userId)
+    const otro = contrincanteDe(partida, userId)
     await finalizar(partida, otro.userId, 'abandono')
     return partida
   }
@@ -282,8 +282,8 @@ export async function estudianteGo(idSala: string, userId: string) {
   return {
     miPartida,
     observar,
-    rivalesDisponibles: () => calcularRivalesDisponibles(idSala, userId),
-    desafiar,
+    contrincantesDisponibles: () => calcularContrincantesDisponibles(idSala, userId),
+    invitar,
     aceptar,
     rechazar,
     jugar,
@@ -315,5 +315,5 @@ async function finalizar(
   console.log(`🏁 Partida de Go ${partida.id} terminada por ${motivoFin}. Ganador: ${ganadorUserId ?? 'empate'}`)
 
   await broadcastPartida(partida)
-  await avisarRivalesActualizados(partida.salaId)
+  await avisarContrincantesActualizados(partida.salaId)
 }

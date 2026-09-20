@@ -2,13 +2,13 @@ import { Socket } from 'socket.io'
 import { conAck, conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
-import { avisarRivalesActualizados, estudianteGo, salaGoRoom } from './app'
+import { avisarContrincantesActualizados, estudianteGo, salaGoRoom } from './app'
 import { Partida, partidaIdSchema } from '../validators/go'
 
 /**
  * Registra los comandos de Go de una conexión bajo una identidad (`userId`/`nombre`) dada. La
  * identidad es lo único que distingue quién juega: estudiante y profe comparten exactamente la misma
- * mecánica (desafiar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
+ * mecánica (invitar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
  */
 async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
   const ack = conAck(socket)
@@ -21,8 +21,8 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
   }
 
   socket.on(
-    'go:rivales',
-    ack(async () => go.rivalesDisponibles())
+    'go:contrincantes',
+    ack(async () => go.contrincantesDisponibles())
   )
 
   socket.on(
@@ -44,8 +44,8 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
   )
 
   socket.on(
-    'go:desafiar',
-    ack(async (payload: unknown) => seguir(await go.desafiar(payload, nombre)))
+    'go:invitar',
+    ack(async (payload: unknown) => seguir(await go.invitar(payload, nombre)))
   )
 
   socket.on(
@@ -93,26 +93,26 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
   const { userId, nombre } = socket.data.session
 
   // Al desconectar, si no le queda otro socket vivo (multi-pestaña), avisamos a la sala que dejó de
-  // estar disponible como rival. Al conectar avisamos siempre, más abajo, así reaparece en vivo.
+  // estar disponible como contrincante. Al conectar avisamos siempre, más abajo, así reaparece en vivo.
   socket.on(
     'disconnect',
     safe(async () => {
       const sala = await Salas.get(idSala)
-      if (!(await sala.sigueConectado(userId, socket.id))) await avisarRivalesActualizados(idSala)
+      if (!(await sala.sigueConectado(userId, socket.id))) await avisarContrincantesActualizados(idSala)
     })
   )
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  // Recién conectado (o reconectado): avisamos a la sala que apareció como rival disponible.
-  await avisarRivalesActualizados(idSala)
+  // Recién conectado (o reconectado): avisamos a la sala que apareció como contrincante disponible.
+  await avisarContrincantesActualizados(idSala)
 }
 
 /**
- * Handlers de Go del profe: puede desafiar y jugar contra los estudiantes de su sala bajo su propia
+ * Handlers de Go del profe: puede invitar y jugar contra los estudiantes de su sala bajo su propia
  * identidad (el email, igual que en el resto de la sesión de profe). A diferencia del estudiante, no
- * es un rival disponible para nadie (no aparece en `sala.listarEstudiantes()`), así que no hace falta
- * avisar a la sala cuando se conecta o desconecta.
+ * es un contrincante disponible para nadie (no aparece en `sala.listarEstudiantes()`), así que no hace
+ * falta avisar a la sala cuando se conecta o desconecta.
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const { userId, nombre } = socket.data.session

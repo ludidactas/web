@@ -13,8 +13,8 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
 export type AccionesGo = {
-  pedirRivales: () => void
-  desafiar: (rivalId: string, tamaño?: TamañoTablero) => Promise<Partida>
+  pedirContrincantes: () => void
+  invitar: (contrincanteId: string, tamaño?: TamañoTablero) => Promise<Partida>
   aceptar: (partidaId: string) => Promise<Partida>
   rechazar: (partidaId: string) => Promise<void>
   jugar: (partidaId: string, x: number, y: number) => Promise<Partida>
@@ -26,23 +26,23 @@ export type AccionesGo = {
   dejarDeObservar: (partidaId: string) => Promise<void>
 }
 
-/** Flujo completo de Go (desafíos, buscador de rivales, partida en curso) para quien juega: usado
- * tanto por el estudiante como por el profe, cada uno con sus propios `acciones` de conexión. */
+/** Flujo completo de Go (invitaciones, buscador de contrincantes, partida en curso) para quien juega:
+ * usado tanto por el estudiante como por el profe, cada uno con sus propios `acciones` de conexión. */
 export default function GoJuego({ userId, acciones }: { userId: string; acciones: AccionesGo }) {
-  const { inicializado, partida, desafios, rivales, observando } = storeGo()
-  const { pedirRivales, desafiar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
+  const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
+  const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
 
-  // Tengo una partida pendiente donde soy el desafiado?
-  const soyDesafiado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
-  const desafiosEntrantes =
-    soyDesafiado && !desafios.some((d) => d.id === partida!.id) ? [...desafios, partida!] : desafios
+  // Tengo una partida pendiente donde soy el invitado?
+  const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
+  const invitacionesEntrantes =
+    soyInvitado && !invitaciones.some((i) => i.id === partida!.id) ? [...invitaciones, partida!] : invitaciones
 
   useEffect(() => {
-    if (inicializado && (!partida || soyDesafiado) && !observando) pedirRivales()
-  }, [inicializado, partida, soyDesafiado, observando, pedirRivales])
+    if (inicializado && (!partida || soyInvitado) && !observando) pedirContrincantes()
+  }, [inicializado, partida, soyInvitado, observando, pedirContrincantes])
 
   // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
-  // (mostrar el buscador de rivales de entrada parpadea si después resulta que sí había una).
+  // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
   if (!inicializado)
     return (
       <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
@@ -60,52 +60,53 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
     )
 
   // Sin partida propia, o con una pendiente de responder: en ambos casos seguís viendo la sala (lista
-  // de rivales) en vez de que un desafío entrante tape toda la pantalla.
-  if (!partida || soyDesafiado)
+  // de contrincantes) en vez de que una invitación entrante tape toda la pantalla.
+  if (!partida || soyInvitado)
     return (
-      <BuscarRival
-        rivales={rivales}
-        desafiosEntrantes={desafiosEntrantes}
-        onRefrescar={pedirRivales}
-        onDesafiar={desafiar}
+      <BuscarContrincante
+        contrincantes={contrincantes}
+        invitacionesEntrantes={invitacionesEntrantes}
+        onRefrescar={pedirContrincantes}
+        onInvitar={invitar}
         onObservar={observar}
         onAceptar={aceptar}
         onRechazar={rechazar}
       />
     )
 
-  if (partida.estado === 'pendiente') return <EsperandoRival partida={partida} userId={userId} rechazar={rechazar} />
+  if (partida.estado === 'pendiente')
+    return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
 
   return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} />
 }
 
-function DesafiosEntrantes({
-  desafios,
+function InvitacionesEntrantes({
+  invitaciones,
   aceptar,
   rechazar,
 }: {
-  desafios: ReturnType<typeof storeGo.getState>['desafios']
+  invitaciones: ReturnType<typeof storeGo.getState>['invitaciones']
   aceptar: (id: string) => Promise<unknown>
   rechazar: (id: string) => Promise<unknown>
 }) {
   return (
     <div className="flex flex-col gap-2 items-center w-full">
-      <h2 className="text-lg font-bold">¡Te desafiaron a Go!</h2>
-      {desafios.map((d) => (
-        <div key={d.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
+      <h2 className="text-lg font-bold">¡Te invitaron a jugar Go!</h2>
+      {invitaciones.map((i) => (
+        <div key={i.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
           <p>
-            <span className="font-semibold">{d.negro.nombre}</span> te desafió a un tablero de {d.tamaño}x{d.tamaño}
+            <span className="font-semibold">{i.negro.nombre}</span> te invitó a un tablero de {i.tamaño}x{i.tamaño}
           </p>
           <div className="flex gap-2">
             <button
               className="bg-emerald-500 text-white px-4 py-2 rounded"
-              onClick={() => aceptar(d.id).catch((e) => toast.error(e.message))}
+              onClick={() => aceptar(i.id).catch((e) => toast.error(e.message))}
             >
               Aceptar
             </button>
             <button
               className="bg-slate-200 px-4 py-2 rounded"
-              onClick={() => rechazar(d.id).catch((e) => toast.error(e.message))}
+              onClick={() => rechazar(i.id).catch((e) => toast.error(e.message))}
             >
               Rechazar
             </button>
@@ -116,19 +117,19 @@ function DesafiosEntrantes({
   )
 }
 
-function BuscarRival({
-  rivales,
-  desafiosEntrantes,
+function BuscarContrincante({
+  contrincantes,
+  invitacionesEntrantes,
   onRefrescar,
-  onDesafiar,
+  onInvitar,
   onObservar,
   onAceptar,
   onRechazar,
 }: {
-  rivales: ReturnType<typeof storeGo.getState>['rivales']
-  desafiosEntrantes: ReturnType<typeof storeGo.getState>['desafios']
+  contrincantes: ReturnType<typeof storeGo.getState>['contrincantes']
+  invitacionesEntrantes: ReturnType<typeof storeGo.getState>['invitaciones']
   onRefrescar: () => void
-  onDesafiar: (rivalId: string, tamaño: TamañoTablero) => Promise<unknown>
+  onInvitar: (contrincanteId: string, tamaño: TamañoTablero) => Promise<unknown>
   onObservar: (partidaId: string) => Promise<unknown>
   onAceptar: (partidaId: string) => Promise<unknown>
   onRechazar: (partidaId: string) => Promise<unknown>
@@ -138,7 +139,7 @@ function BuscarRival({
   return (
     <div className="flex flex-col gap-6 items-center max-w-md mx-auto w-full">
       <div className="flex flex-col gap-4 items-center w-full">
-        <h2 className="text-xl font-bold">Elegí un rival y un tamaño de tablero</h2>
+        <h2 className="text-xl font-bold">Elegí un contrincante y un tamaño de tablero</h2>
 
         <div className="flex gap-2 text-sm">
           {TAMAÑOS_TABLERO.map((t) => (
@@ -156,7 +157,7 @@ function BuscarRival({
           ))}
         </div>
 
-        {rivales.length === 0 && (
+        {contrincantes.length === 0 && (
           <p className="text-slate-500 text-sm text-center">
             No hay compañeros conectados todavía.
             <br />
@@ -167,16 +168,16 @@ function BuscarRival({
         )}
 
         <ul className="flex flex-col gap-2 w-full">
-          {rivales.map((r) => (
-            <li key={r.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
-              <span>{r.nombre}</span>
-              {r.enPartida ? (
+          {contrincantes.map((c) => (
+            <li key={c.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
+              <span>{c.nombre}</span>
+              {c.enPartida ? (
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs text-slate-400">En una partida</span>
-                  {r.partidaId && (
+                  {c.partidaId && (
                     <button
                       className="bg-slate-200 px-3 py-1 rounded text-xs"
-                      onClick={() => onObservar(r.partidaId!).catch((e) => toast.error(e.message))}
+                      onClick={() => onObservar(c.partidaId!).catch((e) => toast.error(e.message))}
                     >
                       Observar
                     </button>
@@ -185,9 +186,9 @@ function BuscarRival({
               ) : (
                 <button
                   className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm"
-                  onClick={() => onDesafiar(r.userId, tamaño).catch((e) => toast.error(e.message))}
+                  onClick={() => onInvitar(c.userId, tamaño).catch((e) => toast.error(e.message))}
                 >
-                  Desafiar
+                  Invitar
                 </button>
               )}
             </li>
@@ -195,14 +196,14 @@ function BuscarRival({
         </ul>
       </div>
 
-      {desafiosEntrantes.length > 0 && (
-        <DesafiosEntrantes desafios={desafiosEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
+      {invitacionesEntrantes.length > 0 && (
+        <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
     </div>
   )
 }
 
-function EsperandoRival({
+function EsperandoContrincante({
   partida,
   userId,
   rechazar,
@@ -212,11 +213,11 @@ function EsperandoRival({
   rechazar: AccionesGo['rechazar']
 }) {
   const soyNegro = partida.negro.userId === userId
-  const rival = soyNegro ? partida.blanco : partida.negro
+  const contrincante = soyNegro ? partida.blanco : partida.negro
 
   return (
     <div className="flex flex-col gap-4 items-center">
-      <p className="text-lg">Esperando a que {rival.nombre} acepte el desafío...</p>
+      <p className="text-lg">Esperando a que {contrincante.nombre} acepte la invitación...</p>
       <button
         className="text-sm underline text-slate-500"
         onClick={() => rechazar(partida.id).catch((e) => toast.error(e.message))}
@@ -233,7 +234,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
     return (
       <div className="flex flex-col gap-4 items-center">
         <p className="text-lg">
-          Esperando a que {partida.blanco.nombre} acepte el desafío de {partida.negro.nombre}...
+          Esperando a que {partida.blanco.nombre} acepte la invitación de {partida.negro.nombre}...
         </p>
         <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
           Dejar de observar
@@ -354,8 +355,8 @@ function PartidaEnCurso({
 
   const soyNegro = partida.negro.userId === userId
   const miColor = soyNegro ? NEGRO : BLANCO
-  const colorRival = soyNegro ? BLANCO : NEGRO
-  const rival = soyNegro ? partida.blanco : partida.negro
+  const colorContrincante = soyNegro ? BLANCO : NEGRO
+  const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
   const capturasDe = (color: 1 | 2) => (color === NEGRO ? partida.capturasNegras : partida.capturasBlancas)
 
@@ -390,7 +391,7 @@ function PartidaEnCurso({
           Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
         </span>
         <span>
-          Rival: <span className="font-bold">{rival.nombre}</span>
+          Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
       </div>
 
@@ -409,7 +410,7 @@ function PartidaEnCurso({
                 className="inline-block h-3 w-3 rounded-full border border-slate-400"
                 style={{ backgroundColor: RELLENO[partida.turno] }}
               />
-              Juega blanco — {esMiTurno ? 'tu turno' : rival.nombre}
+              Juega blanco — {esMiTurno ? 'tu turno' : contrincante.nombre}
             </Outlined>
           ) : (
             <>
@@ -417,7 +418,7 @@ function PartidaEnCurso({
                 className="inline-block h-3 w-3 rounded-full border border-slate-400"
                 style={{ backgroundColor: RELLENO[partida.turno] }}
               />
-              Juega negro — {esMiTurno ? 'tu turno' : rival.nombre}
+              Juega negro — {esMiTurno ? 'tu turno' : contrincante.nombre}
             </>
           )}
         </p>
@@ -434,7 +435,7 @@ function PartidaEnCurso({
       )}
 
       <div className="flex flex-col items-center gap-3">
-        <PanelCapturas capturador={colorRival} capturas={capturasDe(colorRival)} />
+        <PanelCapturas capturador={colorContrincante} capturas={capturasDe(colorContrincante)} />
 
         <TableroGo
           tablero={partida.tablero}

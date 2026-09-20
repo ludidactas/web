@@ -57,8 +57,8 @@ Cómo se verifica el login:
 
 Quedó afuera del baseline de salida a prod:
 
-- **Lista de "partidas activas en la sala"** y poder **observar otra partida mientras jugás la propia**. Hoy `PartidaEnCurso` ocupa toda la pantalla sin salida a observar a otros, y la única forma de ver partidas ajenas es desde `BuscarRival` (cuando no tenés partida propia). Requiere un query nuevo (partidas activas de la sala, no solo por rival individual) y repensar el layout de `PartidaEnCurso` para dejar lugar a un modo espectador simultáneo.
-- **Varias invitaciones entrantes simultáneas, incluso de la misma persona.** El server hoy modela "partida activa" como un puntero único por usuario (`db.getPartidaActiva`), así que solo puede haber una invitación pendiente a la vez. La UI ya quedó orientada a lista (`desafiosEntrantes` en `GoJuego`) para cuando el modelo de datos del server soporte más de una.
+- **Lista de "partidas activas en la sala"** y poder **observar otra partida mientras jugás la propia**. Hoy `PartidaEnCurso` ocupa toda la pantalla sin salida a observar a otros, y la única forma de ver partidas ajenas es desde `BuscarContrincante` (cuando no tenés partida propia). Requiere un query nuevo (partidas activas de la sala, no solo por contrincante individual) y repensar el layout de `PartidaEnCurso` para dejar lugar a un modo espectador simultáneo.
+- **Varias invitaciones entrantes simultáneas, incluso de la misma persona.** El server hoy modela "partida activa" como un puntero único por usuario (`db.getPartidaActiva`), así que solo puede haber una invitación pendiente a la vez. La UI ya quedó orientada a lista (`invitacionesEntrantes` en `GoJuego`) para cuando el modelo de datos del server soporte más de una.
 
 ## Setup
 

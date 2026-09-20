@@ -7,24 +7,24 @@ interface GoState {
   inicializado: boolean
   /** Mi partida activa (pendiente o en curso), o `null` si no tengo ninguna. */
   partida: Partida | null
-  /** Desafíos entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
-  desafios: Partida[]
-  /** Compañeros conectados, con si están o no disponibles para desafiar (ya en una partida) y, en ese
+  /** Invitaciones entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
+  invitaciones: Partida[]
+  /** Compañeros conectados, con si están o no disponibles para invitar (ya en una partida) y, en ese
    * caso, contra quién. */
-  rivales: Array<{
+  contrincantes: Array<{
     userId: string
     nombre: string
     enPartida: boolean
     partidaId: string | null
-    rival: { userId: string; nombre: string } | null
+    contrincante: { userId: string; nombre: string } | null
   }>
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
   observando: Partida | null
   marcarInicializado: () => void
   set: (partida: Partida | null) => void
-  agregarDesafio: (partida: Partida) => void
-  quitarDesafio: (partidaId: string) => void
-  setRivales: (rivales: GoState['rivales']) => void
+  agregarInvitacion: (partida: Partida) => void
+  quitarInvitacion: (partidaId: string) => void
+  setContrincantes: (contrincantes: GoState['contrincantes']) => void
   setObservando: (partida: Partida | null) => void
   reset: () => void
 }
@@ -32,8 +32,8 @@ interface GoState {
 export const storeGo = create<GoState>()((set) => ({
   inicializado: false,
   partida: null,
-  desafios: [],
-  rivales: [],
+  invitaciones: [],
+  contrincantes: [],
   observando: null,
 
   marcarInicializado: () => set({ inicializado: true }),
@@ -41,22 +41,23 @@ export const storeGo = create<GoState>()((set) => ({
   set: (partida) =>
     set((state) => ({
       partida,
-      // Si la partida que llega soy yo, deja de ser un desafío entrante.
-      desafios: partida ? state.desafios.filter((d) => d.id !== partida.id) : state.desafios,
+      // Si la partida que llega soy yo, deja de ser una invitación entrante.
+      invitaciones: partida ? state.invitaciones.filter((i) => i.id !== partida.id) : state.invitaciones,
     })),
 
-  agregarDesafio: (partida) =>
+  agregarInvitacion: (partida) =>
     set((state) => ({
-      desafios: state.desafios.find((d) => d.id === partida.id)
-        ? state.desafios.map((d) => (d.id === partida.id ? partida : d))
-        : [...state.desafios, partida],
+      invitaciones: state.invitaciones.find((i) => i.id === partida.id)
+        ? state.invitaciones.map((i) => (i.id === partida.id ? partida : i))
+        : [...state.invitaciones, partida],
     })),
 
-  quitarDesafio: (partidaId) => set((state) => ({ desafios: state.desafios.filter((d) => d.id !== partidaId) })),
+  quitarInvitacion: (partidaId) =>
+    set((state) => ({ invitaciones: state.invitaciones.filter((i) => i.id !== partidaId) })),
 
-  setRivales: (rivales) => set({ rivales }),
+  setContrincantes: (contrincantes) => set({ contrincantes }),
 
   setObservando: (partida) => set({ observando: partida }),
 
-  reset: () => set({ partida: null, desafios: [], rivales: [], observando: null }),
+  reset: () => set({ partida: null, invitaciones: [], contrincantes: [], observando: null }),
 }))

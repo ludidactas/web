@@ -29,7 +29,7 @@ const BannerGo = ({ className }: { className: string }) => (
 
 /** Vista del profe para Go: comparte el layout de `EncuestasProfe` (lista a la izquierda,
  * participantes + visualizador a la derecha), pero en vez de la lista de preguntas el profe puede
- * desafiar a los estudiantes de la sala, igual que ellos entre sí. El visualizador queda vacío por
+ * invitar a los estudiantes de la sala, igual que ellos entre sí. El visualizador queda vacío por
  * ahora: más adelante va a permitir observar partidas en curso. */
 export default function GoProfePage() {
   const { estado, WssDebugPanel, error } = useConexionProfe()

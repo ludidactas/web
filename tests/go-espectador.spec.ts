@@ -11,11 +11,11 @@ async function entrarGo(browser: Browser, idSala: string, nombre: string): Promi
   return page
 }
 
-async function esperarRival(page: Page, nombreRival: string) {
+async function esperarContrincante(page: Page, nombreContrincante: string) {
   await expect(async () => {
     const refrescar = page.getByText('Refrescar')
     if (await refrescar.isVisible().catch(() => false)) await refrescar.click()
-    await expect(page.getByText(nombreRival, { exact: true })).toBeVisible({ timeout: 500 })
+    await expect(page.getByText(nombreContrincante, { exact: true })).toBeVisible({ timeout: 500 })
   }).toPass({ timeout: 20_000 })
 }
 
@@ -45,17 +45,17 @@ test('un tercer estudiante puede observar una partida ajena en curso', async ({ 
   const blanco = await entrarGo(browser, idSala, 'Beto')
   const carla = await entrarGo(browser, idSala, 'Carla')
 
-  await esperarRival(negro, 'Beto')
-  await negro.locator('li', { hasText: 'Beto' }).getByRole('button', { name: 'Desafiar' }).click()
+  await esperarContrincante(negro, 'Beto')
+  await negro.locator('li', { hasText: 'Beto' }).getByRole('button', { name: 'Invitar' }).click()
 
-  await blanco.getByText('¡Te desafiaron a Go!').waitFor()
+  await blanco.getByText('¡Te invitaron a jugar Go!').waitFor()
   await blanco.getByRole('button', { name: 'Aceptar' }).click()
 
   await expect(negro.locator('svg.touch-none')).toBeVisible()
   await expect(blanco.locator('svg.touch-none')).toBeVisible()
 
   // Carla ve a Ana y Beto "en una partida", con un botón para observar.
-  await esperarRival(carla, 'Ana')
+  await esperarContrincante(carla, 'Ana')
   const filaAna = carla.locator('li', { hasText: 'Ana' })
   await expect(filaAna.getByText('En una partida')).toBeVisible()
   await filaAna.getByRole('button', { name: 'Observar' }).click()
@@ -71,5 +71,5 @@ test('un tercer estudiante puede observar una partida ajena en curso', async ({ 
 
   // Carla puede dejar de observar y vuelve a la sala.
   await carla.getByRole('button', { name: 'Dejar de observar' }).click()
-  await expect(carla.getByText('Elegí un rival')).toBeVisible()
+  await expect(carla.getByText('Elegí un contrincante')).toBeVisible()
 })

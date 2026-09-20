@@ -13,10 +13,10 @@ import { storeGo } from '@/wss-cli/stores/go-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 
 /** Una fila de la lista de participantes: avatar, nombre/DNI/email, y las acciones del profe sobre
- * ese estudiante (desafiar a Go, ver su partida o sus votos). */
+ * ese estudiante (invitar a Go, ver su partida o sus votos). */
 export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante; modo: 'encuestas' | 'go' }) {
-  const { desafiar } = useConexionProfe()
-  const { rivales, partida: partidaPropia } = storeGo()
+  const { invitar } = useConexionProfe()
+  const { contrincantes, partida: partidaPropia } = storeGo()
   const { nombres: nombresInvitados } = storePermitidos()
 
   return (
@@ -54,10 +54,10 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
             <TooltipTrigger asChild>
               <button
                 className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
-                disabled={!!partidaPropia || !!rivales.find((r) => r.userId === e.userId)?.enPartida}
+                disabled={!!partidaPropia || !!contrincantes.find((c) => c.userId === e.userId)?.enPartida}
                 onClick={() =>
-                  desafiar(e.userId).catch((err) =>
-                    toast.error(err instanceof Error ? err.message : 'No se pudo desafiar')
+                  invitar(e.userId).catch((err) =>
+                    toast.error(err instanceof Error ? err.message : 'No se pudo invitar')
                   )
                 }
               >
@@ -65,7 +65,7 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Desafiar a {e.nombre} a Go</p>
+              <p className="text-xs">Invitar a {e.nombre} a jugar Go</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -85,14 +85,14 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
 }
 
 /** Con quién está jugando (o no) cada estudiante en Go, en vez de sus votos de encuestas. La info sale
- * de `rivales` (la misma que alimenta "Elegí un rival"), que solo cubre a los conectados. */
+ * de `contrincantes` (la misma que alimenta "Elegí un contrincante"), que solo cubre a los conectados. */
 function TooltipPartidaEstudiante({
   children,
   userId,
   conectado,
 }: PropsWithChildren & { userId: string; conectado: boolean }) {
-  const { rivales } = storeGo()
-  const info = rivales.find((r) => r.userId === userId)
+  const { contrincantes } = storeGo()
+  const info = contrincantes.find((c) => c.userId === userId)
 
   return (
     <Tooltip>
@@ -101,7 +101,7 @@ function TooltipPartidaEstudiante({
         <p className="text-xs">
           {!conectado && 'Estudiante desconectado'}
           {conectado && !info?.enPartida && 'No está jugando ninguna partida'}
-          {conectado && info?.enPartida && `Jugando contra ${info.rival?.nombre ?? '…'}`}
+          {conectado && info?.enPartida && `Jugando contra ${info.contrincante?.nombre ?? '…'}`}
         </p>
       </TooltipContent>
     </Tooltip>

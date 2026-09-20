@@ -64,34 +64,35 @@ export default function estudianteGoHandlers(socket: Socket | null) {
         else store.set(partida)
       })
 
-      // Alguien me desafía.
-      socket.on('go:desafio', (partida: Partida) => store.agregarDesafio(partida))
-      socket.on('go:desafio_rechazado', ({ partidaId }: { partidaId: string }) => {
-        store.quitarDesafio(partidaId)
+      // Alguien me invita.
+      socket.on('go:invitacion', (partida: Partida) => store.agregarInvitacion(partida))
+      socket.on('go:invitacion_rechazada', ({ partidaId }: { partidaId: string }) => {
+        store.quitarInvitacion(partidaId)
         if (storeGo.getState().partida?.id === partidaId) store.set(null)
       })
 
       // Alguien de la sala entró o salió de una partida: refresca "la sala" en vivo.
-      socket.on('go:rivales_actualizados', (rivales: ReturnType<typeof storeGo.getState>['rivales']) =>
-        store.setRivales(rivales)
+      socket.on('go:contrincantes_actualizados', (contrincantes: ReturnType<typeof storeGo.getState>['contrincantes']) =>
+        store.setContrincantes(contrincantes)
       )
 
       // Al conectar, pedimos si ya tenemos una partida en curso (soporta reconexión/refresh). Hasta
       // que esto resuelve, `inicializado` queda en false para que la UI muestre un loading en vez de
-      // asumir "no hay partida" y mostrar por un instante el buscador de rivales.
+      // asumir "no hay partida" y mostrar por un instante el buscador de contrincantes.
       pedirMiPartidaConReintentos().finally(store.marcarInicializado)
     },
 
     acciones: {
-      pedirRivales: async () => store.setRivales(await conAck('go:rivales')),
-      desafiar: (rivalId: string, tamaño: TamañoTablero = 9) => conAckPartida('go:desafiar', { rivalId, tamaño }),
+      pedirContrincantes: async () => store.setContrincantes(await conAck('go:contrincantes')),
+      invitar: (contrincanteId: string, tamaño: TamañoTablero = 9) =>
+        conAckPartida('go:invitar', { contrincanteId, tamaño }),
       aceptar: (partidaId: string) => conAckPartida('go:aceptar', { partidaId }),
-      // También sirve para cancelar un desafío propio todavía pendiente: el server trata ambos casos
-      // igual (termina la partida pendiente y avisa al otro jugador por `go:desafio_rechazado`), así
-      // que acá limpiamos tanto la lista de entrantes como `partida` si es la que estábamos esperando.
+      // También sirve para cancelar una invitación propia todavía pendiente: el server trata ambos
+      // casos igual (termina la partida pendiente y avisa al otro jugador por `go:invitacion_rechazada`),
+      // así que acá limpiamos tanto la lista de entrantes como `partida` si es la que estábamos esperando.
       rechazar: async (partidaId: string) => {
         await conAck<void>('go:rechazar', { partidaId })
-        store.quitarDesafio(partidaId)
+        store.quitarInvitacion(partidaId)
         if (storeGo.getState().partida?.id === partidaId) store.set(null)
       },
       jugar: (partidaId: string, x: number, y: number) => conAckPartida('go:jugar', { partidaId, x, y }),
@@ -115,9 +116,9 @@ export default function estudianteGoHandlers(socket: Socket | null) {
       if (!socket) return
 
       socket.removeAllListeners('go:partida')
-      socket.removeAllListeners('go:desafio')
-      socket.removeAllListeners('go:desafio_rechazado')
-      socket.removeAllListeners('go:rivales_actualizados')
+      socket.removeAllListeners('go:invitacion')
+      socket.removeAllListeners('go:invitacion_rechazada')
+      socket.removeAllListeners('go:contrincantes_actualizados')
     },
   }
 }

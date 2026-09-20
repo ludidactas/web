@@ -53,11 +53,11 @@ export interface Partida {
   creadaEn: string
 }
 
-export const desafioSchema = z.object({
-  rivalId: z.string().min(1),
+export const invitacionSchema = z.object({
+  contrincanteId: z.string().min(1),
   tamaño: z.union([z.literal(9), z.literal(13), z.literal(19)]).default(9),
 })
-export type Desafio = z.infer<typeof desafioSchema>
+export type Invitacion = z.infer<typeof invitacionSchema>
 
 export const partidaIdSchema = z.object({
   partidaId: z.string().min(1),

@@ -22,6 +22,10 @@ La app Next (`src/`) y el server de tiempo real (`wss/`) corren en **instancias 
 
 En general, si el emit espera respuesta, es un ack.
 
+### Reconciliar estado en vivo vs. al reconectar
+
+Cuando un hecho puede enterarse un cliente de dos formas distintas —un evento en vivo empujado por el server mientras la pestaña está abierta, o una consulta de reconciliación al conectar/refrescar (ej. "¿tengo algo pendiente?")— las dos vías tienen que terminar en la **misma** pieza de estado, o la UI que depende de "cómo llegó el dato" en vez de "qué dice el dato" se rompe apenas alguien refresca en el momento equivocado.
+
 ### Stores globales (zustand) y navegación SPA
 
 Los stores son singletons **por pestaña** que sobreviven a la navegación entre rutas. Si un store guarda estado ligado a "la entidad activa" (ej: la config de la sala abierta), hay que **limpiarlo en el teardown** de la conexión/página; si no, la siguiente ruta lee el valor de la anterior antes de que llegue el fresco.
@@ -48,6 +52,13 @@ Cómo se verifica el login:
 
 - Cuando un estudiante está en la sala y el docente publica una pregunta, al estudiante le aparece como 'ya votaste'
 - Parece que no se invalida la sesión al cambiar de usuario... conectarse con una cuenta, luego con otra, sigue diciendo "ya votaste"
+
+## Go — pendiente para después del baseline
+
+Quedó afuera del baseline de salida a prod:
+
+- **Lista de "partidas activas en la sala"** y poder **observar otra partida mientras jugás la propia**. Hoy `PartidaEnCurso` ocupa toda la pantalla sin salida a observar a otros, y la única forma de ver partidas ajenas es desde `BuscarRival` (cuando no tenés partida propia). Requiere un query nuevo (partidas activas de la sala, no solo por rival individual) y repensar el layout de `PartidaEnCurso` para dejar lugar a un modo espectador simultáneo.
+- **Varias invitaciones entrantes simultáneas, incluso de la misma persona.** El server hoy modela "partida activa" como un puntero único por usuario (`db.getPartidaActiva`), así que solo puede haber una invitación pendiente a la vez. La UI ya quedó orientada a lista (`desafiosEntrantes` en `GoJuego`) para cuando el modelo de datos del server soporte más de una.
 
 ## Setup
 

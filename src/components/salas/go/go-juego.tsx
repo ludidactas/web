@@ -32,18 +32,24 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
   const { inicializado, partida, desafios, rivales, observando } = storeGo()
   const { pedirRivales, desafiar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
 
+  // Tengo una partida pendiente donde soy el desafiado?
+  const soyDesafiado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
+  const desafiosEntrantes =
+    soyDesafiado && !desafios.some((d) => d.id === partida!.id) ? [...desafios, partida!] : desafios
+
   useEffect(() => {
-    if (inicializado && !partida && !observando) pedirRivales()
-  }, [inicializado, partida, observando, pedirRivales])
+    if (inicializado && (!partida || soyDesafiado) && !observando) pedirRivales()
+  }, [inicializado, partida, soyDesafiado, observando, pedirRivales])
 
   // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
   // (mostrar el buscador de rivales de entrada parpadea si después resulta que sí había una).
-  if (!inicializado) return <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
-    <Icon className='w-10 h-10' icon={"eos-icons:bubble-loading"}/>
-    Cargando…
-    </p>
-
-  if (desafios.length > 0) return <DesafiosEntrantes desafios={desafios} aceptar={aceptar} rechazar={rechazar} />
+  if (!inicializado)
+    return (
+      <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
+        <Icon className="w-10 h-10" icon={'eos-icons:bubble-loading'} />
+        Cargando…
+      </p>
+    )
 
   if (observando)
     return (
@@ -53,11 +59,22 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
       />
     )
 
-  if (!partida)
-    return <BuscarRival rivales={rivales} onRefrescar={pedirRivales} onDesafiar={desafiar} onObservar={observar} />
+  // Sin partida propia, o con una pendiente de responder: en ambos casos seguís viendo la sala (lista
+  // de rivales) en vez de que un desafío entrante tape toda la pantalla.
+  if (!partida || soyDesafiado)
+    return (
+      <BuscarRival
+        rivales={rivales}
+        desafiosEntrantes={desafiosEntrantes}
+        onRefrescar={pedirRivales}
+        onDesafiar={desafiar}
+        onObservar={observar}
+        onAceptar={aceptar}
+        onRechazar={rechazar}
+      />
+    )
 
-  if (partida.estado === 'pendiente')
-    return <EsperandoRival partida={partida} userId={userId} rechazar={rechazar} />
+  if (partida.estado === 'pendiente') return <EsperandoRival partida={partida} userId={userId} rechazar={rechazar} />
 
   return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} />
 }
@@ -72,8 +89,8 @@ function DesafiosEntrantes({
   rechazar: (id: string) => Promise<unknown>
 }) {
   return (
-    <div className="flex flex-col gap-4 items-center max-w-md mx-auto">
-      <h2 className="text-xl font-bold">¡Te desafiaron a Go!</h2>
+    <div className="flex flex-col gap-2 items-center w-full">
+      <h2 className="text-lg font-bold">¡Te desafiaron a Go!</h2>
       {desafios.map((d) => (
         <div key={d.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
           <p>
@@ -101,74 +118,86 @@ function DesafiosEntrantes({
 
 function BuscarRival({
   rivales,
+  desafiosEntrantes,
   onRefrescar,
   onDesafiar,
   onObservar,
+  onAceptar,
+  onRechazar,
 }: {
   rivales: ReturnType<typeof storeGo.getState>['rivales']
+  desafiosEntrantes: ReturnType<typeof storeGo.getState>['desafios']
   onRefrescar: () => void
   onDesafiar: (rivalId: string, tamaño: TamañoTablero) => Promise<unknown>
   onObservar: (partidaId: string) => Promise<unknown>
+  onAceptar: (partidaId: string) => Promise<unknown>
+  onRechazar: (partidaId: string) => Promise<unknown>
 }) {
   const [tamaño, setTamaño] = useState<TamañoTablero>(9)
 
   return (
-    <div className="flex flex-col gap-4 items-center max-w-md mx-auto">
-      <h2 className="text-xl font-bold">Elegí un rival y un tamaño de tablero</h2>
+    <div className="flex flex-col gap-6 items-center max-w-md mx-auto w-full">
+      <div className="flex flex-col gap-4 items-center w-full">
+        <h2 className="text-xl font-bold">Elegí un rival y un tamaño de tablero</h2>
 
-      <div className="flex gap-2 text-sm">
-        {TAMAÑOS_TABLERO.map((t) => (
-          <button key={t} onClick={() => setTamaño(t)}>
-            <Boton
-              color={tamaño === t ? '#6366f1' : '#ccb2ff'}
-              shadowColor={tamaño === t ? '#4338ca' : '#6b34a4'}
-              classNames={{ root: 'flex items-center justify-center w-16 h-9 hover:scale-105 transition-transform' }}
-            >
-              <span className={cn('text-xs font-bold', tamaño === t ? 'text-white' : 'text-black')}>
-                {t}x{t}
-              </span>
-            </Boton>
-          </button>
-        ))}
+        <div className="flex gap-2 text-sm">
+          {TAMAÑOS_TABLERO.map((t) => (
+            <button key={t} onClick={() => setTamaño(t)}>
+              <Boton
+                color={tamaño === t ? '#6366f1' : '#ccb2ff'}
+                shadowColor={tamaño === t ? '#4338ca' : '#6b34a4'}
+                classNames={{ root: 'flex items-center justify-center w-16 h-9 hover:scale-105 transition-transform' }}
+              >
+                <span className={cn('text-xs font-bold', tamaño === t ? 'text-white' : 'text-black')}>
+                  {t}x{t}
+                </span>
+              </Boton>
+            </button>
+          ))}
+        </div>
+
+        {rivales.length === 0 && (
+          <p className="text-slate-500 text-sm text-center">
+            No hay compañeros conectados todavía.
+            <br />
+            <button className="underline mt-2" onClick={onRefrescar}>
+              Refrescar
+            </button>
+          </p>
+        )}
+
+        <ul className="flex flex-col gap-2 w-full">
+          {rivales.map((r) => (
+            <li key={r.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
+              <span>{r.nombre}</span>
+              {r.enPartida ? (
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs text-slate-400">En una partida</span>
+                  {r.partidaId && (
+                    <button
+                      className="bg-slate-200 px-3 py-1 rounded text-xs"
+                      onClick={() => onObservar(r.partidaId!).catch((e) => toast.error(e.message))}
+                    >
+                      Observar
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm"
+                  onClick={() => onDesafiar(r.userId, tamaño).catch((e) => toast.error(e.message))}
+                >
+                  Desafiar
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {rivales.length === 0 && (
-        <p className="text-slate-500 text-sm text-center">
-          No hay compañeros conectados todavía.
-          <br />
-          <button className="underline mt-2" onClick={onRefrescar}>
-            Refrescar
-          </button>
-        </p>
+      {desafiosEntrantes.length > 0 && (
+        <DesafiosEntrantes desafios={desafiosEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
-
-      <ul className="flex flex-col gap-2 w-full">
-        {rivales.map((r) => (
-          <li key={r.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
-            <span>{r.nombre}</span>
-            {r.enPartida ? (
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-slate-400">En una partida</span>
-                {r.partidaId && (
-                  <button
-                    className="bg-slate-200 px-3 py-1 rounded text-xs"
-                    onClick={() => onObservar(r.partidaId!).catch((e) => toast.error(e.message))}
-                  >
-                    Observar
-                  </button>
-                )}
-              </div>
-            ) : (
-              <button
-                className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm"
-                onClick={() => onDesafiar(r.userId, tamaño).catch((e) => toast.error(e.message))}
-              >
-                Desafiar
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
@@ -337,12 +366,12 @@ function PartidaEnCurso({
     () =>
       partida.estado === 'contando'
         ? calcularPuntaje(
-          partida.tablero,
-          partida.tamaño,
-          partida.removidas,
-          partida.capturasNegras,
-          partida.capturasBlancas
-        )
+            partida.tablero,
+            partida.tamaño,
+            partida.removidas,
+            partida.capturasNegras,
+            partida.capturasBlancas
+          )
         : null,
     [
       partida.estado,
@@ -356,41 +385,43 @@ function PartidaEnCurso({
 
   return (
     <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
-        <div className="flex flex-col items-center gap-2 text-md mb-2">
-          <span>
-            Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
-          </span>
-          <span>Rival: <span className='font-bold'>{rival.nombre}</span></span>
-        </div>
+      <div className="flex flex-col items-center gap-2 text-md mb-2">
+        <span>
+          Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
+        </span>
+        <span>
+          Rival: <span className="font-bold">{rival.nombre}</span>
+        </span>
+      </div>
 
-        {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
+      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
-        {partida.estado === 'jugando' && (
-          <p
-            className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
-            style={{
-              color: RELLENO[partida.turno],
-            }}
-          >
-            {partida.turno === BLANCO ? (
-              <Outlined radius={2} outlineColor="negro" className="flex items-center gap-2">
-                <span
-                  className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                  style={{ backgroundColor: RELLENO[partida.turno] }}
-                />
-                Juega blanco — {esMiTurno ? 'tu turno' : rival.nombre}
-              </Outlined>
-            ) : (
-              <>
-                <span
-                  className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                  style={{ backgroundColor: RELLENO[partida.turno] }}
-                />
-                Juega negro — {esMiTurno ? 'tu turno' : rival.nombre}
-              </>
-            )}
-          </p>
-        )}
+      {partida.estado === 'jugando' && (
+        <p
+          className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
+          style={{
+            color: RELLENO[partida.turno],
+          }}
+        >
+          {partida.turno === BLANCO ? (
+            <Outlined radius={2} outlineColor="negro" className="flex items-center gap-2">
+              <span
+                className="inline-block h-3 w-3 rounded-full border border-slate-400"
+                style={{ backgroundColor: RELLENO[partida.turno] }}
+              />
+              Juega blanco — {esMiTurno ? 'tu turno' : rival.nombre}
+            </Outlined>
+          ) : (
+            <>
+              <span
+                className="inline-block h-3 w-3 rounded-full border border-slate-400"
+                style={{ backgroundColor: RELLENO[partida.turno] }}
+              />
+              Juega negro — {esMiTurno ? 'tu turno' : rival.nombre}
+            </>
+          )}
+        </p>
+      )}
 
       {partida.estado === 'contando' && conteoEnVivo && (
         <div className="text-sm text-slate-600 text-center">

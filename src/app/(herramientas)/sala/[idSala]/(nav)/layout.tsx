@@ -1,5 +1,5 @@
 import { Toaster } from 'sonner'
-import SalaFloatingNav from '@/components/salas/sala-floating-nav'
+import SalaFloatingNavEstudiante from '@/components/salas/sala-floating-nav-estudiante'
 import { TituloPestanaSala } from '@/components/salas/titulo-pestana-sala'
 
 export default async function SalaEstudianteNavLayout({
@@ -16,7 +16,7 @@ export default async function SalaEstudianteNavLayout({
       <Toaster />
       <TituloPestanaSala />
       {children}
-      <SalaFloatingNav idSala={idSala} basePath="/sala" />
+      <SalaFloatingNavEstudiante idSala={idSala} />
     </div>
   )
 }

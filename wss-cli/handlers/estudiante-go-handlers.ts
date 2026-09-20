@@ -7,6 +7,10 @@ import { storeGo } from '../stores/go-store'
 /** Espejo cliente de `handlersGoEstudiante`. */
 export default function estudianteGoHandlers(socket: Socket | null) {
   const store = storeGo.getState()
+  // `desmontar()` lo pone en true para cancelar un loop de reintentos en curso: sin esto, un montaje
+  // reemplazado (StrictMode en dev, o un socket nuevo tras reconectar) deja corriendo el loop viejo en
+  // paralelo con el nuevo, y cada uno puede terminar en su propio toast de error duplicado.
+  let desmontado = false
 
   async function conAck<T>(evento: string, payload?: unknown): Promise<T> {
     if (!socket) throw new Error('Sin conexión')
@@ -36,10 +40,13 @@ export default function estudianteGoHandlers(socket: Socket | null) {
   async function pedirMiPartidaConReintentos() {
     const intentos = 3
     for (let i = 0; i < intentos; i++) {
+      if (desmontado) return
       try {
-        store.set(await conAck<Partida | null>('go:mi_partida'))
+        const partida = await conAck<Partida | null>('go:mi_partida')
+        if (!desmontado) store.set(partida)
         return
       } catch {
+        if (desmontado) return
         if (i === intentos - 1) toast.error('No pudimos recuperar tu partida en curso. Refrescá la página.')
         else await new Promise((r) => setTimeout(r, 1000))
       }
@@ -104,6 +111,7 @@ export default function estudianteGoHandlers(socket: Socket | null) {
     },
 
     desmontar: () => {
+      desmontado = true
       if (!socket) return
 
       socket.removeAllListeners('go:partida')

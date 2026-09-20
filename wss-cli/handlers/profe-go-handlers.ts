@@ -8,6 +8,8 @@ import { storeGo } from '../stores/go-store'
  * bajo su propia identidad (ver `estudiante-go-handlers.ts`, del que es prácticamente un calco). */
 export default function profeGoHandlers(socket: Socket | null) {
   const store = storeGo.getState()
+  // Ver comentario en `estudiante-go-handlers.ts`.
+  let desmontado = false
 
   async function conAck<T>(evento: string, payload?: unknown): Promise<T> {
     if (!socket) throw new Error('Sin conexión')
@@ -26,10 +28,13 @@ export default function profeGoHandlers(socket: Socket | null) {
   async function pedirMiPartidaConReintentos() {
     const intentos = 3
     for (let i = 0; i < intentos; i++) {
+      if (desmontado) return
       try {
-        store.set(await conAck<Partida | null>('go:mi_partida'))
+        const partida = await conAck<Partida | null>('go:mi_partida')
+        if (!desmontado) store.set(partida)
         return
       } catch {
+        if (desmontado) return
         if (i === intentos - 1) toast.error('No pudimos recuperar tu partida en curso. Refrescá la página.')
         else await new Promise((r) => setTimeout(r, 1000))
       }
@@ -89,6 +94,7 @@ export default function profeGoHandlers(socket: Socket | null) {
     },
 
     desmontar: () => {
+      desmontado = true
       if (!socket) return
 
       socket.removeAllListeners('go:partida')

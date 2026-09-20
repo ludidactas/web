@@ -21,7 +21,7 @@ export const ListaEstudiantes = ({ modo = 'encuestas' }: { modo?: 'encuestas' | 
             <>
               <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>
               <p className="text-slate-400 italic px-6 mt-2 text-center">
-                ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
+                ¡Compartí el link de la sala con tus estudiantes para que participen de las actividades!
               </p>
             </>
           )}

@@ -18,11 +18,11 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 const BannerGo = ({ className }: { className: string }) => (
   <div className="flex items-center gap-3 md:gap-4">
     <LdGo className={className} />
-    <div className='flex flex-col'>
-    <Outlined outlineColor="white" >
-      <p className="text-ld-violeta sm:rotate-3 text-5xl md:text-7xl">Go!</p>
-    <p className='text-black text-2xl font-bold'>Sumérgete en el mundo del Go!</p>
-    </Outlined>
+    <div className="flex flex-col">
+      <Outlined outlineColor="white">
+        <p className="text-ld-violeta sm:rotate-3 text-5xl md:text-7xl">Go!</p>
+        <p className="text-black text-2xl font-bold">Sumergite en el mundo del Go!</p>
+      </Outlined>
     </div>
   </div>
 )
@@ -50,9 +50,13 @@ export default function GoProfePage() {
 
   return (
     <>
-      <WssDebugPanel />
+      {/* <WssDebugPanel /> */}
       <Status
-        banner={<Outlined radius={3} outlineColor='white'><BannerGo className="md:w-72 h-auto" /></Outlined>}
+        banner={
+          <Outlined radius={3} outlineColor="white">
+            <BannerGo className="md:w-72 h-auto" />
+          </Outlined>
+        }
         bannerMobile={<BannerGo className="w-40 h-auto" />}
       />
 
@@ -71,17 +75,14 @@ export default function GoProfePage() {
             </TabsList>
 
             <TabsContent value="go">
-               
               <div className="flex flex-col items-center p-6 h-screen bg-white">
-
                 <h1 className="flex gap-2 items-center text-3xl font-medium text-ld-violeta-oscuro">
-                    <Grid3x3 />
-                    Partidas
-                  </h1>
-    
-                  <div className="w-full pt-4">
-                    <GoProfe />
-                  
+                  <Grid3x3 />
+                  Partidas
+                </h1>
+
+                <div className="w-full pt-4">
+                  <GoProfe />
                 </div>
               </div>
             </TabsContent>
@@ -104,7 +105,7 @@ export default function GoProfePage() {
           <div className="w-3/5 min-w-0 flex flex-col bg-white gap-2 rounded-xl box-content overflow-y-auto">
             <div className="flex items-center p-6 justify-center rounded-t-xl">
               <h1 className="flex gap-2 items-center text-5xl font-medium text-ld-violeta-oscuro">
-                <Grid3x3 className='-rotate-3 w-12 h-12' size={40} />
+                <Grid3x3 className="-rotate-3 w-12 h-12" size={40} />
                 Partidas
               </h1>
             </div>

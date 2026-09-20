@@ -189,7 +189,7 @@ test('partida de 9x9 casi completa: tres personas conectadas, cadenas vivas y mu
   // Este estado (fase de conteo con cadenas vivas/inciertas ya en el tablero, y un tercero
   // observando) es muy difícil de reproducir a mano; para inspeccionar la UI acá, habilitar
   // temporalmente `await negro.pause()`.
-  await negro.pause()
+  // await negro.pause()
 
   await negro.getByRole('button', { name: 'Confirmar conteo' }).click()
   await blanco.getByRole('button', { name: 'Confirmar conteo' }).click()

@@ -158,7 +158,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
         yaVotado && 'border-slate-300'
       )}
     >
-      <DebugPanel
+      {/* <DebugPanel
         classNames={{ button: 'absolute bottom-4' }}
         data={{
           seleccion,
@@ -167,7 +167,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
           hayAporte,
           puedeEnviar,
         }}
-      />
+      /> */}
 
       {/* Header - Titulo y status */}
       <HeaderEncuestaEstudiante encuesta={encuesta} />

@@ -1,24 +1,13 @@
 import { ReactNode } from 'react'
 import { LdSvg } from '@/components/custom/ld-svg'
-import EncuestasIcon from '@/svg/dist/encuestas/EncuestasTitulo.svg'
 import Conectado from '@/svg/dist/ui/Conectado.svg'
-import SalaHeader from '@/svg/dist/encuestas/EncuestasEstIcon.svg'
 
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 
-const BANNER_ENCUESTAS_DESKTOP = <LdSvg className="w-[1000px] max-w-full h-auto" SvgComponent={EncuestasIcon} />
-const BANNER_ENCUESTAS_MOBILE = <LdSvg className="w-[350px]" SvgComponent={SalaHeader} />
-
-/** Título + tagline del modo actual (Encuestas, Go, ...), arriba de todo. Por defecto es el de
- * Encuestas; cada modo puede pisarlo con su propio banner (ver `GoProfePage`). */
-export function Status({
-  banner = BANNER_ENCUESTAS_DESKTOP,
-  bannerMobile = BANNER_ENCUESTAS_MOBILE,
-}: {
-  banner?: ReactNode
-  bannerMobile?: ReactNode
-} = {}) {
+/** Título + tagline del modo actual (Encuestas, Go, ...), arriba de todo. Cada modo pasa su propio
+ * banner (ver `BannerEncuestas` en este mismo directorio y `BannerGo` en `go-profe`). */
+export function Status({ banner, bannerMobile }: { banner: ReactNode; bannerMobile: ReactNode }) {
   const { estado } = useConexionProfe()
   return (
     <>

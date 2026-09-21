@@ -1,5 +1,17 @@
 import { describe, expect, test } from 'bun:test'
-import { BLANCO, calcularPuntaje, calcularTerritorio, grupoEn, NEGRO, Tablero } from './motor'
+import {
+  BLANCO,
+  calcularPuntaje,
+  calcularTerritorio,
+  grupoEn,
+  hashTablero,
+  jugar,
+  JugadaInvalida,
+  NEGRO,
+  Tablero,
+  tableroVacio,
+  VACIO,
+} from './motor'
 
 /**
  * Tablero 5x5 partido en tres franjas verticales por dos paredes completas (columna 1 negra, columna
@@ -77,5 +89,99 @@ describe('grupoEn', () => {
     expect(grupoEn(tablero, -1, 0, 5)).toEqual([])
     expect(grupoEn(tablero, 0, 999, 5)).toEqual([])
     expect(grupoEn(tablero, 100, 100, 5)).toEqual([])
+  })
+})
+
+describe('jugar', () => {
+  test('captura un grupo rival que se queda sin libertades', () => {
+    // Piedra blanca en (1,1) rodeada por negro en tres lados; el cuarto lado, (1,2), es su última
+    // libertad.
+    const tablero: Tablero = [
+      [0, NEGRO, 0],
+      [NEGRO, BLANCO, NEGRO],
+      [0, VACIO, 0],
+    ]
+
+    const { tablero: resultado, capturas } = jugar(tablero, 3, 1, 2, NEGRO, new Set())
+
+    expect(capturas).toBe(1)
+    expect(resultado[1][1]).toBe(VACIO)
+    expect(resultado[2][1]).toBe(NEGRO)
+  })
+
+  test('una sola jugada puede capturar más de un grupo rival a la vez', () => {
+    // Dos piedras blancas sueltas (no conectadas entre sí) en (1,2) y (3,2), cada una con su única
+    // libertad en (2,2). Negro juega ahí y captura ambos grupos.
+    const tablero: Tablero = [
+      [0, 0, 0, 0, 0],
+      [0, NEGRO, 0, NEGRO, 0],
+      [NEGRO, BLANCO, VACIO, BLANCO, NEGRO],
+      [0, NEGRO, 0, NEGRO, 0],
+      [0, 0, 0, 0, 0],
+    ]
+
+    const { tablero: resultado, capturas } = jugar(tablero, 5, 2, 2, NEGRO, new Set())
+
+    expect(capturas).toBe(2)
+    expect(resultado[2][1]).toBe(VACIO)
+    expect(resultado[2][3]).toBe(VACIO)
+    expect(resultado[2][2]).toBe(NEGRO)
+  })
+
+  test('rechaza una jugada suicida (sin libertades propias y sin capturar nada)', () => {
+    // (1,1) rodeado en cruz por piedras negras que a su vez tienen libertades propias en las
+    // esquinas: blanco jugando en el centro no captura nada y se queda sin libertades.
+    const tablero: Tablero = [
+      [0, NEGRO, 0],
+      [NEGRO, VACIO, NEGRO],
+      [0, NEGRO, 0],
+    ]
+
+    expect(() => jugar(tablero, 3, 1, 1, BLANCO, new Set())).toThrow(JugadaInvalida)
+  })
+
+  test('una jugada que capturaría fuera suicida en otro caso es legal (se chequea captura antes que suicidio)', () => {
+    // Dos piedras blancas sueltas en (1,0) y (0,1), cada una con su única libertad en la esquina
+    // (0,0). Si negro jugara ahí y las libertades se chequearan antes de aplicar la captura, parecería
+    // suicida (sin libertades propias); pero como las captura, se libera esa misma esquina.
+    const tablero: Tablero = [
+      [VACIO, BLANCO, NEGRO],
+      [BLANCO, NEGRO, 0],
+      [NEGRO, 0, 0],
+    ]
+
+    const { tablero: resultado, capturas } = jugar(tablero, 3, 0, 0, NEGRO, new Set())
+
+    expect(capturas).toBe(2)
+    expect(resultado[0][0]).toBe(NEGRO)
+  })
+
+  test('rechaza jugar sobre una posición ocupada', () => {
+    const tablero = tableroVacio(3)
+    tablero[0][0] = NEGRO
+
+    expect(() => jugar(tablero, 3, 0, 0, BLANCO, new Set())).toThrow(JugadaInvalida)
+  })
+
+  test('rechaza coordenadas fuera del tablero', () => {
+    const tablero = tableroVacio(3)
+
+    expect(() => jugar(tablero, 3, 3, 0, NEGRO, new Set())).toThrow(JugadaInvalida)
+    expect(() => jugar(tablero, 3, -1, 0, NEGRO, new Set())).toThrow(JugadaInvalida)
+    expect(() => jugar(tablero, 3, 0, 3, NEGRO, new Set())).toThrow(JugadaInvalida)
+  })
+
+  test('rechaza una jugada que repite una posición anterior de la partida (ko/superko)', () => {
+    const tablero: Tablero = [
+      [0, NEGRO, 0],
+      [NEGRO, BLANCO, NEGRO],
+      [0, VACIO, 0],
+    ]
+
+    // La posición resultante de esta captura ya "pasó" antes en la partida (queda en el historial).
+    const { tablero: posicionRepetida } = jugar(tablero, 3, 1, 2, NEGRO, new Set())
+    const historial = new Set([hashTablero(posicionRepetida)])
+
+    expect(() => jugar(tablero, 3, 1, 2, NEGRO, historial)).toThrow(JugadaInvalida)
   })
 })

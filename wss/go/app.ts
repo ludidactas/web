@@ -12,6 +12,7 @@ import {
 } from '../validators/go'
 import { calcularVivos } from './benson'
 import * as db from './db'
+import { conLock } from './lock'
 import * as motor from './motor'
 
 export function salaGoRoom(salaId: string, partidaId: string) {
@@ -116,188 +117,214 @@ export async function estudianteGo(idSala: string, userId: string) {
     return assertPartidaExiste(idSala, partidaId)
   }
 
+  // `invitar`/`aceptar`/`rechazar` leen y escriben el puntero de "partida activa" de dos usuarios
+  // (`db.getPartidaActiva`/`setPartidaActiva`/`limpiarPartidaActiva`) sin transacción de Redis; sin
+  // serializarlas, dos invitaciones o una invitación y una aceptación casi simultáneas en la misma sala
+  // pueden pisarse ese puntero y dejar a alguien "jugando" una partida distinta de la que apunta su
+  // propio puntero. Una única cola por sala alcanza: el volumen de invitar/aceptar en un aula es bajo.
+  const conLockInvitaciones = <T>(fn: () => Promise<T>) => conLock(`${idSala}:go:invitaciones`, fn)
+
   async function invitar(payload: unknown, nombre: string) {
-    const { contrincanteId, tamaño } = invitacionSchema.parse(payload)
+    return conLockInvitaciones(async () => {
+      const { contrincanteId, tamaño } = invitacionSchema.parse(payload)
 
-    if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
+      if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
-    const existente = await miPartida()
-    if (existente && existente.estado !== EstadoPartida.Terminada) throw new Error('Ya tenés una partida en curso')
+      const existente = await miPartida()
+      if (existente && existente.estado !== EstadoPartida.Terminada) throw new Error('Ya tenés una partida en curso')
 
-    const personas = await personasDeSala(idSala)
-    const contrincante = personas.find((e) => e.userId === contrincanteId)
-    if (!contrincante || !contrincante.conectado) throw new Error('Ese contrincante no está disponible')
-    if (await db.getPartidaActiva(idSala, contrincanteId)) throw new Error('Ese contrincante ya está en una partida')
+      const personas = await personasDeSala(idSala)
+      const contrincante = personas.find((e) => e.userId === contrincanteId)
+      if (!contrincante || !contrincante.conectado) throw new Error('Ese contrincante no está disponible')
+      if (await db.getPartidaActiva(idSala, contrincanteId)) throw new Error('Ese contrincante ya está en una partida')
 
-    const id = randomUUID().split('-')[0]
-    const partida: Partida = {
-      id,
-      salaId: idSala,
-      tamaño,
-      negro: { userId, nombre },
-      blanco: { userId: contrincanteId, nombre: contrincante.nombre },
-      tablero: motor.tableroVacio(tamaño),
-      turno: motor.NEGRO,
-      capturasNegras: 0,
-      capturasBlancas: 0,
-      pases: 0,
-      historial: [],
-      removidas: null,
-      vivo: null,
-      confirmaron: { negro: false, blanco: false },
-      estado: EstadoPartida.Pendiente,
-      resultado: null,
-      motivoFin: null,
-      ganadorUserId: null,
-      creadaEn: new Date().toISOString(),
-    }
+      const id = randomUUID().split('-')[0]
+      const partida: Partida = {
+        id,
+        salaId: idSala,
+        tamaño,
+        negro: { userId, nombre },
+        blanco: { userId: contrincanteId, nombre: contrincante.nombre },
+        tablero: motor.tableroVacio(tamaño),
+        turno: motor.NEGRO,
+        capturasNegras: 0,
+        capturasBlancas: 0,
+        pases: 0,
+        historial: [],
+        removidas: null,
+        vivo: null,
+        confirmaron: { negro: false, blanco: false },
+        estado: EstadoPartida.Pendiente,
+        resultado: null,
+        motivoFin: null,
+        ganadorUserId: null,
+        creadaEn: new Date().toISOString(),
+      }
 
-    await db.guardarPartida(partida)
-    await db.registrarPartida(idSala, id)
-    await db.setPartidaActiva(idSala, userId, id)
-    await db.setPartidaActiva(idSala, contrincanteId, id)
+      await db.guardarPartida(partida)
+      await db.registrarPartida(idSala, id)
+      await db.setPartidaActiva(idSala, userId, id)
+      await db.setPartidaActiva(idSala, contrincanteId, id)
 
-    console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
+      console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
 
-    io.to(`sala:${idSala}:${contrincanteId}`).emit('go:invitacion', partida)
-    await avisarContrincantesActualizados(idSala)
+      io.to(`sala:${idSala}:${contrincanteId}`).emit('go:invitacion', partida)
+      await avisarContrincantesActualizados(idSala)
 
-    return partida
+      return partida
+    })
   }
 
   async function aceptar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    assertEsJugador(partida, userId)
-    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
-    if (partida.blanco.userId !== userId) throw new Error('Solo el invitado puede aceptar')
+    return conLockInvitaciones(async () => {
+      const { partidaId } = partidaIdSchema.parse(payload)
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      assertEsJugador(partida, userId)
+      if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
+      if (partida.blanco.userId !== userId) throw new Error('Solo el invitado puede aceptar')
 
-    partida.estado = EstadoPartida.Jugando
-    await db.guardarPartida(partida)
-    await broadcastPartida(partida)
-    return partida
+      partida.estado = EstadoPartida.Jugando
+      await db.guardarPartida(partida)
+      await broadcastPartida(partida)
+      return partida
+    })
   }
 
   async function rechazar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    assertEsJugador(partida, userId)
-    if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
+    return conLockInvitaciones(async () => {
+      const { partidaId } = partidaIdSchema.parse(payload)
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      assertEsJugador(partida, userId)
+      if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
 
-    await db.limpiarPartidaActiva(idSala, partida.negro.userId)
-    await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
+      await db.limpiarPartidaActiva(idSala, partida.negro.userId)
+      await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
-    const otro = contrincanteDe(partida, userId)
-    io.to(`sala:${idSala}:${otro.userId}`).emit('go:invitacion_rechazada', { partidaId })
-    await avisarContrincantesActualizados(idSala)
+      const otro = contrincanteDe(partida, userId)
+      io.to(`sala:${idSala}:${otro.userId}`).emit('go:invitacion_rechazada', { partidaId })
+      await avisarContrincantesActualizados(idSala)
+    })
   }
 
   async function jugar(payload: unknown) {
     const { partidaId, x, y } = jugadaSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    const color = colorDe(partida, userId)
-    if (partida.estado !== EstadoPartida.Jugando) throw new Error('La partida no está en curso')
-    if (partida.turno !== color) throw new Error('No es tu turno')
+    return conLock(partidaId, async () => {
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      const color = colorDe(partida, userId)
+      if (partida.estado !== EstadoPartida.Jugando) throw new Error('La partida no está en curso')
+      if (partida.turno !== color) throw new Error('No es tu turno')
 
-    const historial = new Set(partida.historial)
-    const { tablero, capturas } = motor.jugar(partida.tablero, partida.tamaño, x, y, color, historial)
+      const historial = new Set(partida.historial)
+      const { tablero, capturas } = motor.jugar(partida.tablero, partida.tamaño, x, y, color, historial)
 
-    partida.tablero = tablero
-    partida.historial.push(motor.hashTablero(tablero))
-    if (color === motor.NEGRO) partida.capturasNegras += capturas
-    else partida.capturasBlancas += capturas
-    partida.turno = motor.rival(color)
-    partida.pases = 0
+      partida.tablero = tablero
+      partida.historial.push(motor.hashTablero(tablero))
+      if (color === motor.NEGRO) partida.capturasNegras += capturas
+      else partida.capturasBlancas += capturas
+      partida.turno = motor.rival(color)
+      partida.pases = 0
 
-    await db.guardarPartida(partida)
-    await broadcastPartida(partida)
-    return partida
+      await db.guardarPartida(partida)
+      await broadcastPartida(partida)
+      return partida
+    })
   }
 
   async function pasar(payload: unknown) {
     const { partidaId } = partidaIdSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    const color = colorDe(partida, userId)
-    if (partida.estado !== EstadoPartida.Jugando) throw new Error('La partida no está en curso')
-    if (partida.turno !== color) throw new Error('No es tu turno')
+    return conLock(partidaId, async () => {
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      const color = colorDe(partida, userId)
+      if (partida.estado !== EstadoPartida.Jugando) throw new Error('La partida no está en curso')
+      if (partida.turno !== color) throw new Error('No es tu turno')
 
-    partida.pases += 1
-    partida.turno = motor.rival(color)
+      partida.pases += 1
+      partida.turno = motor.rival(color)
 
-    // Dos pases seguidos terminan la fase de juego y arrancan el conteo (marcado de piedras muertas).
-    if (partida.pases >= 2) {
-      partida.estado = EstadoPartida.Contando
-      partida.removidas = partida.tablero.map((fila) => fila.map(() => false))
-      // Calculado una sola vez acá: el tablero ya no cambia durante el conteo, solo `removidas`.
-      partida.vivo = calcularVivos(partida.tablero, partida.tamaño)
-      partida.confirmaron = { negro: false, blanco: false }
-    }
+      // Dos pases seguidos terminan la fase de juego y arrancan el conteo (marcado de piedras muertas).
+      if (partida.pases >= 2) {
+        partida.estado = EstadoPartida.Contando
+        partida.removidas = partida.tablero.map((fila) => fila.map(() => false))
+        // Calculado una sola vez acá: el tablero ya no cambia durante el conteo, solo `removidas`.
+        partida.vivo = calcularVivos(partida.tablero, partida.tamaño)
+        partida.confirmaron = { negro: false, blanco: false }
+      }
 
-    await db.guardarPartida(partida)
-    await broadcastPartida(partida)
-    return partida
+      await db.guardarPartida(partida)
+      await broadcastPartida(partida)
+      return partida
+    })
   }
 
   async function marcarMuerta(payload: unknown) {
     const { partidaId, x, y } = jugadaSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    assertEsJugador(partida, userId)
-    if (partida.estado !== EstadoPartida.Contando || !partida.removidas) throw new Error('La partida no está en conteo')
+    return conLock(partidaId, async () => {
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      assertEsJugador(partida, userId)
+      if (partida.estado !== EstadoPartida.Contando || !partida.removidas)
+        throw new Error('La partida no está en conteo')
 
-    const grupo = motor.grupoEn(partida.tablero, x, y, partida.tamaño)
-    if (grupo.length === 0) throw new Error('Ahí no hay ninguna piedra')
-    if (partida.vivo?.[y][x]) throw new Error('Ese grupo está incondicionalmente vivo, no se puede marcar como muerto')
+      const grupo = motor.grupoEn(partida.tablero, x, y, partida.tamaño)
+      if (grupo.length === 0) throw new Error('Ahí no hay ninguna piedra')
+      if (partida.vivo?.[y][x])
+        throw new Error('Ese grupo está incondicionalmente vivo, no se puede marcar como muerto')
 
-    // Toggle: si el grupo ya estaba marcado como muerto, lo restauramos.
-    const marcar = !partida.removidas[y][x]
-    for (const [gx, gy] of grupo) partida.removidas[gy][gx] = marcar
+      // Toggle: si el grupo ya estaba marcado como muerto, lo restauramos.
+      const marcar = !partida.removidas[y][x]
+      for (const [gx, gy] of grupo) partida.removidas[gy][gx] = marcar
 
-    // Cualquier cambio en el marcado invalida las confirmaciones previas.
-    partida.confirmaron = { negro: false, blanco: false }
+      // Cualquier cambio en el marcado invalida las confirmaciones previas.
+      partida.confirmaron = { negro: false, blanco: false }
 
-    await db.guardarPartida(partida)
-    await broadcastPartida(partida)
-    return partida
+      await db.guardarPartida(partida)
+      await broadcastPartida(partida)
+      return partida
+    })
   }
 
   async function confirmarConteo(payload: unknown) {
     const { partidaId } = partidaIdSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    const color = colorDe(partida, userId)
-    if (partida.estado !== EstadoPartida.Contando || !partida.removidas) throw new Error('La partida no está en conteo')
+    return conLock(partidaId, async () => {
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      const color = colorDe(partida, userId)
+      if (partida.estado !== EstadoPartida.Contando || !partida.removidas)
+        throw new Error('La partida no está en conteo')
 
-    if (color === motor.NEGRO) partida.confirmaron.negro = true
-    else partida.confirmaron.blanco = true
+      if (color === motor.NEGRO) partida.confirmaron.negro = true
+      else partida.confirmaron.blanco = true
 
-    if (partida.confirmaron.negro && partida.confirmaron.blanco) {
-      const puntaje = motor.calcularPuntaje(
-        partida.tablero,
-        partida.tamaño,
-        partida.removidas,
-        partida.capturasNegras,
-        partida.capturasBlancas
-      )
-      const ganadorUserId =
-        puntaje.ganador === 'empate' ? null : puntaje.ganador === 'negro' ? partida.negro.userId : partida.blanco.userId
+      if (partida.confirmaron.negro && partida.confirmaron.blanco) {
+        const puntaje = motor.calcularPuntaje(
+          partida.tablero,
+          partida.tamaño,
+          partida.removidas,
+          partida.capturasNegras,
+          partida.capturasBlancas
+        )
+        const ganadorUserId =
+          puntaje.ganador === 'empate' ? null : puntaje.ganador === 'negro' ? partida.negro.userId : partida.blanco.userId
 
-      await finalizar(partida, ganadorUserId, 'conteo', puntaje)
-    } else {
-      await db.guardarPartida(partida)
-      await broadcastPartida(partida)
-    }
+        await finalizar(partida, ganadorUserId, 'conteo', puntaje)
+      } else {
+        await db.guardarPartida(partida)
+        await broadcastPartida(partida)
+      }
 
-    return partida
+      return partida
+    })
   }
 
   async function abandonar(payload: unknown) {
     const { partidaId } = partidaIdSchema.parse(payload)
-    const partida = await assertPartidaExiste(idSala, partidaId)
-    assertEsJugador(partida, userId)
-    if (partida.estado === EstadoPartida.Terminada) throw new Error('La partida ya terminó')
+    return conLock(partidaId, async () => {
+      const partida = await assertPartidaExiste(idSala, partidaId)
+      assertEsJugador(partida, userId)
+      if (partida.estado === EstadoPartida.Terminada) throw new Error('La partida ya terminó')
 
-    const otro = contrincanteDe(partida, userId)
-    await finalizar(partida, otro.userId, 'abandono')
-    return partida
+      const otro = contrincanteDe(partida, userId)
+      await finalizar(partida, otro.userId, 'abandono')
+      return partida
+    })
   }
 
   return {

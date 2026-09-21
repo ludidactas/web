@@ -1,5 +1,6 @@
 import { Toaster } from 'sonner'
 import SalaFloatingNavEstudiante from '@/components/salas/sala-floating-nav-estudiante'
+import { SalaEstudianteConexion } from '@/components/salas/sala-estudiante-conexion'
 import { TituloPestanaSala } from '@/components/salas/titulo-pestana-sala'
 
 export default async function SalaEstudianteNavLayout({
@@ -15,7 +16,7 @@ export default async function SalaEstudianteNavLayout({
     <div className="bg-ld-gradiente-fondo grid place-content-center min-h-screen w-full">
       <Toaster />
       <TituloPestanaSala />
-      {children}
+      <SalaEstudianteConexion idSala={idSala}>{children}</SalaEstudianteConexion>
       <SalaFloatingNavEstudiante idSala={idSala} />
     </div>
   )

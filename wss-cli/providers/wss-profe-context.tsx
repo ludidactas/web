@@ -13,6 +13,7 @@ import profeGoHandlers from '../handlers/profe-go-handlers'
 import { useWss } from '../use-wss'
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
+import { storeGo } from '../stores/go-store'
 
 /**
  * Cose el socket del profe con su state. La conexión es token-only (identidad); qué sala se opera se
@@ -56,8 +57,14 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
     if (abrirSalaId && estado === StatusDeConexion.Conectado) handlers.gestion.acciones.abrirSala(abrirSalaId)
   }, [abrirSalaId, estado, handlers])
 
-  // Al salir de la sala limpiamos su config para no dejar valores stale al navegar.
-  useEffect(() => () => storeConfig.getState().set(null), [])
+  // Al salir de la sala limpiamos su config y estado de Go para no dejar valores stale al navegar.
+  useEffect(
+    () => () => {
+      storeConfig.getState().set(null)
+      storeGo.getState().resetConexion()
+    },
+    []
+  )
 
   return {
     socket,

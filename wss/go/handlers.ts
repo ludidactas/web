@@ -105,7 +105,11 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
   await registrarComandosGo(socket, idSala, userId, nombre)
 
   // Recién conectado (o reconectado): avisamos a la sala que apareció como contrincante disponible.
-  await avisarContrincantesActualizados(idSala)
+  // A diferencia de los comandos de arriba, esto corre incondicionalmente en cada conexión (no solo al
+  // ejecutar un comando de Go puntual); sin `safe`, un throw acá (ej. `Salas.get` si la sala ya no
+  // existe en Redis) queda como unhandled rejection del handler de `connection` y tira abajo el proceso
+  // completo del wss (ver `unhandledRejection` en `wss/mount.ts`), no solo esta conexión.
+  await safe(() => avisarContrincantesActualizados(idSala))()
 }
 
 /**
@@ -128,5 +132,7 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  await avisarContrincantesActualizados(idSala)
+  // Ver comentario equivalente en `handlersGoEstudiante`: sin `safe`, un throw acá tira abajo el
+  // proceso completo del wss, no solo esta conexión.
+  await safe(() => avisarContrincantesActualizados(idSala))()
 }

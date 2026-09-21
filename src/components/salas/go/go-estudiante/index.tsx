@@ -2,26 +2,18 @@
 
 import { nombreSplit } from '@/lib/utils'
 import HeaderSala from '../../header-sala'
-import LoginSalaEstudiante from '../../encuestas-estudiante/encuestas-estudiante-login'
 import LdGo from '@/components/custom/ld-go'
 import { BtnAuth } from '@/components/ui/btn-auth'
-import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-context'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
-import { ConexionPublicProvider } from '@/wss-cli/providers/wss-public-context'
 import GoEstudiante from './go-estudiante'
 import { BannerSalaEstudiante } from '../../banner-sala-estudiante'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
+// El gate de login y la conexión de estudiante viven en el layout compartido (`SalaEstudianteConexion`,
+// en `(nav)/layout.tsx`), no acá: así sobreviven a la navegación entre tabs de la sala (Encuestas, Go).
+// Esta página solo se monta una vez que ya está `ingresado`.
 export default function GoEstudiantePage({ idSala }: { idSala: string }) {
-  const { dni, nombre, clientId, ingresado, setIngresado } = useLoginSalaEstudiante({ idSala })
-
-  if (!ingresado) {
-    return (
-      <ConexionPublicProvider auth={{ idSala }}>
-        <LoginSalaEstudiante idSala={idSala} />
-      </ConexionPublicProvider>
-    )
-  }
+  const { dni, nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
 
   const btnLogoutAnonimo = (
     <BtnAuth
@@ -39,24 +31,22 @@ export default function GoEstudiantePage({ idSala }: { idSala: string }) {
   const userId = dni || nombre || ''
 
   return (
-    <ConexionEstudianteProvider auth={{ idSala, nombre, dni, clientId }}>
-      <div className="min-h-screen w-full mx-auto flex flex-col gap-4 sm:gap-8 items-center">
-        <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo} waveHeight="h-[20px] md:h-[90px]">
-          <p className="text-base text-center sm:text-2xl md:text-4xl">¡Hola {nombreSplit(nombre)}! </p>
-        </HeaderSala>
-        <div className="p-2 w-full md:p-8">
-      <div className="flex flex-col md:px-12 md:mx-20 gap-4">
-            <BannerSalaEstudiante
-              icono={<LdGo className="w-[100px] md:w-[300px]" />}
-              titulo="Go!"
-              subtitulo="Sumérgete en el mundo del Go!"
-              // aviso={<AvisoInvitado />}
-            />
+    <div className="min-h-screen w-full mx-auto flex flex-col gap-4 sm:gap-8 items-center">
+      <HeaderSala className="gap-2" btnLogout={btnLogoutAnonimo} waveHeight="h-[20px] md:h-[90px]">
+        <p className="text-base text-center sm:text-2xl md:text-4xl">¡Hola {nombreSplit(nombre)}! </p>
+      </HeaderSala>
+      <div className="p-2 w-full md:p-8">
+        <div className="flex flex-col md:px-12 md:mx-20 gap-4">
+          <BannerSalaEstudiante
+            icono={<LdGo className="w-[100px] md:w-[300px]" />}
+            titulo="Go!"
+            subtitulo="Sumérgete en el mundo del Go!"
+            // aviso={<AvisoInvitado />}
+          />
 
-            <GoEstudiante userId={userId} />
-          </div>
+          <GoEstudiante userId={userId} />
         </div>
       </div>
-    </ConexionEstudianteProvider>
+    </div>
   )
 }

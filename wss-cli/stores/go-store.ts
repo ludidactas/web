@@ -27,6 +27,7 @@ interface GoState {
   setContrincantes: (contrincantes: GoState['contrincantes']) => void
   setObservando: (partida: Partida | null) => void
   reset: () => void
+  resetConexion: () => void
 }
 
 export const storeGo = create<GoState>()((set) => ({
@@ -63,4 +64,11 @@ export const storeGo = create<GoState>()((set) => ({
   // que se está por soltar), y no queremos perderla justo cuando el usuario recién se está por fijar
   // en la lista de contrincantes.
   reset: () => set({ partida: null, contrincantes: [], observando: null }),
+
+  // A diferencia de `reset` (mismo usuario, solo soltando la partida), esto es para cuando la
+  // identidad detrás de la pestaña cambia (logout/login de otro estudiante en el mismo dispositivo, o
+  // se cierra la conexión): ahí sí hay que volver todo a estado inicial, invitaciones e `inicializado`
+  // incluidos, para no filtrarle a la próxima persona el tablero/rival/invitaciones de la anterior.
+  resetConexion: () =>
+    set({ inicializado: false, partida: null, invitaciones: [], contrincantes: [], observando: null }),
 }))

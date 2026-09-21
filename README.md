@@ -63,6 +63,32 @@ Quedó afuera del baseline de salida a prod:
   - Al aceptar una invitación, las demás (tuyas o de otros) quedan abiertas y pendientes, no se cancelan solas.
   - En la lista de contrincantes (`BuscarContrincante`), la fila de alguien a quien ya invitaste necesita un estado nuevo ("esperando que acepte", sin bloquear el resto de la pantalla) — hoy ese caso solo existe como pantalla completa (`EsperandoContrincante`).
 
+Relevado en el review de correctness/prod-readiness previo a mergear `go-lazo` a `staging` (lo crítico ya se arregló en la misma rama; esto quedó anotado para después):
+
+- **El link/QR de la sala siempre lleva a `/encuestas`, nunca a `/go`.** El modelo de sala (`ConfigSala`) no tiene noción de "app activa"; `wss/salas/app.ts` genera el link una sola vez al crear la sala. Si el profe comparte el link/QR parado en la pestaña de Go, el estudiante entra igual por Encuestas y tiene que tocar el ícono flotante para llegar a jugar.
+- **`TabsTriggerLink` (el tab de Go dentro del `TabsList` de Radix en la vista mobile del profe) no participa del roving-tabindex de Radix**, al ser un `<Link>` plano intercalado entre `TabsTrigger`. No rompe el click/tap, pero navegar esa lista de tabs con el teclado salta ese ítem.
+- **`AccionesPlanilla` (exportar planilla, columnas de encuesta) se sigue mostrando en el modo Go** de `ListaEstudiantes`, donde no tiene mucho sentido — el split a `modo: 'encuestas' | 'go'` no llegó a filtrar esa sección.
+- **`jugadaSchema` no valida que `x`/`y` estén dentro del tamaño del tablero.** Hoy no es explotable porque `motor.jugar`/`motor.grupoEn` chequean bounds antes de indexar, pero es la única red de seguridad y es frágil ante un refactor futuro que la toque sin darse cuenta.
+- **Sin mecanismo de desempate si los dos jugadores no coinciden marcando piedras muertas en el conteo.** `marcarMuerta` resetea ambas confirmaciones en cada cambio; si ninguno cede, no hay forma de volver a jugar para resolverlo, solo abandonar.
+- **Partidas terminadas no tienen TTL ni se archivan en Redis** (`wss/go/db.ts`) — con muchas salas a lo largo de meses, el índice de partidas de una sala crece sin límite.
+- **IDs de partida con poca entropía** (`randomUUID().split('-')[0]`, 32 bits): con mucho volumen en una misma sala la probabilidad de colisión deja de ser despreciable y pisaría silenciosamente otra partida.
+- **`tablero-go.tsx` recalcula el flood-fill del grupo bajo el cursor en cada `mousemove`**, sin comparar contra la intersección anterior — trabajo de más durante el conteo (impacto real bajo, tableros de hasta 19x19).
+- **Falta un test e2e que haga `page.reload()` en medio de una partida `jugando`/`contando`.** Hay lógica dedicada a reconciliar ese caso (`pedirMiPartidaConReintentos`, con reintentos) pero ningún spec ejercita un refresh de browser real durante la partida.
+- **`wss/go/benson.ts` (vida/muerte de grupos) no tiene unit tests aislados**, solo se ejerce indirectamente vía un escenario e2e (`go-benson.spec.ts`). Casos límite (seki, regiones vitales compartidas) no están cubiertos con tableros armados a mano.
+- **El área del filtro `Outlined` se agrandó** (`src/components/fx/filtros.tsx`, de `-10%/120%` a `-40%/180%`) para que no se recorten las piedras de Go — afecta también a todos los usos existentes en Encuestas (título, banners). Vale un ojo visual rápido ahí.
+
+### Refactor futuro: `go-juego.tsx`
+
+570 líneas y va a seguir creciendo (más roles, más estados, más configuraciones ya se fueron agregando ajuste sobre ajuste). Hoy combina, en condicionales anidados, 5 ejes de estado que en la práctica son ortogonales: rol (estudiante/profe, ya bien resuelto por inyección de dependencias desde `go-estudiante.tsx`/`go-profe.tsx`), fase de carga global (`inicializado`), modo espectador (`observando`), estado de "mi partida" (`soyInvitado`, `enPausa`, y el propio `partida.estado`: `pendiente/jugando/contando/terminada`), y turno dentro de "jugando".
+
+Cuando se encare, la propuesta es:
+
+- Modelar el "estado visible" como una **FSM explícita** con estados nombrados (`cargando | observando | sin_partida | invitado_pendiente | pausado | esperando_rival | jugando | contando | terminada`) en vez de derivarlo cada render de combinaciones de booleans + `partida?.estado` + flags del store.
+- Extraer un hook `usePartidaPropia()` que encapsule `soyInvitado`, `enPausa` y su efecto de auto-cancelación.
+- Extraer un hook `useAccionesGoConToast(acciones)` que centralice el `.catch((e) => toast.error(e.message))` repetido en cada acción (`jugar`, `pasar`, `marcarMuerta`, `confirmarConteo`, `abandonar`, `aceptar`, `rechazar`, `observar`, `dejarDeObservar`, `invitar`).
+- Compartir entre `PartidaEnCurso` (participante) y `PartidaObservada` (espectador) una misma función pura para el "texto de estado", que hoy reimplementan cada uno por su lado.
+- En `go-store.ts`, separar la noción de "reset por fin de partida" (`reset`, ya existe) de "reset por fin de conexión/identidad" (`resetConexion`, agregado en este review) para que agregar un campo nuevo al store no reabra el mismo tipo de bug.
+
 ## Setup
 
 - Correr un server redis. Puede ser standalone o con docker.

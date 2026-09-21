@@ -19,7 +19,9 @@
     "wss:reset-db": "redis-cli flushdb",
     "wss:salas": "bun run wss/scripts/listar-salas.ts",
     "wss:inspeccionar": "bun run wss/scripts/inspeccionar-sala.ts",
-    "images:optimize": "bun run scripts/optimize-images.ts"
+    "wss:simular": "bun run wss/scripts/simular-estudiantes.ts",
+    "images:optimize": "bun run scripts/optimize-images.ts",
+    "test": "bun test src wss"
   },
   "dependencies": {
     "@googleapis/drive": "^21.0.0",
@@ -99,6 +101,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/aos": "^3.0.7",
+    "@types/bun": "^1.4.2",
     "@types/ioredis": "^5.0.0",
     "@types/node": "^20",
     "@types/p5": "^1.7.6",

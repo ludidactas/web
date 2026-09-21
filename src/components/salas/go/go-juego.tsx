@@ -34,6 +34,9 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
+  // Si me llega una invitación mientras `partida` todavía tiene la mía anterior ya terminada, no la
+  // mostramos acá arriba de la tuya propia (eso lo hace elegir dejar de mirar su tablero, ver abajo):
+  // solo la sumamos a la lista una vez que `partida` se soltó (`!partida`, ver más abajo).
   const invitacionesEntrantes =
     soyInvitado && !invitaciones.some((i) => i.id === partida!.id) ? [...invitaciones, partida!] : invitaciones
 
@@ -207,8 +210,8 @@ function BuscarContrincante({
                       {invitacionDe
                         ? 'Te invitó a jugar'
                         : esMiContrincantePausado
-                          ? 'Es tu contrincante'
-                          : 'En una partida'}
+                        ? 'Es tu contrincante'
+                        : 'En una partida'}
                     </span>
                     {invitacionDe ? (
                       <div className="flex gap-1">
@@ -541,19 +544,23 @@ function PartidaEnCurso({
             <button className="text-sm underline text-slate-500" onClick={onVolverASala}>
               Volver a la sala
             </button>
-            <button
-              className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
-              disabled={!esMiTurno}
-              onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
-            >
-              Pasar
-            </button>
-            <button
-              className="text-sm underline text-slate-500"
-              onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
-            >
-              Abandonar
-            </button>
+            {partida.estado === 'jugando' && (
+              <>
+                <button
+                  className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
+                  disabled={!esMiTurno}
+                  onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
+                >
+                  Pasar
+                </button>
+                <button
+                  className="text-sm underline text-slate-500"
+                  onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
+                >
+                  Abandonar
+                </button>
+              </>
+            )}
           </>
         )}
       </div>

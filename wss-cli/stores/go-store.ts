@@ -59,5 +59,8 @@ export const storeGo = create<GoState>()((set) => ({
 
   setObservando: (partida) => set({ observando: partida }),
 
-  reset: () => set({ partida: null, invitaciones: [], contrincantes: [], observando: null }),
+  // No tocamos `invitaciones`: puede haber llegado una mientras todavía tenías `partida` seteada (la
+  // que se está por soltar), y no queremos perderla justo cuando el usuario recién se está por fijar
+  // en la lista de contrincantes.
+  reset: () => set({ partida: null, contrincantes: [], observando: null }),
 }))

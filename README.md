@@ -58,7 +58,10 @@ Cómo se verifica el login:
 Quedó afuera del baseline de salida a prod:
 
 - **Lista de "partidas activas en la sala"** y poder **observar otra partida mientras jugás la propia**. Hoy `PartidaEnCurso` ocupa toda la pantalla sin salida a observar a otros, y la única forma de ver partidas ajenas es desde `BuscarContrincante` (cuando no tenés partida propia). Requiere un query nuevo (partidas activas de la sala, no solo por contrincante individual) y repensar el layout de `PartidaEnCurso` para dejar lugar a un modo espectador simultáneo.
-- **Varias invitaciones entrantes simultáneas, incluso de la misma persona.** El server hoy modela "partida activa" como un puntero único por usuario (`db.getPartidaActiva`), así que solo puede haber una invitación pendiente a la vez. La UI ya quedó orientada a lista (`invitacionesEntrantes` en `GoJuego`) para cuando el modelo de datos del server soporte más de una.
+- **Varias invitaciones simultáneas, una por persona con la que quieras jugar.** El server hoy modela "partida activa" como un puntero único por usuario (`db.getPartidaActiva`), y lo usa tanto para "tengo una invitación pendiente" como para "estoy jugando en serio" — eso hoy es un bug concreto: si A desafía a B y B todavía no aceptó, un tercero C no puede desafiar ni a A ni a B (ambos figuran "en partida"), cuando en realidad ninguno de los dos empezó a jugar todavía. La UI ya quedó orientada a lista (`invitacionesEntrantes` en `GoJuego`) para el lado de recibir varias a la vez; falta:
+  - Separar en el modelo de datos "invitaciones pendientes" (permite varias por persona, una por cada posible contrincante) de "partida en curso" (puntero único, sigue siendo de a una — no podés jugar dos partidas a la vez). `invitar`/`aceptar`/`rechazar` en `wss/go/app.ts` deberían bloquear por estar *jugando*, no por tener invitaciones sueltas.
+  - Al aceptar una invitación, las demás (tuyas o de otros) quedan abiertas y pendientes, no se cancelan solas.
+  - En la lista de contrincantes (`BuscarContrincante`), la fila de alguien a quien ya invitaste necesita un estado nuevo ("esperando que acepte", sin bloquear el resto de la pantalla) — hoy ese caso solo existe como pantalla completa (`EsperandoContrincante`).
 
 ## Setup
 

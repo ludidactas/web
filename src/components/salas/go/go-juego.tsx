@@ -197,15 +197,35 @@ function BuscarContrincante({
         <ul className="flex flex-col gap-2 w-full">
           {contrincantes.map((c) => {
             const esMiContrincantePausado = c.partidaId != null && c.partidaId === partidaEnPausa?.id
+            const invitacionDe = invitacionesEntrantes.find((i) => i.id === c.partidaId)
             return (
               <li key={c.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
                 <span>{c.nombre}</span>
                 {c.enPartida ? (
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-xs text-slate-400">
-                      {esMiContrincantePausado ? 'Es tu contrincante' : 'En una partida'}
+                      {invitacionDe
+                        ? 'Te invitó a jugar'
+                        : esMiContrincantePausado
+                          ? 'Es tu contrincante'
+                          : 'En una partida'}
                     </span>
-                    {esMiContrincantePausado ? (
+                    {invitacionDe ? (
+                      <div className="flex gap-1">
+                        <button
+                          className="bg-emerald-500 text-white px-3 py-1 rounded text-xs"
+                          onClick={() => onAceptar(invitacionDe.id).catch((e) => toast.error(e.message))}
+                        >
+                          Aceptar
+                        </button>
+                        <button
+                          className="bg-slate-200 px-3 py-1 rounded text-xs"
+                          onClick={() => onRechazar(invitacionDe.id).catch((e) => toast.error(e.message))}
+                        >
+                          Rechazar
+                        </button>
+                      </div>
+                    ) : esMiContrincantePausado ? (
                       <button className="bg-indigo-500 text-white px-3 py-1 rounded text-xs" onClick={onVolverAPartida}>
                         Volver a la partida
                       </button>

@@ -36,7 +36,9 @@ test('el profe aparece como contrincante disponible y se puede jugar contra él'
   // dos oculta por CSS según el viewport), así que apuntamos solo a la visible.
   await sala.goto(`/salas/${idSala}/go`)
   await sala.locator('h2:visible', { hasText: '¡Te invitaron a jugar Go!' }).waitFor()
-  await sala.locator('button:visible', { hasText: 'Aceptar' }).click()
+  // El botón "Aceptar" aparece dos veces (la tarjeta de invitación y la fila del contrincante en la
+  // lista, que ofrece el mismo atajo): cualquiera de los dos acepta la misma invitación.
+  await sala.locator('button:visible', { hasText: 'Aceptar' }).first().click()
 
   await expect(ana.locator('svg.touch-none')).toBeVisible()
   await expect(sala.locator('svg.touch-none:visible').first()).toBeVisible()

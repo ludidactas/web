@@ -49,7 +49,9 @@ test('un tercer estudiante puede observar una partida ajena en curso', async ({ 
   await negro.locator('li', { hasText: 'Beto' }).getByRole('button', { name: 'Invitar' }).click()
 
   await blanco.getByText('¡Te invitaron a jugar Go!').waitFor()
-  await blanco.getByRole('button', { name: 'Aceptar' }).click()
+  // El botón "Aceptar" aparece dos veces (la tarjeta de invitación y la fila del contrincante en la
+  // lista, que ofrece el mismo atajo): cualquiera de los dos acepta la misma invitación.
+  await blanco.getByRole('button', { name: 'Aceptar' }).first().click()
 
   await expect(negro.locator('svg.touch-none')).toBeVisible()
   await expect(blanco.locator('svg.touch-none')).toBeVisible()

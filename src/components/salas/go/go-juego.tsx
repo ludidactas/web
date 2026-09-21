@@ -37,9 +37,20 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
   const invitacionesEntrantes =
     soyInvitado && !invitaciones.some((i) => i.id === partida!.id) ? [...invitaciones, partida!] : invitaciones
 
+  // Mientras juego, puedo "pausar" para ver la lista de contrincantes sin abandonar mi partida (no
+  // navega afuera de Go: la partida sigue jugándose en el server, y una tarjeta en esa lista me deja
+  // volver a ella). Si deja de estar jugando/contando (terminó, o me quedé sin partida), se cancela
+  // sola: no tiene sentido seguir "pausado" de algo que ya no está en curso.
+  const [pausada, setPausada] = useState(false)
+  const enPausa = pausada && (partida?.estado === 'jugando' || partida?.estado === 'contando')
+
   useEffect(() => {
-    if (inicializado && (!partida || soyInvitado) && !observando) pedirContrincantes()
-  }, [inicializado, partida, soyInvitado, observando, pedirContrincantes])
+    if (partida && partida.estado !== 'jugando' && partida.estado !== 'contando') setPausada(false)
+  }, [partida])
+
+  useEffect(() => {
+    if (inicializado && (!partida || soyInvitado || enPausa) && !observando) pedirContrincantes()
+  }, [inicializado, partida, soyInvitado, enPausa, observando, pedirContrincantes])
 
   // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
   // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
@@ -59,9 +70,9 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
       />
     )
 
-  // Sin partida propia, o con una pendiente de responder: en ambos casos seguís viendo la sala (lista
-  // de contrincantes) en vez de que una invitación entrante tape toda la pantalla.
-  if (!partida || soyInvitado)
+  // Sin partida propia, con una pendiente de responder, o pausando la propia: en los tres casos seguís
+  // viendo la sala (lista de contrincantes) en vez de que otra vista tape toda la pantalla.
+  if (!partida || soyInvitado || enPausa)
     return (
       <BuscarContrincante
         contrincantes={contrincantes}
@@ -71,13 +82,15 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
         onObservar={observar}
         onAceptar={aceptar}
         onRechazar={rechazar}
+        partidaEnPausa={enPausa ? partida : null}
+        onVolverAPartida={() => setPausada(false)}
       />
     )
 
   if (partida.estado === 'pendiente')
     return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
 
-  return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} />
+  return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
 }
 
 function InvitacionesEntrantes({
@@ -125,6 +138,8 @@ function BuscarContrincante({
   onObservar,
   onAceptar,
   onRechazar,
+  partidaEnPausa,
+  onVolverAPartida,
 }: {
   contrincantes: ReturnType<typeof storeGo.getState>['contrincantes']
   invitacionesEntrantes: ReturnType<typeof storeGo.getState>['invitaciones']
@@ -133,6 +148,9 @@ function BuscarContrincante({
   onObservar: (partidaId: string) => Promise<unknown>
   onAceptar: (partidaId: string) => Promise<unknown>
   onRechazar: (partidaId: string) => Promise<unknown>
+  /** Mi propia partida, si estoy acá "pausándola" en vez de sin ninguna partida activa. */
+  partidaEnPausa: Partida | null
+  onVolverAPartida: () => void
 }) {
   const [tamaño, setTamaño] = useState<TamañoTablero>(9)
 
@@ -140,6 +158,15 @@ function BuscarContrincante({
     <div className="flex flex-col gap-6 items-center max-w-md mx-auto w-full">
       <div className="flex flex-col gap-4 items-center w-full">
         <h2 className="text-xl font-bold">Elegí un contrincante y un tamaño de tablero</h2>
+
+        {partidaEnPausa && (
+          <div className="flex items-center justify-between gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3 w-full text-sm">
+            <span>Tenés una partida en curso.</span>
+            <button className="text-indigo-600 font-semibold underline shrink-0" onClick={onVolverAPartida}>
+              Volver a mi partida
+            </button>
+          </div>
+        )}
 
         <div className="flex gap-2 text-sm">
           {TAMAÑOS_TABLERO.map((t) => (
@@ -168,31 +195,44 @@ function BuscarContrincante({
         )}
 
         <ul className="flex flex-col gap-2 w-full">
-          {contrincantes.map((c) => (
-            <li key={c.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
-              <span>{c.nombre}</span>
-              {c.enPartida ? (
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs text-slate-400">En una partida</span>
-                  {c.partidaId && (
-                    <button
-                      className="bg-slate-200 px-3 py-1 rounded text-xs"
-                      onClick={() => onObservar(c.partidaId!).catch((e) => toast.error(e.message))}
-                    >
-                      Observar
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <button
-                  className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm"
-                  onClick={() => onInvitar(c.userId, tamaño).catch((e) => toast.error(e.message))}
-                >
-                  Invitar
-                </button>
-              )}
-            </li>
-          ))}
+          {contrincantes.map((c) => {
+            const esMiContrincantePausado = c.partidaId != null && c.partidaId === partidaEnPausa?.id
+            return (
+              <li key={c.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
+                <span>{c.nombre}</span>
+                {c.enPartida ? (
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs text-slate-400">
+                      {esMiContrincantePausado ? 'Es tu contrincante' : 'En una partida'}
+                    </span>
+                    {esMiContrincantePausado ? (
+                      <button className="bg-indigo-500 text-white px-3 py-1 rounded text-xs" onClick={onVolverAPartida}>
+                        Volver a la partida
+                      </button>
+                    ) : (
+                      c.partidaId && (
+                        <button
+                          className="bg-slate-200 px-3 py-1 rounded text-xs"
+                          onClick={() => onObservar(c.partidaId!).catch((e) => toast.error(e.message))}
+                        >
+                          Observar
+                        </button>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
+                    disabled={!!partidaEnPausa}
+                    title={partidaEnPausa ? 'Volvé a tu partida antes de invitar a alguien más' : undefined}
+                    onClick={() => onInvitar(c.userId, tamaño).catch((e) => toast.error(e.message))}
+                  >
+                    Invitar
+                  </button>
+                )}
+              </li>
+            )
+          })}
         </ul>
       </div>
 
@@ -247,16 +287,21 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
     <div className="flex flex-col gap-4 items-center w-full px-2">
       <div className="flex items-center gap-4 text-sm">
         <span style={{ color: RELLENO[NEGRO] }}>● {partida.negro.nombre}</span>
-        <span style={{ color: RELLENO[BLANCO] }}>● {partida.blanco.nombre}</span>
+        <span style={{ color: '#CCC' }}>● {partida.blanco.nombre}</span>
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
-        <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: RELLENO[partida.turno] }}>
+        <p
+          className="flex items-center gap-2 text-sm font-semibold"
+          style={{ color: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC' }}
+        >
           <span
             className="inline-block h-3 w-3 rounded-full border"
-            style={{ backgroundColor: RELLENO[partida.turno] }}
+            style={{
+              backgroundColor: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC',
+            }}
           />
           Juega {partida.turno === NEGRO ? partida.negro.nombre : partida.blanco.nombre}
         </p>
@@ -346,10 +391,12 @@ function PartidaEnCurso({
   partida,
   userId,
   acciones,
+  onVolverASala,
 }: {
   partida: NonNullable<ReturnType<typeof storeGo.getState>['partida']>
   userId: string
   acciones: AccionesGo
+  onVolverASala: () => void
 }) {
   const { jugar, pasar, marcarMuerta, confirmarConteo, abandonar } = acciones
 
@@ -456,16 +503,7 @@ function PartidaEnCurso({
         <PanelCapturas capturador={miColor} capturas={capturasDe(miColor)} />
       </div>
 
-      <div className="flex gap-3">
-        {partida.estado === 'jugando' && (
-          <button
-            className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
-            disabled={!esMiTurno}
-            onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
-          >
-            Pasar
-          </button>
-        )}
+      <div className="w-full flex gap-12 items-center justify-center">
         {partida.estado === 'contando' && !(soyNegro ? partida.confirmaron.negro : partida.confirmaron.blanco) && (
           <button
             className="bg-indigo-500 text-white px-4 py-2 rounded"
@@ -479,12 +517,24 @@ function PartidaEnCurso({
             Volver a la sala
           </button>
         ) : (
-          <button
-            className="text-sm underline text-slate-500"
-            onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
-          >
-            Abandonar
-          </button>
+          <>
+            <button className="text-sm underline text-slate-500" onClick={onVolverASala}>
+              Volver a la sala
+            </button>
+            <button
+              className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
+              disabled={!esMiTurno}
+              onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
+            >
+              Pasar
+            </button>
+            <button
+              className="text-sm underline text-slate-500"
+              onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
+            >
+              Abandonar
+            </button>
+          </>
         )}
       </div>
     </div>

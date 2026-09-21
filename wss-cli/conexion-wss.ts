@@ -30,6 +30,10 @@ type Estado = {
   socket: SocketWssCli | null
   status: StatusDeConexion
   error: string | null
+  /** `true` si al llegar a `Quieto` fue por una desconexión inesperada (`_manejarDesconexion`), no por
+   *  el estado inicial ni por un `desconectar()` deliberado. `useWss` la usa para aplicar el delay de
+   *  reintento solo a reconexiones, no a la conexión inicial. */
+  huboCaidaPrevia: boolean
   /** ID de la última llamada a `iniciarConexion`. Permite descartar handshakes que quedaron en vuelo
    *  tras un cleanup (p.ej. React StrictMode desmonta/remonta en dev). */
   _conexionActualId: string | null
@@ -39,7 +43,7 @@ type Estado = {
   // Acciones internas para gestionar transiciones de estado
   _manejarError: (err: any) => void
   _manejarDesconexion: (reason: string) => void
-  _limpiarSocket: (reason?: string) => void
+  _limpiarSocket: (reason?: string, huboCaida?: boolean) => void
 }
 
 /** Lógica de conexión y máquina de estados finitos para conexión del cliente al WSS */
@@ -48,6 +52,7 @@ export const conexionWss = create<Estado>((set, get) => ({
   status: StatusDeConexion.Quieto,
   error: null,
   session: null,
+  huboCaidaPrevia: false,
   _conexionActualId: null,
 
   // Creación/cierre del socket
@@ -83,7 +88,7 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     console.log(`🔌 Iniciando conexión WSS... Rol: ${auth.rol}`)
     const miId = idAleatorio() // Usamos un id para trackear la conexión y no abrir otra encima
-    set({ status: StatusDeConexion.Conectando, error: null, _conexionActualId: miId })
+    set({ status: StatusDeConexion.Conectando, error: null, _conexionActualId: miId, huboCaidaPrevia: false })
 
     try {
       // Handshake (crea el socket y lo retorna)
@@ -136,7 +141,7 @@ export const conexionWss = create<Estado>((set, get) => ({
 
   // Internas
 
-  _limpiarSocket(razon = 'cleanup') {
+  _limpiarSocket(razon = 'cleanup', huboCaida = false) {
     console.log(`🔄 Limpiando estado de conexión: ${razon}`)
 
     const sock = get().socket
@@ -144,12 +149,17 @@ export const conexionWss = create<Estado>((set, get) => ({
 
     // Reseteamos todo el estado a Quieto, los errores en este punto ya fueron manejados y notificados al usuario.
     // El socket ya fue desconectado y limpiado, así que no hay riesgo de que quede un socket zombie con listeners activos.
-    set({ socket: null, status: StatusDeConexion.Quieto, error: null, _conexionActualId: null })
+    set({
+      socket: null,
+      status: StatusDeConexion.Quieto,
+      error: null,
+      _conexionActualId: null,
+      huboCaidaPrevia: huboCaida,
+    })
   },
 
   _manejarDesconexion(reason: string) {
-    return get()._limpiarSocket(`Desconectado: ${reason}`)
-    // etc
+    return get()._limpiarSocket(`Desconectado: ${reason}`, true)
   },
 
   _manejarError(err: any) {

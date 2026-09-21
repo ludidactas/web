@@ -8,10 +8,12 @@ import { PasaporteEstudiante } from '@/wss/validators/auth'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import estudianteSalaHandlers from '../handlers/estudiante-sala-handlers'
 import estudianteEncuestasHandlers from '../handlers/estudiante-encuestas-handlers'
+import estudianteGoHandlers from '../handlers/estudiante-go-handlers'
 
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
 import { storeEstudianteLogin } from '../stores/estudiante-login-store'
+import { storeGo } from '../stores/go-store'
 import { storeInvitado } from '../stores/invitado-store'
 import { useWss } from '../use-wss'
 
@@ -28,6 +30,7 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
       base: baseSalaHandlers(socket),
       sala: estudianteSalaHandlers(socket),
       encuestas: estudianteEncuestasHandlers(socket),
+      go: estudianteGoHandlers(socket),
     }),
     [socket]
   )
@@ -38,20 +41,25 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     handlers.base.montar()
     handlers.sala.montar()
     handlers.encuestas.montar()
+    handlers.go.montar()
 
     // ...y al desmontar el componente, los desmontamos también.
     return () => {
       handlers.base.desmontar()
       handlers.sala.desmontar()
       handlers.encuestas.desmontar()
+      handlers.go.desmontar()
     }
   }, [socket])
 
-  // Al salir de la sala limpiamos su config y estado de invitado para no dejar valores stale al navegar
+  // Al salir de la sala limpiamos su config, invitado y estado de Go para no dejar valores stale al
+  // navegar (o, en un dispositivo compartido, filtrarle a la próxima persona logueada la partida de la
+  // anterior).
   useEffect(
     () => () => {
       storeConfig.getState().set(null)
       storeInvitado.getState().reset()
+      storeGo.getState().resetConexion()
     },
     []
   )
@@ -69,6 +77,7 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     ...handlers.base.acciones,
     ...handlers.sala.acciones,
     ...handlers.encuestas.acciones,
+    ...handlers.go.acciones,
     nombre: auth.nombre,
   }
 }

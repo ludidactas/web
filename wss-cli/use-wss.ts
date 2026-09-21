@@ -14,7 +14,7 @@ import DebugPanel from '@/components/ui/debug-panel'
 export function useWss(auth: Pasaporte, opts?: { autoConectar?: boolean }) {
   const autoConectar = opts?.autoConectar ?? true
   const { status: statusSesionNext } = useSessionNext()
-  const { status, iniciarConexion, desconectar, socket, error } = conexionWss()
+  const { status, iniciarConexion, desconectar, socket, error, huboCaidaPrevia } = conexionWss()
 
   const sessionReady = statusSesionNext !== 'loading'
 
@@ -37,11 +37,13 @@ export function useWss(auth: Pasaporte, opts?: { autoConectar?: boolean }) {
     if (hayQueReconectar) {
       console.log(`✅ Dependencias listas, estado es ${status}. Iniciando conexión...`)
 
-      // El store maneja internamente la lógica de si hay un socket activo o si debe cerrarlo (Publico -> Estudiante)
-      setTimeout(() => iniciarConexion(auth), 1000)
+      // El delay es solo para reconexión tras una caída (backoff, para no reintentar en el
+      // instante en que el server se cayó/reinició): la conexión inicial arranca ya mismo.
+      if (huboCaidaPrevia) setTimeout(() => iniciarConexion(auth), 1000)
+      else iniciarConexion(auth)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Evitamos que se re-defina la función por cambios de estado que no produzcan cambios de valor en auth
-  }, [autoConectar, sessionReady, authKey, status, iniciarConexion])
+  }, [autoConectar, sessionReady, authKey, status, iniciarConexion, huboCaidaPrevia])
 
   return {
     estado: status,

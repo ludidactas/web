@@ -4,20 +4,11 @@ import useConfirmarConDelay from '@/components/hooks/use-delay'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
 import { cn } from '@/lib/utils'
-import IconEnc from '@/svg/dist/encuestas/EncuestaIcon.svg'
 import { EncuestaHidratadaEstudiante } from '@/wss/validators/polls'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import {
-  BadgeCheck,
-  Circle,
-  CircleCheckBig,
-  MessageCircleQuestionIcon,
-  Send,
-  Square,
-  SquareCheckBig,
-} from 'lucide-react'
 import { useEffect, useState } from 'react'
+import LdMano from '@/components/custom/ld-mano'
 import LoadingSala from '../loading-sala'
 import { PreguntaMarkdown } from '../pregunta-markdown'
 import Cabeza from '/svg/dist/ilustraciones/cabezas.svg'
@@ -30,16 +21,19 @@ import { storeConfig } from '@/wss-cli/stores/config-store'
 import { intersection } from 'remeda'
 import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
 import { storeInvitado } from '@/wss-cli/stores/invitado-store'
+import { Icon } from '@iconify/react/dist/iconify.js'
+import { BannerSalaEstudiante } from '../banner-sala-estudiante'
 
 /** Avisa al estudiante que su DNI está en la lista de invitados de la sala (se le tomó asistencia). */
-function AvisoInvitado() {
+export function AvisoInvitado() {
   const { esInvitado, nombreProvisto } = storeInvitado()
 
   if (!esInvitado) return null
 
   return (
-    <p className="flex items-center max-w-max gap-1.5 text-sm text-teal-600 bg-teal-50 rounded-full px-4 py-1.5 mt-2">
-      <BadgeCheck size={16} /> Estás en la lista de invitados de esta sala{' '}
+    <p className="flex items-start sm:items-center max-w-max gap-1.5 text-xs sm:text-sm text-teal-600 bg-white rounded-full px-2 py-1 mt-2">
+      <Icon className="w-8 h-8" icon={"ant-design:check-circle-twotone"} /> 
+      Estás en la lista de invitados de esta sala{' '}
       {nombreProvisto && <>con el nombre {nombreProvisto}</>}
     </p>
   )
@@ -66,29 +60,24 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
   return (
     <div>
       <div className="flex flex-col md:px-10 md:mx-10 gap-4">
+        <BannerSalaEstudiante
+          icono={
+            <>
+              <LdSvg
+                className="w-[100px] md:w-[200px]"
+                SvgComponent={Cabeza}
+                ids={['cabeza'] as const}
+                animation={oscilar(['cabeza'], 2, 1, 0.4)}
+              />
+              <LdMano className="hidden md:block w-[100px] lg:w-[120px] shrink-0" />
+            </>
+          }
+          titulo="Encuestas"
+          subtitulo="¡Participa respondiendo a las preguntas en vivo!"
+          // aviso={<AvisoInvitado />}
+        />
         <div className="flex flex-col px-4 items-center justify-center md:gap-10 bg-white rounded-3xl md:p-10">
-          <div className="flex flex-col md:flex-row items-center md:gap-10">
-            <LdSvg
-              className="w-[100px] md:w-[200px]"
-              SvgComponent={Cabeza}
-              ids={['cabeza'] as const}
-              animation={oscilar(['cabeza'], 2, 1, 0.4)}
-            />
-
-            <div className="flex flex-col items-center text-center text-lg md:text-3xl">
-              <p>
-                Estás en la{' '}
-                <span className="text-lg md:text-4xl text-ld-violeta rounded-full md:px-4 ">
-                  Sala de Encuestas
-                  <LdSvg className="w-10 md:w-20 inline-block mx-1" SvgComponent={IconEnc} />
-                </span>
-                de
-              </p>
-              <p className="text-teal-500"> {config?.nombre?.trim() || (config?.nombre_profe ?? idSala)}</p>
-              <AvisoInvitado />
-              <p className="text-xs md:text-2xl p-4">¡Participa respondiendo a las preguntas en vivo!</p>
-            </div>
-          </div>
+ <AvisoInvitado/>
 
           {encuestasVisibles.length > 0 && (
             <div className="w-full flex flex-col py-10 gap-2 items-center">
@@ -169,7 +158,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
         yaVotado && 'border-slate-300'
       )}
     >
-      <DebugPanel
+      {/* <DebugPanel
         classNames={{ button: 'absolute bottom-4' }}
         data={{
           seleccion,
@@ -178,7 +167,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
           hayAporte,
           puedeEnviar,
         }}
-      />
+      /> */}
 
       {/* Header - Titulo y status */}
       <HeaderEncuestaEstudiante encuesta={encuesta} />
@@ -205,8 +194,8 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
           const maxEfectivo = encuesta.maxMultiplesVotos
             ? encuesta.maxMultiplesVotos
             : !encuesta.admiteAportes
-            ? encuesta.opciones.length
-            : Infinity
+              ? encuesta.opciones.length
+              : Infinity
 
           return (
             <li
@@ -250,11 +239,15 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
             >
               <span className="flex items-center gap-2">
                 {/* Checkbox */}
-                {encuesta.admiteMultiplesVotos && !seleccionada && <Square className="shrink-0" />}
-                {encuesta.admiteMultiplesVotos && seleccionada && <SquareCheckBig className="shrink-0" />}
+                {encuesta.admiteMultiplesVotos && !seleccionada && <Icon icon="lucide:square" className="shrink-0" />}
+                {encuesta.admiteMultiplesVotos && seleccionada && (
+                  <Icon icon="lucide:square-check-big" className="shrink-0" />
+                )}
                 {/* Radio */}
-                {!encuesta.admiteMultiplesVotos && !seleccionada && <Circle className="shrink-0" />}
-                {!encuesta.admiteMultiplesVotos && seleccionada && <CircleCheckBig className="shrink-0" />}
+                {!encuesta.admiteMultiplesVotos && !seleccionada && <Icon icon="lucide:circle" className="shrink-0" />}
+                {!encuesta.admiteMultiplesVotos && seleccionada && (
+                  <Icon icon="lucide:circle-check-big" className="shrink-0" />
+                )}
 
                 {/* Texto */}
                 <span className="break-normal">{opcion.texto}</span>
@@ -333,7 +326,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
             disabled={!puedeEnviar}
             onClick={enviarVoto}
           >
-            <Send size={16} />
+            <Icon icon="lucide:send" width={16} height={16} />
             Enviar
           </button>
         )}
@@ -347,7 +340,7 @@ function HeaderEncuestaEstudiante({ encuesta }: { encuesta: EncuestaHidratadaEst
     <div className="flex gap-4 md:gap-6 items-start justify-between rounded-xl">
       {/* Icono */}
       <div className={cn('flex items-center text-indigo-500  gap-2 md:gap-4', !encuesta.puedoVotar && 'grayscale')}>
-        <MessageCircleQuestionIcon className="w-10 h-10 md:w-16 md:h-16 self-start shrink-0" />
+        <Icon icon="lucide:message-circle-question" className="w-10 h-10 md:w-16 md:h-16 self-start shrink-0" />
         <h3 className="w-[90%] break-words text-left text-xs md:text-xl font-bold text-cyan-500">
           {encuesta.pregunta}
         </h3>
@@ -356,9 +349,8 @@ function HeaderEncuestaEstudiante({ encuesta }: { encuesta: EncuestaHidratadaEst
       {/* Status */}
       <div className="flex flex-col items-end">
         <span
-          className={`text-xs md:text-sm ${
-            encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
-          }`}
+          className={`text-xs md:text-sm ${encuesta.isOpen ? 'text-emerald-700 animate-pulse duration-1000' : 'text-red-900'
+            }`}
         >
           {encuesta.isOpen ? 'Abierta' : 'Cerrada'}
         </span>

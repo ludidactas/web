@@ -4,7 +4,7 @@ import { MetodosLogin } from '@/wss/validators/auth'
 test.describe('Sala de encuestas', () => {
   test('se puede llegar a la sala desde la portada', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('Entrená con profes')).toBeVisible()
+    await expect(page.getByText('Taller lúdico')).toBeVisible()
 
     await page.goto('/salas')
     await expect(page.getByText('Conectate con tu cuenta de Google')).toBeVisible()
@@ -17,7 +17,7 @@ test.describe('Sala de encuestas', () => {
     const { sala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
 
     // Verificar que el profe puede ver la sala
-    await expect(sala.getByRole('heading', { name: '¡Hacé una pregunta!' })).toBeVisible()
+    await expect(sala.getByRole('heading', { name: 'Preguntas', exact: true })).toBeVisible()
 
     // Acceder como estudiante
     const alumnoPage = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })

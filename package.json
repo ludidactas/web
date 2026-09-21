@@ -95,6 +95,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/aos": "^3.0.7",
+    "@types/bun": "^1.4.2",
     "@types/ioredis": "^5.0.0",
     "@types/node": "^20",
     "@types/p5": "^1.7.6",

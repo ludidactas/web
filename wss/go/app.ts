@@ -45,12 +45,25 @@ export async function broadcastPartida(partida: Partida) {
   await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
 }
 
-/** Compañeros conectados de la sala (para `userId`), con si están o no disponibles para invitar (ya
- * en una partida) y, en ese caso, contra quién (para mostrarlo, ej: en la lista de participantes). */
-async function calcularContrincantesDisponibles(idSala: string, userId: string) {
+/** Estudiantes de la sala más el profe (si está conectado): todas las personas que puede invitar a
+ * jugar Go alguien de esa sala, normalizadas a lo mínimo que necesita este archivo (no la sesión
+ * completa). El profe juega bajo su email, igual que el resto de su sesión de sala. */
+async function personasDeSala(idSala: string) {
   const sala = await Salas.get(idSala)
   const estudiantes = await sala.listarEstudiantes()
-  const conectados = estudiantes.filter((e) => e.conectado && e.userId !== userId)
+  const personas = estudiantes.map((e) => ({ userId: e.userId, nombre: e.nombre, conectado: e.conectado }))
+
+  if (await sala.profeConectado()) {
+    personas.push({ userId: sala.profe.email, nombre: sala.profe.nombre ?? sala.profe.email, conectado: true })
+  }
+
+  return personas
+}
+
+/** Con qué compañeros de `personas` (ya resuelta) puede jugar `userId`: si están o no disponibles
+ * para invitar (ya en una partida) y, en ese caso, contra quién (ej: en la lista de participantes). */
+async function contrincantesDesde(personas: Awaited<ReturnType<typeof personasDeSala>>, idSala: string, userId: string) {
+  const conectados = personas.filter((e) => e.conectado && e.userId !== userId)
 
   return Promise.all(
     conectados.map(async (e) => {
@@ -62,6 +75,10 @@ async function calcularContrincantesDisponibles(idSala: string, userId: string) 
   )
 }
 
+async function calcularContrincantesDisponibles(idSala: string, userId: string) {
+  return contrincantesDesde(await personasDeSala(idSala), idSala, userId)
+}
+
 /**
  * Avisa a cada estudiante conectado de la sala (y al profe, que también puede invitar) que la
  * disponibilidad de contrincantes cambió (alguien entró o salió de una partida), empujándole su lista
@@ -71,9 +88,14 @@ async function calcularContrincantesDisponibles(idSala: string, userId: string) 
  */
 export async function avisarContrincantesActualizados(idSala: string) {
   const sockets = await io.in([`sala:${idSala}:estudiantes`, `sala:${idSala}:profe`]).fetchSockets()
+  // Una sola foto de la sala para todos los destinatarios: si la recalculáramos por socket (como antes
+  // de sumar al profe), cada destinatario dispara sus propias consultas de conexión (`fetchSockets`) en
+  // paralelo, y nada garantiza que las respuestas lleguen en orden — una más vieja podía pisar a una
+  // más nueva y dejar a alguien viendo la sala desactualizada.
+  const personas = await personasDeSala(idSala)
   await Promise.all(
     sockets.map(async (s) => {
-      const contrincantes = await calcularContrincantesDisponibles(idSala, s.data.session.userId)
+      const contrincantes = await contrincantesDesde(personas, idSala, s.data.session.userId)
       s.emit('go:contrincantes_actualizados', contrincantes)
     })
   )
@@ -102,9 +124,8 @@ export async function estudianteGo(idSala: string, userId: string) {
     const existente = await miPartida()
     if (existente && existente.estado !== EstadoPartida.Terminada) throw new Error('Ya tenés una partida en curso')
 
-    const sala = await Salas.get(idSala)
-    const estudiantes = await sala.listarEstudiantes()
-    const contrincante = estudiantes.find((e) => e.userId === contrincanteId)
+    const personas = await personasDeSala(idSala)
+    const contrincante = personas.find((e) => e.userId === contrincanteId)
     if (!contrincante || !contrincante.conectado) throw new Error('Ese contrincante no está disponible')
     if (await db.getPartidaActiva(idSala, contrincanteId)) throw new Error('Ese contrincante ya está en una partida')
 

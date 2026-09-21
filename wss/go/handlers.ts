@@ -110,11 +110,23 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
 
 /**
  * Handlers de Go del profe: puede invitar y jugar contra los estudiantes de su sala bajo su propia
- * identidad (el email, igual que en el resto de la sesión de profe). A diferencia del estudiante, no
- * es un contrincante disponible para nadie (no aparece en `sala.listarEstudiantes()`), así que no hace
- * falta avisar a la sala cuando se conecta o desconecta.
+ * identidad (el email, igual que en el resto de la sesión de profe). También es un contrincante
+ * disponible para ellos, así que al conectar/desconectar avisamos a la sala igual que con un
+ * estudiante (ver `handlersGoEstudiante`).
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
+  const safe = conErrorHandling(socket)
   const { userId, nombre } = socket.data.session
+
+  socket.on(
+    'disconnect',
+    safe(async () => {
+      const sala = await Salas.get(idSala)
+      if (!(await sala.profeConectado(socket.id))) await avisarContrincantesActualizados(idSala)
+    })
+  )
+
   await registrarComandosGo(socket, idSala, userId, nombre)
+
+  await avisarContrincantesActualizados(idSala)
 }

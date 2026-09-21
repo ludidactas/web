@@ -1,0 +1,20 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  wss:
+    build:
+      context: .
+      dockerfile: wss/Dockerfile
+    env_file:
+      - .env.local
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3005
+    ports:
+      - '3005:3005'
+    depends_on:
+      - redis

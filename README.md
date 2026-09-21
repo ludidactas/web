@@ -103,6 +103,58 @@ Cuando se encare, la propuesta es:
 - Correr el proyecto next en otra terminal con `bun/npm dev`
 - Los tests se corren con `bun/npm e2e` (de end-to-end)
 
+### Variables de entorno
+
+Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba). "Runtime" lee la variable en el proceso del server; "build-time" queda inlineado en el bundle del browser al buildear Next, así que un cambio requiere rebuild/redeploy, no solo reiniciar.
+
+| Variable | Quién la lee | Cuándo | Para qué |
+| --- | --- | --- | --- |
+| `JWT_SECRET` | Next (`src/server/token_wss.ts`, firma) y wss (`wss/middleware/auth.ts`, verifica) | runtime | Secret compartido del JWT de corta vida que autentica al socket contra el wss. Tiene que ser **el mismo valor exacto** en ambos lados. |
+| `NEXTAUTH_SECRET` / `AUTH_SECRET` | Next, internamente (Auth.js) | runtime | Firma la cookie de sesión del navegador. `AUTH_SECRET` es el nombre nuevo de Auth.js v5; si no está seteado, cae a `NEXTAUTH_SECRET`. No lo usa el wss. |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Next (`src/server/google/cliente.ts`, provider de login y cliente de Drive) | runtime | Credenciales de la app OAuth de Google. |
+| `POLLS_ADMINS` | wss (`wss/middleware/auth.ts`) | runtime | Emails con rol admin en el wss, separados por coma. |
+| `NEXT_PUBLIC_HOST` | wss (`wss/salas/app.ts`), pese al nombre | runtime | Host que se antepone al armar el `link` de una sala nueva (queda guardado en Redis al crearla, no se recalcula después). |
+| `NEXT_PUBLIC_ENCUESTA_HOST` | Next, client-side (`wss-cli/utils-socket-wss.ts`) | **build-time** | Host del wss al que se conecta el cliente de socket.io desde el browser. |
+| `IDP_HOST` | Next + `scripts/idp-dev.ts` | runtime | Ver sección **Autenticación** más arriba (login por LAN). |
+| `APP_HOST` | `scripts/check-idp-login.ts` | runtime | Solo para el chequeo manual de login, no para correr la app. |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_USERNAME` / `REDIS_PASSWORD` | wss (`wss/redis.ts`) | runtime | Conexión a Redis. Host/puerto por default apuntan a `127.0.0.1:6379` (sin auth) si no están seteadas — para local alcanza con tener un Redis corriendo ahí, no hace falta setear nada. |
+| `PORT` | wss (`wss/server.ts`) | runtime | Puerto del server de wss, default `3005`. |
+
+### WSS con Docker (alternativa a los dos pasos de arriba)
+
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+
+- Levantar todo: `docker compose up --build -d`
+- Ver logs: `docker compose logs -f wss`
+- Apagar todo (y borrar los datos de Redis de la prueba, es efímero a propósito): `docker compose down`
+- Después de tocar código en `wss/`, hay que reconstruir la imagen: `docker compose up --build -d` de nuevo (no tiene hot-reload)
+
+El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup (correr Next en otra terminal) es igual.
+
+## Pendiente
+
+- `JWT_SECRET` está bien separado de `NEXTAUTH_SECRET`/`AUTH_SECRET` en el código (cada uno con su propia variable, ver tabla de arriba), pero en local (`.env.local`) los dos todavía tienen cargado **el mismo valor de string**, porque nunca se regeneró `JWT_SECRET` de forma independiente — falta confirmar si eso también pasa en staging/producción. Hay que generar un `JWT_SECRET` propio y distinto (`openssl rand -base64 32`) por ambiente y actualizarlo a la vez en Vercel (Next, firma) y en la Application de Coolify correspondiente (wss, verifica) — son un par, tienen que cambiar juntos.
+
+## Deploy y ambientes
+
+**Next (`src/`)** se deploya en Vercel:
+
+- Producción: rama `main`, en `ludidactas.com`.
+- Staging: rama `staging`, con preview permanente en `staging.ludidactas.com`.
+
+**WSS (`wss/`)** se deploya en un VPS que corre [Coolify](https://coolify.io) (PaaS self-hosted), con panel en `https://deploy.ludidactas.com`. Coolify gestiona ahí los containers Docker del wss, sus Redis, y el proxy reverso (Traefik) que expone todo con TLS automático (Let's Encrypt) — todo el tráfico entra por Traefik, que rutea por dominio a cada servicio y renueva los certificados solo.
+
+El wss corre como dos Applications de Coolify independientes, ambas construidas desde el mismo `wss/Dockerfile`, cada una con su propio Redis (también gestionado por Coolify) y sus propias variables de entorno — nada se comparte entre ambientes, así una prueba de estrés deliberada en staging no puede afectar producción:
+
+| Environment | Branch    | Dominio                      | Redis              |
+| ----------- | --------- | ---------------------------- | ------------------ |
+| Producción  | `main`    | `ws.ludidactas.com`          | `redis-production` |
+| Staging     | `staging` | `wss.staging.ludidactas.com` | `redis-staging`    |
+
+Cada Application tiene seteadas sus propias `PORT`, `REDIS_HOST`/`REDIS_PORT`/`REDIS_USERNAME`/`REDIS_PASSWORD`, y los secrets de auth (mismos nombres que en local, ver sección **Setup**) — con valores independientes por ambiente.
+
+Ambas Applications tienen auto-deploy activado (`Deploy on push` vía webhook): un push a `main` o a `staging` redeploya sola la Application correspondiente, sin acción manual en Coolify.
+
 ## Checkear
 
 https://www.svgator.com/

@@ -2,7 +2,7 @@
 
 import { useOutlineFilter } from '@/components/fx/filtros'
 import { BLANCO, calcularPuntaje, calcularTerritorio, grupoEn, NEGRO } from '@/wss/go/motor'
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 
 export { BLANCO, calcularPuntaje, NEGRO }
 
@@ -87,6 +87,23 @@ export function TableroGo({
   // aplicar según el color del grupo, para que el contorno siempre sea el opuesto (negro <-> blanco).
   const contornoNegro = useOutlineFilter({ outlineColor: RELLENO[NEGRO], radius: 3 })
   const contornoBlanco = useOutlineFilter({ outlineColor: RELLENO[BLANCO], radius: 3 })
+
+  // Ids únicos por instancia (como en useOutlineFilter) para que los <radialGradient>/<filter> no
+  // colisionen si hay más de un TableroGo montado a la vez en la misma página.
+  const idPiedras = useId().replace(/:/g, '')
+  const gradienteNegroId = `piedra-negra-${idPiedras}`
+  const gradienteBlancoId = `piedra-blanca-${idPiedras}`
+  const filtroSombraId = `sombra-piedra-${idPiedras}`
+  const filtroSombraUrl = `url(#${filtroSombraId})`
+  const filtroSombraTableroId = `sombra-tablero-${idPiedras}`
+  const filtroSombraTableroUrl = `url(#${filtroSombraTableroId})`
+
+  // Relleno "brilloso" de las piedras: gradiente radial con la luz viniendo de arriba a la
+  // izquierda, para que se vean como piedras reales y no como círculos planos.
+  const RELLENO_PIEDRA: Record<number, string> = {
+    [NEGRO]: `url(#${gradienteNegroId})`,
+    [BLANCO]: `url(#${gradienteBlancoId})`,
+  }
 
   function coordenadas(x: number) {
     return MARGEN + x * CELDA
@@ -173,6 +190,29 @@ export function TableroGo({
       {contornoNegro.defs}
       {contornoBlanco.defs}
 
+      <defs>
+        {/* Sombra suave por fuera de cada piedra, apenas desplazada hacia abajo para dar sensación
+            de volumen apoyado sobre el tablero. */}
+        <filter id={filtroSombraId}>
+          <feDropShadow dx="0" dy="1.5" stdDeviation="1.4" floodColor="#000" floodOpacity="0.35" />
+        </filter>
+        {/* Sombra del tablero completo contra el fondo de la página, para que se note que "flota"
+            apoyado en vez de quedar pegado como un recorte plano. */}
+        <filter id={filtroSombraTableroId} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.3" />
+        </filter>
+        {/* Luz viniendo de arriba a la izquierda (cx/cy corridos del centro): da el efecto de piedra
+            pulida en vez de círculo plano. */}
+        <radialGradient id={gradienteNegroId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#52525b" />
+          <stop offset="100%" stopColor="#0a0a0a" />
+        </radialGradient>
+        <radialGradient id={gradienteBlancoId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#c4c4c8" />
+        </radialGradient>
+      </defs>
+
       {/* Glow del turno: un rect idéntico al fondo, pero atrás — solo se ve el halo dilatado que
           asoma por los bordes. Va en una capa separada del tablero real para que, si pulsa, pulse
           solo el halo y no todo el contenido del tablero. */}
@@ -182,7 +222,7 @@ export function TableroGo({
         </g>
       )}
 
-      <rect x={0} y={0} width={lado} height={lado} fill="#FFE8B7" rx={8} />
+      <rect x={0} y={0} width={lado} height={lado} fill="#FFE8B7" rx={8} filter={filtroSombraTableroUrl} />
 
       {/* Líneas de la grilla */}
       {Array.from({ length: tamaño }, (_, i) => (
@@ -251,33 +291,35 @@ export function TableroGo({
       )}
 
       {/* Piedras */}
-      {tablero.map((fila, y) =>
-        fila.map((valor, x) => {
-          if (valor === 0) return null
+      <g filter={filtroSombraUrl}>
+        {tablero.map((fila, y) =>
+          fila.map((valor, x) => {
+            if (valor === 0) return null
 
-          const muerta = removidas?.[y]?.[x] ?? false
-          const esVivo = vivo?.[y]?.[x] ?? false
-          const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
-          const opacidad = esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1
-          const color = muerta && valor === BLANCO ? BLANCO_MUERTA : RELLENO[valor]
+            const muerta = removidas?.[y]?.[x] ?? false
+            const esVivo = vivo?.[y]?.[x] ?? false
+            const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
+            const opacidad = esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1
+            const color = muerta && valor === BLANCO ? BLANCO_MUERTA : RELLENO_PIEDRA[valor]
 
-          return (
-            <circle
-              key={`${x},${y}`}
-              cx={coordenadas(x)}
-              cy={coordenadas(y)}
-              r={CELDA * 0.46}
-              fill={color}
-              stroke="#1a1a1a"
-              strokeWidth={valor === NEGRO ? 0 : 1}
-              opacity={opacidad}
-              style={esVivo ? { filter: 'grayscale(1)' } : undefined}
-            >
-              <title>{esVivo ? 'Grupo incondicionalmente vivo' : muerta ? 'Marcada como muerta' : undefined}</title>
-            </circle>
-          )
-        })
-      )}
+            return (
+              <circle
+                key={`${x},${y}`}
+                cx={coordenadas(x)}
+                cy={coordenadas(y)}
+                r={CELDA * 0.46}
+                fill={color}
+                stroke="#1a1a1a"
+                strokeWidth={valor === NEGRO ? 0 : 1}
+                opacity={opacidad}
+                style={esVivo ? { filter: 'grayscale(1)' } : undefined}
+              >
+                <title>{esVivo ? 'Grupo incondicionalmente vivo' : muerta ? 'Marcada como muerta' : undefined}</title>
+              </circle>
+            )
+          })
+        )}
+      </g>
 
       {/* Ghost de la próxima jugada: previsualiza dónde y de qué color caería la piedra */}
       {mostrarGhost && miColor && hover && (
@@ -285,11 +327,12 @@ export function TableroGo({
           cx={coordenadas(hover.x)}
           cy={coordenadas(hover.y)}
           r={CELDA * 0.46}
-          fill={RELLENO[miColor]}
+          fill={RELLENO_PIEDRA[miColor]}
           stroke="#1a1a1a"
           strokeWidth={miColor === NEGRO ? 0 : 1}
           opacity={0.4}
           pointerEvents="none"
+          filter={filtroSombraUrl}
         />
       )}
     </svg>

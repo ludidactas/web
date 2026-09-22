@@ -25,6 +25,26 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
   const almacenConfig = storeConfig.getState()
   const almacenPermitidos = storePermitidos.getState()
 
+  /** `profe-asistencia-handlers` también escucha `sala:abierta`, así que no
+   * podemos desmontar con `removeAllListeners` sin pisar al otro. */
+  const alAbrirSala = ({
+    polls,
+    estudiantes,
+    config,
+    listaPermitidos,
+  }: {
+    sala: SalaData
+    polls: EncuestaHidratadaProfe[]
+    estudiantes: Estudiante[]
+    config: ConfigSala
+    listaPermitidos: { lista: string[]; nombres: Record<string, string> }
+  }) => {
+    almacenConfig.set(config)
+    almacenEncuestas.set(polls)
+    almacenEstudiantes.set(estudiantes)
+    almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
+  }
+
   return {
     montar: () => {
       if (!socket) return
@@ -42,26 +62,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
         almacenEstudiantes.disconnect(estudiante.id)
       })
 
-      socket.on(
-        'sala:abierta',
-        ({
-          polls,
-          estudiantes,
-          config,
-          listaPermitidos,
-        }: {
-          sala: SalaData
-          polls: EncuestaHidratadaProfe[]
-          estudiantes: Estudiante[]
-          config: ConfigSala
-          listaPermitidos: { lista: string[]; nombres: Record<string, string> }
-        }) => {
-          almacenConfig.set(config)
-          almacenEncuestas.set(polls)
-          almacenEstudiantes.set(estudiantes)
-          almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
-        }
-      )
+      socket.on('sala:abierta', alAbrirSala)
 
       socket.on('sala:lista_permitidos', almacenPermitidos.set)
 
@@ -98,7 +99,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
     desmontar: () => {
       if (!socket) return
 
-      socket.removeAllListeners('sala:abierta')
+      socket.off('sala:abierta', alAbrirSala)
       socket.removeAllListeners('sala:lista_permitidos')
       socket.removeAllListeners('sala:estudiantes')
       socket.removeAllListeners('sala:estudiante_conectado')

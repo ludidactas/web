@@ -11,40 +11,13 @@ import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
+import { reconstruirIntervalos } from '../asistencia/evaluacion'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import { RemoteSocketConSesion } from '../middleware/session'
 
 export type { SalaData } from './db'
 
 export type Sala = Awaited<ReturnType<typeof Salas.get>>
-
-/**
- * Reconstruye, por userId, los intervalos durante los que el estudiante estuvo conectado, a partir
- * del log crudo de eventos. Usa un contador de profundidad (conexiones simultáneas): un intervalo va
- * desde que la profundidad pasa de 0→1 hasta que vuelve a 0. Así multi-tab cuenta como un solo
- * intervalo, y un 'desconexion' que nunca llegó (ej: crash) queda como intervalo abierto (`fin: null`).
- */
-function reconstruirIntervalos(eventos: db.EventoAsistencia[]): Record<string, db.Intervalo[]> {
-  const ordenados = [...eventos].sort((a, b) => a.ts - b.ts)
-  const intervalos: Record<string, db.Intervalo[]> = {}
-  const profundidad: Record<string, number> = {}
-
-  for (const { userId, evento, ts } of ordenados) {
-    const lista = (intervalos[userId] ??= [])
-    const actual = profundidad[userId] ?? 0
-
-    if (evento === 'conexion') {
-      if (actual === 0) lista.push({ inicio: ts, fin: null })
-      profundidad[userId] = actual + 1
-    } else {
-      profundidad[userId] = Math.max(0, actual - 1)
-      const abierto = lista[lista.length - 1]
-      if (profundidad[userId] === 0 && abierto && abierto.fin === null) abierto.fin = ts
-    }
-  }
-
-  return intervalos
-}
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Salas {
@@ -166,10 +139,10 @@ export namespace Salas {
     }
 
     /**
-     * Registra al estudiante en la planilla durable de la sala (persiste su sesión) y anota su
+     * Registra el ingreso del estudiante: lo persiste en la planilla durable de la sala y anota su
      * conexión en el log de asistencia.
      */
-    async function registrarEstudiante(session: WssEstudianteSession) {
+    async function registrarIngreso(session: WssEstudianteSession) {
       await db.guardarEstudiante(salaId, session)
       await db.registrarEventoAsistencia(salaId, session.userId, 'conexion', Date.now())
     }
@@ -180,17 +153,23 @@ export namespace Salas {
     }
 
     /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia. */
-    async function asistencia() {
+    async function intervalosDeConexion() {
       return reconstruirIntervalos(await db.getEventosAsistencia(salaId))
     }
 
     async function actualizarConfig(payload: unknown) {
       const sala = await getFromDb()
 
-      // Validamos: solo se pueden tocar los campos mutables (hoy, `solo_invitados`).
+      // Validamos: solo se pueden tocar los campos mutables.
       const config = configActualizable.partial().parse(payload)
       const configActual = sala.config
-      const nuevaConfig = configSala.parse(mergeDeep(configActual, config))
+      const merged = { ...mergeDeep(configActual, config) }
+
+      for (const key of Object.keys(config)) {
+        if ((config as Record<string, unknown>)[key] === null) delete (merged as Record<string, unknown>)[key]
+      }
+
+      const nuevaConfig = configSala.parse(merged)
       sala.config = nuevaConfig
 
       await db.guardarSala(sala)
@@ -214,8 +193,8 @@ export namespace Salas {
       /** Broadcastea un mensaje a todos los sockets en la sala */
       broadcast,
 
-      /** Registra al estudiante en la planilla durable de la sala (persiste su sesión) */
-      registrarEstudiante,
+      /** Registra el ingreso del estudiante en la planilla durable de la sala (persiste su sesión) */
+      registrarIngreso,
 
       /** Anota la desconexión del estudiante en el log de asistencia */
       registrarDesconexion,
@@ -224,7 +203,7 @@ export namespace Salas {
       sigueConectado,
 
       /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
-      asistencia,
+      intervalosDeConexion,
 
       /** Valida lo que recibe y si pasa actualiza la config de la sala */
       actualizarConfig,

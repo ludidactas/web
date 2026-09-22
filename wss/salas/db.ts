@@ -1,4 +1,5 @@
 import redis from '../redis'
+import { asistenciaDeClaseSchema, type AsistenciaDeClase } from '../validators/asistencia'
 import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 
@@ -101,7 +102,7 @@ export async function borrarEstudiantes(salaId: string, userIds: string[]): Prom
 export type EventoAsistencia = { userId: string; evento: 'conexion' | 'desconexion'; ts: number }
 
 /** Un intervalo durante el cual el estudiante estuvo conectado. `fin: null` = intervalo aún abierto. */
-export type Intervalo = { inicio: number; fin: number | null }
+export type IntervaloDeConexion = { inicio: number; fin: number | null }
 
 /**
  * Appendea un evento de presencia al log de asistencia de la sala. Es append-only: los intervalos
@@ -121,4 +122,33 @@ export async function registrarEventoAsistencia(
 export async function getEventosAsistencia(salaId: string): Promise<EventoAsistencia[]> {
   const raw = await redis.lrange(`sala:${salaId}:asistencia`, 0, -1)
   return raw.map((s) => JSON.parse(s) as EventoAsistencia)
+}
+
+/** Borra el log de asistencia de la sala (la clase ya quedó resumida en un pendiente). */
+export async function borrarLogDeAsistencia(salaId: string): Promise<void> {
+  await redis.del(`sala:${salaId}:asistencia`)
+}
+
+// -- Asistencias pendientes (clase ya evaluada, pendiente de subir a Drive) --
+
+/** Encola una clase evaluada al final de la cola de pendientes de subir a Drive. */
+export async function encolarAsistencia(salaId: string, asistencia: AsistenciaDeClase): Promise<void> {
+  await redis.rpush(`sala:${salaId}:asistencia_pendiente`, JSON.stringify(asistencia))
+}
+
+/**
+ * Devuelve las asistencias pendientes de subir a Drive, en orden de cierre. Normalmente tiene 0 o 1
+ * elemento: una clase se encola recién cuando el profe se retiró, y el FE la sube al volver a abrir la
+ * sala. Puede haber varias sólo si alguna subida falló y la cola se fue acumulando.
+ * NO las borra: el FE confirma con `sala:descartar_asistencias_pendientes` recién cuando la planilla
+ * quedó escrita, así un fallo de subida no pierde la clase.
+ */
+export async function getAsistenciasPendientes(salaId: string): Promise<AsistenciaDeClase[]> {
+  const raw = await redis.lrange(`sala:${salaId}:asistencia_pendiente`, 0, -1)
+  return raw.map((s) => asistenciaDeClaseSchema.parse(JSON.parse(s)))
+}
+
+/** Descarta las asistencias pendientes: se llama recién cuando quedaron escritas en Drive. */
+export async function borrarAsistenciasPendientes(salaId: string): Promise<void> {
+  await redis.del(`sala:${salaId}:asistencia_pendiente`)
 }

@@ -1,11 +1,13 @@
 import { Socket } from 'socket.io'
 import { conAck, conErrorHandling } from '../middleware/error-handling'
+import * as db from './db'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
 import { handlersEncuestasProfe } from '../polls/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
+import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
 import { configCreacionSala } from '../validators/salas'
 import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
@@ -42,7 +44,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
     sala.listarEstudiantes(),
     sala.listaPermitidos().nombres(),
     profeSala(sala.id).then((profe) => profe.listarEncuestas()),
-    sala.asistencia(),
+    sala.intervalosDeConexion(),
   ])
 
   const estudiantes =
@@ -93,13 +95,6 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     'sala:listar_estudiantes',
     safe(async () => {
       socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-    })
-  )
-
-  socket.on(
-    'sala:pedir_asistencia',
-    safe(async () => {
-      socket.emit('sala:asistencia', await sala.asistencia())
     })
   )
 
@@ -158,6 +153,21 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     })
   )
 
+  // Las asistencias pendientes (normalmente una sola clase, la última cerrada) quedan en redis hasta
+  // que el FE confirma que las escribió en Drive: si las borráramos al entregarlas, un fallo de
+  // subida (Drive desconectado, red) perdería la clase.
+  socket.on(
+    'sala:asistencias_pendientes',
+    conAck(socket)(async () => db.getAsistenciasPendientes(sala.id))
+  )
+
+  socket.on(
+    'sala:descartar_asistencias_pendientes',
+    conAck(socket)(async () => {
+      await db.borrarAsistenciasPendientes(sala.id)
+    })
+  )
+
   await handlersEncuestasProfe(socket, sala)
 
   await emitirAbierta(socket, sala)
@@ -187,6 +197,10 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   const abrir = async (sala: Sala) => {
     if (socket.data.salaActiva && socket.data.salaActiva !== sala.id)
       throw new Error('Ya hay una sala abierta en esta conexión. Reconectá para operar otra.')
+    // Si la sala se estaba por cerrar (el profe se había desconectado y todavía corre la espera
+    // previa a evaluar), la clase sigue: se cancela el cierre y se conserva el inicio, porque el log
+    // de asistencia es el mismo.
+    registrarApertura(sala.id)
     if (socket.data.salaActiva === sala.id) return emitirAbierta(socket, sala)
     await handlersSalaActivaProfe(socket, sala, safe)
   }
@@ -248,6 +262,15 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${email} desconectado: ${reason}`)
+
+    const salaId = socket.data.salaActiva
+    if (!salaId) return
+
+    // El chequeo de "al profe le queda otra conexión abierta" es async: si falla preferimos no
+    // programar el cierre antes que cerrar una clase que puede seguir viva.
+    registrarSalidaDelProfe(salaId, socket.id).catch((e) =>
+      console.error(`No se pudo programar el cierre de la sala ${salaId}:`, e)
+    )
   })
 }
 
@@ -291,7 +314,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
 
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
-    await sala.registrarEstudiante(socket.data.session)
+    await sala.registrarIngreso(socket.data.session)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
 
     // Si está en la lista de invitados (solo aplica a salas por DNI), le avisamos con su nombre

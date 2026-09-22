@@ -390,7 +390,11 @@ function BannerResultado({
 
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      {colorGanador === BLANCO ? <Outlined radius={1.1} outlineColor="negro">{h2}</Outlined> : h2}
+      <div className='flex gap-2 items-center'>
+      <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'}/>
+      {colorGanador === BLANCO ? <Outlined radius={1.5} outlineColor="negro">{h2}</Outlined> : h2}
+      <Icon className='w-8 h-8' icon={'noto:party-popper'}/>
+      </div>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}

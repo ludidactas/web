@@ -300,8 +300,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <p className="text-lg">
           Esperando a que {partida.blanco.nombre} acepte la invitación de {partida.negro.nombre}...
         </p>
-        <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-          Dejar de observar
+        <button className="flex gap-1 items-center text-sm underline text-slate-500" onClick={onDejarDeObservar}>
+          <Icon icon={"akar-icons:arrow-back"}/>
+          Volver a la Sala
         </button>
       </div>
     )
@@ -310,24 +311,36 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
   return (
     <div className="flex flex-col gap-4 items-center w-full px-2">
       <div className="flex items-center gap-4 text-sm">
-        <span style={{ color: RELLENO[NEGRO] }}>● {partida.negro.nombre}</span>
-        <span style={{ color: '#CCC' }}>● {partida.blanco.nombre}</span>
+        <span className="inline-flex items-center font-bold text-md gap-1" style={{ color: RELLENO[NEGRO] }}>
+          <PiedraIcono color={NEGRO} className="h-3 w-3" /> {partida.negro.nombre}
+        </span>
+        <span className="inline-flex text-white items-center drop-shadow-2xl gap-1">
+          <Outlined radius={1.1} outlineColor="zinc" className="inline-flex tracking-wider items-center gap-1">
+            <PiedraIcono color={BLANCO} className="h-3 w-3" /> {partida.blanco.nombre}
+          </Outlined>
+        </span>
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
         <p
-          className="flex items-center gap-2 text-sm font-semibold"
-          style={{ color: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC' }}
+          className="flex items-center gap-1 text-md font-semibold"
+          style={{
+            color: RELLENO[partida.turno],
+          }}
         >
-          <span
-            className="inline-block h-3 w-3 rounded-full border"
-            style={{
-              backgroundColor: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC',
-            }}
-          />
-          Juega {partida.turno === NEGRO ? partida.negro.nombre : partida.blanco.nombre}
+          {partida.turno === BLANCO ? (
+            <Outlined radius={1.1} outlineColor="black" className="flex items-center gap-2 drop-shadow-2xl tracking-wider">
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              Juega blanco
+            </Outlined>
+          ) : (
+            <>
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              Juega negro
+            </>
+          )}
         </p>
       )}
 
@@ -348,8 +361,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
-      <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-        {partida.estado === 'terminada' ? 'Volver a la sala' : 'Dejar de observar'}
+      <button className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105" onClick={onDejarDeObservar}>
+        <Icon icon={'akar-icons:arrow-back'} />
+        Volver a la Sala
       </button>
     </div>
   )
@@ -376,7 +390,7 @@ function BannerResultado({
 
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      {colorGanador === BLANCO ? <Outlined outlineColor="negro">{h2}</Outlined> : h2}
+      {colorGanador === BLANCO ? <Outlined radius={1.1} outlineColor="negro">{h2}</Outlined> : h2}
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
@@ -497,7 +511,7 @@ function PartidaEnCurso({
           }}
         >
           {partida.turno === BLANCO ? (
-            <Outlined radius={2} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wide">
+            <Outlined radius={1.5} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wider">
               <PiedraIcono color={partida.turno} className="h-3 w-3" />
               {esMiTurno ? 'Tu turno' : 'Juega blanco '}
             </Outlined>
@@ -547,7 +561,7 @@ function PartidaEnCurso({
 
         {partida.estado === 'jugando' && (
           <button
-            className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 hover:scale-105"
+            className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
             disabled={!jugadaPendiente || confirmando}
             onClick={confirmarJugada}
           >
@@ -581,7 +595,7 @@ function PartidaEnCurso({
             {partida.estado === 'jugando' && (
               <>
                 <button
-                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 hover:scale-105"
+                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
                   disabled={!esMiTurno}
                   onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
                 >

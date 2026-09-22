@@ -2,7 +2,7 @@
 
 import { useOutlineFilter } from '@/components/fx/filtros'
 import { BLANCO, calcularPuntaje, calcularTerritorio, grupoEn, NEGRO } from '@/wss/go/motor'
-import { useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 
 export { BLANCO, calcularPuntaje, NEGRO }
 
@@ -19,6 +19,13 @@ export const RELLENO: Record<number, string> = { [NEGRO]: '#1a1a1a', [BLANCO]: '
 /** Piedra blanca marcada como muerta: a la opacidad reducida, el casi-blanco de `RELLENO[BLANCO]`
  * se pierde contra el fondo claro, así que para ese caso puntual usamos un gris más oscuro. */
 const BLANCO_MUERTA = '#94a3b8'
+
+/** Tonos del gradiente "brilloso" de cada piedra (luz a oscuridad), compartidos entre el tablero y
+ * `PiedraIcono` para que un mismo color se vea igual dentro y fuera del `<svg>` del tablero. */
+const TONOS_PIEDRA: Record<number, [claro: string, oscuro: string]> = {
+  [NEGRO]: ['#52525b', '#0a0a0a'],
+  [BLANCO]: ['#ffffff', '#c4c4c8'],
+}
 
 interface Punto {
   x: number
@@ -55,6 +62,8 @@ export function TableroGo({
   miColor,
   turno,
   esMiTurno,
+  ultimaJugada,
+  pendiente,
   deshabilitado,
   onJugar,
 }: {
@@ -62,6 +71,8 @@ export function TableroGo({
   tamaño: number
   /** Piedras marcadas como muertas durante la fase de conteo (se muestran atenuadas). */
   removidas?: boolean[][] | null
+  /** Coordenadas de la última piedra jugada: se resalta con un anillo naranja para ubicarla rápido. */
+  ultimaJugada?: Punto | null
   /** Puntos de cadenas incondicionalmente vivas (algoritmo de Benson): no se pueden marcar como muertas. */
   vivo?: boolean[][] | null
   /** Fase de conteo: grisa los grupos vivos (no seleccionables) y resalta el grupo bajo el cursor. */
@@ -72,6 +83,10 @@ export function TableroGo({
   turno?: 1 | 2
   /** Si el turno es del usuario, el contorno del tablero pulsa para que note que le toca jugar. */
   esMiTurno?: boolean
+  /** Punto elegido pero todavía sin confirmar (fuera de `modoConteo`): se dibuja fijo, más sólido que
+   * el ghost del hover, con un anillo punteado, hasta que se confirma la jugada con el botón afuera
+   * del tablero o se cancela clickeándolo de nuevo. */
+  pendiente?: Punto | null
   deshabilitado?: boolean
   onJugar?: (x: number, y: number) => void
 }) {
@@ -87,6 +102,23 @@ export function TableroGo({
   // aplicar según el color del grupo, para que el contorno siempre sea el opuesto (negro <-> blanco).
   const contornoNegro = useOutlineFilter({ outlineColor: RELLENO[NEGRO], radius: 3 })
   const contornoBlanco = useOutlineFilter({ outlineColor: RELLENO[BLANCO], radius: 3 })
+
+  // Ids únicos por instancia (como en useOutlineFilter) para que los <radialGradient>/<filter> no
+  // colisionen si hay más de un TableroGo montado a la vez en la misma página.
+  const idPiedras = useId().replace(/:/g, '')
+  const gradienteNegroId = `piedra-negra-${idPiedras}`
+  const gradienteBlancoId = `piedra-blanca-${idPiedras}`
+  const filtroSombraId = `sombra-piedra-${idPiedras}`
+  const filtroSombraUrl = `url(#${filtroSombraId})`
+  const filtroSombraTableroId = `sombra-tablero-${idPiedras}`
+  const filtroSombraTableroUrl = `url(#${filtroSombraTableroId})`
+
+  // Relleno "brilloso" de las piedras: gradiente radial con la luz viniendo de arriba a la
+  // izquierda, para que se vean como piedras reales y no como círculos planos.
+  const RELLENO_PIEDRA: Record<number, string> = {
+    [NEGRO]: `url(#${gradienteNegroId})`,
+    [BLANCO]: `url(#${gradienteBlancoId})`,
+  }
 
   function coordenadas(x: number) {
     return MARGEN + x * CELDA
@@ -153,7 +185,13 @@ export function TableroGo({
   const filterUrlTurno = turno === NEGRO ? contornoNegro.filterUrl : contornoBlanco.filterUrl
 
   // Ghost de la próxima jugada: previsualiza la piedra en la intersección vacía bajo el cursor.
-  const mostrarGhost = !modoConteo && !!miColor && !!hover && tablero[hover.y][hover.x] === 0
+  // No se dibuja sobre el punto ya elegido (`pendiente`): ese tiene su propio dibujo, más sólido.
+  const mostrarGhost =
+    !modoConteo &&
+    !!miColor &&
+    !!hover &&
+    tablero[hover.y][hover.x] === 0 &&
+    !(pendiente && hover.x === pendiente.x && hover.y === pendiente.y)
 
   const cursorActual =
     deshabilitado || !onJugar || (hover && !esSeleccionable(hover)) || (modoConteo && !hover) ? 'default' : 'pointer'
@@ -173,6 +211,29 @@ export function TableroGo({
       {contornoNegro.defs}
       {contornoBlanco.defs}
 
+      <defs>
+        {/* Sombra suave por fuera de cada piedra, apenas desplazada hacia abajo para dar sensación
+            de volumen apoyado sobre el tablero. */}
+        <filter id={filtroSombraId}>
+          <feDropShadow dx="0" dy="1.5" stdDeviation="1.4" floodColor="#000" floodOpacity="0.35" />
+        </filter>
+        {/* Sombra del tablero completo contra el fondo de la página, para que se note que "flota"
+            apoyado en vez de quedar pegado como un recorte plano. */}
+        <filter id={filtroSombraTableroId} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.3" />
+        </filter>
+        {/* Luz viniendo de arriba a la izquierda (cx/cy corridos del centro): da el efecto de piedra
+            pulida en vez de círculo plano. */}
+        <radialGradient id={gradienteNegroId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor={TONOS_PIEDRA[NEGRO][0]} />
+          <stop offset="100%" stopColor={TONOS_PIEDRA[NEGRO][1]} />
+        </radialGradient>
+        <radialGradient id={gradienteBlancoId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor={TONOS_PIEDRA[BLANCO][0]} />
+          <stop offset="100%" stopColor={TONOS_PIEDRA[BLANCO][1]} />
+        </radialGradient>
+      </defs>
+
       {/* Glow del turno: un rect idéntico al fondo, pero atrás — solo se ve el halo dilatado que
           asoma por los bordes. Va en una capa separada del tablero real para que, si pulsa, pulse
           solo el halo y no todo el contenido del tablero. */}
@@ -182,7 +243,7 @@ export function TableroGo({
         </g>
       )}
 
-      <rect x={0} y={0} width={lado} height={lado} fill="#FFE8B7" rx={8} />
+      <rect x={0} y={0} width={lado} height={lado} fill="#FFE8B7" rx={8} filter={filtroSombraTableroUrl} />
 
       {/* Líneas de la grilla */}
       {Array.from({ length: tamaño }, (_, i) => (
@@ -251,32 +312,47 @@ export function TableroGo({
       )}
 
       {/* Piedras */}
-      {tablero.map((fila, y) =>
-        fila.map((valor, x) => {
-          if (valor === 0) return null
+      <g filter={filtroSombraUrl}>
+        {tablero.map((fila, y) =>
+          fila.map((valor, x) => {
+            if (valor === 0) return null
 
-          const muerta = removidas?.[y]?.[x] ?? false
-          const esVivo = vivo?.[y]?.[x] ?? false
-          const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
-          const opacidad = esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1
-          const color = muerta && valor === BLANCO ? BLANCO_MUERTA : RELLENO[valor]
+            const muerta = removidas?.[y]?.[x] ?? false
+            const esVivo = vivo?.[y]?.[x] ?? false
+            const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
+            const opacidad = esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1
+            const color = muerta && valor === BLANCO ? BLANCO_MUERTA : RELLENO_PIEDRA[valor]
 
-          return (
-            <circle
-              key={`${x},${y}`}
-              cx={coordenadas(x)}
-              cy={coordenadas(y)}
-              r={CELDA * 0.46}
-              fill={color}
-              stroke="#1a1a1a"
-              strokeWidth={valor === NEGRO ? 0 : 1}
-              opacity={opacidad}
-              style={esVivo ? { filter: 'grayscale(1)' } : undefined}
-            >
-              <title>{esVivo ? 'Grupo incondicionalmente vivo' : muerta ? 'Marcada como muerta' : undefined}</title>
-            </circle>
-          )
-        })
+            return (
+              <circle
+                key={`${x},${y}`}
+                cx={coordenadas(x)}
+                cy={coordenadas(y)}
+                r={CELDA * 0.46}
+                fill={color}
+                stroke="#1a1a1a"
+                strokeWidth={valor === NEGRO ? 0 : 1}
+                opacity={opacidad}
+                style={esVivo ? { filter: 'grayscale(1)' } : undefined}
+              >
+                <title>{esVivo ? 'Grupo incondicionalmente vivo' : muerta ? 'Marcada como muerta' : undefined}</title>
+              </circle>
+            )
+          })
+        )}
+      </g>
+
+      {/* Anillo naranja sobre la última piedra jugada, para encontrarla de un vistazo. */}
+      {ultimaJugada && (
+        <circle
+          cx={coordenadas(ultimaJugada.x)}
+          cy={coordenadas(ultimaJugada.y)}
+          r={CELDA * 0.3}
+          fill="none"
+          className="stroke-ld-amarillo-oscuro"
+          strokeWidth={CELDA * 0.1}
+          pointerEvents="none"
+        />
       )}
 
       {/* Ghost de la próxima jugada: previsualiza dónde y de qué color caería la piedra */}
@@ -285,13 +361,76 @@ export function TableroGo({
           cx={coordenadas(hover.x)}
           cy={coordenadas(hover.y)}
           r={CELDA * 0.46}
-          fill={RELLENO[miColor]}
+          fill={RELLENO_PIEDRA[miColor]}
           stroke="#1a1a1a"
           strokeWidth={miColor === NEGRO ? 0 : 1}
           opacity={0.4}
           pointerEvents="none"
+          filter={filtroSombraUrl}
         />
       )}
+
+      {/* Jugada elegida pero todavía sin confirmar: piedra fija (no sigue al mouse) con anillo
+          punteado, para distinguirla del ghost de hover mientras se espera el botón de confirmar. */}
+      {pendiente && miColor && tablero[pendiente.y][pendiente.x] === 0 && (
+        <g pointerEvents="none">
+          <circle
+            cx={coordenadas(pendiente.x)}
+            cy={coordenadas(pendiente.y)}
+            r={CELDA * 0.46}
+            fill={RELLENO_PIEDRA[miColor]}
+            stroke="#1a1a1a"
+            strokeWidth={miColor === NEGRO ? 0 : 1}
+            opacity={0.6}
+            filter={filtroSombraUrl}
+          />
+          <circle
+            cx={coordenadas(pendiente.x)}
+            cy={coordenadas(pendiente.y)}
+            r={CELDA * 0.6}
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            className="animate-pulse"
+          />
+        </g>
+      )}
+    </svg>
+  )
+}
+
+/**
+ * Piedrita chica (gradiente + sombra igual a las del tablero) para usar como ícono suelto fuera del
+ * `<svg>` del tablero — ej. "Tu color: ⚫ Negro" o el indicador de turno. `className` controla el
+ * tamaño (ej. `h-4 w-4`).
+ */
+export function PiedraIcono({ color, className }: { color: 1 | 2; className?: string }) {
+  const uid = useId().replace(/:/g, '')
+  const gradienteId = `piedra-icono-${uid}`
+  const filtroSombraId = `sombra-piedra-icono-${uid}`
+  const [claro, oscuro] = TONOS_PIEDRA[color]
+
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden>
+      <defs>
+        <filter id={filtroSombraId}>
+          <feDropShadow dx="0" dy="0.6" stdDeviation="0.6" floodColor="#000" floodOpacity="0.35" />
+        </filter>
+        <radialGradient id={gradienteId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor={claro} />
+          <stop offset="100%" stopColor={oscuro} />
+        </radialGradient>
+      </defs>
+      <circle
+        cx={10}
+        cy={10}
+        r={9}
+        fill={`url(#${gradienteId})`}
+        stroke="#1a1a1a"
+        strokeWidth={color === NEGRO ? 0 : 0.7}
+        filter={`url(#${filtroSombraId})`}
+      />
     </svg>
   )
 }

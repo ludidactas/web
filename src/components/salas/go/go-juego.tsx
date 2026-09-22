@@ -5,10 +5,11 @@ import { storeGo } from '@/wss-cli/stores/go-store'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
-import { BLANCO, calcularPuntaje, NEGRO, RELLENO, TableroGo } from './tablero-go'
+import { BLANCO, calcularPuntaje, NEGRO, PiedraIcono, RELLENO, TableroGo } from './tablero-go'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
@@ -160,7 +161,7 @@ function BuscarContrincante({
   return (
     <div className="flex flex-col gap-6 items-center max-w-md mx-auto w-full">
       <div className="flex flex-col gap-4 items-center w-full">
-        <h2 className="text-xl font-bold">Elegí un contrincante y un tamaño de tablero</h2>
+        <h2 className="text-xl text-center font-bold">Elegí un contrincante y un tamaño de tablero</h2>
 
         {partidaEnPausa && (
           <div className="flex items-center justify-between gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3 w-full text-sm">
@@ -177,9 +178,9 @@ function BuscarContrincante({
               <Boton
                 color={tamaño === t ? '#6366f1' : '#ccb2ff'}
                 shadowColor={tamaño === t ? '#4338ca' : '#6b34a4'}
-                classNames={{ root: 'flex items-center justify-center w-16 h-9 hover:scale-105 transition-transform' }}
+                classNames={{ root: 'flex items-center justify-center w-20 h-12 hover:scale-105 transition-transform' }}
               >
-                <span className={cn('text-xs font-bold', tamaño === t ? 'text-white' : 'text-black')}>
+                <span className={cn('text-md font-bold', tamaño === t ? 'text-white' : 'text-black')}>
                   {t}x{t}
                 </span>
               </Boton>
@@ -299,8 +300,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <p className="text-lg">
           Esperando a que {partida.blanco.nombre} acepte la invitación de {partida.negro.nombre}...
         </p>
-        <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-          Dejar de observar
+        <button className="flex gap-1 items-center text-sm underline text-slate-500" onClick={onDejarDeObservar}>
+          <Icon icon={"akar-icons:arrow-back"}/>
+          Volver a la Sala
         </button>
       </div>
     )
@@ -309,32 +311,42 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
   return (
     <div className="flex flex-col gap-4 items-center w-full px-2">
       <div className="flex items-center gap-4 text-sm">
-        <span style={{ color: RELLENO[NEGRO] }}>● {partida.negro.nombre}</span>
-        <span style={{ color: '#CCC' }}>● {partida.blanco.nombre}</span>
+        <span className="inline-flex items-center font-bold text-md gap-1" style={{ color: RELLENO[NEGRO] }}>
+          <PiedraIcono color={NEGRO} className="h-3 w-3" /> {partida.negro.nombre}
+        </span>
+        <span className="inline-flex text-white items-center drop-shadow-2xl gap-1">
+          <Outlined radius={1.1} outlineColor="zinc" className="inline-flex tracking-wider items-center gap-1">
+            <PiedraIcono color={BLANCO} className="h-3 w-3" /> {partida.blanco.nombre}
+          </Outlined>
+        </span>
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
         <p
-          className="flex items-center gap-2 text-sm font-semibold"
-          style={{ color: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC' }}
+          className="flex items-center gap-1 text-md font-semibold"
+          style={{
+            color: RELLENO[partida.turno],
+          }}
         >
-          <span
-            className="inline-block h-3 w-3 rounded-full border"
-            style={{
-              backgroundColor: partida.turno === NEGRO ? RELLENO[partida.turno] : '#CCC',
-            }}
-          />
-          Juega {partida.turno === NEGRO ? partida.negro.nombre : partida.blanco.nombre}
+          {partida.turno === BLANCO ? (
+            <Outlined radius={1.1} outlineColor="black" className="flex items-center gap-2 drop-shadow-2xl tracking-wider">
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              Juega blanco
+            </Outlined>
+          ) : (
+            <>
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              Juega negro
+            </>
+          )}
         </p>
       )}
 
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
       <div className="flex flex-col items-center gap-3">
-        <PanelCapturas capturador={BLANCO} capturas={partida.capturasBlancas} />
-
         <TableroGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
@@ -342,14 +354,16 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           vivo={partida.vivo}
           modoConteo={partida.estado === 'contando'}
           turno={partida.estado === 'jugando' ? partida.turno : undefined}
+          ultimaJugada={partida.ultimaJugada}
           deshabilitado
         />
 
-        <PanelCapturas capturador={NEGRO} capturas={partida.capturasNegras} />
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
-      <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-        {partida.estado === 'terminada' ? 'Volver a la sala' : 'Dejar de observar'}
+      <button className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105" onClick={onDejarDeObservar}>
+        <Icon icon={'akar-icons:arrow-back'} />
+        Volver a la Sala
       </button>
     </div>
   )
@@ -376,7 +390,11 @@ function BannerResultado({
 
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      {colorGanador === BLANCO ? <Outlined outlineColor="negro">{h2}</Outlined> : h2}
+      <div className='flex gap-2 items-center'>
+      <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'}/>
+      {colorGanador === BLANCO ? <Outlined radius={1.5} outlineColor="negro">{h2}</Outlined> : h2}
+      <Icon className='w-8 h-8' icon={'noto:party-popper'}/>
+      </div>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
@@ -387,25 +405,21 @@ function BannerResultado({
   )
 }
 
-/** Piedras capturadas por `capturador`, mostradas como circulitos del color capturado (el opuesto). */
-function PanelCapturas({ capturador, capturas }: { capturador: 1 | 2; capturas: number }) {
-  if (capturas === 0) return null
+/** Panel único de capturas debajo del tablero. `capturasNegras`/`capturasBlancas` cuentan, como en
+ * `Partida`, las piedras que capturó cada jugador (no las que le capturaron a él), así que el ícono
+ * de cada número es el del color CAPTURADO: negro captura blancas, blanco captura negras. */
+function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: number; capturasBlancas: number }) {
+  if (capturasNegras === 0 && capturasBlancas === 0) return null
 
-  const colorCapturado = capturador === NEGRO ? BLANCO : NEGRO
   return (
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: RELLENO[capturador] }}>
-        Capturas de {capturador === NEGRO ? 'negro' : 'blanco'}
+    <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+      Capturas:
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={BLANCO} className="h-4 w-4" /> {capturasNegras}
       </span>
-      <div className="flex flex-wrap gap-1 justify-center max-w-[220px]">
-        {Array.from({ length: capturas }, (_, i) => (
-          <span
-            key={i}
-            className="inline-block h-3.5 w-3.5 rounded-full border border-slate-400"
-            style={{ backgroundColor: RELLENO[colorCapturado] }}
-          />
-        ))}
-      </div>
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={NEGRO} className="h-4 w-4" /> {capturasBlancas}
+      </span>
     </div>
   )
 }
@@ -425,10 +439,34 @@ function PartidaEnCurso({
 
   const soyNegro = partida.negro.userId === userId
   const miColor = soyNegro ? NEGRO : BLANCO
-  const colorContrincante = soyNegro ? BLANCO : NEGRO
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
-  const capturasDe = (color: 1 | 2) => (color === NEGRO ? partida.capturasNegras : partida.capturasBlancas)
+
+  // Contenedor del área del juego: se lo pasamos como `container` a los dialogs de esta partida para
+  // que el overlay quede acotado a esta zona en vez de tapar toda la pantalla (el div de abajo tiene
+  // `contain: layout`, que hace que sea el containing block de sus hijos `fixed`, como el overlay).
+  const [contenedorJuego, setContenedorJuego] = useState<HTMLDivElement | null>(null)
+
+  // Jugada elegida en el tablero pero todavía sin enviar al server: el click ya no juega directo,
+  // solo marca la intersección candidata. Se confirma (o cancela) con los botones de abajo, así el
+  // jugador puede "probar" dónde poner la ficha antes de comprometerse.
+  const [jugadaPendiente, setJugadaPendiente] = useState<{ x: number; y: number } | null>(null)
+  const [confirmando, setConfirmando] = useState(false)
+
+  // Si dejó de ser mi turno (jugada confirmada, o volví a la sala y perdí el estado), no tiene
+  // sentido dejar una selección vieja colgada para la próxima vez que sea mi turno.
+  useEffect(() => {
+    if (!esMiTurno) setJugadaPendiente(null)
+  }, [esMiTurno])
+
+  function confirmarJugada() {
+    if (!jugadaPendiente) return
+    setConfirmando(true)
+    jugar(partida.id, jugadaPendiente.x, jugadaPendiente.y)
+      .then(() => setJugadaPendiente(null))
+      .catch((e) => toast.error(e.message))
+      .finally(() => setConfirmando(false))
+  }
 
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
@@ -455,12 +493,14 @@ function PartidaEnCurso({
   )
 
   return (
-    <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
+    <div ref={setContenedorJuego} className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl">
       <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span>
-          Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
+        <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
+          Tu color: 
+          <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
+          <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
         </span>
-        <span>
+        <span className='font-bold  p-2 rounded-xl'> 
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
       </div>
@@ -469,26 +509,20 @@ function PartidaEnCurso({
 
       {partida.estado === 'jugando' && (
         <p
-          className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
+          className={cn('flex items-center gap-1 text-md font-semibold', esMiTurno && 'animate-pulse')}
           style={{
             color: RELLENO[partida.turno],
           }}
         >
           {partida.turno === BLANCO ? (
-            <Outlined radius={2} outlineColor="negro" className="flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                style={{ backgroundColor: RELLENO[partida.turno] }}
-              />
-              Juega blanco — {esMiTurno ? 'tu turno' : contrincante.nombre}
+            <Outlined radius={1.5} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wider">
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              {esMiTurno ? 'Tu turno' : 'Juega blanco '}
             </Outlined>
           ) : (
             <>
-              <span
-                className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                style={{ backgroundColor: RELLENO[partida.turno] }}
-              />
-              Juega negro — {esMiTurno ? 'tu turno' : contrincante.nombre}
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+               {esMiTurno ? 'Tu turno' : 'Juega negro'}
             </>
           )}
         </p>
@@ -505,8 +539,6 @@ function PartidaEnCurso({
       )}
 
       <div className="flex flex-col items-center gap-3">
-        <PanelCapturas capturador={colorContrincante} capturas={capturasDe(colorContrincante)} />
-
         <TableroGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
@@ -516,14 +548,32 @@ function PartidaEnCurso({
           miColor={partida.estado === 'jugando' && esMiTurno ? miColor : undefined}
           turno={partida.estado === 'jugando' ? partida.turno : undefined}
           esMiTurno={partida.estado === 'jugando' && esMiTurno}
-          deshabilitado={partida.estado === 'jugando' ? !esMiTurno : partida.estado === 'terminada'}
+          ultimaJugada={partida.ultimaJugada}
+          pendiente={partida.estado === 'jugando' ? jugadaPendiente : null}
+          deshabilitado={
+            partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'
+          }
           onJugar={(x, y) => {
-            if (partida.estado === 'jugando') jugar(partida.id, x, y).catch((e) => toast.error(e.message))
-            else if (partida.estado === 'contando') marcarMuerta(partida.id, x, y).catch((e) => toast.error(e.message))
+            if (partida.estado === 'jugando') {
+              // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
+              setJugadaPendiente((actual) => (actual && actual.x === x && actual.y === y ? null : { x, y }))
+            } else if (partida.estado === 'contando') {
+              marcarMuerta(partida.id, x, y).catch((e) => toast.error(e.message))
+            }
           }}
         />
 
-        <PanelCapturas capturador={miColor} capturas={capturasDe(miColor)} />
+        {partida.estado === 'jugando' && (
+          <button
+            className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
+            disabled={!jugadaPendiente || confirmando}
+            onClick={confirmarJugada}
+          >
+            Confirmar jugada
+          </button>
+        )}
+
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
       <div className="w-full flex gap-12 items-center justify-center">
@@ -536,29 +586,61 @@ function PartidaEnCurso({
           </button>
         )}
         {partida.estado === 'terminada' ? (
-          <button className="bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
+          <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
+            <Icon icon={"akar-icons:arrow-back"}/>
             Volver a la sala
           </button>
         ) : (
           <>
-            <button className="text-sm underline text-slate-500" onClick={onVolverASala}>
+            <button className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold" onClick={onVolverASala}>
+              <Icon className='w-6 h-6' icon={"famicons:arrow-back-circle-outline"}/>
               Volver a la sala
             </button>
             {partida.estado === 'jugando' && (
               <>
                 <button
-                  className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
+                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
                   disabled={!esMiTurno}
                   onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
                 >
                   Pasar
                 </button>
-                <button
-                  className="text-sm underline text-slate-500"
-                  onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
-                >
-                  Abandonar
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
+                      disabled={confirmando}
+                    >
+                      <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
+                      Abandonar
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent
+                    container={contenedorJuego}
+                    overlayClassName="rounded-xl"
+                    className="flex flex-col items-center rounded-xl"
+                  >
+                    <DialogHeader>
+                      <DialogTitle className="text-center leading-6">
+                        ¿Estás seguro que deseas abandonar la partida? Al abandonar la partida tu contrincante ganará
+                        automáticamente
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex gap-2">
+                      <DialogClose asChild>
+                        <button className="bg-slate-200 px-4 py-2 min-w-40 text-xl rounded-full">Cancelar</button>
+                      </DialogClose>
+                      <DialogClose asChild>
+                        <button
+                          className="flex items-center justify-center gap-1 bg-rose-500 text-white px-4 py-2 min-w-40 text-xl rounded-full"
+                          onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
+                        >
+                          Abandonar
+                        </button>
+                      </DialogClose>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </>
             )}
           </>

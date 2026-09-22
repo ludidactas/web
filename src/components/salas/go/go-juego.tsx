@@ -161,7 +161,7 @@ function BuscarContrincante({
   return (
     <div className="flex flex-col gap-6 items-center max-w-md mx-auto w-full">
       <div className="flex flex-col gap-4 items-center w-full">
-        <h2 className="text-xl font-bold">Elegí un contrincante y un tamaño de tablero</h2>
+        <h2 className="text-xl text-center font-bold">Elegí un contrincante y un tamaño de tablero</h2>
 
         {partidaEnPausa && (
           <div className="flex items-center justify-between gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3 w-full text-sm">
@@ -178,9 +178,9 @@ function BuscarContrincante({
               <Boton
                 color={tamaño === t ? '#6366f1' : '#ccb2ff'}
                 shadowColor={tamaño === t ? '#4338ca' : '#6b34a4'}
-                classNames={{ root: 'flex items-center justify-center w-16 h-9 hover:scale-105 transition-transform' }}
+                classNames={{ root: 'flex items-center justify-center w-20 h-12 hover:scale-105 transition-transform' }}
               >
-                <span className={cn('text-xs font-bold', tamaño === t ? 'text-white' : 'text-black')}>
+                <span className={cn('text-md font-bold', tamaño === t ? 'text-white' : 'text-black')}>
                   {t}x{t}
                 </span>
               </Boton>

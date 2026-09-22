@@ -39,7 +39,8 @@ export default function GoogleLogin({ className, intent }: { className?: string;
             <div className="flex flex-col gap-4 text-zinc-800 ">
               <p>
                 Las salas de profe ofrecen una interfaz en vivo de{' '}
-                <span className="text-cyan-600">encuestas y toma de asistencia</span> que podés compartir con tus
+                <span className="text-cyan-600">encuestas y toma de asistencia</span> y{' '}
+                <span className="text-ld-violeta">partidas de Go</span> (el juego de mesa) que podés compartir con tus
                 estudiantes. Facilitan la <span className="text-cyan-600">interactividad</span> en{' '}
                 <span className="text-emerald-600">experiencias a distancia</span>, independientemente de la plataforma
                 que estés usando para transmitir.

@@ -344,7 +344,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           deshabilitado
         />
 
-        <PanelCapturas negras={partida.capturasNegras} blancas={partida.capturasBlancas} />
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
       <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
@@ -386,18 +386,20 @@ function BannerResultado({
   )
 }
 
-/** Panel único de capturas (piedras negras y blancas que sacó cada jugador), debajo del tablero. */
-function PanelCapturas({ negras, blancas }: { negras: number; blancas: number }) {
-  if (negras === 0 && blancas === 0) return null
+/** Panel único de capturas debajo del tablero. `capturasNegras`/`capturasBlancas` cuentan, como en
+ * `Partida`, las piedras que capturó cada jugador (no las que le capturaron a él), así que el ícono
+ * de cada número es el del color CAPTURADO: negro captura blancas, blanco captura negras. */
+function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: number; capturasBlancas: number }) {
+  if (capturasNegras === 0 && capturasBlancas === 0) return null
 
   return (
     <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
       Capturas:
       <span className="inline-flex items-center gap-1">
-        <PiedraIcono color={NEGRO} className="h-4 w-4" /> {negras}
+        <PiedraIcono color={BLANCO} className="h-4 w-4" /> {capturasNegras}
       </span>
       <span className="inline-flex items-center gap-1">
-        <PiedraIcono color={BLANCO} className="h-4 w-4" /> {blancas}
+        <PiedraIcono color={NEGRO} className="h-4 w-4" /> {capturasBlancas}
       </span>
     </div>
   )
@@ -509,7 +511,7 @@ function PartidaEnCurso({
           }}
         />
 
-        <PanelCapturas negras={partida.capturasNegras} blancas={partida.capturasBlancas} />
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
       <div className="w-full flex gap-12 items-center justify-center">

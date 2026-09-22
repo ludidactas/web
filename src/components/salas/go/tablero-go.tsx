@@ -62,6 +62,7 @@ export function TableroGo({
   miColor,
   turno,
   esMiTurno,
+  ultimaJugada,
   deshabilitado,
   onJugar,
 }: {
@@ -69,6 +70,8 @@ export function TableroGo({
   tamaño: number
   /** Piedras marcadas como muertas durante la fase de conteo (se muestran atenuadas). */
   removidas?: boolean[][] | null
+  /** Coordenadas de la última piedra jugada: se resalta con un anillo naranja para ubicarla rápido. */
+  ultimaJugada?: Punto | null
   /** Puntos de cadenas incondicionalmente vivas (algoritmo de Benson): no se pueden marcar como muertas. */
   vivo?: boolean[][] | null
   /** Fase de conteo: grisa los grupos vivos (no seleccionables) y resalta el grupo bajo el cursor. */
@@ -327,6 +330,19 @@ export function TableroGo({
           })
         )}
       </g>
+
+      {/* Anillo naranja sobre la última piedra jugada, para encontrarla de un vistazo. */}
+      {ultimaJugada && (
+        <circle
+          cx={coordenadas(ultimaJugada.x)}
+          cy={coordenadas(ultimaJugada.y)}
+          r={CELDA * 0.3}
+          fill="none"
+          className="stroke-ld-amarillo-oscuro"
+          strokeWidth={CELDA * 0.1}
+          pointerEvents="none"
+        />
+      )}
 
       {/* Ghost de la próxima jugada: previsualiza dónde y de qué color caería la piedra */}
       {mostrarGhost && miColor && hover && (

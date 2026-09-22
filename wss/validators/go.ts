@@ -36,6 +36,8 @@ export interface Partida {
   pases: number
   /** Hashes de posiciones ya vistas en la partida, para detectar ko / superko. */
   historial: string[]
+  /** Coordenadas de la última piedra jugada (no cambia al pasar), para resaltarla en el tablero. */
+  ultimaJugada: { x: number; y: number } | null
   /** Solo se usa durante la fase de conteo (`estado === 'contando'`). */
   removidas: boolean[][] | null
   /**

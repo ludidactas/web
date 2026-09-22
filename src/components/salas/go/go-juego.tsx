@@ -340,6 +340,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           vivo={partida.vivo}
           modoConteo={partida.estado === 'contando'}
           turno={partida.estado === 'jugando' ? partida.turno : undefined}
+          ultimaJugada={partida.ultimaJugada}
           deshabilitado
         />
 
@@ -500,6 +501,7 @@ function PartidaEnCurso({
           miColor={partida.estado === 'jugando' && esMiTurno ? miColor : undefined}
           turno={partida.estado === 'jugando' ? partida.turno : undefined}
           esMiTurno={partida.estado === 'jugando' && esMiTurno}
+          ultimaJugada={partida.ultimaJugada}
           deshabilitado={partida.estado === 'jugando' ? !esMiTurno : partida.estado === 'terminada'}
           onJugar={(x, y) => {
             if (partida.estado === 'jugando') jugar(partida.id, x, y).catch((e) => toast.error(e.message))

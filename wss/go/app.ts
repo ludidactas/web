@@ -151,6 +151,7 @@ export async function estudianteGo(idSala: string, userId: string) {
         capturasBlancas: 0,
         pases: 0,
         historial: [],
+        ultimaJugada: null,
         removidas: null,
         vivo: null,
         confirmaron: { negro: false, blanco: false },
@@ -219,6 +220,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       partida.tablero = tablero
       partida.historial.push(motor.hashTablero(tablero))
+      partida.ultimaJugada = { x, y }
       if (color === motor.NEGRO) partida.capturasNegras += capturas
       else partida.capturasBlancas += capturas
       partida.turno = motor.rival(color)

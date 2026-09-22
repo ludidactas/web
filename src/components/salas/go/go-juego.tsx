@@ -9,6 +9,7 @@ import { BLANCO, calcularPuntaje, NEGRO, PiedraIcono, RELLENO, TableroGo } from 
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
@@ -423,6 +424,11 @@ function PartidaEnCurso({
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
 
+  // Contenedor del área del juego: se lo pasamos como `container` a los dialogs de esta partida para
+  // que el overlay quede acotado a esta zona en vez de tapar toda la pantalla (el div de abajo tiene
+  // `contain: layout`, que hace que sea el containing block de sus hijos `fixed`, como el overlay).
+  const [contenedorJuego, setContenedorJuego] = useState<HTMLDivElement | null>(null)
+
   // Jugada elegida en el tablero pero todavía sin enviar al server: el click ya no juega directo,
   // solo marca la intersección candidata. Se confirma (o cancela) con los botones de abajo, así el
   // jugador puede "probar" dónde poner la ficha antes de comprometerse.
@@ -469,7 +475,7 @@ function PartidaEnCurso({
   )
 
   return (
-    <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
+    <div ref={setContenedorJuego} className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl">
       <div className="flex flex-col items-center gap-2 text-md mb-2">
         <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
           Tu color: 
@@ -581,14 +587,42 @@ function PartidaEnCurso({
                 >
                   Pasar
                 </button>
-                <button
-                  className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
-                  disabled={confirmando}
-                  onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
-                >
-                  <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
-                  Abandonar
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
+                      disabled={confirmando}
+                    >
+                      <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
+                      Abandonar
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent
+                    container={contenedorJuego}
+                    overlayClassName="rounded-xl"
+                    className="flex flex-col items-center rounded-xl"
+                  >
+                    <DialogHeader>
+                      <DialogTitle className="text-center leading-6">
+                        ¿Estás seguro que deseas abandonar la partida? Al abandonar la partida tu contrincante ganará
+                        automáticamente
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex gap-2">
+                      <DialogClose asChild>
+                        <button className="bg-slate-200 px-4 py-2 min-w-40 text-xl rounded-full">Cancelar</button>
+                      </DialogClose>
+                      <DialogClose asChild>
+                        <button
+                          className="flex items-center justify-center gap-1 bg-rose-500 text-white px-4 py-2 min-w-40 text-xl rounded-full"
+                          onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
+                        >
+                          Abandonar
+                        </button>
+                      </DialogClose>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </>
             )}
           </>

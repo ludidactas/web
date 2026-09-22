@@ -81,15 +81,6 @@ export async function guardarEstudiante(salaId: string, session: WssEstudianteSe
   await redis.hset(`sala:${salaId}:estudiantes`, session.userId, JSON.stringify(session))
 }
 
-/** Borra varios estudiantes en un pipeline (evita múltiples round-trips). */
-export async function borrarEstudiantes(salaId: string, userIds: string[]): Promise<void> {
-  const pipeline = redis.pipeline()
-  for (const id of userIds) {
-    pipeline.hdel(`sala:${salaId}:estudiantes`, id)
-  }
-  await pipeline.exec()
-}
-
 // -- Asistencia (log de conexión/desconexión) --
 
 // Nota: Este log de asistencia guarda los intervalos en los que estuvo conectado un `userId`

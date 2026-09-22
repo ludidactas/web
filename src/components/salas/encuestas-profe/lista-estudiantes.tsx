@@ -3,7 +3,6 @@ import {
   CircleCheckBig,
   Copy,
   Download,
-  Eraser,
   FileSpreadsheet,
   Link,
   ListCollapse,
@@ -14,7 +13,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { PropsWithChildren, useRef, useState, useTransition } from 'react'
+import { PropsWithChildren, useEffect, useRef, useState, useTransition } from 'react'
 import { isEmpty } from 'remeda'
 import { QRCodeCanvas } from 'qrcode.react'
 import { toast } from 'sonner'
@@ -45,14 +44,33 @@ import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 
+// Preferencia de vista del profe (no estado de la sala): "mostrar solo conectados". Persistida en
+// cookie global, igual que `sidebar_state` (ui/sidebar.tsx). El server nunca purga la planilla, así
+// que este filtro es puramente cosmético.
+const SOLO_CONECTADOS_COOKIE = 'salas_solo_conectados'
+const SOLO_CONECTADOS_MAX_AGE = 60 * 60 * 24 * 7 // 7 días, igual que el sidebar
+
 export const ListaEstudiantes = () => {
-  const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
+  const { pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
-  const { lista: invitados, nombres: nombresInvitados } = storePermitidos()
+  const { nombres: nombresInvitados } = storePermitidos()
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
   const [minutosVentana, setMinutosVentana] = useState(90)
+  const [soloConectados, setSoloConectados] = useState(false)
+
+  useEffect(() => {
+    setSoloConectados(document.cookie.split('; ').includes(`${SOLO_CONECTADOS_COOKIE}=1`))
+  }, [])
+
+  const alternarSoloConectados = () =>
+    setSoloConectados((prev) => {
+      document.cookie = `${SOLO_CONECTADOS_COOKIE}=${prev ? '0' : '1'}; path=/; max-age=${SOLO_CONECTADOS_MAX_AGE}`
+      return !prev
+    })
+
+  const visibles = soloConectados ? estudiantes.filter((e) => e.conectado) : estudiantes
 
   const { handleCopy, justCopied } = useClipboard()
 
@@ -70,10 +88,10 @@ export const ListaEstudiantes = () => {
   //   exportarPlanilla(datosParaExcel)
   // }
 
-  /** Exporta la planilla completa desde el estado del servidor: incluye a quienes ya no están
-   * conectados (o fueron "limpiados" del store del FE) y una columna por cada pregunta con la
-   * respuesta de cada estudiante. A diferencia de `handleExportToExcel`, no depende de lo que este
-   * navegador haya visto en la sesión actual. */
+  /** Exporta la planilla completa desde el estado del servidor: incluye a todos los que pasaron por
+   * la sala (conectados o no) y una columna por cada pregunta con la respuesta de cada estudiante.
+   * A diferencia de `handleExportToExcel`, no depende de lo que este navegador haya visto en la
+   * sesión actual ni del filtro "solo conectados" de la vista. */
   const handleExportarPlanillaCompleta = () =>
     startExportarPlanilla(async () => {
       try {
@@ -96,7 +114,7 @@ export const ListaEstudiantes = () => {
       }
     })
 
-  const datosEstudiantes = estudiantes
+  const datosEstudiantes = visibles
     .map((e) => {
       const identificador = e.email || e.dni
       return identificador ? `${e.nombre} (${identificador})` : e.nombre
@@ -169,18 +187,24 @@ export const ListaEstudiantes = () => {
       {/* Lista de participantes */}
       <div className={cn('flex flex-col flex-1 overflow-hidden mt-4')}>
         <div className={cn('flex-1 overflow-y-auto')}>
-          {estudiantes.length === 0 && (
+          {visibles.length === 0 && (
             <>
-              <p className="text-slate-400 italic mt-6 text-center">Ningún estudiante conectado aún...</p>
-              <p className="text-slate-400 italic px-6 mt-2 text-center">
-                ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
+              <p className="text-slate-400 italic mt-6 text-center">
+                {soloConectados && estudiantes.length > 0
+                  ? 'No hay estudiantes conectados en este momento'
+                  : 'Ningún estudiante conectado aún...'}
               </p>
+              {!soloConectados && (
+                <p className="text-slate-400 italic px-6 mt-2 text-center">
+                  ¡Compartí el link de la sala con tus estudiantes para que participen de las encuestas!
+                </p>
+              )}
             </>
           )}
 
-          {estudiantes.length > 0 && (
+          {visibles.length > 0 && (
             <ul className="flex flex-col gap-2 p-2 rounded-xl">
-              {estudiantes.map((e) => (
+              {visibles.map((e) => (
                 <li
                   key={e.userId}
                   className={cn('flex items-center gap-2', {
@@ -219,47 +243,23 @@ export const ListaEstudiantes = () => {
           )}
         </div>
         <div className={cn('flex justify-end gap-2 mb-3 text-ld-violeta-oscuro')}>
-          <Dialog>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DialogTrigger asChild>
-                  <button
-                    className={cn(
-                      'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                    )}
-                    disabled={estudiantes.length === 0}
-                  >
-                    <Eraser size={14} /> Limpiar
-                  </button>
-                </DialogTrigger>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">Limpiá la lista de participantes</p>
-              </TooltipContent>
-            </Tooltip>
-            <DialogContent className="flex flex-col items-center">
-              <DialogHeader>
-                <DialogTitle className="text-center leading-6">¿Limpiar la lista de participantes?</DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-slate-500 text-center">
-                Se van a quitar de la lista los estudiantes desconectados.
-                {invitados.length > 0 && ` Los ${invitados.length} invitados no se van a borrar.`}
-              </p>
-              <DialogFooter className="flex-row justify-center gap-2">
-                <DialogClose>
-                  <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
-                </DialogClose>
-                <DialogClose asChild>
-                  <button
-                    className="flex items-center gap-1 bg-rose-700 text-white px-4 py-2 rounded-full text-sm"
-                    onClick={limpiarEstudiantes}
-                  >
-                    <Eraser size={14} /> Limpiar
-                  </button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
+                  soloConectados ? 'bg-ld-violeta-oscuro text-white border-ld-violeta-oscuro' : 'hover:bg-slate-50'
+                )}
+                onClick={alternarSoloConectados}
+                disabled={estudiantes.length === 0}
+              >
+                <Users size={14} /> Solo conectados
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Mostrar solo los estudiantes conectados ahora</p>
+            </TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -268,7 +268,7 @@ export const ListaEstudiantes = () => {
                   justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
                 )}
                 onClick={handleCopy(datosEstudiantes)}
-                disabled={estudiantes.length === 0}
+                disabled={visibles.length === 0}
               >
                 {justCopied ? <SquareCheckBig size={14} /> : <Copy size={14} />}
                 {justCopied ? '¡Copiado!' : 'Copiar'}

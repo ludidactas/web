@@ -77,7 +77,6 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
     },
 
     acciones: {
-      limpiarEstudiantes: () => socket?.emit('sala:limpar_estudiantes_sala'),
       actualizarConfig: (config: Partial<ConfigSala>) => socket?.emit('sala:actualizar_config', config),
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
@@ -85,7 +84,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       setNombrePermitido: (dni: string, nombre: string) => socket?.emit('sala:permitidos_nombre', { dni, nombre }),
       // Comando con ack: el caller (botón de exportar) necesita los datos ya para armar el archivo.
       // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
-      // atrás (así no arrastra invitados de encuentros anteriores a la exportación de la clase actual).
+      // atrás (para acotar la exportación a la clase actual).
       pedirPlanillaCompleta: async (minutos?: number): Promise<PlanillaCompleta> => {
         if (!socket) throw new Error('Sin conexión')
         const res: Ack<PlanillaCompleta> = await socket

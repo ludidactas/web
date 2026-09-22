@@ -34,10 +34,10 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
  * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
  *
- * Si se pasa `minutos`, restringe las filas a los estudiantes que estuvieron conectados en algún
- * momento de la ventana `[ahora - minutos, ahora]` (según el log de asistencia), para no arrastrar a
- * la exportación a los invitados de encuentros anteriores que la guarda de "Limpiar" preserva en la
- * planilla a propósito.
+ * La planilla nunca se purga: guarda a todos los que pasaron por la sala (conectados o no), así que
+ * no hace falta un "Limpiar" para conservar a los invitados. Si se pasa `minutos`, restringe las filas
+ * a los estudiantes que estuvieron conectados en algún momento de la ventana
+ * `[ahora - minutos, ahora]` (según el log de asistencia), para acotar la exportación a la clase actual.
  */
 async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
   const [estudiantesTotales, nombresProvistos, encuestas, asistencia] = await Promise.all([
@@ -101,18 +101,10 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
   // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
   // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
   // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
-  // atrás (para no arrastrar invitados de encuentros anteriores que la planilla preserva a propósito).
+  // atrás (para acotar la exportación a la clase actual).
   socket.on(
     'sala:pedir_planilla_completa',
     conAck(socket)(async (minutos?: number) => armarPlanillaCompleta(sala, minutos))
-  )
-
-  socket.on(
-    'sala:limpar_estudiantes_sala',
-    safe(async () => {
-      await sala.limpiarEstudiantes()
-      socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-    })
   )
 
   socket.on(

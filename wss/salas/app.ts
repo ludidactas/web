@@ -125,20 +125,6 @@ export namespace Salas {
     }
 
     /**
-     * Purga de la planilla a los estudiantes desconectados, PERO conserva a los que están en la
-     * lista de invitados (queremos seguir viéndolos aunque no estén conectados).
-     */
-    async function limpiarEstudiantes() {
-      const planilla = await db.getEstudiantes(salaId)
-      const conectados = await userIdsConectados()
-      const invitados = await ListaPermitidos.para(salaId).obtener()
-
-      // Borramos los desconectados que _NO_ estén en la lista de invitados
-      const aBorrar = Object.keys(planilla).filter((userId) => !conectados.has(userId) && !invitados.includes(userId))
-      if (aBorrar.length > 0) await db.borrarEstudiantes(salaId, aBorrar)
-    }
-
-    /**
      * Registra el ingreso del estudiante: lo persiste en la planilla durable de la sala y anota su
      * conexión en el log de asistencia.
      */
@@ -183,9 +169,6 @@ export namespace Salas {
 
       /** Kickea a los estudiantes cuyo DNI/email no esté en la lista de permitidos actualizada */
       sanitizar,
-
-      /** Borra los estudiantes desconectados de la lista */
-      limpiarEstudiantes,
 
       /** Devuelve la lista de estudiantes, y anota si están presentes */
       listarEstudiantes,

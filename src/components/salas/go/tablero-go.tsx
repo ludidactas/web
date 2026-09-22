@@ -63,6 +63,7 @@ export function TableroGo({
   turno,
   esMiTurno,
   ultimaJugada,
+  pendiente,
   deshabilitado,
   onJugar,
 }: {
@@ -82,6 +83,10 @@ export function TableroGo({
   turno?: 1 | 2
   /** Si el turno es del usuario, el contorno del tablero pulsa para que note que le toca jugar. */
   esMiTurno?: boolean
+  /** Punto elegido pero todavía sin confirmar (fuera de `modoConteo`): se dibuja fijo, más sólido que
+   * el ghost del hover, con un anillo punteado, hasta que se confirma la jugada con el botón afuera
+   * del tablero o se cancela clickeándolo de nuevo. */
+  pendiente?: Punto | null
   deshabilitado?: boolean
   onJugar?: (x: number, y: number) => void
 }) {
@@ -180,7 +185,13 @@ export function TableroGo({
   const filterUrlTurno = turno === NEGRO ? contornoNegro.filterUrl : contornoBlanco.filterUrl
 
   // Ghost de la próxima jugada: previsualiza la piedra en la intersección vacía bajo el cursor.
-  const mostrarGhost = !modoConteo && !!miColor && !!hover && tablero[hover.y][hover.x] === 0
+  // No se dibuja sobre el punto ya elegido (`pendiente`): ese tiene su propio dibujo, más sólido.
+  const mostrarGhost =
+    !modoConteo &&
+    !!miColor &&
+    !!hover &&
+    tablero[hover.y][hover.x] === 0 &&
+    !(pendiente && hover.x === pendiente.x && hover.y === pendiente.y)
 
   const cursorActual =
     deshabilitado || !onJugar || (hover && !esSeleccionable(hover)) || (modoConteo && !hover) ? 'default' : 'pointer'
@@ -357,6 +368,33 @@ export function TableroGo({
           pointerEvents="none"
           filter={filtroSombraUrl}
         />
+      )}
+
+      {/* Jugada elegida pero todavía sin confirmar: piedra fija (no sigue al mouse) con anillo
+          punteado, para distinguirla del ghost de hover mientras se espera el botón de confirmar. */}
+      {pendiente && miColor && tablero[pendiente.y][pendiente.x] === 0 && (
+        <g pointerEvents="none">
+          <circle
+            cx={coordenadas(pendiente.x)}
+            cy={coordenadas(pendiente.y)}
+            r={CELDA * 0.46}
+            fill={RELLENO_PIEDRA[miColor]}
+            stroke="#1a1a1a"
+            strokeWidth={miColor === NEGRO ? 0 : 1}
+            opacity={0.6}
+            filter={filtroSombraUrl}
+          />
+          <circle
+            cx={coordenadas(pendiente.x)}
+            cy={coordenadas(pendiente.y)}
+            r={CELDA * 0.6}
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            className="animate-pulse"
+          />
+        </g>
       )}
     </svg>
   )

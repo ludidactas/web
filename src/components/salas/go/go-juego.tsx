@@ -423,6 +423,27 @@ function PartidaEnCurso({
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
 
+  // Jugada elegida en el tablero pero todavía sin enviar al server: el click ya no juega directo,
+  // solo marca la intersección candidata. Se confirma (o cancela) con los botones de abajo, así el
+  // jugador puede "probar" dónde poner la ficha antes de comprometerse.
+  const [jugadaPendiente, setJugadaPendiente] = useState<{ x: number; y: number } | null>(null)
+  const [confirmando, setConfirmando] = useState(false)
+
+  // Si dejó de ser mi turno (jugada confirmada, o volví a la sala y perdí el estado), no tiene
+  // sentido dejar una selección vieja colgada para la próxima vez que sea mi turno.
+  useEffect(() => {
+    if (!esMiTurno) setJugadaPendiente(null)
+  }, [esMiTurno])
+
+  function confirmarJugada() {
+    if (!jugadaPendiente) return
+    setConfirmando(true)
+    jugar(partida.id, jugadaPendiente.x, jugadaPendiente.y)
+      .then(() => setJugadaPendiente(null))
+      .catch((e) => toast.error(e.message))
+      .finally(() => setConfirmando(false))
+  }
+
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
   // nunca puede mostrar un número distinto al que se confirma al terminar la partida.
@@ -450,7 +471,7 @@ function PartidaEnCurso({
   return (
     <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
       <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span className='font-bold border-4 p-2 text-xl rounded-xl inline-flex items-center gap-1.5'>
+        <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
           Tu color: 
           <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
           <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
@@ -464,7 +485,7 @@ function PartidaEnCurso({
 
       {partida.estado === 'jugando' && (
         <p
-          className={cn('flex items-center gap-2 text-sm font-semibold', esMiTurno && 'animate-pulse')}
+          className={cn('flex items-center gap-1 text-md font-semibold', esMiTurno && 'animate-pulse')}
           style={{
             color: RELLENO[partida.turno],
           }}
@@ -504,12 +525,29 @@ function PartidaEnCurso({
           turno={partida.estado === 'jugando' ? partida.turno : undefined}
           esMiTurno={partida.estado === 'jugando' && esMiTurno}
           ultimaJugada={partida.ultimaJugada}
-          deshabilitado={partida.estado === 'jugando' ? !esMiTurno : partida.estado === 'terminada'}
+          pendiente={partida.estado === 'jugando' ? jugadaPendiente : null}
+          deshabilitado={
+            partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'
+          }
           onJugar={(x, y) => {
-            if (partida.estado === 'jugando') jugar(partida.id, x, y).catch((e) => toast.error(e.message))
-            else if (partida.estado === 'contando') marcarMuerta(partida.id, x, y).catch((e) => toast.error(e.message))
+            if (partida.estado === 'jugando') {
+              // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
+              setJugadaPendiente((actual) => (actual && actual.x === x && actual.y === y ? null : { x, y }))
+            } else if (partida.estado === 'contando') {
+              marcarMuerta(partida.id, x, y).catch((e) => toast.error(e.message))
+            }
           }}
         />
+
+        {partida.estado === 'jugando' && (
+          <button
+            className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 hover:scale-105"
+            disabled={!jugadaPendiente || confirmando}
+            onClick={confirmarJugada}
+          >
+            Confirmar jugada
+          </button>
+        )}
 
         <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
@@ -537,7 +575,7 @@ function PartidaEnCurso({
             {partida.estado === 'jugando' && (
               <>
                 <button
-                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:bg-gray-200 hover:bg-ld-violeta/30 hover:text-ld-violeta-oscuro"
+                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 hover:scale-105"
                   disabled={!esMiTurno}
                   onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
                 >
@@ -545,6 +583,7 @@ function PartidaEnCurso({
                 </button>
                 <button
                   className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
+                  disabled={confirmando}
                   onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
                 >
                   <Icon className='w-6 h-6' icon={'ci:close-circle'}/>

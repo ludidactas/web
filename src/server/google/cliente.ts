@@ -1,4 +1,7 @@
 import { auth, drive } from '@googleapis/drive'
+import type { drive_v3 } from '@googleapis/drive'
+import { sheets } from '@googleapis/sheets'
+import type { sheets_v4 } from '@googleapis/sheets'
 import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 
@@ -18,15 +21,15 @@ class SinConexionDrive extends Error {
 }
 
 /**
- * Arma un cliente de la API de Drive autenticado como el usuario de la request actual.
+ * Credenciales OAuth2 de corta duración del usuario de la request actual.
  *
  * Lee el `driveRefreshToken` directo del JWT de sesión (vía `getToken`, sin pasar por
- * `auth()`) y lo cambia por credenciales OAuth2 de corta duración para esta llamada.
- * No valida acá si el usuario tiene habilitada la integración (`tieneIntegracionGoogle`)
- * ni si es dueño de la sala sobre la que va a operar — eso es responsabilidad del caller
- * (la ruta HTTP). Si no hay refresh token, asumimos que el usuario nunca conectó Drive.
+ * `auth()`) y lo cambia por credenciales OAuth2 para esta llamada. No valida acá si el
+ * usuario tiene habilitada la integración (`tieneIntegracionGoogle`) ni si es dueño de
+ * la sala sobre la que va a operar — eso es responsabilidad del caller (la ruta HTTP).
+ * Si no hay refresh token, asumimos que el usuario nunca conectó Drive.
  */
-export async function clienteDrive(request: Request) {
+async function credencialesGoogle(request: Request) {
   const clientId = process.env.AUTH_GOOGLE_ID
   const clientSecret = process.env.AUTH_GOOGLE_SECRET
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
@@ -48,7 +51,29 @@ export async function clienteDrive(request: Request) {
   const oauth = new auth.OAuth2({ clientId, clientSecret })
   oauth.setCredentials({ refresh_token: token.driveRefreshToken })
 
-  return drive({ version: 'v3', auth: oauth, ...opcionesRed })
+  return oauth
+}
+
+/**
+ * Arma los clientes de las APIs de Google autenticados como el usuario de la request actual,
+ * compartiendo las credenciales OAuth2 (una sola renovación de access token para los dos).
+ *
+ * Es la única puerta de entrada a Google: así "no conectó Drive" es siempre el mismo error
+ * (`SinConexionDrive`, que `responderError` mapea a 409) y no hay clientes paralelos con su
+ * propia copia del armado de credenciales.
+ */
+export async function clientesGoogle(request: Request): Promise<{ drive: drive_v3.Drive; sheets: sheets_v4.Sheets }> {
+  const oauth = await credencialesGoogle(request)
+
+  return {
+    drive: drive({ version: 'v3', auth: oauth, ...opcionesRed }),
+    sheets: sheets({ version: 'v4', auth: oauth, ...opcionesRed }),
+  }
+}
+
+/** Atajo de `clientesGoogle` para las rutas que solo usan Drive. */
+export async function clienteDrive(request: Request): Promise<drive_v3.Drive> {
+  return (await clientesGoogle(request)).drive
 }
 
 /** Google devuelve `invalid_grant` cuando el usuario revocó el acceso desde su cuenta, o el refresh_token expiró. */
@@ -60,7 +85,7 @@ function esGrantInvalido(e: unknown) {
 }
 
 /**
- * Handler de errores común para las rutas que usan `clienteDrive`.
+ * Handler de errores común para las rutas que usan `clientesGoogle`.
  *
  * Si el problema es de conexión con Drive (nunca conectó, o Google invalidó el grant),
  * responde 409 y, en el caso de un grant inválido, llama a `desconectarDrive()` para que

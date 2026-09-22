@@ -20,6 +20,13 @@ export const RELLENO: Record<number, string> = { [NEGRO]: '#1a1a1a', [BLANCO]: '
  * se pierde contra el fondo claro, así que para ese caso puntual usamos un gris más oscuro. */
 const BLANCO_MUERTA = '#94a3b8'
 
+/** Tonos del gradiente "brilloso" de cada piedra (luz a oscuridad), compartidos entre el tablero y
+ * `PiedraIcono` para que un mismo color se vea igual dentro y fuera del `<svg>` del tablero. */
+const TONOS_PIEDRA: Record<number, [claro: string, oscuro: string]> = {
+  [NEGRO]: ['#52525b', '#0a0a0a'],
+  [BLANCO]: ['#ffffff', '#c4c4c8'],
+}
+
 interface Punto {
   x: number
   y: number
@@ -204,12 +211,12 @@ export function TableroGo({
         {/* Luz viniendo de arriba a la izquierda (cx/cy corridos del centro): da el efecto de piedra
             pulida en vez de círculo plano. */}
         <radialGradient id={gradienteNegroId} cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#52525b" />
-          <stop offset="100%" stopColor="#0a0a0a" />
+          <stop offset="0%" stopColor={TONOS_PIEDRA[NEGRO][0]} />
+          <stop offset="100%" stopColor={TONOS_PIEDRA[NEGRO][1]} />
         </radialGradient>
         <radialGradient id={gradienteBlancoId} cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#c4c4c8" />
+          <stop offset="0%" stopColor={TONOS_PIEDRA[BLANCO][0]} />
+          <stop offset="100%" stopColor={TONOS_PIEDRA[BLANCO][1]} />
         </radialGradient>
       </defs>
 
@@ -335,6 +342,41 @@ export function TableroGo({
           filter={filtroSombraUrl}
         />
       )}
+    </svg>
+  )
+}
+
+/**
+ * Piedrita chica (gradiente + sombra igual a las del tablero) para usar como ícono suelto fuera del
+ * `<svg>` del tablero — ej. "Tu color: ⚫ Negro" o el indicador de turno. `className` controla el
+ * tamaño (ej. `h-4 w-4`).
+ */
+export function PiedraIcono({ color, className }: { color: 1 | 2; className?: string }) {
+  const uid = useId().replace(/:/g, '')
+  const gradienteId = `piedra-icono-${uid}`
+  const filtroSombraId = `sombra-piedra-icono-${uid}`
+  const [claro, oscuro] = TONOS_PIEDRA[color]
+
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden>
+      <defs>
+        <filter id={filtroSombraId}>
+          <feDropShadow dx="0" dy="0.6" stdDeviation="0.6" floodColor="#000" floodOpacity="0.35" />
+        </filter>
+        <radialGradient id={gradienteId} cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor={claro} />
+          <stop offset="100%" stopColor={oscuro} />
+        </radialGradient>
+      </defs>
+      <circle
+        cx={10}
+        cy={10}
+        r={9}
+        fill={`url(#${gradienteId})`}
+        stroke="#1a1a1a"
+        strokeWidth={color === NEGRO ? 0 : 0.7}
+        filter={`url(#${filtroSombraId})`}
+      />
     </svg>
   )
 }

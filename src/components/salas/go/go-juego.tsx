@@ -5,7 +5,7 @@ import { storeGo } from '@/wss-cli/stores/go-store'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
-import { BLANCO, calcularPuntaje, NEGRO, RELLENO, TableroGo } from './tablero-go'
+import { BLANCO, calcularPuntaje, NEGRO, PiedraIcono, RELLENO, TableroGo } from './tablero-go'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -333,8 +333,6 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
       <div className="flex flex-col items-center gap-3">
-        <PanelCapturas capturador={BLANCO} capturas={partida.capturasBlancas} />
-
         <TableroGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
@@ -345,7 +343,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           deshabilitado
         />
 
-        <PanelCapturas capturador={NEGRO} capturas={partida.capturasNegras} />
+        <PanelCapturas negras={partida.capturasNegras} blancas={partida.capturasBlancas} />
       </div>
 
       <button className="text-sm underline text-slate-500" onClick={onDejarDeObservar}>
@@ -387,25 +385,19 @@ function BannerResultado({
   )
 }
 
-/** Piedras capturadas por `capturador`, mostradas como circulitos del color capturado (el opuesto). */
-function PanelCapturas({ capturador, capturas }: { capturador: 1 | 2; capturas: number }) {
-  if (capturas === 0) return null
+/** Panel único de capturas (piedras negras y blancas que sacó cada jugador), debajo del tablero. */
+function PanelCapturas({ negras, blancas }: { negras: number; blancas: number }) {
+  if (negras === 0 && blancas === 0) return null
 
-  const colorCapturado = capturador === NEGRO ? BLANCO : NEGRO
   return (
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      <span className="text-xs font-semibold whitespace-nowrap" style={{ color: RELLENO[capturador] }}>
-        Capturas de {capturador === NEGRO ? 'negro' : 'blanco'}
+    <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+      Capturas:
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={NEGRO} className="h-4 w-4" /> {negras}
       </span>
-      <div className="flex flex-wrap gap-1 justify-center max-w-[220px]">
-        {Array.from({ length: capturas }, (_, i) => (
-          <span
-            key={i}
-            className="inline-block h-3.5 w-3.5 rounded-full border border-slate-400"
-            style={{ backgroundColor: RELLENO[colorCapturado] }}
-          />
-        ))}
-      </div>
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={BLANCO} className="h-4 w-4" /> {blancas}
+      </span>
     </div>
   )
 }
@@ -425,10 +417,8 @@ function PartidaEnCurso({
 
   const soyNegro = partida.negro.userId === userId
   const miColor = soyNegro ? NEGRO : BLANCO
-  const colorContrincante = soyNegro ? BLANCO : NEGRO
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
-  const capturasDe = (color: 1 | 2) => (color === NEGRO ? partida.capturasNegras : partida.capturasBlancas)
 
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
@@ -457,10 +447,12 @@ function PartidaEnCurso({
   return (
     <div className="flex flex-col gap-4 items-center p-2 rounded-2xl">
       <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span>
-          Tu color: <b>{soyNegro ? 'Negro' : 'Blanco'}</b>
+        <span className='font-bold border-4 p-2 text-xl rounded-xl inline-flex items-center gap-1.5'>
+          Tu color: 
+          <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
+          <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
         </span>
-        <span>
+        <span className='font-bold  p-2 rounded-xl'> 
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
       </div>
@@ -475,20 +467,14 @@ function PartidaEnCurso({
           }}
         >
           {partida.turno === BLANCO ? (
-            <Outlined radius={2} outlineColor="negro" className="flex items-center gap-2">
-              <span
-                className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                style={{ backgroundColor: RELLENO[partida.turno] }}
-              />
-              Juega blanco — {esMiTurno ? 'tu turno' : contrincante.nombre}
+            <Outlined radius={2} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wide">
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+              {esMiTurno ? 'Tu turno' : 'Juega blanco '}
             </Outlined>
           ) : (
             <>
-              <span
-                className="inline-block h-3 w-3 rounded-full border border-slate-400"
-                style={{ backgroundColor: RELLENO[partida.turno] }}
-              />
-              Juega negro — {esMiTurno ? 'tu turno' : contrincante.nombre}
+              <PiedraIcono color={partida.turno} className="h-3 w-3" />
+               {esMiTurno ? 'Tu turno' : 'Juega negro'}
             </>
           )}
         </p>
@@ -505,8 +491,6 @@ function PartidaEnCurso({
       )}
 
       <div className="flex flex-col items-center gap-3">
-        <PanelCapturas capturador={colorContrincante} capturas={capturasDe(colorContrincante)} />
-
         <TableroGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
@@ -523,7 +507,7 @@ function PartidaEnCurso({
           }}
         />
 
-        <PanelCapturas capturador={miColor} capturas={capturasDe(miColor)} />
+        <PanelCapturas negras={partida.capturasNegras} blancas={partida.capturasBlancas} />
       </div>
 
       <div className="w-full flex gap-12 items-center justify-center">
@@ -536,27 +520,30 @@ function PartidaEnCurso({
           </button>
         )}
         {partida.estado === 'terminada' ? (
-          <button className="bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
+          <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
+            <Icon icon={"akar-icons:arrow-back"}/>
             Volver a la sala
           </button>
         ) : (
           <>
-            <button className="text-sm underline text-slate-500" onClick={onVolverASala}>
+            <button className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold" onClick={onVolverASala}>
+              <Icon className='w-6 h-6' icon={"famicons:arrow-back-circle-outline"}/>
               Volver a la sala
             </button>
             {partida.estado === 'jugando' && (
               <>
                 <button
-                  className="bg-slate-200 px-4 py-2 rounded disabled:opacity-40"
+                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:bg-gray-200 hover:bg-ld-violeta/30 hover:text-ld-violeta-oscuro"
                   disabled={!esMiTurno}
                   onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
                 >
                   Pasar
                 </button>
                 <button
-                  className="text-sm underline text-slate-500"
+                  className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
                   onClick={() => abandonar(partida.id).catch((e) => toast.error(e.message))}
                 >
+                  <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
                   Abandonar
                 </button>
               </>

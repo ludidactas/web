@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io'
 import { conAck, conErrorHandling } from '../middleware/error-handling'
+import * as db from './db'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
@@ -7,6 +8,7 @@ import { handlersEncuestasProfe } from '../polls/handlers'
 import { handlersGoProfe } from '../go/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
+import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
 import { configCreacionSala } from '../validators/salas'
 import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
@@ -33,17 +35,17 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
  * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
  *
- * Si se pasa `minutos`, restringe las filas a los estudiantes que estuvieron conectados en algún
- * momento de la ventana `[ahora - minutos, ahora]` (según el log de asistencia), para no arrastrar a
- * la exportación a los invitados de encuentros anteriores que la guarda de "Limpiar" preserva en la
- * planilla a propósito.
+ * La planilla nunca se purga: guarda a todos los que pasaron por la sala (conectados o no), así que
+ * no hace falta un "Limpiar" para conservar a los invitados. Si se pasa `minutos`, restringe las filas
+ * a los estudiantes que estuvieron conectados en algún momento de la ventana
+ * `[ahora - minutos, ahora]` (según el log de asistencia), para acotar la exportación a la clase actual.
  */
 async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
   const [estudiantesTotales, nombresProvistos, encuestas, asistencia] = await Promise.all([
     sala.listarEstudiantes(),
     sala.listaPermitidos().nombres(),
     profeSala(sala.id).then((profe) => profe.listarEncuestas()),
-    sala.asistencia(),
+    sala.intervalosDeConexion(),
   ])
 
   const estudiantes =
@@ -97,28 +99,13 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     })
   )
 
-  socket.on(
-    'sala:pedir_asistencia',
-    safe(async () => {
-      socket.emit('sala:asistencia', await sala.asistencia())
-    })
-  )
-
   // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
   // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
   // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
-  // atrás (para no arrastrar invitados de encuentros anteriores que la planilla preserva a propósito).
+  // atrás (para acotar la exportación a la clase actual).
   socket.on(
     'sala:pedir_planilla_completa',
     conAck(socket)(async (minutos?: number) => armarPlanillaCompleta(sala, minutos))
-  )
-
-  socket.on(
-    'sala:limpar_estudiantes_sala',
-    safe(async () => {
-      await sala.limpiarEstudiantes()
-      socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-    })
   )
 
   socket.on(
@@ -159,6 +146,21 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
     })
   )
 
+  // Las asistencias pendientes (normalmente una sola clase, la última cerrada) quedan en redis hasta
+  // que el FE confirma que las escribió en Drive: si las borráramos al entregarlas, un fallo de
+  // subida (Drive desconectado, red) perdería la clase.
+  socket.on(
+    'sala:asistencias_pendientes',
+    conAck(socket)(async () => db.getAsistenciasPendientes(sala.id))
+  )
+
+  socket.on(
+    'sala:descartar_asistencias_pendientes',
+    conAck(socket)(async () => {
+      await db.borrarAsistenciasPendientes(sala.id)
+    })
+  )
+
   await handlersEncuestasProfe(socket, sala)
   await handlersGoProfe(socket, sala.id)
 
@@ -189,6 +191,10 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   const abrir = async (sala: Sala) => {
     if (socket.data.salaActiva && socket.data.salaActiva !== sala.id)
       throw new Error('Ya hay una sala abierta en esta conexión. Reconectá para operar otra.')
+    // Si la sala se estaba por cerrar (el profe se había desconectado y todavía corre la espera
+    // previa a evaluar), la clase sigue: se cancela el cierre y se conserva el inicio, porque el log
+    // de asistencia es el mismo.
+    registrarApertura(sala.id)
     if (socket.data.salaActiva === sala.id) return emitirAbierta(socket, sala)
     await handlersSalaActivaProfe(socket, sala, safe)
   }
@@ -250,6 +256,15 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${email} desconectado: ${reason}`)
+
+    const salaId = socket.data.salaActiva
+    if (!salaId) return
+
+    // El chequeo de "al profe le queda otra conexión abierta" es async: si falla preferimos no
+    // programar el cierre antes que cerrar una clase que puede seguir viva.
+    registrarSalidaDelProfe(salaId, socket.id).catch((e) =>
+      console.error(`No se pudo programar el cierre de la sala ${salaId}:`, e)
+    )
   })
 }
 
@@ -293,7 +308,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
 
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
-    await sala.registrarEstudiante(socket.data.session)
+    await sala.registrarIngreso(socket.data.session)
     await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
 
     // Si está en la lista de invitados (solo aplica a salas por DNI), le avisamos con su nombre

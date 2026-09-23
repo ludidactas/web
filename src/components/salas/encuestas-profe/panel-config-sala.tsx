@@ -26,6 +26,7 @@ import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { cn } from '@/lib/utils'
 import { ListaInvitadosForm, ListaPermitidosForm } from './lista-invitados-form'
+import { SelectorCondicionDeAsistencia } from './condicion-asistencia'
 
 export default function PanelConfigSala({ children }: PropsWithChildren) {
   const isMobile = useIsMobile()
@@ -108,6 +109,11 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          <SelectorCondicionDeAsistencia
+            condicion={config?.condicion_asistencia ?? null}
+            onChange={(condicion_asistencia) => actualizarConfig({ condicion_asistencia })}
+          />
         </div>
       </DialogContent>
     </Dialog>

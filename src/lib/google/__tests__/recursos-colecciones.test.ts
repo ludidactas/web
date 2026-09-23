@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, mock } from 'bun:test'
 
-import { DriveNoConectado, guardarColeccion, leerColecciones } from '../recursos-colecciones'
+import { DriveNoConectado } from '../comun'
+import { guardarColeccion, leerColecciones } from '../recursos-colecciones'
 
 const fetchMock = mock()
 globalThis.fetch = fetchMock as any

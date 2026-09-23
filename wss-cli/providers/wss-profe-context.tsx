@@ -10,9 +10,11 @@ import profeGestionSalasHandlers from '../handlers/profe-gestion-salas-handlers'
 import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import profeAsistenciaHandlers from '../handlers/profe-asistencia-handlers'
+import profeGoHandlers from '../handlers/profe-go-handlers'
 import { useWss } from '../use-wss'
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
+import { storeGo } from '../stores/go-store'
 
 /**
  * Cose el socket del profe con su state. La conexión es token-only (identidad); qué sala se opera se
@@ -30,17 +32,22 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       base: baseSalaHandlers(socket),
       encuestas: profeEncuestasHandlers(socket),
       asistencia: profeAsistenciaHandlers(socket),
+      go: profeGoHandlers(socket),
     }),
     [socket]
   )
 
-  // Conectamos el socket a sus handlers
+  // Conectamos el socket a sus handlers. Go es el único que emite algo (`go:mi_partida`) apenas
+  // monta: el server solo registra ese listener cuando hay una sala abierta (`sala:abrir`), así que en
+  // modo gestión (sin `abrirSalaId`, ver `/salas`) el pedido nunca tiene quien lo conteste y termina
+  // siempre en el toast de error tras agotar los reintentos. Lo montamos solo si vamos a abrir una sala.
   useEffect(() => {
     handlers.gestion.montar()
     handlers.salaActiva.montar()
     handlers.base.montar()
     handlers.encuestas.montar()
     handlers.asistencia.montar()
+    if (abrirSalaId) handlers.go.montar()
 
     return () => {
       handlers.gestion.desmontar()
@@ -48,16 +55,23 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       handlers.base.desmontar()
       handlers.encuestas.desmontar()
       handlers.asistencia.desmontar()
+      if (abrirSalaId) handlers.go.desmontar()
     }
-  }, [handlers])
+  }, [handlers, abrirSalaId])
 
   // Página de operación: apenas la conexión está lista, abrimos la sala pedida.
   useEffect(() => {
     if (abrirSalaId && estado === StatusDeConexion.Conectado) handlers.gestion.acciones.abrirSala(abrirSalaId)
   }, [abrirSalaId, estado, handlers])
 
-  // Al salir de la sala limpiamos su config para no dejar valores stale al navegar.
-  useEffect(() => () => storeConfig.getState().set(null), [])
+  // Al salir de la sala limpiamos su config y estado de Go para no dejar valores stale al navegar.
+  useEffect(
+    () => () => {
+      storeConfig.getState().set(null)
+      storeGo.getState().resetConexion()
+    },
+    []
+  )
 
   return {
     socket,
@@ -67,6 +81,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
     ...handlers.salaActiva.acciones,
     ...handlers.base.acciones,
     ...handlers.encuestas.acciones,
+    ...handlers.go.acciones,
     WssDebugPanel,
   }
 }

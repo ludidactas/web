@@ -73,6 +73,13 @@ export namespace Salas {
       return sockets.some((s) => s.data.session.userId === userId && s.id !== excluirSocketId)
     }
 
+    /** Si al profe le queda algún socket vivo, excluyendo `excluirSocketId` (ver `sigueConectado`: el
+     * mismo motivo, para no confundir la propagación del adapter con que el profe sigue conectado). */
+    async function profeConectado(excluirSocketId?: string) {
+      const sockets = await io.in(`sala:${salaId}:profe`).fetchSockets()
+      return sockets.some((s) => s.id !== excluirSocketId)
+    }
+
     /**
      * Devuelve la planilla de estudiantes de la sala: todos los que pasaron por ella (incluye
      * desconectados, con su sesión persistida), anotando `conectado` según tengan o no un socket
@@ -184,6 +191,9 @@ export namespace Salas {
 
       /** Indica si al estudiante le queda algún socket vivo (excluyendo el `socketId` dado) */
       sigueConectado,
+
+      /** Indica si el profe tiene algún socket vivo ahora mismo */
+      profeConectado,
 
       /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
       intervalosDeConexion,

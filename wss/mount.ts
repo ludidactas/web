@@ -19,14 +19,16 @@ export const mount = (port: number) => {
 
   console.log(`🚀 Servidor de salas corriendo en el puerto ${port}`)
 
-  // Graceful shutdown
-  process.on('SIGINT', () => {
+  // Graceful shutdown. SIGINT llega de pm2/ctrl-c, SIGTERM es lo que manda Docker/Coolify al redeployar.
+  const cerrarServer = () => {
     console.log('\n📡 Cerrando server...')
     io.close(() => {
       console.log('Server cerrado!')
       process.exit(0)
     })
-  })
+  }
+  process.on('SIGINT', cerrarServer)
+  process.on('SIGTERM', cerrarServer)
 
   // Última línea de error handling
   process.on('uncaughtException', (error) => {

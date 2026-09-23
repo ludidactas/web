@@ -283,9 +283,9 @@ export function ImportarExportar({
     <Drawer direction="right" open={drawerAbierto} onOpenChange={alCambiarDrawer}>
       <div className="contents md:relative md:block md:w-11 md:h-11 md:shrink-0">
         <DrawerTrigger asChild>
-          <button className="group flex items-center w-full md:w-fit justify-center gap-2 md:gap-0 md:hover:gap-2 font-semibold text-white text-sm px-4 py-3 md:py-0 rounded-full bg-ld-violeta hover:bg-ld-violeta/80 transition-colors md:absolute md:right-0 md:top-0 md:z-10 md:h-11 md:flex-row-reverse md:justify-start md:hover:px-4 md:text-base">
+          <button className="group flex items-center w-fit justify-center gap-2 md:gap-0 md:hover:gap-2 font-semibold text-white text-sm px-4 py-3 md:py-0 rounded-full bg-ld-violeta hover:bg-ld-violeta/80 transition-colors md:absolute md:right-0 md:top-0 md:z-10 md:h-11 md:flex-row-reverse md:justify-start md:hover:px-4 md:text-base">
             <Icon icon="mage:box-question-mark" className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
+            <span className="hidden md:block whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
               Colecciones
             </span>
           </button>

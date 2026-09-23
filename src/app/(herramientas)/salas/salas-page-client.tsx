@@ -35,7 +35,7 @@ import {
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { NavLink } from '@/components/navegacion/nav-link'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
-import { StatusDeConexion } from '@/wss-cli/conexion-wss'
+import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -44,6 +44,7 @@ import { CirclePlus, Pencil, Trash2 } from 'lucide-react'
 import type { SalaResumen } from '@/wss-cli/stores/salas-store'
 import IlustSalas from '@/svg/dist/salas/IlustracionSalas.svg'
 import { Outlined } from '@/components/fx/filtros'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 type FormState = {
   nombre: string
@@ -76,10 +77,10 @@ function FormCrearSala() {
   const [form, setForm] = useState<FormState>(FORM_INICIAL)
   const [creando, startCreacion] = useTransition()
 
-  const conectando = estado === StatusDeConexion.Conectando
+  const cargandoConexion = statusesDeCarga.includes(estado)
   const pideDni = form.metodoLogin === MetodosLogin.DNI
   const nombreValido = form.nombre.trim().length > 0
-  const razonDisabled = conectando
+  const razonDisabled = cargandoConexion
     ? 'Conectando...'
     : creando
     ? 'Creando la sala...'
@@ -106,7 +107,7 @@ function FormCrearSala() {
           delay(CARGA_MINIMA_MS),
         ])
         toast.success('Sala creada con éxito')
-        router.push(`/salas/${idSala}`)
+        router.push(`/salas/${idSala}/encuestas`)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
       }
@@ -223,7 +224,7 @@ function FormCrearSala() {
               onClick={handleCrear}
               disabled={!!razonDisabled}
             >
-              {creando ? 'Creando...' : conectando ? 'Conectando...' : 'Crear e ingresar'}
+              {creando ? 'Creando...' : cargandoConexion ? 'Conectando...' : 'Crear e ingresar'}
             </button>
           </span>
         </TooltipTrigger>
@@ -293,7 +294,7 @@ function FilaSala({
   return (
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
       <NavLink
-        href={`/salas/${sala.id}`}
+        href={`/salas/${sala.id}/encuestas`}
         overlayMensaje="Renderizando sala..."
         className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
       >
@@ -334,7 +335,11 @@ function FilaSala({
               <DialogClose asChild>
                 <Button variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button onClick={handleConfirmarRenombrar} disabled={!nuevoNombreValido}>
+              <Button
+                className="bg-ld-violeta hover:bg-ld-violeta-oscuro"
+                onClick={handleConfirmarRenombrar}
+                disabled={!nuevoNombreValido}
+              >
                 Guardar
               </Button>
             </DialogFooter>
@@ -424,17 +429,23 @@ function VerSalas({ onCrear }: { onCrear: () => void }) {
 
 export default function SalasPageClient() {
   const [activo, setActivo] = useState<'crear' | 'ver' | 'cuenta'>('ver')
+  const [saberMasAbierto, setSaberMasAbierto] = useState(false)
   const { estado, listarSalas } = useConexionProfe()
 
   useEffect(() => {
     if (estado === StatusDeConexion.Conectado) listarSalas()
   }, [estado, listarSalas])
 
+  // Toggle en localStorage para ver el dialog de ¿Qué es una sala? automáticamente en la primera visita
+  useEffect(() => {
+    if (!localStorage.getItem('salas-saber-mas-visto')) {
+      setSaberMasAbierto(true)
+      localStorage.setItem('salas-saber-mas-visto', '1')
+    }
+  }, [])
+
   return (
-    <SidebarProvider
-      className="flex-none sm:flex-1 flex-col sm:flex-row px-0 my-0 sm:px-20 sm:my-6 rounded-xl -mt-4 sm:mt-0"
-      style={{ minHeight: 0 }}
-    >
+    <SidebarProvider className="flex-none sm:flex-1 flex-col sm:flex-row rounded-xl -mt-4 " style={{ minHeight: 0 }}>
       <Sidebar
         className="sm:rounded-l sm:rounded-t-none p-4 w-full sm:w-fit h-auto sm:h-full bg-indigo-500 text-white"
         collapsible="none"
@@ -449,6 +460,68 @@ export default function SalasPageClient() {
               <Outlined outlineColor="white" radius={2} className="text-black font-bold text-md sm:text-xl">
                 Crea una sala y compartela con otrxs
               </Outlined>
+              <p className="mt-2 max-w-md text-indigo-200 text-sm">
+                Compartí el link o el QR que se encuentra dentro de la sala para que tus participantes se conecten e
+                interactúen en vivo.{' '}
+                <Dialog open={saberMasAbierto} onOpenChange={setSaberMasAbierto}>
+                  <DialogTrigger asChild>
+                    <button className="underline underline-offset-2 hover:text-white transition-colors">
+                      Más información
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent
+                    aria-description="Qué es una sala y qué podés hacer en ella"
+                    className="max-w-xl max-h-[85vh] overflow-y-auto"
+                  >
+                    <DialogHeader>
+                      <DialogTitle className='text-ld-violeta-oscuro text-2xl'>¿Qué es una sala?</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-3 text-sm text-foreground">
+                      <p>
+                        Una sala agrupa a tus participantes –generalmente estudiantes– bajo un mismo link o QR, con el
+                        nivel de acceso que vos elijas: nombre libre, DNI, o una lista de invitadxs. Adentro podés encontrar estas
+                        herramientas:
+                      </p>
+                      <p>
+                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6' icon="fluent:chat-bubbles-question-16-regular"/>Encuestas en vivo.</span> Lanzá preguntas y ejercicios para tu
+                        clase, mirá los resultados actualizarse en tiempo real, y compartilos en pantalla con un
+                        visualizador que se puede embeber en OBS.
+                      </p>
+                      <p>
+                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6 -rotate-3' icon="bi:grid-3x3"/>Go.</span> Tus estudiantes pueden jugar entre ellxs, jugar con vos,
+                        y observar las partidas de otrxs mientras están en curso.
+                      </p>
+                      <p>
+                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6 ' icon="bi:people"/>Participantes.</span> Mirá quién se conectó y cuándo, y exportá ese
+                        registro a Excel.
+                      </p>
+                      <p>
+                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6' icon="mage:box-question-mark"/>Colecciones.</span> Tus preguntas (y pronto tus partidas de Go) se
+                        exportan e importan en YAML –un formato simple, editable a mano o con ayuda de una IA– y también
+                        se guardan directo en tu Google Drive.
+                      </p>
+                      <p className='font-bold text-ld-violeta-oscuro my-4 text-center'>
+                        ¡Creá tu sala y explorá cada uno de sus recursos!
+                      </p>
+                    </div>
+                    <DialogFooter className="gap-2">
+                     
+                      <Button
+                        className="bg-ld-violeta"
+                        onClick={() => {
+                          setActivo('crear')
+                          setSaberMasAbierto(false)
+                        }}
+                      >
+                        Crear sala
+                      </Button>
+                       <DialogClose asChild>
+                        <Button variant="outline">Cerrar</Button>
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </p>
             </div>
           </SidebarHeader>
           <SidebarMenu>

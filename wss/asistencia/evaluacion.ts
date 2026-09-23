@@ -1,8 +1,15 @@
 import type { EventoAsistencia, IntervaloDeConexion } from '../salas/db'
-import { FormaEvaluacionAsistencia, type CondicionAsistencia } from '../validators/asistencia'
+import {
+  FormaEvaluacionAsistencia,
+  type AsistenciaDeClase,
+  type CondicionAsistencia,
+} from '../validators/asistencia'
+import type { WssEstudianteSession } from '../validators/session'
 
 /** La clase: desde que el profe abrió la sala (`inicio`) hasta que se desconectó (`fin`). */
 export type VentanaDeClase = { inicio: number; fin: number }
+
+const DURACION_MINIMA_CLASE_MS = 30 * 60_000
 
 /**
  * Reconstruye, por userId, los intervalos durante los que el estudiante estuvo conectado, a partir
@@ -63,5 +70,30 @@ export function estuvoPresente(
 
     case FormaEvaluacionAsistencia.UltimosMinutos:
       return msConectados(intervalos, fin - umbral, fin) >= umbral
+  }
+}
+
+/**
+ * Evalúa la clase entera: reconstruye los intervalos del log y decide, por estudiante, si estuvo
+ * presente. Devuelve `null` si la clase fue demasiado corta como para registrar asistencia.
+ */
+export function evaluarClase(
+  eventos: EventoAsistencia[],
+  estudiantes: Record<string, WssEstudianteSession>,
+  condicion: CondicionAsistencia,
+  ventana: VentanaDeClase
+): AsistenciaDeClase | null {
+  if (ventana.fin - ventana.inicio < DURACION_MINIMA_CLASE_MS) return null
+
+  const intervalos = reconstruirIntervalos(eventos)
+
+  return {
+    inicio: ventana.inicio,
+    fin: ventana.fin,
+    estudiantes: Object.values(estudiantes).map((est) => ({
+      userId: est.userId,
+      nombre: est.nombre,
+      presente: estuvoPresente(intervalos[est.userId] ?? [], condicion, ventana),
+    })),
   }
 }

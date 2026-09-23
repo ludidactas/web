@@ -1,6 +1,6 @@
 import { io } from '../server'
 import * as db from '../salas/db'
-import { estuvoPresente, reconstruirIntervalos, type VentanaDeClase } from './evaluacion'
+import { evaluarClase } from './evaluacion'
 
 // Cuánto esperamos desde que el profe se desconecta antes de evaluar: tolera un refresh, un cambio de
 // pestaña o una caída breve de red sin partir la clase en dos. Es SÓLO una demora: la ventana
@@ -9,10 +9,9 @@ const ESPERA_PARA_CERRAR_MS = 20 * 60_000
 
 /**
  * Lo que sabemos de la clase abierta de una sala: cuándo la vimos abrir (`inicio`) y cuándo se fue el
- * profe (`fin`). `inicio: null` = no la vimos empezar (p. ej. se reinició el wss); `fin: null` = el
- * profe todavía está adentro. Son las dos mismas puntas que `VentanaDeClase`, pero acá pueden faltar.
+ * profe (`fin`). `fin: null` = el profe todavía está adentro.
  */
-type RegistroDeClase = { inicio: number | null; fin: number | null }
+type RegistroDeClase = { inicio: number; fin: number | null }
 
 const registrosPorSala = new Map<string, RegistroDeClase>()
 const cierresProgramados = new Map<string, ReturnType<typeof setTimeout>>()
@@ -68,9 +67,9 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
   cancelarCierreProgramado(salaId)
   if (await hayProfeConectado(salaId, excluirSocketId)) return
 
-  const registro = registrosPorSala.get(salaId) ?? { inicio: null, fin: null }
+  const registro = registrosPorSala.get(salaId)
+  if (!registro) return
   registro.fin = Date.now()
-  registrosPorSala.set(salaId, registro)
 
   programarCierreDeClase(salaId)
 }
@@ -84,8 +83,9 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
  *
  * La fecha de la clase es la del INICIO: el cierre cae bastante después, y puede cruzar la medianoche.
  */
-async function evaluarYEncolarClase(salaId: string) {
+export async function evaluarYEncolarClase(salaId: string) {
   const registro = registrosPorSala.get(salaId)
+  if (!registro || registro.fin === null) return
   registrosPorSala.delete(salaId)
 
   const sala = await db.getSala(salaId)
@@ -97,27 +97,13 @@ async function evaluarYEncolarClase(salaId: string) {
   const eventos = await db.getEventosAsistencia(salaId)
   if (eventos.length === 0) return
 
-  const intervalos = reconstruirIntervalos(eventos)
   const estudiantes = await db.getEstudiantes(salaId)
+  const asistencia = evaluarClase(eventos, estudiantes, condicion, { inicio: registro.inicio, fin: registro.fin })
+  if (!asistencia) return
 
-  const ventana: VentanaDeClase = {
-    inicio: registro?.inicio ?? Math.min(...eventos.map((e) => e.ts)),
-    fin: registro?.fin ?? Date.now(),
-  }
-
-  const DURACION_MINIMA_CLASE_MS = 30 * 60_000
-  if (ventana.fin - ventana.inicio < DURACION_MINIMA_CLASE_MS) return
-
-  const evaluados = Object.values(estudiantes).map((est) => ({
-    userId: est.userId,
-    nombre: est.nombre || est.userId,
-    presente: estuvoPresente(intervalos[est.userId] ?? [], condicion, ventana),
-  }))
-
-  await db.encolarAsistencia(salaId, { inicio: ventana.inicio, fin: ventana.fin, estudiantes: evaluados })
+  await db.encolarAsistencia(salaId, asistencia)
   await db.borrarLogDeAsistencia(salaId)
 
-  console.log(
-    `Asistencia evaluada para sala ${salaId}: ${evaluados.filter((e) => e.presente).length}/${evaluados.length} presentes`
-  )
+  const presentes = asistencia.estudiantes.filter((e) => e.presente).length
+  console.log(`Asistencia evaluada para sala ${salaId}: ${presentes}/${asistencia.estudiantes.length} presentes`)
 }

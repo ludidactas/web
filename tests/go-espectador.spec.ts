@@ -35,6 +35,8 @@ async function jugarEn(page: Page, x: number, y: number, tamaño: number) {
   await page.locator('svg.touch-none').click({
     position: { x: (MARGEN + x * CELDA + GLOW_MARGEN) * escala, y: (MARGEN + y * CELDA + GLOW_MARGEN) * escala },
   })
+  // El click solo elige la intersección; hace falta confirmar para que se envíe la jugada al server.
+  await page.getByRole('button', { name: 'Confirmar jugada' }).click()
 }
 
 test('un tercer estudiante puede observar una partida ajena en curso', async ({ browser }) => {
@@ -64,14 +66,15 @@ test('un tercer estudiante puede observar una partida ajena en curso', async ({ 
 
   // Ve el tablero (solo lectura) con ambos nombres.
   await expect(carla.locator('svg.touch-none')).toBeVisible()
-  await expect(carla.getByText('● Ana')).toBeVisible()
-  await expect(carla.getByText('● Beto')).toBeVisible()
+  await expect(carla.getByText('Ana', { exact: true })).toBeVisible()
+  await expect(carla.getByText('Beto', { exact: true })).toBeVisible()
 
-  // Ana juega una piedra: Carla ve el broadcast en vivo.
+  // Ana juega una piedra: Carla ve el broadcast en vivo. La vista de espectador muestra el color de
+  // quien tiene el turno, no el nombre (Ana es negro, así que tras su jugada le toca a blanco = Beto).
   await jugarEn(negro, 4, 4, 9)
-  await expect(carla.getByText('Juega Beto')).toBeVisible()
+  await expect(carla.getByText('Juega blanco')).toBeVisible()
 
   // Carla puede dejar de observar y vuelve a la sala.
-  await carla.getByRole('button', { name: 'Dejar de observar' }).click()
+  await carla.getByRole('button', { name: 'Volver a la Sala' }).click()
   await expect(carla.getByText('Elegí un contrincante')).toBeVisible()
 })

@@ -59,7 +59,7 @@ afterAll(async () => {
 /** Abre la clase en `T0` y hace salir al profe `duracionMin` después. */
 async function correrClase(duracionMin: number, registrarEventos: () => Promise<void>) {
   setSystemTime(T0)
-  seguimiento.registrarApertura(salaId)
+  await seguimiento.registrarApertura(salaId)
 
   await registrarEventos()
 
@@ -145,6 +145,81 @@ describe('asistencia — pipeline completo contra Redis', () => {
       await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
     })
 
+    expect(await db.getAsistenciasPendientes(salaId)).toEqual([])
+  })
+})
+
+describe('asistencia — el estado del cierre sobrevive a un restart del proceso', () => {
+  it('persiste el registro de clase y el cierre programado en redis, no solo en memoria', async () => {
+    const condicion: CondicionAsistencia = {
+      forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos,
+      minutos_minimos: 15,
+    }
+    await db.guardarSala(salaCon(salaId, condicion))
+
+    setSystemTime(T0)
+    await seguimiento.registrarApertura(salaId)
+    await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
+
+    setSystemTime(T0 + 60 * MIN)
+    await seguimiento.registrarSalidaDelProfe(salaId)
+
+    // El registro de clase y el cierre programado quedan en redis, listos para sobrevivir un restart.
+    expect(await db.getRegistroDeClase(salaId)).toEqual({ inicio: T0, fin: T0 + 60 * MIN })
+    const cierres = await db.getCierresProgramados()
+    expect(cierres.find((c) => c.salaId === salaId)).toEqual({ salaId, ts: T0 + 60 * MIN + 20 * MIN })
+  })
+
+  it('reprogramarCierresPendientes evalúa de una una clase cuyo plazo venció con el proceso caído', async () => {
+    const condicion: CondicionAsistencia = {
+      forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos,
+      minutos_minimos: 15,
+    }
+    await db.guardarSala(salaCon(salaId, condicion))
+
+    setSystemTime(T0)
+    await seguimiento.registrarApertura(salaId)
+    await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
+
+    // El profe se va, y el proceso "se cae" durante la espera de 20': lo que queda en redis (registro
+    // + cierre programado) es lo único que va a leer `reprogramarCierresPendientes` más abajo.
+    setSystemTime(T0 + 60 * MIN)
+    await seguimiento.registrarSalidaDelProfe(salaId)
+
+    // El plazo ya venció (estamos bastante después de T0+60min+20min) cuando "reiniciamos" el proceso.
+    setSystemTime(T0 + 60 * MIN + 25 * MIN)
+    await seguimiento.reprogramarCierresPendientes()
+
+    const pendientes = await db.getAsistenciasPendientes(salaId)
+    expect(pendientes).toHaveLength(1)
+    expect(pendientes[0]).toMatchObject({ inicio: T0, fin: T0 + 60 * MIN })
+    expect(await db.getRegistroDeClase(salaId)).toBeNull()
+    expect((await db.getCierresProgramados()).find((c) => c.salaId === salaId)).toBeUndefined()
+  })
+
+  it('registrarApertura cancela un cierre programado que sobrevivió un restart (el profe reabrió antes)', async () => {
+    const condicion: CondicionAsistencia = {
+      forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos,
+      minutos_minimos: 15,
+    }
+    await db.guardarSala(salaCon(salaId, condicion))
+
+    setSystemTime(T0)
+    await seguimiento.registrarApertura(salaId)
+    await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
+
+    setSystemTime(T0 + 60 * MIN)
+    await seguimiento.registrarSalidaDelProfe(salaId)
+
+    // El profe reabre la sala (ej: en el proceso nuevo, tras el restart) antes de que el cierre corra.
+    setSystemTime(T0 + 65 * MIN)
+    await seguimiento.registrarApertura(salaId)
+
+    expect(await db.getRegistroDeClase(salaId)).toEqual({ inicio: T0, fin: null })
+    expect((await db.getCierresProgramados()).find((c) => c.salaId === salaId)).toBeUndefined()
+
+    // La clase sigue abierta: correr reprogramarCierresPendientes de nuevo no la evalúa.
+    await seguimiento.reprogramarCierresPendientes()
     expect(await db.getAsistenciasPendientes(salaId)).toEqual([])
   })
 })

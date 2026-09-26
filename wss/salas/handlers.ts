@@ -194,7 +194,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     // Si la sala se estaba por cerrar (el profe se había desconectado y todavía corre la espera
     // previa a evaluar), la clase sigue: se cancela el cierre y se conserva el inicio, porque el log
     // de asistencia es el mismo.
-    registrarApertura(sala.id)
+    await registrarApertura(sala.id)
     if (socket.data.salaActiva === sala.id) return emitirAbierta(socket, sala)
     await handlersSalaActivaProfe(socket, sala, safe)
   }

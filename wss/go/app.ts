@@ -367,8 +367,8 @@ async function finalizar(
   await db.guardarPartida(partida)
   await db.limpiarPartidaActiva(partida.salaId, partida.negro.userId)
   await db.limpiarPartidaActiva(partida.salaId, partida.blanco.userId)
-  await db.incrementarStats(partida.negro.userId, ganadorUserId === partida.negro.userId)
-  await db.incrementarStats(partida.blanco.userId, ganadorUserId === partida.blanco.userId)
+  await db.incrementarStats(partida.salaId, partida.negro.userId, ganadorUserId === partida.negro.userId)
+  await db.incrementarStats(partida.salaId, partida.blanco.userId, ganadorUserId === partida.blanco.userId)
 
   console.log(`🏁 Partida de Go ${partida.id} terminada por ${motivoFin}. Ganador: ${ganadorUserId ?? 'empate'}`)
 

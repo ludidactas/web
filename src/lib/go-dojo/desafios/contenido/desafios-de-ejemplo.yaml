@@ -1,0 +1,186 @@
+# Cada archivo .yaml en esta carpeta es una lista de desafíos.
+# Un content creator solo necesita copiar un bloque, cambiar las coordenadas
+# y escribir el texto — no hace falta tocar código.
+#
+# Coordenadas: [fila, columna], arrancando en 0 desde la esquina superior
+# izquierda del tablero. tamañoTablero: 9 es el default para principiantes.
+# color: "N" = negro, "B" = blanco.
+#
+# Campos obligatorios: id, titulo, piedras (puede ir vacío: []), jugadasCorrectas,
+# explicacion. El resto tiene valores por defecto razonables.
+
+- id: capturar-una-piedra
+  titulo: Capturar una piedra
+  etiqueta: atari
+  tamañoTablero: 9
+  turno: N
+  instruccion: Juega negras y captura la piedra blanca.
+  piedras:
+    - { r: 4, c: 4, color: B }
+    - { r: 4, c: 3, color: N }
+    - { r: 3, c: 4, color: N }
+    - { r: 5, c: 4, color: N }
+  jugadasCorrectas:
+    - [4, 5]
+  explicacion: >
+    La piedra blanca en el centro tiene una sola libertad — el punto a su
+    derecha. Negro captura jugando ahí, ocupando la última libertad. Este
+    es el patrón fundamental de captura.
+
+- id: salva-tu-piedra
+  titulo: Salva tu piedra
+  etiqueta: atari
+  tamañoTablero: 9
+  turno: N
+  instruccion: Juega negras y escapá del atari.
+  piedras:
+    - { r: 2, c: 2, color: N }
+    - { r: 2, c: 1, color: B }
+    - { r: 1, c: 2, color: B }
+    - { r: 3, c: 2, color: B }
+  jugadasCorrectas:
+    - [2, 3]
+  explicacion: >
+    La piedra negra está en atari (una sola libertad). Escapar hacia la
+    derecha extiende el grupo y agrega libertades, evitando la captura.
+    Siempre fijate si podés escapar antes de que el oponente te cierre.
+
+# Ejemplo con campos opcionales: ayuda explícita (si no se pone, usa la
+# primera jugadasCorrectas) y un mensaje de éxito personalizado.
+- id: captura-doble
+  titulo: Captura doble
+  etiqueta: atari
+  dificultad: 2
+  tamañoTablero: 9
+  turno: N
+  instruccion: Juega negras. Dos piedras blancas comparten su última libertad — encontrala.
+  piedras:
+    - { r: 3, c: 3, color: B }
+    - { r: 3, c: 5, color: B }
+    - { r: 3, c: 2, color: N }
+    - { r: 2, c: 3, color: N }
+    - { r: 4, c: 3, color: N }
+    - { r: 3, c: 6, color: N }
+    - { r: 2, c: 5, color: N }
+    - { r: 4, c: 5, color: N }
+  jugadasCorrectas:
+    - [3, 4]
+  ayuda: [3, 4]
+  mensajeExito: ¡Exacto! Una sola jugada captura las dos piedras blancas a la vez.
+  explicacion: >
+    Ambas piedras blancas comparten el punto (3,4) como su única libertad
+    en común — jugar ahí les quita la última libertad a las dos al mismo
+    tiempo.
+
+# turno: B — mismo patrón que "capturar-una-piedra" pero con blancas, para
+# poder ver el ghost de hover con la piedra blanca (el resto de los ejemplos
+# juega con negras).
+- id: capturar-una-piedra-blancas
+  titulo: Capturar una piedra (blancas)
+  etiqueta: atari
+  tamañoTablero: 9
+  turno: B
+  instruccion: Juega blancas y captura la piedra negra.
+  piedras:
+    - { r: 4, c: 4, color: N }
+    - { r: 4, c: 3, color: B }
+    - { r: 3, c: 4, color: B }
+    - { r: 5, c: 4, color: B }
+  jugadasCorrectas:
+    - [4, 5]
+  explicacion: >
+    Igual que el problema de negras, pero invertido: la piedra negra en el
+    centro tiene una sola libertad y blancas la captura jugando ahí.
+
+# tipo: exploracion — varios puntos clickeables, cada uno con su propio texto,
+# sin trabarse después del primer click (el estudiante puede tocar los dos).
+# Versión reducida y traducida de un puzzle real de online-go.com
+# ("Jugadas Ilegales: Suicidio (1)", colección tutorial en español — acá usamos
+# "autocaptura" en vez de "suicidio" para el mismo concepto) — las posiciones
+# de las piedras blancas y los puntos marcados son las mismas que las del
+# ejemplo A original, solo que acá no hace falta la codificación de tablero
+# en string que usa OGS: alcanza con la lista de piedras de siempre.
+- id: autocaptura-ilegal-1
+  titulo: 'Jugadas ilegales: autocaptura (1)'
+  etiqueta: reglas
+  tamañoTablero: 19
+  turno: N
+  tipo: exploracion
+  instruccion: Tocá los puntos marcados con letra para ver por qué esa jugada sería ilegal.
+  piedras:
+    - { r: 0, c: 1, color: B }
+    - { r: 1, c: 0, color: B }
+    - { r: 0, c: 3, color: B }
+    - { r: 1, c: 2, color: B }
+  marcas:
+    - { r: 0, c: 0, tipo: letra, texto: '1' }
+    - { r: 0, c: 2, tipo: letra, texto: '2' }
+    - { r: 0, c: 1, tipo: circulo }
+    - { r: 1, c: 0, tipo: circulo }
+    - { r: 0, c: 3, tipo: circulo }
+    - { r: 1, c: 2, tipo: circulo }
+  desenlaces:
+    - en: [0, 0]
+      correcto: true
+      texto: >
+        Autocaptura: negro en (0,0) quedaría sin libertades. Sus únicos dos
+        vecinos en el tablero — marcados con círculo — ya son blancos.
+    - en: [0, 2]
+      correcto: true
+      texto: >
+        Mismo patrón: los tres vecinos de este punto (marcados con círculo)
+        son blancos, así que negro ahí también sería una autocaptura.
+  explicacion: >
+    Una autocaptura es una jugada que deja al propio grupo sin libertades. La
+    mayoría de los reglamentos (incluido este) la consideran ilegal.
+
+# tipo: secuencia — árbol de jugadas con respuesta automática del rival.
+# Rama raíz correcta -> respuesta de blancas -> segunda jugada del
+# estudiante, con un final correcto y uno incorrecto. Rama raíz alternativa
+# termina mal de una, sin continuar el árbol.
+- id: escapa-y-conecta
+  titulo: Escapá y conectá
+  etiqueta: secuencia
+  tamañoTablero: 9
+  turno: N
+  tipo: secuencia
+  instruccion: 'Jugá negras: escapá del atari y después asegurá el grupo.'
+  piedras:
+    - { r: 4, c: 4, color: N }
+    - { r: 3, c: 4, color: B }
+    - { r: 5, c: 4, color: B }
+    - { r: 4, c: 3, color: B }
+  secuencia:
+    ramas:
+      - en: [4, 5]
+        correcto: true
+        texto: >
+          Bien — extender hacia la derecha le da al grupo nuevas libertades
+          y escapa del atari. Blanco persigue cerrando el paso. Todavía no terminó.
+        respuestaRival: [4, 6]
+        siguiente:
+          ramas:
+            - en: [5, 5]
+              correcto: true
+              texto: >
+                Correcto: esa jugada conecta el grupo hacia varias
+                libertades nuevas — ya no lo atrapan en un solo movimiento.
+            - en: [3, 5]
+              correcto: true
+              texto: >
+                Correcto: esa jugada conecta el grupo hacia varias
+                libertades nuevas — ya no lo atrapan en un solo movimiento.
+            - en: [0, 0]
+              correcto: false
+              texto: >
+                Eso abandona el grupo perseguido en el medio del tablero —
+                blanco lo termina capturando.
+      - en: [0, 0]
+        correcto: false
+        texto: >
+          Esa jugada no hace nada por la piedra en atari — blanco captura
+          en la próxima.
+  explicacion: >
+    Primero hay que salir del atari extendiendo hacia la única libertad
+    disponible; después, conectar hacia espacio abierto en vez de jugar
+    en otro lado del tablero.

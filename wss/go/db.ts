@@ -1,6 +1,7 @@
 import redis from '../redis'
 import { Partida } from '../validators/go'
 
+/** Persistencia en Redis de una partida de Go — claves bajo `sala:<id>:go:...` (ver `k` abajo). */
 const k = {
   /** STRING — JSON de la partida completa. */
   partida: (salaId: string, partidaId: string) => `sala:${salaId}:go:${partidaId}`,
@@ -8,8 +9,9 @@ const k = {
   partidasIndex: (salaId: string) => `sala:${salaId}:go`,
   /** STRING — ID de la partida pendiente/en curso de un usuario en la sala (una por vez). */
   partidaActiva: (salaId: string, userId: string) => `sala:${salaId}:go:activa:${userId}`,
-  /** HASH — estadísticas acumuladas de un usuario: { jugadas, ganadas }. */
-  stats: (userId: string) => `usuario:${userId}:go:stats`,
+  /** HASH — estadísticas acumuladas de un usuario en la sala: { jugadas, ganadas }. Por sala, no
+   * global: el userId de un estudiante (dni o nombre) no es único fuera de su propia sala. */
+  stats: (salaId: string, userId: string) => `sala:${salaId}:go:stats:${userId}`,
 }
 
 /** Devuelve la partida, o `null` si no existe. */
@@ -48,8 +50,8 @@ export async function limpiarPartidaActiva(salaId: string, userId: string): Prom
   await redis.del(k.partidaActiva(salaId, userId))
 }
 
-/** Suma una partida jugada (y, si ganó, una ganada) a las estadísticas del usuario. */
-export async function incrementarStats(userId: string, gano: boolean): Promise<void> {
-  await redis.hincrby(k.stats(userId), 'jugadas', 1)
-  if (gano) await redis.hincrby(k.stats(userId), 'ganadas', 1)
+/** Suma una partida jugada (y, si ganó, una ganada) a las estadísticas del usuario en esa sala. */
+export async function incrementarStats(salaId: string, userId: string, gano: boolean): Promise<void> {
+  await redis.hincrby(k.stats(salaId, userId), 'jugadas', 1)
+  if (gano) await redis.hincrby(k.stats(salaId, userId), 'ganadas', 1)
 }

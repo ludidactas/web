@@ -9,9 +9,14 @@ import GoEstudiante from './go-estudiante'
 import { BannerSalaEstudiante } from '../../banner-sala-estudiante'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
-// El gate de login y la conexión de estudiante viven en el layout compartido (`SalaEstudianteConexion`,
-// en `(nav)/layout.tsx`), no acá: así sobreviven a la navegación entre tabs de la sala (Encuestas, Go).
-// Esta página solo se monta una vez que ya está `ingresado`.
+/**
+ * Página de Go del estudiante: banner + `GoEstudiante` (el flujo real, en `./go-estudiante.tsx`) con
+ * el userId ya resuelto.
+ *
+ * El gate de login y la conexión de estudiante viven en el layout compartido (`SalaEstudianteConexion`,
+ * en `(nav)/layout.tsx`), no acá: así sobreviven a la navegación entre tabs de la sala (Encuestas, Go).
+ * Esta página solo se monta una vez que ya está `ingresado`.
+ */
 export default function GoEstudiantePage({ idSala }: { idSala: string }) {
   const { dni, nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
 

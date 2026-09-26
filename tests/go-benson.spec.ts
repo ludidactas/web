@@ -107,14 +107,18 @@ async function hoverEn(page: Page, x: number, y: number) {
   await page.locator('svg.touch-none').hover({ position: posicionEnTablero(x, y, escala) })
 }
 
-/** Resalte (outline) que dibuja `TableroGo` sobre el grupo bajo el cursor durante el conteo. */
+/** Resalte (outline) que dibuja `PartidaGo` sobre el grupo bajo el cursor durante el conteo. Filtra
+ * por `filter*="outlined"` (el id que arma `useOutlineFilter`) para no matchear también el `<g
+ * filter=...>` de la sombra de las piedras, que está siempre presente apenas hay piedras en pie. */
 function resalteDeHover(page: Page) {
-  return page.locator('svg.touch-none g[filter]')
+  return page.locator('svg.touch-none g[filter*="outlined"]')
 }
 
-/** Juega en `actor` y espera que `oponente` reciba el broadcast (su turno) antes de seguir. */
+/** Juega en `actor` (clickear elige la jugada, "Confirmar jugada" la envía) y espera que `oponente`
+ * reciba el broadcast (su turno) antes de seguir. */
 async function jugarYEsperarTurno(actor: Page, oponente: Page, x: number, y: number) {
   await clickearEn(actor, x, y)
+  await actor.getByRole('button', { name: 'Confirmar jugada' }).click()
   await expect(oponente.getByText('tu turno')).toBeVisible()
 }
 
@@ -154,8 +158,9 @@ test('partida de 9x9 casi completa: tres personas conectadas, cadenas vivas y mu
     await jugarYEsperarTurno(blanco, negro, ...BLANCO_MOVES[i])
   }
 
-  // Carla recibe el estado en vivo: le toca jugar a Ana a continuación de la última jugada de Beto.
-  await expect(carla.getByText('Juega Ana')).toBeVisible()
+  // Carla recibe el estado en vivo: le toca jugar a Ana (negras) a continuación de la última jugada
+  // de Beto — PartidaObservada muestra el color de quien juega, no el nombre.
+  await expect(carla.getByText('Juega negro')).toBeVisible()
 
   await expect(negro.getByText('tu turno')).toBeVisible()
   await negro.getByRole('button', { name: 'Pasar' }).click()

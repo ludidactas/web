@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
 import { cn } from '@/lib/utils'
@@ -8,10 +9,14 @@ import PanelConfigSala from '../panel-config-sala'
 import { DialogMostrarQR } from './dialog-mostrar-qr'
 
 /** Título de la sala y las acciones para compartirla: configurar el acceso (solo por DNI), copiar
- * el link, y mostrar el QR. */
+ * el link, y mostrar el QR. El link apunta a la misma herramienta en la que está parado el profe
+ * (Encuestas o Go) — así el estudiante entra directo ahí en vez de a la que sea el default. */
 export function CabeceraSala() {
   const { config: configSala } = storeConfig()
   const [linkCopiado, setLinkCopiado] = useState(false)
+  const pathname = usePathname()
+  const herramienta = pathname?.endsWith('/go') ? 'go' : 'encuestas'
+  const link = configSala?.link ? `${configSala.link}${herramienta}` : undefined
 
   const tituloSala =
     configSala?.nombre?.trim() || (configSala?.nombre_profe ? `Sala de ${configSala.nombre_profe}` : 'Tu sala')
@@ -43,7 +48,7 @@ export function CabeceraSala() {
             </div>
           )}
 
-          {configSala?.link && (
+          {link && (
             <>
               <div className="contents md:relative md:block md:w-11 md:h-11 md:shrink-0">
                 <button
@@ -54,7 +59,7 @@ export function CabeceraSala() {
                       : 'bg-ld-violeta-oscuro hover:bg-ld-violeta-oscuro/80'
                   )}
                   onClick={() => {
-                    navigator.clipboard.writeText(configSala.link)
+                    navigator.clipboard.writeText(link)
                     setLinkCopiado(true)
                     setTimeout(() => setLinkCopiado(false), 2000)
                   }}
@@ -71,13 +76,13 @@ export function CabeceraSala() {
                 </button>
               </div>
 
-              <DialogMostrarQR link={configSala.link} titulo={tituloSala} />
+              <DialogMostrarQR link={link} titulo={tituloSala} />
             </>
           )}
         </div>
       </div>
 
-      {!configSala?.link && <p className={cn('text-center text-rose-500 text-sm pt-2')}>Link de sala no recibido</p>}
+      {!link && <p className={cn('text-center text-rose-500 text-sm pt-2')}>Link de sala no recibido</p>}
     </>
   )
 }

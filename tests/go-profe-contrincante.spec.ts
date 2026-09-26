@@ -25,8 +25,8 @@ test('el profe aparece como contrincante disponible y se puede jugar contra él'
 
   const ana = await entrarGo(browser, idSala, 'Ana')
 
-  // El profe ya está conectado a la sala (en /encuestas, tal como lo deja `armarSala`): alcanza con
-  // eso para que Ana lo vea disponible, no hace falta que haya entrado a la pestaña de Go todavía.
+  // El profe ya está conectado a la sala (tal como lo deja `armarSala`): alcanza con eso para que Ana
+  // lo vea disponible, no hace falta que haya entrado a la pestaña de Go todavía.
   await esperarContrincante(ana, profe.name)
   await ana.locator('li', { hasText: profe.name }).getByRole('button', { name: 'Invitar' }).click()
 

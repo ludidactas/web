@@ -1,6 +1,7 @@
 import redis from '../redis'
 import { Partida } from '../validators/go'
 
+/** Persistencia en Redis de una partida de Go — claves bajo `sala:<id>:go:...` (ver `k` abajo). */
 const k = {
   /** STRING — JSON de la partida completa. */
   partida: (salaId: string, partidaId: string) => `sala:${salaId}:go:${partidaId}`,

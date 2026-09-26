@@ -95,9 +95,10 @@ export default function estudianteGoHandlers(socket: Socket | null) {
         store.quitarInvitacion(partidaId)
         if (storeGo.getState().partida?.id === partidaId) store.set(null)
       },
-      jugar: (partidaId: string, x: number, y: number) => conAckPartida('go:jugar', { partidaId, x, y }),
+      jugar: (partidaId: string, fila: number, columna: number) => conAckPartida('go:jugar', { partidaId, fila, columna }),
       pasar: (partidaId: string) => conAckPartida('go:pasar', { partidaId }),
-      marcarMuerta: (partidaId: string, x: number, y: number) => conAckPartida('go:marcar_muerta', { partidaId, x, y }),
+      marcarMuerta: (partidaId: string, fila: number, columna: number) =>
+        conAckPartida('go:marcar_muerta', { partidaId, fila, columna }),
       confirmarConteo: (partidaId: string) => conAckPartida('go:confirmar_conteo', { partidaId }),
       abandonar: (partidaId: string) => conAckPartida('go:abandonar', { partidaId }),
       observar: async (partidaId: string) => {

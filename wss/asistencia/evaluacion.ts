@@ -5,7 +5,7 @@ import type { WssEstudianteSession } from '../validators/session'
 /** La clase: desde que el profe abrió la sala (`inicio`) hasta que se desconectó (`fin`). */
 export type VentanaDeClase = { inicio: number; fin: number }
 
-const DURACION_MINIMA_CLASE_MS = 30 * 60_000
+export const DURACION_MINIMA_CLASE_MS = 1 * 60_000
 
 /**
  * Reconstruye, por userId, los intervalos durante los que el estudiante estuvo conectado, a partir

@@ -59,15 +59,23 @@ afterAll(async () => {
   await db.borrarSala(salaId)
 })
 
-/** Abre la clase en `T0` y hace salir al profe `duracionMin` después. */
+/**
+ * Abre la clase en `T0` y hace salir al profe `duracionMin` después, para probar cómo evalúa
+ * `evaluarYEncolarClase` un registro ya cerrado — no pasa por `registrarApertura`/
+ * `registrarSalidaDelProfe` (esas dos tienen sus propios tests en el describe de bullmq más abajo)
+ * porque agendan un job real con `Date.now()`, y acá el reloj está mockeado: bullmq calcularía el
+ * vencimiento contra un timestamp del pasado y lo procesaría de una, en paralelo con esta misma
+ * llamada directa — dos evaluaciones para la misma clase.
+ */
 async function correrClase(duracionMin: number, registrarEventos: () => Promise<void>) {
   setSystemTime(T0)
-  await seguimiento.registrarApertura(salaId)
+  await db.guardarRegistroDeClase(salaId, { inicio: T0, fin: null })
 
   await registrarEventos()
 
-  setSystemTime(T0 + duracionMin * MIN)
-  await seguimiento.registrarSalidaDelProfe(salaId)
+  const fin = T0 + duracionMin * MIN
+  setSystemTime(fin)
+  await db.guardarRegistroDeClase(salaId, { inicio: T0, fin })
 
   await seguimiento.evaluarYEncolarClase(salaId)
 }
@@ -101,6 +109,7 @@ describe('asistencia — pipeline completo contra Redis', () => {
     ])
 
     expect(await db.getEventosAsistencia(salaId)).toEqual([])
+    expect(await db.getRegistroDeClase(salaId)).toBeNull()
   })
 
   it('no encola nada si la sala no tiene condición de asistencia', async () => {
@@ -149,6 +158,7 @@ describe('asistencia — pipeline completo contra Redis', () => {
     })
 
     expect(await db.getAsistenciasPendientes(salaId)).toEqual([])
+    expect(await db.getRegistroDeClase(salaId)).toBeNull()
   })
 })
 

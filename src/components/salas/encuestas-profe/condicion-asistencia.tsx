@@ -8,10 +8,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SwitchCard } from '@/components/ui/switch-card'
-import { cn } from '@/lib/utils'
+import { cn, plural } from '@/lib/utils'
 import {
   ETIQUETAS_FORMA_DE_EVALUACION,
   FormaEvaluacionAsistencia,
+  MINUTOS_MAXIMOS,
   type CondicionAsistencia,
 } from '@/wss/validators/asistencia'
 
@@ -27,10 +28,6 @@ const MINUTOS_POR_DEFECTO = 45
 /** Presets del dropdown de minutos. Son atajos para los valores más comunes, no una restricción: el
  * profe puede tipear cualquier otro valor con "Personalizado". */
 const PRESETS_MINUTOS = [15, 30, 45, 60, 90, 120] as const
-
-function plural(n: number, singular: string, plural: string) {
-  return n === 1 ? singular : plural
-}
 
 /** El texto exacto de qué significa la condición elegida, con los valores concretos ya adentro. */
 function descripcionCondicion(condicion: CondicionAsistencia): string {
@@ -65,37 +62,41 @@ function SelectorMinutos({ minutos, onChange }: { minutos: number; onChange: (mi
   useEffect(() => setTexto(String(minutos)), [minutos])
 
   if (personalizado) {
-    const invalido = texto === '' || Number(texto) < 1
+    const n = Number(texto)
+    const invalido = texto === '' || n < 1 || n > MINUTOS_MAXIMOS
 
     return (
-      <div className={cn('flex items-center gap-2')}>
-        <label
-          className={cn(
-            'flex items-center gap-1.5 border rounded-lg px-3 py-1.5 text-sm bg-white',
-            invalido && 'border-red-400'
-          )}
-        >
-          <input
-            type="text"
-            inputMode="numeric"
-            value={texto}
-            onChange={(e) => {
-              const digitos = e.target.value.replace(/\D/g, '')
-              setTexto(digitos)
-              const n = Number(digitos)
-              if (digitos !== '' && n >= 1) onChange(n)
-            }}
-            className={cn('w-12 text-center outline-none')}
-          />
-          min
-        </label>
-        <button
-          type="button"
-          className={cn('text-xs text-slate-500 underline underline-offset-2')}
-          onClick={() => setPersonalizado(false)}
-        >
-          usar un preset
-        </button>
+      <div className={cn('flex flex-col gap-1')}>
+        <div className={cn('flex items-center gap-2')}>
+          <label
+            className={cn(
+              'flex items-center gap-1.5 border rounded-lg px-3 py-1.5 text-sm bg-white',
+              invalido && 'border-red-400'
+            )}
+          >
+            <input
+              type="text"
+              inputMode="numeric"
+              value={texto}
+              onChange={(e) => {
+                const digitos = e.target.value.replace(/\D/g, '')
+                setTexto(digitos)
+                const nuevo = Number(digitos)
+                if (digitos !== '' && nuevo >= 1 && nuevo <= MINUTOS_MAXIMOS) onChange(nuevo)
+              }}
+              className={cn('w-12 text-center outline-none')}
+            />
+            min
+          </label>
+          <button
+            type="button"
+            className={cn('text-xs text-slate-500 underline underline-offset-2')}
+            onClick={() => setPersonalizado(false)}
+          >
+            usar un preset
+          </button>
+        </div>
+        {invalido && <p className={cn('text-xs text-red-500')}>Tiene que ser entre 1 y {MINUTOS_MAXIMOS} minutos.</p>}
       </div>
     )
   }

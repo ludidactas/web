@@ -3,7 +3,9 @@ import { estuvoPresente, evaluarClase, type VentanaDeClase } from '../evaluacion
 import {
   asistenciaDeClaseSchema,
   condicionAsistenciaSchema,
+  registroDeClaseSchema,
   FormaEvaluacionAsistencia,
+  MINUTOS_MAXIMOS,
   type CondicionAsistencia,
 } from '../../validators/asistencia'
 import { MetodosLogin, RolSala } from '../../validators/auth'
@@ -182,6 +184,27 @@ describe('condicionAsistenciaSchema', () => {
 
   it('rechaza TotalMinutos/UltimosMinutos sin minutos_minimos', () => {
     expect(() => condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos' })).toThrow()
+  })
+
+  it('rechaza minutos_minimos por encima de MINUTOS_MAXIMOS', () => {
+    expect(() =>
+      condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos', minutos_minimos: MINUTOS_MAXIMOS + 1 })
+    ).toThrow()
+    expect(() =>
+      condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos', minutos_minimos: MINUTOS_MAXIMOS })
+    ).not.toThrow()
+  })
+})
+
+describe('registroDeClaseSchema', () => {
+  it('acepta inicio/fin numéricos, con fin en null', () => {
+    expect(() => registroDeClaseSchema.parse({ inicio: T0, fin: null })).not.toThrow()
+    expect(() => registroDeClaseSchema.parse({ inicio: T0, fin: T0 + 60 * MIN })).not.toThrow()
+  })
+
+  it('rechaza un valor sin la forma esperada', () => {
+    expect(() => registroDeClaseSchema.parse({ inicio: T0 })).toThrow()
+    expect(() => registroDeClaseSchema.parse({ inicio: 'no-es-un-numero', fin: null })).toThrow()
   })
 })
 

@@ -13,7 +13,11 @@ export const ETIQUETAS_FORMA_DE_EVALUACION: Record<FormaEvaluacionAsistencia, st
   [FormaEvaluacionAsistencia.Conectado]: 'Se conectó en algún momento',
 }
 
-const minutosMinimos = z.number().int().positive()
+// Techo generoso para una clase real (8 h): sin esto, un valor tipeado a mano sin querer (ej. de más)
+// deja la condición imposible de cumplir, marcando ausente a todo el mundo sin ningún aviso.
+export const MINUTOS_MAXIMOS = 8 * 60
+
+const minutosMinimos = z.number().int().positive().max(MINUTOS_MAXIMOS)
 
 /**
  * Condición de asistencia de la sala. Vive acá (y no en el FE) porque la validan el server
@@ -56,3 +60,16 @@ export const asistenciaDeClaseSchema = z.object({
 })
 
 export type AsistenciaDeClase = z.infer<typeof asistenciaDeClaseSchema>
+
+/**
+ * Lo que sabemos de la clase abierta de una sala: cuándo la vimos abrir (`inicio`) y cuándo se fue el
+ * profe (`fin`). `fin: null` = el profe todavía está adentro. Vive en `wss/salas/db.ts`
+ * (`guardarRegistroDeClase`/`getRegistroDeClase`), persistido en redis para sobrevivir a un restart
+ * del proceso wss durante la espera post-desconexión.
+ */
+export const registroDeClaseSchema = z.object({
+  inicio: z.number(),
+  fin: z.number().nullable(),
+})
+
+export type RegistroDeClase = z.infer<typeof registroDeClaseSchema>

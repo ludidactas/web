@@ -1,5 +1,10 @@
 import redis from '../redis'
-import { asistenciaDeClaseSchema, type AsistenciaDeClase } from '../validators/asistencia'
+import {
+  asistenciaDeClaseSchema,
+  registroDeClaseSchema,
+  type AsistenciaDeClase,
+  type RegistroDeClase,
+} from '../validators/asistencia'
 import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 
@@ -146,21 +151,13 @@ export async function borrarAsistenciasPendientes(salaId: string): Promise<void>
 
 // -- Registro de la clase abierta (para el seguimiento de apertura/cierre en `wss/asistencia/seguimiento.ts`) --
 
-/**
- * Lo que sabemos de la clase abierta de una sala: cuándo la vimos abrir (`inicio`) y cuándo se fue el
- * profe (`fin`). `fin: null` = el profe todavía está adentro.
- *
- * Persiste en redis para sobrevivir a un restart del proceso wss durante la espera post-desconexión.
- */
-export type RegistroDeClase = { inicio: number; fin: number | null }
-
 export async function guardarRegistroDeClase(salaId: string, registro: RegistroDeClase): Promise<void> {
   await redis.set(`sala:${salaId}:registro_clase`, JSON.stringify(registro))
 }
 
 export async function getRegistroDeClase(salaId: string): Promise<RegistroDeClase | null> {
   const raw = await redis.get(`sala:${salaId}:registro_clase`)
-  return raw ? (JSON.parse(raw) as RegistroDeClase) : null
+  return raw ? registroDeClaseSchema.parse(JSON.parse(raw)) : null
 }
 
 export async function borrarRegistroDeClase(salaId: string): Promise<void> {

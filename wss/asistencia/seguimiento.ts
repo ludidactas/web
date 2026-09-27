@@ -19,7 +19,12 @@ const NOMBRE_COLA = 'asistencia-cierres'
  */
 const cierresProgramados = new Queue<{ salaId: string }>(NOMBRE_COLA, {
   connection: redisBullMQ,
-  defaultJobOptions: { removeOnComplete: true, removeOnFail: { count: 50 } },
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { count: 50 },
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
+  },
 })
 
 /** Cancela el job de cierre pendiente de la sala, si lo hay. */
@@ -61,7 +66,6 @@ async function hayProfeConectado(salaId: string, excluirSocketId?: string) {
  * el mismo socket o con otro), `registrarApertura` cancela el cierre y la clase continúa.
  */
 export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: string): Promise<void> {
-  await cancelarJobDeCierre(salaId)
   if (await hayProfeConectado(salaId, excluirSocketId)) return
 
   const registro = await db.getRegistroDeClase(salaId)
@@ -70,6 +74,10 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
   const fin = Date.now()
   await db.guardarRegistroDeClase(salaId, { ...registro, fin })
 
+  // Defensivo: no debería haber un cierre ya agendado a esta altura (`registrarApertura` cancela el
+  // suyo en cada reconexión), pero agregar un job con un id que ya existe no falla ni lo reemplaza,
+  // así que si por algún motivo quedó uno viejo, hay que sacarlo antes de agendar el real.
+  await cancelarJobDeCierre(salaId)
   await cierresProgramados.add('cierre', { salaId }, { jobId: salaId, delay: ESPERA_PARA_CERRAR_MS })
 }
 
@@ -77,6 +85,10 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
  * Cierra la clase: evalúa la asistencia de cada estudiante contra la ventana real de la clase, la
  * encola como pendiente de subir a Drive (la sube el FE cuando el profe vuelve a abrir la sala) y
  * borra el log de asistencia, que ya quedó resumido en lo encolado.
+ *
+ * `db.borrarRegistroDeClase` corre al final, después de que todo lo demás salió bien: si algo tira acá
+ * en el medio (ej. un error transitorio de redis), el registro sigue intacto y el retry configurado en
+ * la cola (`attempts`/`backoff`) puede reintentar la evaluación entera desde cero.
  *
  * La dispara únicamente el Worker de `cierresProgramados`, cuando vence la espera.
  *
@@ -87,26 +99,28 @@ export async function evaluarYEncolarClase(salaId: string): Promise<void> {
   // `fin === null`: el profe ya reabrió la sala, ganándole la carrera a esta evaluación (el único
   // camino es que `cancelarJobDeCierre` haya llegado tarde). La clase sigue viva.
   if (!registro || registro.fin === null) return
+
+  const [sala, eventos, estudiantes] = await Promise.all([
+    db.getSala(salaId),
+    db.getEventosAsistencia(salaId),
+    db.getEstudiantes(salaId),
+  ])
+
+  const condicion = sala?.config.condicion_asistencia
+  const asistencia =
+    condicion && eventos.length > 0
+      ? evaluarClase(eventos, estudiantes, condicion, { inicio: registro.inicio, fin: registro.fin })
+      : null
+
+  if (asistencia) {
+    await db.encolarAsistencia(salaId, asistencia)
+    await db.borrarLogDeAsistencia(salaId)
+
+    const presentes = asistencia.estudiantes.filter((e) => e.presente).length
+    console.log(`Asistencia evaluada para sala ${salaId}: ${presentes}/${asistencia.estudiantes.length} presentes`)
+  }
+
   await db.borrarRegistroDeClase(salaId)
-
-  const sala = await db.getSala(salaId)
-  if (!sala) return
-
-  const condicion = sala.config.condicion_asistencia
-  if (!condicion) return
-
-  const eventos = await db.getEventosAsistencia(salaId)
-  if (eventos.length === 0) return
-
-  const estudiantes = await db.getEstudiantes(salaId)
-  const asistencia = evaluarClase(eventos, estudiantes, condicion, { inicio: registro.inicio, fin: registro.fin })
-  if (!asistencia) return
-
-  await db.encolarAsistencia(salaId, asistencia)
-  await db.borrarLogDeAsistencia(salaId)
-
-  const presentes = asistencia.estudiantes.filter((e) => e.presente).length
-  console.log(`Asistencia evaluada para sala ${salaId}: ${presentes}/${asistencia.estudiantes.length} presentes`)
 }
 
 /**

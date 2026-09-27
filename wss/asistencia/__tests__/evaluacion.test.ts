@@ -2,6 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { estuvoPresente, evaluarClase, type VentanaDeClase } from '../evaluacion'
 import {
   asistenciaDeClaseSchema,
+  condicionAsistenciaSchema,
   FormaEvaluacionAsistencia,
   type CondicionAsistencia,
 } from '../../validators/asistencia'
@@ -125,6 +126,25 @@ describe('estuvoPresente — matriz 6×2 (umbral × forma)', () => {
   }
 })
 
+describe('estuvoPresente — Conectado', () => {
+  const condicion: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.Conectado }
+  const finDeLaClase = T0 + 60 * MIN
+
+  it('presente con conectarse un instante, en cualquier punto de la clase', () => {
+    const intervalos = [intervalo(59 * MIN, 59 * MIN + 1)]
+    expect(estuvoPresente(intervalos, condicion, ventanaHasta(finDeLaClase))).toBe(true)
+  })
+
+  it('ausente si no hay ningún intervalo', () => {
+    expect(estuvoPresente([], condicion, ventanaHasta(finDeLaClase))).toBe(false)
+  })
+
+  it('ausente si el único intervalo cae fuera de la ventana de la clase', () => {
+    const intervalos = [intervalo(-30 * MIN, -1 * MIN)] // se conectó antes de que el profe abriera
+    expect(estuvoPresente(intervalos, condicion, ventanaHasta(finDeLaClase))).toBe(false)
+  })
+})
+
 describe('estuvoPresente — separador entre formas', () => {
   const FIN_OFFSET = 240 * MIN
 
@@ -136,6 +156,32 @@ describe('estuvoPresente — separador entre formas', () => {
 
     expect(estuvoPresente(intervalos, total, ventana)).toBe(true)
     expect(estuvoPresente(intervalos, ultimos, ventana)).toBe(false)
+  })
+})
+
+describe('condicionAsistenciaSchema', () => {
+  it('acepta TotalMinutos/UltimosMinutos con minutos_minimos positivo', () => {
+    expect(() =>
+      condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos', minutos_minimos: 45 })
+    ).not.toThrow()
+    expect(() =>
+      condicionAsistenciaSchema.parse({ forma_evaluacion: 'ultimos_minutos', minutos_minimos: 1 })
+    ).not.toThrow()
+  })
+
+  it('acepta Conectado sin minutos_minimos', () => {
+    expect(() => condicionAsistenciaSchema.parse({ forma_evaluacion: 'conectado' })).not.toThrow()
+  })
+
+  it('rechaza minutos_minimos 0 o negativo en TotalMinutos/UltimosMinutos', () => {
+    expect(() => condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos', minutos_minimos: 0 })).toThrow()
+    expect(() =>
+      condicionAsistenciaSchema.parse({ forma_evaluacion: 'ultimos_minutos', minutos_minimos: -5 })
+    ).toThrow()
+  })
+
+  it('rechaza TotalMinutos/UltimosMinutos sin minutos_minimos', () => {
+    expect(() => condicionAsistenciaSchema.parse({ forma_evaluacion: 'total_minutos' })).toThrow()
   })
 })
 

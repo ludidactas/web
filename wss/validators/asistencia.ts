@@ -3,29 +3,35 @@ import { z } from 'zod'
 export enum FormaEvaluacionAsistencia {
   UltimosMinutos = 'ultimos_minutos',
   TotalMinutos = 'total_minutos',
+  Conectado = 'conectado',
 }
 
 /** Etiquetas de las formas de evaluación, para los selects del FE. */
 export const ETIQUETAS_FORMA_DE_EVALUACION: Record<FormaEvaluacionAsistencia, string> = {
   [FormaEvaluacionAsistencia.UltimosMinutos]: 'Conectado los últimos',
   [FormaEvaluacionAsistencia.TotalMinutos]: 'Conectado un total de',
+  [FormaEvaluacionAsistencia.Conectado]: 'Se conectó en algún momento',
 }
 
-// Los únicos umbrales (en minutos) que acepta la condición: son los que ofrece el select del FE.
-export const MINUTOS_MINIMOS_VALIDOS = [15, 30, 45, 60, 90, 120] as const
+const minutosMinimos = z.number().int().positive()
 
 /**
  * Condición de asistencia de la sala. Vive acá (y no en el FE) porque la validan el server
  * al crear/actualizar la sala y `getSala` al leerla de redis, y la consume el evaluador
  * (`wss/asistencia/evaluacion.ts`): es la fuente única de verdad para los tres lados.
+ *
+ * Unión discriminada por `forma_evaluacion`: `ultimos_minutos`/`total_minutos` piden un umbral en
+ * minutos (`minutos_minimos` — un mínimo de conexión, no la duración de la clase); `conectado` no pide
+ * nada, así que no tiene ese campo.
  */
-export const condicionAsistenciaSchema = z.object({
-  // `ultimos_minutos`: hay que estar conectado la ventana final de la clase.
-  // `total_minutos`: alcanza con acumular esa cantidad en toda la clase (puede ser en tramos).
-  forma_evaluacion: z.nativeEnum(FormaEvaluacionAsistencia),
-  // OJO: es un umbral mínimo de conexión, no la duración de la clase.
-  minutos_minimos: z.number().refine((n) => (MINUTOS_MINIMOS_VALIDOS as readonly number[]).includes(n)),
-})
+export const condicionAsistenciaSchema = z.discriminatedUnion('forma_evaluacion', [
+  // Hay que estar conectado la ventana final de la clase.
+  z.object({ forma_evaluacion: z.literal(FormaEvaluacionAsistencia.UltimosMinutos), minutos_minimos: minutosMinimos }),
+  // Alcanza con acumular esa cantidad en toda la clase (puede ser en tramos).
+  z.object({ forma_evaluacion: z.literal(FormaEvaluacionAsistencia.TotalMinutos), minutos_minimos: minutosMinimos }),
+  // Presente con estar conectado en algún momento de la clase, sin importar cuánto.
+  z.object({ forma_evaluacion: z.literal(FormaEvaluacionAsistencia.Conectado) }),
+])
 
 /**
  * La condición configurada. El `null` de "esta sala no lleva lista de asistencia" lo aporta el campo

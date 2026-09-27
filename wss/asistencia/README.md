@@ -7,9 +7,9 @@ nadie tenga que acordarse de tomar lista. Está repartida entre `wss/` (el serve
 ## Cómo lo vive el profe
 
 1. Prende el switch "Lista de asistencia" al crear la sala, o después desde su configuración
-   (`SelectorCondicionDeAsistencia`), y elige la condición: cuántos minutos mínimos de conexión exige,
-   y si cuentan acumulados en toda la clase (`total_minutos`) o solo en el tramo final de la clase
-   (`ultimos_minutos`).
+   (`SelectorCondicionDeAsistencia`), y elige la condición: acumular un mínimo de minutos en toda la
+   clase (`total_minutos`), estar conectado los últimos N minutos (`ultimos_minutos`), o alcanza con
+   haberse conectado en algún momento (`conectado`, sin umbral de minutos).
 2. Abre la sala — eso marca el `inicio` de la clase.
 3. Da la clase. Cada conexión/desconexión de un estudiante queda anotada en el mismo log de eventos
    que ya usa la exportación manual de planilla.
@@ -132,9 +132,9 @@ src/lib/google/__tests__/recursos-asistencia.test.ts
 
 ## Testing
 
-- Unitarios: `bun test wss` — `evaluacion.test.ts` cubre `estuvoPresente` para las dos formas de
-  evaluación y `evaluarClase`; `reconstruir-intervalos.test.ts` cubre multi-tab y una desconexión que
-  nunca llega (intervalo abierto).
+- Unitarios: `bun test wss` — `evaluacion.test.ts` cubre `estuvoPresente` para las tres formas de
+  evaluación, `evaluarClase`, y el schema de `CondicionAsistencia`; `reconstruir-intervalos.test.ts`
+  cubre multi-tab y una desconexión que nunca llega (intervalo abierto).
 - Integración (contra redis real): `bun test integracion` — `asistencia.test.ts` cubre el pipeline
   completo (apertura → eventos → salida del profe → evaluación → cola de pendientes) y que
   `registrarSalidaDelProfe`/`registrarApertura` agendan/cancelan el job de bullmq correcto. Estos

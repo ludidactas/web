@@ -49,7 +49,7 @@ function msConectados(intervalos: IntervaloDeConexion[], desde: number, hasta: n
 /**
  * Devuelve si el estudiante estuvo presente en la clase, según la condición de la sala.
  *
- * Los dos criterios se miden DENTRO de la ventana de la clase, y no contra `Date.now()`: la clase
+ * Los tres criterios se miden DENTRO de la ventana de la clase, y no contra `Date.now()`: la clase
  * termina cuando el profe se desconecta, y la espera previa a evaluar (ver `seguimiento.ts`) es sólo
  * una demora para tolerar un refresh, no tiempo de clase.
  */
@@ -58,14 +58,17 @@ export function estuvoPresente(
   condicion: CondicionAsistencia,
   { inicio, fin }: VentanaDeClase
 ): boolean {
-  const umbral = condicion.minutos_minimos * 60_000
-
   switch (condicion.forma_evaluacion) {
     case FormaEvaluacionAsistencia.TotalMinutos:
-      return msConectados(intervalos, inicio, fin) >= umbral
+      return msConectados(intervalos, inicio, fin) >= condicion.minutos_minimos * 60_000
 
-    case FormaEvaluacionAsistencia.UltimosMinutos:
+    case FormaEvaluacionAsistencia.UltimosMinutos: {
+      const umbral = condicion.minutos_minimos * 60_000
       return msConectados(intervalos, fin - umbral, fin) >= umbral
+    }
+
+    case FormaEvaluacionAsistencia.Conectado:
+      return msConectados(intervalos, inicio, fin) > 0
   }
 }
 

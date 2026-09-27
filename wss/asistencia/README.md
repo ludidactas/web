@@ -160,7 +160,7 @@ src/lib/google/__tests__/recursos-asistencia.test.ts
   probado es la mitad server-side — que `registrarApertura` cancela el cierre pendiente — no la
   reconexión del socket en sí.
 
-## TODO: feedback en vivo de presentismo
+## TO-DO: feedback en vivo de presentismo
 
 Hoy nadie se entera de "quedó presente" mientras la clase está en curso: la evaluación
 (`evaluacion.ts`) corre una sola vez, al cierre, y solo alimenta la cola de subida a Sheets. Falta:
@@ -210,3 +210,63 @@ en cada caso:
   conectado/desconectado para actualizarlos en vivo sin volver a pedir el ack. Extender
   `wss-cli/stores/estudiantes-store.ts` con un campo "presente" (mismo lugar donde ya vive
   "conectado") y pintarlo en `item-estudiante.tsx`.
+
+## TO-DO: link "ir a ver" en el toast tras crear/editar un recurso de Drive
+
+Hoy, cuando se crea o edita algo en el Drive del profe, el toast confirma pero no lleva a ningún
+lado — el profe tiene que ir a buscar el archivo a mano. Dos flujos ya tocan Drive y calzan con esto:
+asistencia (`escribirAsistencia`, `sheets-asistencia.ts`) y colecciones de preguntas
+(`guardarColeccion`, `drive.ts`), con sus toasts en `wss-cli/handlers/profe-asistencia-handlers.ts:26`
+e `importar-exportar.tsx:263` respectivamente. Ninguno de los dos devuelve hoy el id/link del recurso
+más allá de la llamada a la Drive API que lo crea — se descarta en el camino.
+
+**Camino más liviano**: pedir el campo `webViewLink` en el `fields` de los `files.create`/
+`files.get`/`spreadsheets.create` que ya se hacen (Drive/Sheets ya arma esa URL, no hay que
+construirla a mano por mimeType) y devolverlo hacia arriba en cada cadena existente:
+función de `server/google/*` → response de la route (`escribirAsistencia` hoy no devuelve nada y la
+route de asistencia responde `204`; pasar a `200` + `{ webViewLink }`) → wrapper del FE
+(`lib/google/recursos-*.ts`) → toast. `sonner` (la lib de toasts que ya se usa) soporta `action` en
+`toast.success(msg, { action: { label, onClick } })`, así que "Ir a ver" es solo abrir esa URL en una
+pestaña nueva.
+
+Es plomería chica pero repetida por cada cadena — con solo 2 casos hoy no vale la pena un helper
+compartido todavía (esperar a un tercero antes de abstraer).
+
+## TO-DO: que el profe pueda disparar el cierre de asistencia a demanda
+
+Hoy el cierre de la clase (evaluación + encolado) lo dispara **únicamente** el Worker de bullmq
+cuando vence `ESPERA_PARA_CERRAR_MS` (20') después de que el profe se desconecta
+(`seguimiento.ts::registrarSalidaDelProfe`). No hay ningún comando para cerrarla antes — **la espera
+tiene que pasar a ser el respaldo (por si el profe se olvida o se le corta la conexión), no el único
+trigger.**
+
+**Camino propuesto**: nuevo comando conAck (ver [[wss-patron-ack]]) — p.ej. `sala:cerrar_asistencia`
+— manejado en `wss/salas/handlers.ts`, que:
+
+1. valida que hay una clase en curso (`db.getRegistroDeClase(salaId)` con `fin === null`),
+2. escribe `fin: Date.now()` en el registro (mismo paso que ya hace `registrarSalidaDelProfe` al
+   agendar el cierre automático, solo que sin la demora),
+3. cancela el job de cierre programado si había uno (`cancelarJobDeCierre`, ya existente) — para que
+   no se dispare una segunda evaluación 20' después sobre una clase ya cerrada y borrada,
+4. llama a `evaluarYEncolarClase(salaId)` directo — hoy está atada 1:1 al Worker de bullmq, pero no
+   depende de él (solo recibe `salaId`), así que invocarla desde el handler del comando es directo.
+
+Del lado del FE: un botón en el panel del profe (¿`panel-config-sala.tsx`? ¿la lista de estudiantes? quizás el mismo botón puede exportar la spreadsheet que hay ahora en usuarios "no-pro" y generar el export a spreadsheet en "pro"?)
+que emita el comando y confirme.
+
+El cierre manual debería subir a Drive en el momento (mismo click), no encolar — a diferencia del
+cierre automático, que sigue encolando porque corre server-side sin sesión de usuario (ver "Por qué
+la subida espera a que el profe vuelva a abrir la sala" más arriba). El cierre manual, en cambio, lo
+dispara el mismo browser del profe, que ya tiene las credenciales de Google a mano, así que no tiene
+sentido pasar por la cola. Y el resultado tiene que volver con el link ya listo para clickear e ir a
+ver la planilla — mismo mecanismo del TO-DO anterior ("ir a ver" en el toast).
+
+Eso cambia el paso 4 de arriba: en vez de `evaluarYEncolarClase` (que encola y no devuelve nada),
+conviene extraer de ahí la parte compartida —evaluar, cancelar el job programado, borrar el registro
+y el log de asistencia— en una función que el Worker siga usando igual (encolando el resultado, como
+hoy) y que el comando manual también use, pero devolviendo la `AsistenciaDeClase` evaluada en el
+propio ack en vez de encolarla. Con eso, el FE hace lo mismo que ya hace
+`profe-asistencia-handlers.ts` para lo pendiente: llama a `escribirAsistenciaEnDrive` con ese
+resultado —que ya devuelve `webViewLink` gracias al TODO anterior— y arma el toast con la acción "Ir
+a ver". Este TODO depende entonces de que el anterior ya esté resuelto, al menos para la ruta de
+asistencia.

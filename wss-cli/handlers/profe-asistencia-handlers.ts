@@ -11,15 +11,21 @@ export default function profeAsistenciaHandlers(socket: Socket | null) {
     if (!socket) return
 
     try {
+      // Quedó asistencia de la clase pasada pendiente de grabar en drive?
       const res: Ack<AsistenciaDeClase[]> = await socket.timeout(10000).emitWithAck('sala:asistencias_pendientes')
       if (!res.ok || !res.data || res.data.length === 0) return
 
       const nombreSala = sala.config.nombre ?? 'Sala'
       await escribirAsistenciaEnDrive(sala.id, nombreSala, res.data)
+
       // Recién con la planilla escrita las descartamos: si la subida falla o el socket se corta antes,
       // el server conserva las asistencias pendientes y se reintenta la próxima vez que se abre la sala.
       await socket.timeout(10000).emitWithAck('sala:descartar_asistencias_pendientes')
-      toast.success(`Asistencia guardada en Drive (${res.data.length} clase${res.data.length > 1 ? 's' : ''})`)
+      toast.success(
+        `Asistencia de ${res.data.length > 1 ? 'las clases anteriores' : 'la clase anterior'} guardada en Drive (${
+          res.data.length
+        } clase${res.data.length > 1 ? 's' : ''})`
+      )
     } catch {
       console.warn('No se pudo guardar la asistencia pendiente en Drive')
     }

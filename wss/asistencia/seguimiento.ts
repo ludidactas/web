@@ -1,5 +1,7 @@
+import { Queue, Worker } from 'bullmq'
 import { io } from '../server'
 import * as db from '../salas/db'
+import { redisBullMQ } from '../redis'
 import { evaluarClase } from './evaluacion'
 
 // Cuánto esperamos desde que el profe se desconecta antes de evaluar: tolera un refresh, un cambio de
@@ -7,30 +9,27 @@ import { evaluarClase } from './evaluacion'
 // evaluada termina en la salida del profe, no acá.
 const ESPERA_PARA_CERRAR_MS = 20 * 60_000
 
-// El registro de la clase (inicio/fin) y cuándo evaluarla viven en redis (`db.RegistroDeClase` y el
-// sorted set de cierres programados), para sobrevivir a un restart. Acá en memoria solo vive el
-// `setTimeout`; `reprogramarCierresPendientes` lo reconstruye al bootear el proceso.
-const timersLocales = new Map<string, ReturnType<typeof setTimeout>>()
+const NOMBRE_COLA = 'asistencia-cierres'
 
-/** Cancela el timer local de cierre de la sala, si lo hay (la contraparte en redis es `db.cancelarCierreProgramado`). */
-function cancelarTimerLocal(salaId: string) {
-  const timer = timersLocales.get(salaId)
-  if (!timer) return
-  clearTimeout(timer)
-  timersLocales.delete(salaId)
-}
+/**
+ * Cola de cierres de clase programados: job id = salaId (a lo sumo un cierre pendiente por sala, y
+ * permite cancelarlo por id sin trackear nada aparte), delay = `ESPERA_PARA_CERRAR_MS`. Vive en redis:
+ * sobrevive un restart del proceso wss sin código de reconciliación propio — el Worker, al arrancar,
+ * procesa solo los jobs demorados que ya vencieron.
+ */
+const cierresProgramados = new Queue<{ salaId: string }>(NOMBRE_COLA, {
+  connection: redisBullMQ,
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: { count: 50 } },
+})
 
-/** Arma el timer local que, al vencer, evalúa la clase. `ts` es el epoch ms en el que corresponde evaluar. */
-function programarTimerLocal(salaId: string, ts: number) {
-  cancelarTimerLocal(salaId)
-  const demora = Math.max(0, ts - Date.now())
-  timersLocales.set(
-    salaId,
-    setTimeout(() => {
-      timersLocales.delete(salaId)
-      evaluarYEncolarClase(salaId).catch((e) => console.error(`Error evaluando asistencia para sala ${salaId}:`, e))
-    }, demora)
-  )
+/** Cancela el job de cierre pendiente de la sala, si lo hay. */
+async function cancelarJobDeCierre(salaId: string): Promise<void> {
+  const job = await cierresProgramados.getJob(salaId)
+  try {
+    await job?.remove()
+  } catch {
+    console.log(`Intentando cancelar un job ya retomado o ya cancelado. No es necesario hacer nada más.`)
+  }
 }
 
 /**
@@ -39,8 +38,7 @@ function programarTimerLocal(salaId: string, ts: number) {
  * asistencia es el mismo y la ventana tiene que seguir cubriéndolo entero.
  */
 export async function registrarApertura(salaId: string): Promise<void> {
-  cancelarTimerLocal(salaId)
-  await db.cancelarCierreProgramado(salaId)
+  await cancelarJobDeCierre(salaId)
 
   const registro = await db.getRegistroDeClase(salaId)
   await db.guardarRegistroDeClase(salaId, registro ? { ...registro, fin: null } : { inicio: Date.now(), fin: null })
@@ -63,8 +61,7 @@ async function hayProfeConectado(salaId: string, excluirSocketId?: string) {
  * el mismo socket o con otro), `registrarApertura` cancela el cierre y la clase continúa.
  */
 export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: string): Promise<void> {
-  cancelarTimerLocal(salaId)
-  await db.cancelarCierreProgramado(salaId)
+  await cancelarJobDeCierre(salaId)
   if (await hayProfeConectado(salaId, excluirSocketId)) return
 
   const registro = await db.getRegistroDeClase(salaId)
@@ -73,9 +70,7 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
   const fin = Date.now()
   await db.guardarRegistroDeClase(salaId, { ...registro, fin })
 
-  const ts = fin + ESPERA_PARA_CERRAR_MS
-  await db.programarCierreDeClase(salaId, ts)
-  programarTimerLocal(salaId, ts)
+  await cierresProgramados.add('cierre', { salaId }, { jobId: salaId, delay: ESPERA_PARA_CERRAR_MS })
 }
 
 /**
@@ -83,18 +78,14 @@ export async function registrarSalidaDelProfe(salaId: string, excluirSocketId?: 
  * encola como pendiente de subir a Drive (la sube el FE cuando el profe vuelve a abrir la sala) y
  * borra el log de asistencia, que ya quedó resumido en lo encolado.
  *
- * La dispara únicamente el cierre programado: el timer local al vencer la espera, o
- * `reprogramarCierresPendientes` al bootear si el plazo ya venció.
+ * La dispara únicamente el Worker de `cierresProgramados`, cuando vence la espera.
  *
  * La fecha de la clase es la del INICIO: el cierre cae bastante después, y puede cruzar la medianoche.
  */
 export async function evaluarYEncolarClase(salaId: string): Promise<void> {
-  cancelarTimerLocal(salaId)
-  await db.cancelarCierreProgramado(salaId)
-
   const registro = await db.getRegistroDeClase(salaId)
-  // `fin === null`: el profe ya reabrió la sala, ganándole la carrera a esta evaluación (posible
-  // tras un restart, contra `reprogramarCierresPendientes`). La clase sigue viva.
+  // `fin === null`: el profe ya reabrió la sala, ganándole la carrera a esta evaluación (el único
+  // camino es que `cancelarJobDeCierre` haya llegado tarde). La clase sigue viva.
   if (!registro || registro.fin === null) return
   await db.borrarRegistroDeClase(salaId)
 
@@ -119,20 +110,16 @@ export async function evaluarYEncolarClase(salaId: string): Promise<void> {
 }
 
 /**
- * Al bootear el proceso wss: relee de redis los cierres programados y arma sus timers de nuevo (los
- * `setTimeout` viven solo en memoria, así que un restart se los lleva). Si el plazo ya venció
- * mientras el proceso estuvo caído, evalúa la clase de una en vez de armar un timer con demora negativa.
+ * Procesa los cierres vencidos. Un solo proceso wss, así que un solo Worker; si el día de mañana hay
+ * más de una instancia, bullmq reparte los jobs entre los Workers activos sin cambios acá.
  */
-export async function reprogramarCierresPendientes(): Promise<void> {
-  const pendientes = await db.getCierresProgramados()
+const worker = new Worker<{ salaId: string }>(NOMBRE_COLA, (job) => evaluarYEncolarClase(job.data.salaId), {
+  connection: redisBullMQ,
+})
 
-  for (const { salaId, ts } of pendientes) {
-    if (ts <= Date.now()) {
-      await evaluarYEncolarClase(salaId).catch((e) =>
-        console.error(`Error evaluando asistencia pendiente para sala ${salaId}:`, e)
-      )
-    } else {
-      programarTimerLocal(salaId, ts)
-    }
-  }
+worker.on('failed', (job, err) => console.error(`Error evaluando asistencia para sala ${job?.data.salaId}:`, err))
+
+/** Solo para tests: el job de cierre pendiente de la sala, si lo hay. */
+export async function getJobDeCierrePendiente(salaId: string) {
+  return cierresProgramados.getJob(salaId)
 }

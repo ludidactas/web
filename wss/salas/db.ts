@@ -27,13 +27,9 @@ export async function existeSala(salaId: string): Promise<boolean> {
  * Borra la sala del hash `salas` y TODAS sus claves derivadas (`sala:<id>:*`): estudiantes,
  * asistencia, lista de permitidos, encuestas y votos. No toca las relaciones profe-sala
  * (de eso se encarga `eliminarSalaDeProfe`). Usa SCAN para no bloquear redis.
- *
- * También saca la sala del sorted set global de cierres programados (`getCierresProgramados`), que
- * por vivir fuera de `sala:<id>:*` necesita este borrado aparte.
  */
 export async function borrarSala(salaId: string): Promise<void> {
   await redis.hdel('salas', salaId)
-  await cancelarCierreProgramado(salaId)
 
   const patron = `sala:${salaId}:*`
   let cursor = '0'
@@ -143,7 +139,7 @@ export async function getAsistenciasPendientes(salaId: string): Promise<Asistenc
   return raw.map((s) => asistenciaDeClaseSchema.parse(JSON.parse(s)))
 }
 
-/** Descarta las asistencias pendientes: se llama recién cuando quedaron escritas en Drive. */
+/** Descarta las asistencias pendientes: se llama recién cuando el FE confirma que quedaron escritas en Drive. */
 export async function borrarAsistenciasPendientes(salaId: string): Promise<void> {
   await redis.del(`sala:${salaId}:asistencia_pendiente`)
 }
@@ -169,27 +165,4 @@ export async function getRegistroDeClase(salaId: string): Promise<RegistroDeClas
 
 export async function borrarRegistroDeClase(salaId: string): Promise<void> {
   await redis.del(`sala:${salaId}:registro_clase`)
-}
-
-// -- Cierres de clase programados --
-
-// Sorted set global, fuera del namespace `sala:<id>:*` para poder leerlo entero al bootear: member =
-// salaId, score = epoch ms en el que corresponde evaluar la clase. Lo usa `reprogramarCierresPendientes`
-// (ver seguimiento.ts) para reconstruir los timers al arrancar el proceso.
-const CIERRES_PROGRAMADOS_KEY = 'asistencia:cierres_programados'
-
-export async function programarCierreDeClase(salaId: string, ts: number): Promise<void> {
-  await redis.zadd(CIERRES_PROGRAMADOS_KEY, ts, salaId)
-}
-
-export async function cancelarCierreProgramado(salaId: string): Promise<void> {
-  await redis.zrem(CIERRES_PROGRAMADOS_KEY, salaId)
-}
-
-/** Todos los cierres programados pendientes, salaId + el timestamp en el que corresponde evaluarlos. */
-export async function getCierresProgramados(): Promise<{ salaId: string; ts: number }[]> {
-  const raw = await redis.zrange(CIERRES_PROGRAMADOS_KEY, 0, -1, 'WITHSCORES')
-  const cierres: { salaId: string; ts: number }[] = []
-  for (let i = 0; i < raw.length; i += 2) cierres.push({ salaId: raw[i], ts: Number(raw[i + 1]) })
-  return cierres
 }

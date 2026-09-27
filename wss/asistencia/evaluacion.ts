@@ -1,9 +1,5 @@
 import type { EventoAsistencia, IntervaloDeConexion } from '../salas/db'
-import {
-  FormaEvaluacionAsistencia,
-  type AsistenciaDeClase,
-  type CondicionAsistencia,
-} from '../validators/asistencia'
+import { FormaEvaluacionAsistencia, type AsistenciaDeClase, type CondicionAsistencia } from '../validators/asistencia'
 import type { WssEstudianteSession } from '../validators/session'
 
 /** La clase: desde que el profe abrió la sala (`inicio`) hasta que se desconectó (`fin`). */

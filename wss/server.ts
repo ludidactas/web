@@ -3,7 +3,6 @@ import { conErrorLogging } from './middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
-import { reprogramarCierresPendientes } from './asistencia/seguimiento'
 import { handlersGoEstudiante } from './go/handlers'
 import { handlersEncuestasEstudiante, handlersEncuestasOverlay } from './polls/handlers'
 import { handlersAdmin, handlersGestionSalasProfe, handlersSalaEstudiante, handlersSalaPublico } from './salas/handlers'
@@ -12,9 +11,6 @@ import { RolSala } from './validators/auth'
 const PORT = (process.env.PORT && parseInt(process.env.PORT)) || 3005
 
 export const io = mount(PORT)
-
-// Reconstruye los timers de cierre de clase de la corrida anterior (ver `reprogramarCierresPendientes`).
-reprogramarCierresPendientes().catch((e) => console.error('Error reprogramando cierres de asistencia pendientes:', e))
 
 /** Setup de app */
 io.use(conErrorLogging)

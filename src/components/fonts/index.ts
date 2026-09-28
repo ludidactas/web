@@ -1,42 +1,35 @@
-import {
-  Chelsea_Market,
-  Inter,
-  Jersey_10,
-  Lexend,
-  Nova_Flat,
-  Pangolin,
-  Pixelify_Sans,
-  Press_Start_2P
-} from 'next/font/google'
 import localFont from 'next/font/local'
 
-export const inter = Inter({ subsets: ['latin'] })
+export const inter = localFont({
+  src: './Inter.woff2',
+  weight: '100 900',
+})
 
-export const novaF = Nova_Flat({
-  subsets: ['latin'],
+export const novaF = localFont({
+  src: './NovaFlat.woff2',
   display: 'swap',
   weight: '400',
 })
 
-export const lexend = Lexend({
-  subsets: ['latin'],
+export const lexend = localFont({
+  src: './Lexend.woff2',
   display: 'swap',
   weight: '400',
 })
 
-export const jersey = Jersey_10({
+export const jersey = localFont({
+  src: './Jersey10.woff2',
   weight: '400',
-  subsets: ['latin'],
 })
 
-export const pixelify = Pixelify_Sans({
+export const pixelify = localFont({
+  src: './PixelifySans.woff2',
   weight: '400',
-  subsets: ['latin'],
 })
 
-export const press2P = Press_Start_2P({
+export const press2P = localFont({
+  src: './PressStart2P.woff2',
   weight: '400',
-  subsets: ['latin'],
 })
 
 export const geistSans = localFont({
@@ -53,18 +46,18 @@ export const geistMono = localFont({
 
 // Chakra_Petch, Share_Tech, Space_Grotesk
 
-export const body = Chelsea_Market({
+export const body = localFont({
+  src: './ChelseaMarket.woff2',
   weight: '400',
-  subsets: ['latin'],
 })
-export const titulo = Chelsea_Market({
+export const titulo = localFont({
+  src: './ChelseaMarket.woff2',
   weight: '400',
-  subsets: ['latin'],
 })
 
 // Pangolin, Iceland, Walter_Turncoat
 
-export const boton = Pangolin({
+export const boton = localFont({
+  src: './Pangolin.woff2',
   weight: '400',
-  subsets: ['latin'],
 })

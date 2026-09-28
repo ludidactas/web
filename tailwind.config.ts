@@ -117,12 +117,29 @@ export default {
             boxShadow: '0 0 8px 2px rgba(111, 65, 203, 0.4)',
           },
         },
+
+        // Piedrita que sale disparada desde el centro de una explosión (ver ld-go.tsx),
+        // a lo largo del ángulo/distancia que le tocó (--angulo, --distancia).
+        'explosion-piedra': {
+          '0%': {
+            transform: 'translate(-50%, -50%) rotate(var(--angulo)) translateX(0) scale(1)',
+            opacity: '1',
+          },
+          '65%': {
+            opacity: '1',
+          },
+          '100%': {
+            transform: 'translate(-50%, -50%) rotate(var(--angulo)) translateX(var(--distancia)) scale(0.4)',
+            opacity: '0',
+          },
+        },
       },
       animation: {
         aparecer: 'fadeIn 0.5s ease-in-out',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'border-pulse': 'border-pulse 2s ease-in-out infinite',
+        'explosion-piedra': 'explosion-piedra 0.9s ease-out forwards',
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -66,13 +66,13 @@ const credencialesMock = Credentials({
   },
 })
 
-const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock, Google] : [Google]
+const providers: NextAuthConfig['providers'] = esDesarrollo ? [idpDev(), credencialesMock] : [Google]
 
 // Gate de prod:
 // ID del provider "principal" que dispara el botón de login de la UI
 // (`signIn(proveedorLogin)`). En dev apunta al IdP falso; en prod, a Google. El
 // mock de credenciales se invoca solo desde tests.
-export const proveedorLogin = 'google'
+export const proveedorLogin = esDesarrollo ? 'idp-dev' : 'google'
 
 // Payload que entiende el `trigger: 'update'` del callback `jwt` de abajo.
 // Canal interno para pedirle al callback que borre el

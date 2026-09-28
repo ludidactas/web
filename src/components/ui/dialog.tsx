@@ -31,10 +31,19 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    /** Nodo donde portalear el overlay/contenido en vez de `document.body` (default). Pasándole un
+     * contenedor con `position: relative` y que además establezca containing block para elementos
+     * `fixed` (ej. `contain: layout`, o un `transform`), el dialog queda acotado a ese contenedor en
+     * vez de tapar toda la pantalla. */
+    container?: HTMLElement | null
+    /** Clase extra para el fondo oscuro. Útil, por ejemplo, para redondearle las puntas cuando el
+     * dialog está acotado a un `container` (en un overlay que tapa toda la pantalla no se nota). */
+    overlayClassName?: string
+  }
+>(({ className, children, container, overlayClassName, ...props }, ref) => (
+  <DialogPortal container={container}>
+    <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(

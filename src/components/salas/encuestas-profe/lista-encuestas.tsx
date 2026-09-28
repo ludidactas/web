@@ -42,7 +42,7 @@ export function ListaEncuestas() {
   if (confirmadoVacio && posibleVacio)
     return (
       <div className="flex flex-col flex-1 min-h-0 justify-center items-center grayscale">
-        <p className="text-center text-slate-500 text-xl m-4"> ¡Aún no haz hecho ninguna pregunta!</p>
+        <p className="text-center text-slate-500 text-xl m-4"> ¡Todavía no hiciste ninguna pregunta!</p>
         <LdSvg className="max-w-[75%] max-h-full w-auto h-auto" SvgComponent={profeUps} />
       </div>
     )
@@ -84,9 +84,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
             <div className="flex w-full gap-4 justify-between items-center ">
               <div className="flex flex-1 min-w-0 items-center gap-2">
                 <MessageCircleQuestionIcon className="col-start-1 col-end-2 w-6 h-6 md:w-10 md:h-10 shrink-0" />
-                <h3 className="w-full text-xs md:text-base text-left break-words font-bold">
-                  {encuesta.pregunta}
-                </h3>
+                <h3 className="w-full text-xs md:text-base text-left break-words font-bold">{encuesta.pregunta}</h3>
               </div>
               <div className="flex shrink-0 items-center gap-4">
                 <div className="flex flex-col md:gap-1 items-end">
@@ -207,7 +205,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaProfe }) {
 
               <AccionesToggle encuesta={encuesta} />
 
-              <DebugPanel classNames={{ button: 'absolute bottom-4 right-4' }} data={{ encuesta }} />
+              {/* <DebugPanel classNames={{ button: 'absolute bottom-4 right-4' }} data={{ encuesta }} /> */}
             </div>
           </AccordionContent>
         </AccordionItem>

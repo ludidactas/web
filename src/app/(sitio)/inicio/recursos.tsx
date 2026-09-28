@@ -13,17 +13,18 @@ export default function Recursos() {
       <Pantalla
         title={<Title radius={2} text={'Salas y Recursos'} color={'text-ld-violeta'} size={'text-4xl md:text-7xl'} />}
         one={
-          <div className="flex flex-col max-w-[720px] items-center gap-4 text-sm md:text-xl">
+          <div className="flex flex-col max-w-[720px] items-center md:items-start gap-4 text-sm md:text-xl">
             <p>
               El primer recurso que hemos desarrollado es una{' '}
               <Hl>sala de herramientas de para la gestión de interactividad en las clases online</Hl>. Está disponible
-              para que la utilices conectándote con tu cuenta de google.{' '}
+              para que la uses conectándote con tu cuenta de google. <Hl>Compartís el link</Hl> y tus participantes se
+              conectan sin registrarse.
             </p>
             <p>
-              Estamos trabajando en otras herramientas didácticas y en hacer disponibles en el sitio los contenidos
-              producidos en los talleres, cursos y seminarios de modo que este funcione como biblioteca de recursos y
-              material de referencia, abierto y gratuito, para docentes y talleristas.
+              En una <Hl>sala</Hl> podés compartir <Hl>encuestas en vivo</Hl> y <Hl>partidas del juego de Go</Hl>. Están
+              pensadas para escenarios educativos y son gratuitas.
             </p>
+            <p>¡Te invitamos a probarlas!</p>
           </div>
         }
         two={<Imagenes />}

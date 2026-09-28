@@ -73,7 +73,7 @@ export function AccionesToggle({ encuesta }: { encuesta: Encuesta }) {
           <DialogContent className="flex flex-col items-center">
             <DialogHeader>
               <DialogTitle className="text-center leading-6">
-                ¿Estás seguro/a de que deseas eliminar la pregunta?
+                ¿Estás seguro/a de que querés eliminar la pregunta?
               </DialogTitle>
             </DialogHeader>
             <div className="flex gap-2">

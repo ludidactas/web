@@ -1,19 +1,6 @@
-import { Toaster } from 'sonner'
-import { SignIn, SignOut } from '../../login/components/botones'
-import EncuestasEstudiantePage from '@/components/salas/encuestas-estudiante/encuestras-estudiante-page'
-import { TituloPestanaSala } from '@/components/salas/titulo-pestana-sala'
+import { redirect } from 'next/navigation'
 
-export default async function Page({ params }: { params: Promise<{ idSala: string }> }) {
+export default async function SalaPage({ params }: { params: Promise<{ idSala: string }> }) {
   const { idSala } = await params
-  return (
-    <div className="bg-ld-gradiente-fondo grid place-content-center min-h-screen w-full">
-      <Toaster />
-      <TituloPestanaSala />
-      <EncuestasEstudiantePage
-        idSala={idSala}
-        btnLoginGoogle={<SignIn redirectTo={`/sala/${idSala}`} />}
-        btnLogoutGoogle={<SignOut />}
-      />
-    </div>
-  )
+  redirect(`/sala/${idSala}/encuestas`)
 }

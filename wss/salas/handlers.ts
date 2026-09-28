@@ -4,6 +4,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
 import { handlersEncuestasProfe } from '../polls/handlers'
+import { handlersGoProfe } from '../go/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { configCreacionSala } from '../validators/salas'
@@ -77,7 +78,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
   socket.data.salaActiva = sala.id
-  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`])
+  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`, `sala:${sala.id}:${socket.data.session.userId}`])
   console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
   socket.on(
@@ -159,6 +160,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: Re
   )
 
   await handlersEncuestasProfe(socket, sala)
+  await handlersGoProfe(socket, sala.id)
 
   await emitirAbierta(socket, sala)
 }

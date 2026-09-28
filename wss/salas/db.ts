@@ -1,5 +1,10 @@
 import redis from '../redis'
-import { asistenciaDeClaseSchema, type AsistenciaDeClase } from '../validators/asistencia'
+import {
+  asistenciaDeClaseSchema,
+  registroDeClaseSchema,
+  type AsistenciaDeClase,
+  type RegistroDeClase,
+} from '../validators/asistencia'
 import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession } from '../validators/session'
 
@@ -139,7 +144,22 @@ export async function getAsistenciasPendientes(salaId: string): Promise<Asistenc
   return raw.map((s) => asistenciaDeClaseSchema.parse(JSON.parse(s)))
 }
 
-/** Descarta las asistencias pendientes: se llama recién cuando quedaron escritas en Drive. */
+/** Descarta las asistencias pendientes: se llama recién cuando el FE confirma que quedaron escritas en Drive. */
 export async function borrarAsistenciasPendientes(salaId: string): Promise<void> {
   await redis.del(`sala:${salaId}:asistencia_pendiente`)
+}
+
+// -- Registro de la clase abierta (para el seguimiento de apertura/cierre en `wss/asistencia/seguimiento.ts`) --
+
+export async function guardarRegistroDeClase(salaId: string, registro: RegistroDeClase): Promise<void> {
+  await redis.set(`sala:${salaId}:registro_clase`, JSON.stringify(registro))
+}
+
+export async function getRegistroDeClase(salaId: string): Promise<RegistroDeClase | null> {
+  const raw = await redis.get(`sala:${salaId}:registro_clase`)
+  return raw ? registroDeClaseSchema.parse(JSON.parse(raw)) : null
+}
+
+export async function borrarRegistroDeClase(salaId: string): Promise<void> {
+  await redis.del(`sala:${salaId}:registro_clase`)
 }

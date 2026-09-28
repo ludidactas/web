@@ -49,22 +49,33 @@ beforeAll(async () => {
 
 afterEach(async () => {
   setSystemTime()
+  // Cancela cierres pendientes.
+  await seguimiento.registrarApertura(salaId)
   await db.borrarSala(salaId)
 })
 
 afterAll(async () => {
+  await seguimiento.registrarApertura(salaId)
   await db.borrarSala(salaId)
 })
 
-/** Abre la clase en `T0` y hace salir al profe `duracionMin` después. */
+/**
+ * Abre la clase en `T0` y hace salir al profe `duracionMin` después, para probar cómo evalúa
+ * `evaluarYEncolarClase` un registro ya cerrado — no pasa por `registrarApertura`/
+ * `registrarSalidaDelProfe` (esas dos tienen sus propios tests en el describe de bullmq más abajo)
+ * porque agendan un job real con `Date.now()`, y acá el reloj está mockeado: bullmq calcularía el
+ * vencimiento contra un timestamp del pasado y lo procesaría de una, en paralelo con esta misma
+ * llamada directa — dos evaluaciones para la misma clase.
+ */
 async function correrClase(duracionMin: number, registrarEventos: () => Promise<void>) {
   setSystemTime(T0)
-  seguimiento.registrarApertura(salaId)
+  await db.guardarRegistroDeClase(salaId, { inicio: T0, fin: null })
 
   await registrarEventos()
 
-  setSystemTime(T0 + duracionMin * MIN)
-  await seguimiento.registrarSalidaDelProfe(salaId)
+  const fin = T0 + duracionMin * MIN
+  setSystemTime(fin)
+  await db.guardarRegistroDeClase(salaId, { inicio: T0, fin })
 
   await seguimiento.evaluarYEncolarClase(salaId)
 }
@@ -98,6 +109,7 @@ describe('asistencia — pipeline completo contra Redis', () => {
     ])
 
     expect(await db.getEventosAsistencia(salaId)).toEqual([])
+    expect(await db.getRegistroDeClase(salaId)).toBeNull()
   })
 
   it('no encola nada si la sala no tiene condición de asistencia', async () => {
@@ -146,5 +158,32 @@ describe('asistencia — pipeline completo contra Redis', () => {
     })
 
     expect(await db.getAsistenciasPendientes(salaId)).toEqual([])
+    expect(await db.getRegistroDeClase(salaId)).toBeNull()
+  })
+})
+
+describe('asistencia — el cierre de clase se agenda en la cola de bullmq', () => {
+  it('registrarSalidaDelProfe agenda el cierre con el delay de gracia completo', async () => {
+    await db.guardarSala(salaCon(salaId, null))
+    await db.guardarRegistroDeClase(salaId, { inicio: Date.now(), fin: null })
+
+    await seguimiento.registrarSalidaDelProfe(salaId)
+
+    const job = await seguimiento.getJobDeCierrePendiente(salaId)
+    expect(job).toBeDefined()
+    expect(job?.data).toEqual({ salaId })
+    expect(job?.opts.delay).toBe(20 * MIN)
+  })
+
+  it('registrarApertura cancela el cierre pendiente', async () => {
+    await db.guardarSala(salaCon(salaId, null))
+    await db.guardarRegistroDeClase(salaId, { inicio: Date.now(), fin: null })
+    await seguimiento.registrarSalidaDelProfe(salaId)
+    expect(await seguimiento.getJobDeCierrePendiente(salaId)).toBeDefined()
+
+    await seguimiento.registrarApertura(salaId)
+
+    expect(await seguimiento.getJobDeCierrePendiente(salaId)).toBeUndefined()
+    expect(await db.getRegistroDeClase(salaId)).toEqual({ inicio: expect.any(Number), fin: null })
   })
 })

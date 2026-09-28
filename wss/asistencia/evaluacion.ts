@@ -1,15 +1,11 @@
 import type { EventoAsistencia, IntervaloDeConexion } from '../salas/db'
-import {
-  FormaEvaluacionAsistencia,
-  type AsistenciaDeClase,
-  type CondicionAsistencia,
-} from '../validators/asistencia'
+import { FormaEvaluacionAsistencia, type AsistenciaDeClase, type CondicionAsistencia } from '../validators/asistencia'
 import type { WssEstudianteSession } from '../validators/session'
 
 /** La clase: desde que el profe abrió la sala (`inicio`) hasta que se desconectó (`fin`). */
 export type VentanaDeClase = { inicio: number; fin: number }
 
-const DURACION_MINIMA_CLASE_MS = 30 * 60_000
+export const DURACION_MINIMA_CLASE_MS = 1 * 60_000
 
 /**
  * Reconstruye, por userId, los intervalos durante los que el estudiante estuvo conectado, a partir
@@ -53,7 +49,7 @@ function msConectados(intervalos: IntervaloDeConexion[], desde: number, hasta: n
 /**
  * Devuelve si el estudiante estuvo presente en la clase, según la condición de la sala.
  *
- * Los dos criterios se miden DENTRO de la ventana de la clase, y no contra `Date.now()`: la clase
+ * Los tres criterios se miden DENTRO de la ventana de la clase, y no contra `Date.now()`: la clase
  * termina cuando el profe se desconecta, y la espera previa a evaluar (ver `seguimiento.ts`) es sólo
  * una demora para tolerar un refresh, no tiempo de clase.
  */
@@ -62,14 +58,17 @@ export function estuvoPresente(
   condicion: CondicionAsistencia,
   { inicio, fin }: VentanaDeClase
 ): boolean {
-  const umbral = condicion.minutos_minimos * 60_000
-
   switch (condicion.forma_evaluacion) {
     case FormaEvaluacionAsistencia.TotalMinutos:
-      return msConectados(intervalos, inicio, fin) >= umbral
+      return msConectados(intervalos, inicio, fin) >= condicion.minutos_minimos * 60_000
 
-    case FormaEvaluacionAsistencia.UltimosMinutos:
+    case FormaEvaluacionAsistencia.UltimosMinutos: {
+      const umbral = condicion.minutos_minimos * 60_000
       return msConectados(intervalos, fin - umbral, fin) >= umbral
+    }
+
+    case FormaEvaluacionAsistencia.Conectado:
+      return msConectados(intervalos, inicio, fin) > 0
   }
 }
 

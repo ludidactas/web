@@ -156,6 +156,17 @@ Cada Application tiene seteadas sus propias `PORT`, `REDIS_HOST`/`REDIS_PORT`/`R
 
 Ambas Applications tienen auto-deploy activado (`Deploy on push` vía webhook): un push a `main` o a `staging` redeploya sola la Application correspondiente, sin acción manual en Coolify.
 
+### WSS con Docker (alternativa a los dos pasos de arriba)
+
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+
+- Levantar todo: `docker compose up --build -d`
+- Ver logs: `docker compose logs -f wss`
+- Apagar todo (y borrar los datos de Redis de la prueba, es efímero a propósito): `docker compose down`
+- Después de tocar código en `wss/`, hay que reconstruir la imagen: `docker compose up --build -d` de nuevo (no tiene hot-reload)
+
+El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup (correr Next en otra terminal) es igual.
+
 ## Checkear
 
 https://www.svgator.com/

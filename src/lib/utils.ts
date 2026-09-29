@@ -10,6 +10,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Elige singular o plural según `n` (ej. `plural(1, 'minuto', 'minutos')` → `'minuto'`). */
+export function plural(n: number, singular: string, plural: string): string {
+  return n === 1 ? singular : plural
+}
+
 export function nombreSplit(username: string | null | undefined): string {
   if (!username) return 'Anónimx'
   if (username.includes(' ')) return username.split(' ')[0]

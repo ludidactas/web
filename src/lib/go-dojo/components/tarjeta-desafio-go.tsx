@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { DesafioDojoGo, type DesafioDojoGoTheme } from './desafio-dojo-go'
 import { useDesafioGo } from './use-desafio-go'
 import type { Desafio } from '../tipos'
+import { Icon } from '@iconify/react/dist/iconify.js'
 
 /**
  * Tarjeta de un desafío: combina `useDesafioGo` (estado) con `DesafioDojoGo` (tablero) y agrega el
@@ -48,14 +49,16 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
   }, [estado, desafio.id, onSolved])
 
   const isPositive = estado === 'correcto' || estado === 'jugando'
+  // Cualquier jugada saca al desafío de "inactivo", y reiniciar lo devuelve ahí.
+  const seJugo = estado !== 'inactivo'
 
   return (
-    <div className={className ?? 'bg-white p-6 rounded-xl'}>
-      <div className="flex items-baseline gap-4 mb-4">
+    <div className={className ?? 'bg-white p-6 rounded-xl text-center'}>
+      <div className="flex items-center justify-center gap-4 mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">{desafio.titulo}</h3>
+          <h3 className="text-2xl font-semibold text-ld-violeta-oscuro">{desafio.titulo}</h3>
           {desafio.etiqueta && (
-            <span className="inline-block text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full mt-1">
+            <span className="inline-block text-xs text-ld-violeta-oscuro bg-ld-violeta-oscuro/10 px-2 py-0.5 rounded-full mt-1">
               {desafio.etiqueta}
             </span>
           )}
@@ -105,26 +108,37 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         <button
           type="button"
           onClick={reiniciar}
-          className="text-sm px-4 py-2 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 transition"
+          disabled={!seJugo}
+          className={cn(
+            'flex gap-1 items-center text-sm px-4 py-2 rounded-full border transition',
+            seJugo
+              ? 'border-emerald-500 text-emerald-700 hover:bg-emerald-50'
+              : 'border-slate-300 text-slate-600 opacity-40 cursor-not-allowed'
+          )}
         >
           Reiniciar
+          <Icon className='' icon={'iconamoon:restart-bold'} />
+
         </button>
         {desafio.tipo !== 'exploracion' && (
           <button
             type="button"
             onClick={mostrarAyuda}
-            className="text-sm px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
+            className="flex gap-1 items-center text-sm px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
           >
             Pista
+            <Icon className='' icon={'fluent:search-12-filled'} />
           </button>
         )}
         {desafio.explicacion && (
           <button
             type="button"
             onClick={mostrarExplicacion}
-            className="text-sm px-4 py-2 rounded-full bg-orange-400 text-white hover:bg-orange-500 transition"
+            className="flex gap-1 items-center text-sm px-4 py-2 rounded-full bg-ld-amarillo-oscuro text-white hover:bg-orange-500 transition"
           >
             Explicación
+            <Icon className='' icon={'fluent:text-description-20-filled'} />
+
           </button>
         )}
       </div>

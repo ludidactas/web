@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { TarjetaDesafioGo } from './tarjeta-desafio-go'
 import type { DesafioDojoGoTheme } from './desafio-dojo-go'
@@ -12,6 +13,34 @@ export interface ConjuntoDesafiosProps {
   /** Muestra los pills de filtro por etiqueta arriba del índice. Default true si hay más de una etiqueta. */
   showFilters?: boolean
   className?: string
+}
+
+/**
+ * Torta que se llena según el porcentaje, del mismo color que la barra; al completarse pasa a ser
+ * un check. Truco: un círculo de radio r con trazo de ancho 2r cubre el disco entero, así que
+ * dibujar solo una fracción del trazo (dasharray) dibuja una porción. Con pathLength=100 el
+ * dasharray se expresa directo en porcentaje.
+ */
+function TortaProgreso({ porcentaje }: { porcentaje: number }) {
+  if (porcentaje >= 100) {
+    return <Icon icon="akar-icons:circle-check" className="w-4 h-4 text-emerald-500" aria-hidden />
+  }
+
+  return (
+    <svg viewBox="0 0 32 32" className="w-4 h-4 -rotate-90" aria-hidden>
+      <circle cx="16" cy="16" r="16" className="fill-slate-200" />
+      <circle
+        cx="16"
+        cy="16"
+        r="8"
+        fill="none"
+        strokeWidth="16"
+        pathLength={100}
+        strokeDasharray={`${porcentaje} 100`}
+        className="stroke-ld-violeta transition-all duration-300"
+      />
+    </svg>
+  )
 }
 
 /**
@@ -47,12 +76,15 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, className }: Co
 
   return (
     <div className={className}>
-      <div className="text-xs text-slate-500 mb-2">Progreso</div>
+      <div className="flex items-center gap-2 text-xl text-slate-500 mb-2">
+        <TortaProgreso porcentaje={porcentajeProgreso} />
+        Progreso
+      </div>
       <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-8">
         <div
           className={cn(
             'h-full transition-all duration-300',
-            porcentajeProgreso < 100 ? 'bg-indigo-500' : 'bg-emerald-500'
+            porcentajeProgreso < 100 ? 'bg-ld-violeta' : 'bg-emerald-500'
           )}
           style={{ width: `${porcentajeProgreso}%` }}
         />
@@ -78,11 +110,12 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, className }: Co
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start">
+      <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start bg-ld-violeta-oscuro/10 p-4 rounded-xl">
         <nav
           className={cn(
             'order-2 md:order-1 flex flex-col gap-2 w-full md:w-56 md:shrink-0',
-            'overflow-x-auto md:overflow-x-visible pb-2 md:pb-0',
+            // md:pt-6 compensa el padding de la tarjeta, para que el índice arranque a la altura del título.
+            'overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 md:pt-6',
             'max-w-[30rem] md:max-w-none md:max-h-[30rem] md:overflow-y-auto'
           )}
         >
@@ -158,10 +191,6 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, className }: Co
             )}
           </div>
         </div>
-
-        {/* Espaciador fantasma del mismo ancho que el índice, para que el área del desafío quede
-            centrada respecto a todo el ancho disponible y no solo al espacio que le queda al lado. */}
-        <div aria-hidden className="order-3 hidden md:block md:w-56 md:shrink-0" />
       </div>
     </div>
   )

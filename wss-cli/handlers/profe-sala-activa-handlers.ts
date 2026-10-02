@@ -25,6 +25,26 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
   const almacenConfig = storeConfig.getState()
   const almacenPermitidos = storePermitidos.getState()
 
+  /** `profe-asistencia-handlers` también escucha `sala:abierta`, así que no
+   * podemos desmontar con `removeAllListeners` sin pisar al otro. */
+  const alAbrirSala = ({
+    polls,
+    estudiantes,
+    config,
+    listaPermitidos,
+  }: {
+    sala: SalaData
+    polls: EncuestaHidratadaProfe[]
+    estudiantes: Estudiante[]
+    config: ConfigSala
+    listaPermitidos: { lista: string[]; nombres: Record<string, string> }
+  }) => {
+    almacenConfig.set(config)
+    almacenEncuestas.set(polls)
+    almacenEstudiantes.set(estudiantes)
+    almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
+  }
+
   return {
     montar: () => {
       if (!socket) return
@@ -42,26 +62,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
         almacenEstudiantes.disconnect(estudiante.id)
       })
 
-      socket.on(
-        'sala:abierta',
-        ({
-          polls,
-          estudiantes,
-          config,
-          listaPermitidos,
-        }: {
-          sala: SalaData
-          polls: EncuestaHidratadaProfe[]
-          estudiantes: Estudiante[]
-          config: ConfigSala
-          listaPermitidos: { lista: string[]; nombres: Record<string, string> }
-        }) => {
-          almacenConfig.set(config)
-          almacenEncuestas.set(polls)
-          almacenEstudiantes.set(estudiantes)
-          almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
-        }
-      )
+      socket.on('sala:abierta', alAbrirSala)
 
       socket.on('sala:lista_permitidos', almacenPermitidos.set)
 
@@ -76,7 +77,6 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
     },
 
     acciones: {
-      limpiarEstudiantes: () => socket?.emit('sala:limpar_estudiantes_sala'),
       actualizarConfig: (config: Partial<ConfigSala>) => socket?.emit('sala:actualizar_config', config),
       agregarPermitidos: (list: string[]) => socket?.emit('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => socket?.emit('sala:permitidos_remover', list),
@@ -84,7 +84,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       setNombrePermitido: (dni: string, nombre: string) => socket?.emit('sala:permitidos_nombre', { dni, nombre }),
       // Comando con ack: el caller (botón de exportar) necesita los datos ya para armar el archivo.
       // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
-      // atrás (así no arrastra invitados de encuentros anteriores a la exportación de la clase actual).
+      // atrás (para acotar la exportación a la clase actual).
       pedirPlanillaCompleta: async (minutos?: number): Promise<PlanillaCompleta> => {
         if (!socket) throw new Error('Sin conexión')
         const res: Ack<PlanillaCompleta> = await socket
@@ -98,7 +98,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
     desmontar: () => {
       if (!socket) return
 
-      socket.removeAllListeners('sala:abierta')
+      socket.off('sala:abierta', alAbrirSala)
       socket.removeAllListeners('sala:lista_permitidos')
       socket.removeAllListeners('sala:estudiantes')
       socket.removeAllListeners('sala:estudiante_conectado')

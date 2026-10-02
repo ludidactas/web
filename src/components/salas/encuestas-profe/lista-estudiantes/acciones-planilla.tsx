@@ -16,16 +16,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn, exportarPlanillaCompleta } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
-import { storeEstudiantes } from '@/wss-cli/stores/estudiantes-store'
-import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
+import { storeEstudiantes, type Estudiante } from '@/wss-cli/stores/estudiantes-store'
 
-/** Acciones sobre la lista completa: limpiar los desconectados, copiarla como texto, y exportar la
+/** Acciones sobre la lista completa: filtrar por conectados, copiarla como texto, y exportar la
  * planilla completa (incluye a quienes ya no están conectados en este navegador). */
-export function AccionesPlanilla() {
-  const { limpiarEstudiantes, pedirPlanillaCompleta } = useConexionProfe()
+export function AccionesPlanilla({
+  visibles,
+  soloConectados,
+  onAlternar,
+}: {
+  visibles: Estudiante[]
+  soloConectados: boolean
+  onAlternar: () => void
+}) {
+  const { pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
-  const { lista: invitados } = storePermitidos()
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
   const [minutosVentana, setMinutosVentana] = useState(90)
 
@@ -68,7 +74,7 @@ export function AccionesPlanilla() {
       }
     })
 
-  const datosEstudiantes = estudiantes
+  const datosEstudiantes = visibles
     .map((e) => {
       const identificador = e.email || e.dni
       return identificador ? `${e.nombre} (${identificador})` : e.nombre
@@ -77,47 +83,23 @@ export function AccionesPlanilla() {
 
   return (
     <div className={cn('flex justify-end gap-2 mb-3 text-ld-violeta-oscuro')}>
-      <Dialog>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DialogTrigger asChild>
-              <button
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                )}
-                disabled={estudiantes.length === 0}
-              >
-                <Icon icon="lucide:eraser" width={14} height={14} /> Limpiar
-              </button>
-            </DialogTrigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="text-xs">Limpiá la lista de participantes</p>
-          </TooltipContent>
-        </Tooltip>
-        <DialogContent className="flex flex-col items-center">
-          <DialogHeader>
-            <DialogTitle className="text-center leading-6">¿Limpiar la lista de participantes?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-slate-500 text-center">
-            Se van a quitar de la lista los estudiantes desconectados.
-            {invitados.length > 0 && ` Los ${invitados.length} invitados no se van a borrar.`}
-          </p>
-          <DialogFooter className="flex-row justify-center gap-2">
-            <DialogClose>
-              <p className="bg-slate-200 text-slate-700 px-4 py-2 rounded-full text-sm">Cancelar</p>
-            </DialogClose>
-            <DialogClose asChild>
-              <button
-                className="flex items-center gap-1 bg-rose-700 text-white px-4 py-2 rounded-full text-sm"
-                onClick={limpiarEstudiantes}
-              >
-                <Icon icon="lucide:eraser" width={14} height={14} /> Limpiar
-              </button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className={cn(
+              'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
+              soloConectados ? 'bg-ld-violeta-oscuro text-white border-ld-violeta-oscuro' : 'hover:bg-slate-50'
+            )}
+            onClick={onAlternar}
+            disabled={estudiantes.length === 0}
+          >
+            <Icon icon="lucide:users" width={14} height={14} /> Solo conectados
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">Mostrar solo los estudiantes conectados ahora</p>
+        </TooltipContent>
+      </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -126,7 +108,7 @@ export function AccionesPlanilla() {
               justCopied ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'hover:bg-slate-50'
             )}
             onClick={handleCopy(datosEstudiantes)}
-            disabled={estudiantes.length === 0}
+            disabled={visibles.length === 0}
           >
             {justCopied ? (
               <Icon icon="lucide:square-check-big" width={14} height={14} />

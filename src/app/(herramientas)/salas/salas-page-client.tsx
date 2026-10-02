@@ -20,7 +20,9 @@ import {
 import { cn } from '@/lib/utils'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
+import type { CondicionAsistencia } from '@/wss/validators/asistencia'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import { SelectorCondicionDeAsistencia } from '@/components/salas/encuestas-profe/condicion-asistencia'
 import {
   Dialog,
   DialogClose,
@@ -51,6 +53,7 @@ type FormState = {
   soloInvitados: boolean
   lista: string[]
   nombres: Record<string, string>
+  condicionAsistencia: CondicionAsistencia | null
 }
 
 const FORM_INICIAL: FormState = {
@@ -60,6 +63,7 @@ const FORM_INICIAL: FormState = {
   soloInvitados: false,
   lista: [],
   nombres: {},
+  condicionAsistencia: null,
 }
 
 // Carga mínima tras "Crear": el OK llega cuando ocurre lo último entre la confirmación y este lapso.
@@ -97,6 +101,7 @@ function FormCrearSala() {
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
               nombresPermitidos: form.nombres,
+              condicion_asistencia: form.condicionAsistencia,
             },
           }),
           delay(CARGA_MINIMA_MS),
@@ -202,6 +207,11 @@ function FormCrearSala() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SelectorCondicionDeAsistencia
+        condicion={form.condicionAsistencia}
+        onChange={(condicionAsistencia) => setForm((f) => ({ ...f, condicionAsistencia }))}
+      />
 
       <Tooltip>
         <TooltipTrigger asChild>

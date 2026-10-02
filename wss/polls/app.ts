@@ -1,8 +1,14 @@
 import { isEmpty, merge } from 'remeda'
 import { Salas } from '../salas/app'
-import { Encuesta, EncuestaConVotos, EncuestaHidratadaEstudiante, EncuestaHidratadaProfe } from '../validators/polls'
+import {
+  Encuesta,
+  EncuestaConVotos,
+  EncuestaHidratadaEstudiante,
+  EncuestaHidratadaProfe,
+  NuevaEncuesta,
+  VotarEncuesta,
+} from '../validators/polls'
 import { RolSala } from '../validators/auth'
-import { nuevaEncuesta, voteValidator } from '../validators/polls'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
 
@@ -40,13 +46,12 @@ export async function profeSala(salaId: string) {
     return polls
   }
 
-  async function crearPoll(pollDataUnknown: unknown) {
+  async function crearPoll(datos: NuevaEncuesta) {
     const poll: Encuesta = {
       // Estas dos son server state, no corresponden en el validator:
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-      // Validamos el resto del input
-      ...nuevaEncuesta.parse(pollDataUnknown),
+      ...datos,
     }
 
     await db.guardarEncuesta(salaId, poll)
@@ -193,8 +198,7 @@ export async function estudianteSala(idSala: string, userId: string) {
     if (await db.yaVoto(idSala, poll.id, user)) throw new Error('Ya votaste en esta encuesta')
   }
 
-  async function votar(posibleVoto: unknown) {
-    const voto = voteValidator.parse(posibleVoto)
+  async function votar(voto: VotarEncuesta) {
     const { pollId, tipo } = voto
 
     await assertPollExists(idSala, pollId)

@@ -113,9 +113,17 @@ export const crearEncuesta = z
     message: 'Las opciones no pueden estar vacías',
   })
 
-const voteBase = z.object({
+/** Payload de los comandos que operan sobre una encuesta ya existente. */
+export const pollIdSchema = z.object({
   pollId: z.string().min(1, 'El ID de la encuesta es obligatorio'),
 })
+
+/** Payload de los comandos que consultan por un usuario de la sala. */
+export const userIdSchema = z.object({
+  userId: z.string().min(1, 'El ID del usuario es obligatorio'),
+})
+
+const voteBase = pollIdSchema
 
 export const voteValidator = z.discriminatedUnion('tipo', [
   voteBase.extend({ tipo: z.literal('opcion'), optionId: z.string().min(1) }),
@@ -128,6 +136,12 @@ export const nuevaEncuesta = crearEncuesta.transform((data) => ({
   isFocused: false, // @todo Enfocar por default al crear
   isRevealed: false,
 }))
+
+/** Payload de los comandos que operan sobre una encuesta existente */
+export type PollIdPayload = z.output<typeof pollIdSchema>
+
+/** Datos de una encuesta nueva ya validados, tal como los recibe el server para crearla */
+export type NuevaEncuesta = z.output<typeof nuevaEncuesta>
 
 /** Tipo Encuesta almacenado en el server: tiene los flags de config y las opciones pero no votos */
 export type Encuesta = z.infer<typeof encuestaSchema>

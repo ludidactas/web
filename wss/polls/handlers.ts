@@ -1,7 +1,10 @@
-import { ExtendedError, Socket } from 'socket.io'
-import { conAck, conErrorHandling } from '../middleware/error-handling'
+import { Socket } from 'socket.io'
+import { comandosPollsEstudiante, comandosPollsOverlay, comandosPollsProfe } from '../contrato/polls'
+import { registrar } from '../contrato/registrar'
+import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Sala, Salas } from '../salas/app'
+import { Encuesta, PollIdPayload } from '../validators/polls'
 import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from './app'
 
 /**
@@ -9,113 +12,64 @@ import { broadcastPoll, estudianteSala, getEncuestaEnfocada, profeSala } from '.
  * `handlersSalaActivaProfe` al abrir la sala — no al conectar — así que `sala` es fija en closure.
  */
 export const handlersEncuestasProfe = async (socket: SocketProfe, sala: Sala) => {
-  const safe = conErrorHandling(socket)
   const profe = await profeSala(sala.id)
 
-  socket.on(
-    'poll:create',
-    safe(async (poll: unknown, responder: (error?: ExtendedError) => void) => {
-      try {
-        const nueva = await profe.crearPoll(poll)
-        await broadcastPoll(sala, nueva)
-        responder()
-      } catch (e: any) {
-        console.error('Error creando encuesta:', e)
-        responder(e.message)
-      }
-    })
-  )
+  /** Comando que aplica `cambios` a la encuesta indicada y la broadcastea a la sala. */
+  const actualizar =
+    (cambios: Partial<Encuesta>) =>
+    async ({ pollId }: PollIdPayload) =>
+      broadcastPoll(sala, await profe.updatePoll(pollId, cambios))
 
-  socket.on(
-    'poll:votantes',
-    safe(async ({ pollId }) => {
-      socket.emit('poll:votantes', { votantes: await profe.consultarVotantes({ pollId }) })
-    })
-  )
+  registrar(socket, comandosPollsProfe, {
+    'poll:create': async (datos) => {
+      await broadcastPoll(sala, await profe.crearPoll(datos))
+    },
 
-  // Pide todos los votos dentro de la sala de un usuario
-  socket.on(
-    'poll:votos:usuario',
-    safe(async ({ userId }) => {
+    // Pide todos los votos dentro de la sala de un usuario
+    'poll:votos:usuario': async ({ userId }) => {
       socket.emit('poll:votos:usuario', { userId, votos: await profe.consultarVotosPorUsuario({ userId }) })
-    })
-  )
+    },
 
-  socket.on(
-    'poll:open',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isOpen: true })))
-  )
-  socket.on(
-    'poll:close',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isOpen: false })))
-  )
-  socket.on(
-    'poll:publish',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isPublished: true })))
-  )
-  socket.on(
-    'poll:hide',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isPublished: false })))
-  )
-  socket.on(
-    'poll:reveal',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isRevealed: true })))
-  )
-  socket.on(
-    'poll:unreveal',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.updatePoll(pollId, { isRevealed: false })))
-  )
-  socket.on(
-    'poll:focus',
-    safe(async ({ pollId }) => {
+    'poll:open': actualizar({ isOpen: true }),
+    'poll:close': actualizar({ isOpen: false }),
+    'poll:publish': actualizar({ isPublished: true }),
+    'poll:hide': actualizar({ isPublished: false }),
+    'poll:reveal': actualizar({ isRevealed: true }),
+    'poll:unreveal': actualizar({ isRevealed: false }),
+
+    'poll:focus': async ({ pollId }) => {
       const [enfocada, previa] = await profe.focusPoll(pollId)
       await broadcastPoll(sala, enfocada)
       if (previa) await broadcastPoll(sala, previa)
-    })
-  )
-  socket.on(
-    'poll:unfocus',
-    safe(async ({ pollId }) => await broadcastPoll(sala, await profe.unfocusPoll(pollId)))
-  )
+    },
+    'poll:unfocus': async ({ pollId }) => broadcastPoll(sala, await profe.unfocusPoll(pollId)),
 
-  socket.on(
-    'poll:delete',
-    safe(async ({ pollId }) => {
+    'poll:delete': async ({ pollId }) => {
       await profe.deletePoll({ pollId })
       await sala.broadcast('poll:deleted', { pollId })
-    })
-  )
+    },
+  })
 }
 
 export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSala: string) => {
-  const safe = conErrorHandling(socket)
-
   const sala = await Salas.get(idSala)
 
   const estudiante = await estudianteSala(idSala, socket.data.session.userId)
 
-  // Si las pide, se las enviamos también
-  socket.on(
-    'polls:list',
-    safe(async () => {
-      socket.emit('polls:list', await estudiante.listar())
-    })
-  )
-
-  // Estudiantes votan. Broadcasteamos la poll updateada.
-  socket.on(
-    'poll:vote',
-    safe(async (posibleVoto: unknown) => {
-      await broadcastPoll(sala, await estudiante.votar(posibleVoto))
-    })
-  )
-
-  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas.
-  const emitir = safe(async () => {
+  const emitirLista = async () => {
     socket.emit('polls:list', await estudiante.listar())
+  }
+
+  registrar(socket, comandosPollsEstudiante, {
+    'polls:list': emitirLista,
+
+    // Estudiantes votan. Broadcasteamos la poll updateada.
+    'poll:vote': async (voto) => broadcastPoll(sala, await estudiante.votar(voto)),
   })
 
-  await emitir()
+  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas. Sin el wrapper,
+  // un throw acá quedaría como unhandled rejection y tiraría abajo el proceso del wss.
+  await conErrorHandling(socket)(emitirLista)()
 }
 
 export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {
@@ -123,8 +77,7 @@ export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) =
 
   console.log(`📺 Overlay conectado para sala ${idSala} (socket ${socket.id})`)
 
-  socket.on(
-    'poll:pedir_enfocada',
-    conAck(socket)(async () => await getEncuestaEnfocada(idSala))
-  )
+  registrar(socket, comandosPollsOverlay, {
+    'poll:pedir_enfocada': async () => getEncuestaEnfocada(idSala),
+  })
 }

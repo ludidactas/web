@@ -90,7 +90,7 @@ export function AgregarPregunta() {
         setMaxMultiplesVotos(null)
         setOpen(false)
       })
-      .catch((msg) => toast.error(msg))
+      .catch((error: Error) => toast.error(error.message))
   }
 
   return (

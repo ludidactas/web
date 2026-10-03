@@ -22,17 +22,23 @@ test('el YAML de ejemplo parsea sin errores', () => {
 describe('desafíos tipo: "jugada"', () => {
   const conJugadasCorrectas = desafios.filter((d) => d.tipo === 'jugada' && d.jugadasCorrectas?.length)
 
-  test.each(conJugadasCorrectas.map((d) => [d.id, d] as const))('%s: la jugada listada en jugadasCorrectas es correcta', (_id, d) => {
-    const [r, col] = d.jugadasCorrectas![0]
-    const resultado = evaluarJugada(d, r, col)
-    expect(resultado?.esCorrecta).toBe(true)
-  })
+  test.each(conJugadasCorrectas.map((d) => [d.id, d] as const))(
+    '%s: la jugada listada en jugadasCorrectas es correcta',
+    (_id, d) => {
+      const [r, col] = d.jugadasCorrectas![0]
+      const resultado = evaluarJugada(d, r, col)
+      expect(resultado?.esCorrecta).toBe(true)
+    }
+  )
 
-  test.each(conJugadasCorrectas.map((d) => [d.id, d] as const))('%s: (0,0) no registra como correcta si no es la jugada esperada', (_id, d) => {
-    if (d.piedras.some((p) => p.r === 0 && p.c === 0)) return // ocupado en este desafío, no aplica
-    const resultado = evaluarJugada(d, 0, 0)
-    expect(resultado?.esCorrecta).toBeFalsy()
-  })
+  test.each(conJugadasCorrectas.map((d) => [d.id, d] as const))(
+    '%s: (0,0) no registra como correcta si no es la jugada esperada',
+    (_id, d) => {
+      if (d.piedras.some((p) => p.r === 0 && p.c === 0)) return // ocupado en este desafío, no aplica
+      const resultado = evaluarJugada(d, 0, 0)
+      expect(resultado?.esCorrecta).toBeFalsy()
+    }
+  )
 
   test('capturar-una-piedra: captura exactamente 1 piedra', () => {
     const resultado = evaluarJugada(porId('capturar-una-piedra'), 4, 5)!

@@ -184,3 +184,46 @@
     Primero hay que salir del atari extendiendo hacia la única libertad
     disponible; después, conectar hacia espacio abierto en vez de jugar
     en otro lado del tablero.
+
+# tipo: opciones — el tablero es solo de lectura y se responde con botones. Con una única opción
+# correcta también sirve como botón de acción ("Pasar", "Terminar"). Cada opción puede traer su
+# propia `retro`; si falta, se usa mensajeExito / mensajeError.
+- id: contar-territorio-ejemplo
+  titulo: Contar territorio
+  etiqueta: territorio
+  tamañoTablero: 9
+  turno: N
+  tipo: opciones
+  instruccion: ¿Cuántos puntos de territorio tiene Negro en la esquina?
+  piedras:
+    - { r: 7, c: 7, color: N }
+    - { r: 8, c: 6, color: N }
+    - { r: 6, c: 8, color: N }
+  opciones:
+    - { texto: "2", correcta: false }
+    - { texto: "3", correcta: true }
+    - { texto: "4", correcta: false, retro: Contá solo los puntos vacíos rodeados por piedras negras. }
+  mensajeExito: ¡Correcto! Son 3 puntos.
+  mensajeError: No es esa cantidad. Contá de nuevo los puntos vacíos de la esquina.
+
+# tipo: retirar — el estudiante toca las piedras muertas para sacarlas del tablero. En
+# `piedrasMuertas` va un punto cualquiera de cada grupo a retirar; tocar una piedra de ese grupo
+# saca el grupo entero, y el desafío se resuelve al salir todos.
+- id: retirar-muertas-ejemplo
+  titulo: Retirar piedras muertas
+  etiqueta: fin-del-juego
+  tamañoTablero: 9
+  turno: N
+  tipo: retirar
+  instruccion: Tocá la piedra negra muerta para retirarla.
+  piedras:
+    - { r: 3, c: 3, color: N }
+    - { r: 2, c: 3, color: B }
+    - { r: 4, c: 3, color: B }
+    - { r: 3, c: 2, color: B }
+    - { r: 3, c: 4, color: B }
+    - { r: 6, c: 6, color: N }
+  piedrasMuertas:
+    - [3, 3]
+  mensajeExito: ¡Bien! Esa piedra no tenía salida y se retira del tablero.
+  mensajeError: Esa piedra está viva. Buscá la que quedó rodeada.

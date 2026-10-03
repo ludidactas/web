@@ -25,16 +25,16 @@ export function cargarDesafiosDesdeArchivo(filePath: string): Desafio[] {
 }
 
 /**
- * Lee cada archivo .yml/.yaml de `dirPath`, parsea y valida cada uno, y
- * devuelve la lista combinada y aplanada de desafíos.
+ * Lee cada archivo .yml/.yaml de `dirPath` (en orden alfabético, así `01-…`, `02-…` se respetan),
+ * parsea y valida cada uno, y devuelve la lista combinada y aplanada de desafíos.
  *
  * Solo Node — llamalo desde un Server Component, un Route Handler, o un
  * script de build, nunca desde un Client Component.
  */
 export function cargarDesafiosDesdeDirectorio(dirPath: string): Desafio[] {
-  const files = readdirSync(dirPath).filter(
-    (f) => f.endsWith(".yml") || f.endsWith(".yaml")
-  );
+  const files = readdirSync(dirPath)
+    .filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"))
+    .sort();
 
   const all: Desafio[] = [];
   for (const file of files) {

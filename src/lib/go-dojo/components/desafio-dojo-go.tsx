@@ -126,6 +126,8 @@ export interface DesafioDojoGoProps {
    */
   nextMoveColor?: Color;
   onPointClick?: (r: number, c: number) => void;
+  /** Qué puntos aceptan click. Por defecto, los vacíos; `tipo: "retirar"` acepta los ocupados. */
+  esSeleccionable?: (r: number, c: number) => boolean;
   /** Si es true, se ignoran los clicks (ej. una vez que el problema ya fue respondido). */
   disabled?: boolean;
   theme?: Partial<DesafioDojoGoTheme>;
@@ -143,6 +145,7 @@ export function DesafioDojoGo({
   playedPoint = null,
   nextMoveColor,
   onPointClick,
+  esSeleccionable,
   disabled = false,
   theme,
   className,
@@ -173,6 +176,7 @@ export function DesafioDojoGo({
       tamaño={boardSize}
       disabled={disabled}
       onPointClick={onPointClick}
+      esSeleccionable={esSeleccionable}
       estadoPiedra={estadoPiedra}
       ariaLabel={ariaLabel ?? "Tablero de Go"}
       className={className}

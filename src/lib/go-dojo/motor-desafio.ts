@@ -1,4 +1,4 @@
-import { capturasEnJugada, tableroVacio, type Color, type Tablero } from "@/lib/go/motor";
+import { capturasEnJugada, grupoEn, tableroVacio, type Color, type Tablero } from "@/lib/go/motor";
 import type { Desafio, Punto, Desenlace, ResultadoEvaluacion, Piedra } from "./tipos";
 
 /**
@@ -93,9 +93,45 @@ export function esJugadaCorrecta(desafio: Desafio, r: number, c: number): boolea
   return (desafio.jugadasCorrectas ?? []).some(([mr, mc]) => mr === r && mc === c);
 }
 
+/**
+ * Resultado de tocar una piedra en un desafío `tipo: "retirar"`: `muerta` indica si el grupo tocado
+ * es uno de los que hay que retirar; `piedras` ya no lo contiene en ese caso, y `completo` es true
+ * cuando no queda ningún grupo de `piedrasMuertas` en el tablero.
+ */
+export interface ResultadoRetiro {
+  piedras: Piedra[];
+  muerta: boolean;
+  completo: boolean;
+}
+
+/**
+ * Evalúa el toque del estudiante en (r, c) sobre `piedras` (el estado actual del tablero). Devuelve
+ * null si ahí no hay ninguna piedra. Pura — `piedras` queda intacta.
+ */
+export function retirarGrupo(
+  desafio: Desafio,
+  piedras: Piedra[],
+  r: number,
+  c: number
+): ResultadoRetiro | null {
+  if (!estaOcupado(piedras, r, c)) return null;
+  const { tamañoTablero } = desafio;
+  const grupo = grupoEn(tableroDesdePiedras(piedras, tamañoTablero), r, c, tamañoTablero);
+  const objetivos = desafio.piedrasMuertas ?? [];
+  const muerta = objetivos.some(([pr, pc]) => grupo.some(([gr, gc]) => gr === pr && gc === pc));
+  if (!muerta) return { piedras, muerta: false, completo: false };
+
+  const retiradas = new Set(grupo.map(([gr, gc]) => clavePunto(gr, gc)));
+  const restantes = piedras.filter((p) => !retiradas.has(clavePunto(p.r, p.c)));
+  const completo = objetivos.every(([pr, pc]) => !estaOcupado(restantes, pr, pc));
+  return { piedras: restantes, muerta: true, completo };
+}
+
 /** El punto que debería revelar el botón de ayuda para un desafío. */
 export function puntoDeAyuda(desafio: Desafio): Punto | null {
+  if (desafio.tipo === "opciones") return null;
   if (desafio.ayuda) return desafio.ayuda;
+  if (desafio.tipo === "retirar") return desafio.piedrasMuertas?.[0] ?? null;
   if (desafio.jugadasCorrectas?.length) return desafio.jugadasCorrectas[0];
   const desenlaceCorrecto = desafio.desenlaces?.find((d) => d.correcto);
   return desenlaceCorrecto?.en ?? null;

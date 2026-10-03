@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { rival } from "@/lib/go/motor";
 import {
   aplicarJugada,
+  retirarGrupo,
   evaluarJugada,
   puntoDeAyuda as puntoDeAyudaEstatico,
   estaOcupado,
@@ -21,7 +22,7 @@ export interface EstadoDesafioGo {
    * una rama correcta llevó a otro nodo y sigue. "correcto"/"incorrecto": veredicto terminal.
    */
   estado: EstadoDesafio;
-  /** Cuántas piedras rivales capturó el último intercambio (la jugada del estudiante, más la respuesta automática en tipo `secuencia`). */
+  /** Cuántas piedras rivales capturó la última jugada del estudiante (las que capture la respuesta automática del rival en tipo `secuencia` no cuentan). */
   cantidadCapturas: number;
   /** True brevemente, para disparar la animación de la piedra fantasma de la ayuda. */
   ayudaVisible: boolean;
@@ -32,13 +33,17 @@ export interface EstadoDesafioGo {
   textoActivo: string | null;
   /** `desafio.marcas` combinado con lo que revele el desenlace/rama actual. Pasalo directo a <DesafioDojoGo marks={...} />. */
   marcasVisibles: Marca[];
-  /** Adónde debería apuntar el botón "Ayuda": estático para "jugada", dinámico (la rama correcta del nodo actual del árbol) para "secuencia", null para "exploracion" (nada que ayudar — cada punto ya está marcado). */
+  /** Adónde debería apuntar el botón "Ayuda": estático para "jugada", dinámico (la rama correcta del nodo actual del árbol) para "secuencia", el primer grupo todavía en pie para "retirar", null para "exploracion" (nada que ayudar — cada punto ya está marcado) y "opciones" (no hay punto). */
   puntoDeAyuda: Punto | null;
+  /** Índice de la opción que eligió el estudiante en un desafío `tipo: "opciones"`, o null si todavía no eligió. */
+  opcionElegida: number | null;
 }
 
 export interface ResultadoDesafioGo extends EstadoDesafioGo {
-  /** Llamalo con la (fila, columna) que clickeó el estudiante en el tablero. No hace nada si ya respondió o el punto es ilegal. */
+  /** Llamalo con la (fila, columna) que clickeó el estudiante en el tablero. No hace nada si ya respondió o el punto es ilegal. En `tipo: "retirar"` es el toque sobre una piedra. */
   jugar: (r: number, c: number) => void;
+  /** Elige la opción `indice` de un desafío `tipo: "opciones"`. No hace nada si ya eligió una. */
+  elegirOpcion: (indice: number) => void;
   reiniciar: () => void;
   mostrarAyuda: () => void;
   mostrarExplicacion: () => void;
@@ -48,7 +53,7 @@ export interface ResultadoDesafioGo extends EstadoDesafioGo {
 
 /**
  * Maneja el estado de jugar/reiniciar/ayuda/explicación de un Desafio para
- * los tres tipos de interacción ("jugada", "exploracion", "secuencia"). No toca el
+ * los cinco tipos de interacción ("jugada", "exploracion", "secuencia", "opciones", "retirar"). No toca el
  * DOM — combinalo con <DesafioDojoGo /> para renderizar.
  */
 export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
@@ -68,13 +73,20 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
   // instancia del hook nunca ve un `desafio` distinto después de montar.
   const [nodoSecuencia, setNodoSecuencia] = useState<NodoSecuencia | null>(desafio.secuencia ?? null);
   const [piedrasSecuencia, setPiedrasSecuencia] = useState<Piedra[]>(desafio.piedras);
+  // Estado exclusivo de "retirar" y "opciones", con la misma salvedad que el de "secuencia".
+  const [piedrasRetirar, setPiedrasRetirar] = useState<Piedra[]>(desafio.piedras);
+  const [opcionElegida, setOpcionElegida] = useState<number | null>(null);
 
   const respondido =
     desafio.tipo === "secuencia"
       ? estado === "correcto" || estado === "incorrecto"
-      : desafio.tipo === "exploracion"
-        ? false
-        : jugadaJugador !== null;
+      : desafio.tipo === "retirar"
+        ? estado === "correcto"
+        : desafio.tipo === "opciones"
+          ? opcionElegida !== null
+          : desafio.tipo === "exploracion"
+            ? false
+            : jugadaJugador !== null;
 
   const jugar = useCallback(
     (r: number, c: number) => {
@@ -98,26 +110,21 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
 
         const trasEstudiante = aplicarJugada(piedrasSecuencia, r, c, desafio.turno, desafio.tamañoTablero);
         let siguientesPiedras = trasEstudiante.piedras;
-        let capturadasIntercambio = trasEstudiante.capturadas;
+        const capturadasIntercambio = trasEstudiante.capturadas;
 
+        // La respuesta del rival se muestra si la línea continúa, o como refutación en una rama
+        // terminal incorrecta; una rama terminal correcta termina con la jugada del estudiante.
+        if (rama.respuestaRival && (rama.siguiente || !rama.correcto)) {
+          const [rr, rc] = rama.respuestaRival;
+          const trasRival = aplicarJugada(siguientesPiedras, rr, rc, rival(desafio.turno), desafio.tamañoTablero);
+          siguientesPiedras = trasRival.piedras;
+        }
+
+        setPiedrasSecuencia(siguientesPiedras);
         if (rama.siguiente) {
-          if (rama.respuestaRival) {
-            const [rr, rc] = rama.respuestaRival;
-            const trasRival = aplicarJugada(
-              siguientesPiedras,
-              rr,
-              rc,
-              rival(desafio.turno),
-              desafio.tamañoTablero
-            );
-            siguientesPiedras = trasRival.piedras;
-            capturadasIntercambio = new Set([...capturadasIntercambio, ...trasRival.capturadas]);
-          }
-          setPiedrasSecuencia(siguientesPiedras);
           setNodoSecuencia(rama.siguiente);
           setEstado("jugando");
         } else {
-          setPiedrasSecuencia(siguientesPiedras);
           setEstado(rama.correcto ? "correcto" : "incorrecto");
         }
 
@@ -125,6 +132,27 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
         setCapturadas(capturadasIntercambio);
         setTextoActivo(rama.texto);
         setMarcasActivas(rama.marcas);
+        return;
+      }
+
+      if (desafio.tipo === "opciones") return; // se responde con `elegirOpcion`, no sobre el tablero
+
+      if (desafio.tipo === "retirar") {
+        if (estado === "correcto") return;
+        const resultado = retirarGrupo(desafio, piedrasRetirar, r, c);
+        if (!resultado) return; // punto vacío: no hay nada que retirar
+        if (!resultado.muerta) {
+          setEstado("incorrecto"); // no traba: el estudiante sigue buscando los grupos muertos
+          setTextoActivo(desafio.mensajeError ?? "Esa piedra está viva: buscá las que ya no pueden salvarse.");
+          return;
+        }
+        setPiedrasRetirar(resultado.piedras);
+        setEstado(resultado.completo ? "correcto" : "jugando");
+        setTextoActivo(
+          resultado.completo
+            ? desafio.mensajeExito ?? "Correcto! Bien jugado."
+            : "Bien, esas piedras estaban muertas. Todavía queda algún grupo por retirar."
+        );
         return;
       }
 
@@ -147,7 +175,19 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
       setTextoActivo(resultado.desenlace?.texto ?? null);
       setMarcasActivas(resultado.desenlace?.marcas ?? []);
     },
-    [desafio, estado, nodoSecuencia, piedrasSecuencia, respondido]
+    [desafio, estado, nodoSecuencia, piedrasSecuencia, piedrasRetirar, respondido]
+  );
+
+  const elegirOpcion = useCallback(
+    (indice: number) => {
+      if (desafio.tipo !== "opciones" || opcionElegida !== null) return;
+      const opcion = desafio.opciones?.[indice];
+      if (!opcion) return;
+      setOpcionElegida(indice);
+      setEstado(opcion.correcta ? "correcto" : "incorrecto");
+      setTextoActivo(opcion.retro ?? null);
+    },
+    [desafio, opcionElegida]
   );
 
   const reiniciar = useCallback(() => {
@@ -162,6 +202,8 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
       setNodoSecuencia(desafio.secuencia ?? null);
       setPiedrasSecuencia(desafio.piedras);
     }
+    setPiedrasRetirar(desafio.piedras);
+    setOpcionElegida(null);
   }, [desafio]);
 
   const mostrarAyuda = useCallback(() => {
@@ -174,13 +216,14 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
 
   const piedras = useMemo<Piedra[]>(() => {
     if (desafio.tipo === "secuencia") return piedrasSecuencia;
-    if (desafio.tipo === "exploracion") return desafio.piedras;
+    if (desafio.tipo === "retirar") return piedrasRetirar;
+    if (desafio.tipo === "exploracion" || desafio.tipo === "opciones") return desafio.piedras;
     const base = desafio.piedras.filter((p) => !capturadas.has(clavePunto(p.r, p.c)));
     if (jugadaJugador) {
       base.push({ r: jugadaJugador[0], c: jugadaJugador[1], color: desafio.turno });
     }
     return base;
-  }, [desafio.tipo, desafio.piedras, desafio.turno, capturadas, jugadaJugador, piedrasSecuencia]);
+  }, [desafio.tipo, desafio.piedras, desafio.turno, capturadas, jugadaJugador, piedrasSecuencia, piedrasRetirar]);
 
   const cantidadCapturas = capturadas.size;
 
@@ -196,14 +239,18 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
   );
 
   const puntoDeAyudaDinamico = useMemo<Punto | null>(() => {
-    if (desafio.tipo === "exploracion") return null;
+    if (desafio.tipo === "exploracion" || desafio.tipo === "opciones") return null;
+    if (desafio.tipo === "retirar") {
+      if (desafio.ayuda) return desafio.ayuda;
+      return desafio.piedrasMuertas?.find(([r, c]) => estaOcupado(piedrasRetirar, r, c)) ?? null;
+    }
     if (desafio.tipo === "secuencia") {
       const nodo = nodoSecuencia ?? desafio.secuencia;
       const ramaCorrecta = nodo?.ramas.find((b) => b.correcto);
       return ramaCorrecta?.en ?? null;
     }
     return puntoDeAyudaEstatico(desafio);
-  }, [desafio, nodoSecuencia]);
+  }, [desafio, nodoSecuencia, piedrasRetirar]);
 
   return {
     piedras,
@@ -216,8 +263,10 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
     textoActivo,
     marcasVisibles,
     puntoDeAyuda: puntoDeAyudaDinamico,
+    opcionElegida,
     respondido,
     jugar,
+    elegirOpcion,
     reiniciar,
     mostrarAyuda,
     mostrarExplicacion,

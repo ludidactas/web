@@ -19,6 +19,9 @@ export interface TarjetaDesafioGoProps {
   onSolved?: (desafioId: string) => void
 }
 
+/** Tipos donde un click no pone una piedra del `turno`, así que el hover no previsualiza ninguna. */
+const SIN_PREVIEW: Desafio['tipo'][] = ['exploracion', 'opciones', 'retirar']
+
 export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: TarjetaDesafioGoProps) {
   const {
     piedras,
@@ -33,9 +36,11 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
     puntoDeAyuda,
     respondido,
     jugar,
+    opcionElegida,
     reiniciar,
     mostrarAyuda,
     mostrarExplicacion,
+    elegirOpcion,
   } = useDesafioGo(desafio)
 
   // Dispara onSolved exactamente una vez, en el render donde estado pasa a "correcto".
@@ -72,14 +77,40 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         correctMoveMarkers={jugadasCorrectasReveladas}
         marks={marcasVisibles}
         playedPoint={jugadaJugador}
-        nextMoveColor={desafio.tipo === 'exploracion' ? undefined : desafio.turno}
-        onPointClick={jugar}
+        nextMoveColor={SIN_PREVIEW.includes(desafio.tipo) ? undefined : desafio.turno}
+        onPointClick={desafio.tipo === 'opciones' ? undefined : jugar}
+        esSeleccionable={desafio.tipo === 'retirar' ? (r, c) => piedras.some((p) => p.r === r && p.c === c) : undefined}
         disabled={respondido}
         theme={theme}
         aria-label={desafio.titulo}
       />
 
       {desafio.instruccion && <p className="text-sm text-slate-500 mt-2 text-center">{desafio.instruccion}</p>}
+
+      {desafio.tipo === 'opciones' && (
+        <div className="mt-4 flex gap-3 flex-wrap justify-center">
+          {desafio.opciones?.map((opcion, i) => {
+            const elegida = opcionElegida === i
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => elegirOpcion(i)}
+                disabled={respondido}
+                className={cn(
+                  'min-w-14 px-5 py-2 rounded-full border text-base font-semibold transition',
+                  elegida && opcion.correcta && 'border-emerald-600 bg-emerald-50 text-emerald-800',
+                  elegida && !opcion.correcta && 'border-red-500 bg-red-50 text-red-700',
+                  !elegida && !respondido && 'border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10',
+                  !elegida && respondido && 'border-slate-300 text-slate-400'
+                )}
+              >
+                {opcion.texto}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {estado !== 'inactivo' && (
         <div
@@ -120,7 +151,7 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
           <Icon className='' icon={'iconamoon:restart-bold'} />
 
         </button>
-        {desafio.tipo !== 'exploracion' && (
+        {puntoDeAyuda && (
           <button
             type="button"
             onClick={mostrarAyuda}

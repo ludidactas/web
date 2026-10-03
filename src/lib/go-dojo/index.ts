@@ -15,6 +15,7 @@ export {
   DesenlaceSchema,
   RamaSecuenciaSchema,
   NodoSecuenciaSchema,
+  OpcionSchema,
 } from "./tipos";
 export type {
   Desafio,
@@ -28,6 +29,7 @@ export type {
   Desenlace,
   RamaSecuencia,
   NodoSecuencia,
+  Opcion,
 } from "./tipos";
 
 // Lógica de juego pura — usable también fuera de React (ej. para validar contenido en un script/CI).
@@ -35,6 +37,7 @@ export { rival } from "@/lib/go/motor";
 export {
   calcularCapturas,
   aplicarJugada,
+  retirarGrupo,
   evaluarJugada,
   esJugadaCorrecta,
   estaOcupado,

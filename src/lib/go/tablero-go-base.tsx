@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { BLANCO, NEGRO, VACIO, type Color, type Tablero } from './motor'
 
 /**
@@ -276,8 +276,15 @@ export function TableroGoBase({
     onHoverChange?.(null)
   }, [onHoverChange])
 
-  const cursor =
-    disabled || !onPointClick || (hover && !puedeSeleccionar(hover[0], hover[1])) ? 'default' : 'pointer'
+  // Un tablero deshabilitado no recibe más eventos de mouse que limpien el hover (en táctil nunca hay
+  // `mouseleave`), así que al volver a habilitarse mostraría el preview del último punto tocado.
+  useEffect(() => {
+    if (!disabled) return
+    setHover(null)
+    onHoverChange?.(null)
+  }, [disabled, onHoverChange])
+
+  const cursor = disabled || !onPointClick || (hover && !puedeSeleccionar(hover[0], hover[1])) ? 'default' : 'pointer'
 
   const ctx: ContextoTableroGo = { hover, piezaFill, filtroSombraUrl, lado }
 
@@ -322,7 +329,15 @@ export function TableroGoBase({
 
       {typeof beforeBoard === 'function' ? beforeBoard(ctx) : beforeBoard}
 
-      <rect x={0} y={0} width={lado} height={lado} fill={PALETA_GO_COMPARTIDA.tablero} rx={8} filter={filtroSombraTableroUrl} />
+      <rect
+        x={0}
+        y={0}
+        width={lado}
+        height={lado}
+        fill={PALETA_GO_COMPARTIDA.tablero}
+        rx={8}
+        filter={filtroSombraTableroUrl}
+      />
 
       {Array.from({ length: tamaño }, (_, i) => (
         <line
@@ -348,7 +363,13 @@ export function TableroGoBase({
       ))}
 
       {puntosHoshi(tamaño).map(([fila, columna]) => (
-        <circle key={`hoshi-${fila},${columna}`} cx={coordenadaEnPixeles(columna)} cy={coordenadaEnPixeles(fila)} r={3} fill={PALETA_GO_COMPARTIDA.hoshi} />
+        <circle
+          key={`hoshi-${fila},${columna}`}
+          cx={coordenadaEnPixeles(columna)}
+          cy={coordenadaEnPixeles(fila)}
+          r={3}
+          fill={PALETA_GO_COMPARTIDA.hoshi}
+        />
       ))}
 
       {typeof beforeStones === 'function' ? beforeStones(ctx) : beforeStones}

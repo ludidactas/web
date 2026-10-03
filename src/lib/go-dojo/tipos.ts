@@ -65,7 +65,7 @@ export interface RamaSecuencia {
   correcto: boolean
   texto: string
   marcas: Marca[]
-  /** La respuesta pre-escrita del rival, aplicada automáticamente si `siguiente` continúa la línea. */
+  /** La respuesta pre-escrita del rival, aplicada automáticamente si `siguiente` continúa la línea, o como refutación en una rama terminal incorrecta. */
   respuestaRival?: Punto
   /** Ausente = esta rama es terminal (el problema termina acá, con `correcto` + `texto` como veredicto). */
   siguiente?: NodoSecuencia
@@ -99,6 +99,19 @@ export const NodoSecuenciaSchema: z.ZodType<NodoSecuencia, z.ZodTypeDef, unknown
 )
 
 /**
+ * Una opción de un desafío `tipo: "opciones"`: se dibuja como un botón bajo el tablero. Puede haber
+ * más de una `correcta`; un desafío con una única opción correcta sirve también como botón de acción
+ * ("Pasar", "Terminar").
+ */
+export const OpcionSchema = z.object({
+  texto: z.string().min(1),
+  correcta: z.boolean().default(false),
+  /** Texto mostrado al elegir esta opción. Si falta, se usa el `mensajeExito`/`mensajeError` del desafío. */
+  retro: z.string().optional(),
+})
+export type Opcion = z.infer<typeof OpcionSchema>
+
+/**
  * Un problema. Es la unidad que un content creator escribe en YAML.
  * Solo `id`, `jugadasCorrectas`, `explicacion` y `piedras` son obligatorios —
  * todo lo demás tiene un default razonable para que los problemas simples
@@ -129,8 +142,10 @@ export const DesafioSchema = z
      * - "jugada" (default): un click, correcto o no, traba el tablero.
      * - "exploracion": varios puntos clickeables, cada uno con su propio texto, nunca traba — para diagramas de referencia/anotación.
      * - "secuencia": un árbol de varias jugadas con respuesta automática del rival — ver `secuencia`.
+     * - "opciones": el tablero es solo de lectura y la respuesta se elige entre botones — ver `opciones`.
+     * - "retirar": el estudiante toca los grupos muertos para sacarlos del tablero — ver `piedrasMuertas`.
      */
-    tipo: z.enum(['jugada', 'exploracion', 'secuencia']).default('jugada'),
+    tipo: z.enum(['jugada', 'exploracion', 'secuencia', 'opciones', 'retirar']).default('jugada'),
     /** Anotaciones del tablero siempre visibles (letras de referencia, círculos, etc.) — puramente decorativas. */
     marcas: z.array(MarcaSchema).default([]),
     /**
@@ -154,11 +169,50 @@ export const DesafioSchema = z
     desenlaces: z.array(DesenlaceSchema).optional(),
     /** Árbol de varias jugadas con respuesta automática del rival. Requerido para `tipo: "secuencia"`. */
     secuencia: NodoSecuenciaSchema.optional(),
+    /** Botones de respuesta, al menos una `correcta`. Requerido para `tipo: "opciones"`. */
+    opciones: z.array(OpcionSchema).min(1).optional(),
+    /**
+     * Un punto cualquiera de cada grupo que hay que retirar. Tocar una piedra de uno de esos grupos
+     * saca el grupo entero; el desafío se resuelve cuando salieron todos. Requerido para `tipo: "retirar"`.
+     */
+    piedrasMuertas: z.array(PuntoSchema).min(1).optional(),
     /** Overrides opcionales del texto del banner de feedback. */
     mensajeExito: z.string().optional(),
     mensajeError: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.tipo === 'opciones') {
+      if (!data.opciones?.some((o) => o.correcta)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['opciones'],
+          message: 'tipo: "opciones" requiere `opciones` con al menos una marcada `correcta: true`.',
+        })
+      }
+      return
+    }
+
+    if (data.tipo === 'retirar') {
+      if (!data.piedrasMuertas?.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['piedrasMuertas'],
+          message: 'tipo: "retirar" requiere `piedrasMuertas` (un punto de cada grupo a retirar).',
+        })
+        return
+      }
+      for (const [i, [r, c]] of data.piedrasMuertas.entries()) {
+        if (!data.piedras.some((p) => p.r === r && p.c === c)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['piedrasMuertas', i],
+            message: `piedrasMuertas[${i}] apunta a [${r}, ${c}], donde no hay ninguna piedra.`,
+          })
+        }
+      }
+      return
+    }
+
     if (data.tipo === 'secuencia') {
       if (!data.secuencia) {
         ctx.addIssue({

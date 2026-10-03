@@ -27,6 +27,8 @@ export interface EstadoDesafioGo {
   /** True brevemente, para disparar la animación de la piedra fantasma de la ayuda. */
   ayudaVisible: boolean;
   explicacionVisible: boolean;
+  /** Piedras de los grupos que el estudiante ya marcó como muertos en un desafío `tipo: "retirar"`. Siguen en `piedras` (se dibujan atenuadas) pero ya no son seleccionables. Vacío para otros tipos. */
+  piedrasMuertas: Piedra[];
   /** Marcadores de jugada correcta a mostrar, solo poblados tras una respuesta incorrecta en un desafío `tipo: "jugada"`. */
   jugadasCorrectasReveladas: Punto[];
   /** Texto de feedback para el punto/rama que el estudiante está viendo — tiene prioridad sobre el mensajeExito/mensajeError genérico del desafío cuando está seteado (siempre seteado para "exploracion"/"secuencia", solo para "jugada" cuando define `desenlaces`). */
@@ -75,6 +77,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
   const [piedrasSecuencia, setPiedrasSecuencia] = useState<Piedra[]>(desafio.piedras);
   // Estado exclusivo de "retirar" y "opciones", con la misma salvedad que el de "secuencia".
   const [piedrasRetirar, setPiedrasRetirar] = useState<Piedra[]>(desafio.piedras);
+  const [piedrasMuertas, setPiedrasMuertas] = useState<Piedra[]>([]);
   const [opcionElegida, setOpcionElegida] = useState<number | null>(null);
 
   const respondido =
@@ -146,6 +149,8 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
           setTextoActivo(desafio.mensajeError ?? "Esa piedra está viva: buscá las que ya no pueden salvarse.");
           return;
         }
+        const quedan = new Set(resultado.piedras.map((p) => clavePunto(p.r, p.c)));
+        setPiedrasMuertas((prev) => [...prev, ...piedrasRetirar.filter((p) => !quedan.has(clavePunto(p.r, p.c)))]);
         setPiedrasRetirar(resultado.piedras);
         setEstado(resultado.completo ? "correcto" : "jugando");
         setTextoActivo(
@@ -203,6 +208,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
       setPiedrasSecuencia(desafio.piedras);
     }
     setPiedrasRetirar(desafio.piedras);
+    setPiedrasMuertas([]);
     setOpcionElegida(null);
   }, [desafio]);
 
@@ -216,14 +222,14 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
 
   const piedras = useMemo<Piedra[]>(() => {
     if (desafio.tipo === "secuencia") return piedrasSecuencia;
-    if (desafio.tipo === "retirar") return piedrasRetirar;
+    if (desafio.tipo === "retirar") return [...piedrasRetirar, ...piedrasMuertas];
     if (desafio.tipo === "exploracion" || desafio.tipo === "opciones") return desafio.piedras;
     const base = desafio.piedras.filter((p) => !capturadas.has(clavePunto(p.r, p.c)));
     if (jugadaJugador) {
       base.push({ r: jugadaJugador[0], c: jugadaJugador[1], color: desafio.turno });
     }
     return base;
-  }, [desafio.tipo, desafio.piedras, desafio.turno, capturadas, jugadaJugador, piedrasSecuencia, piedrasRetirar]);
+  }, [desafio.tipo, desafio.piedras, desafio.turno, capturadas, jugadaJugador, piedrasSecuencia, piedrasRetirar, piedrasMuertas]);
 
   const cantidadCapturas = capturadas.size;
 
@@ -257,6 +263,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
     jugadaJugador,
     estado,
     cantidadCapturas,
+    piedrasMuertas,
     ayudaVisible,
     explicacionVisible,
     jugadasCorrectasReveladas,

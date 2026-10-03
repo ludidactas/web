@@ -25,6 +25,7 @@ const SIN_PREVIEW: Desafio['tipo'][] = ['exploracion', 'opciones', 'retirar']
 export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: TarjetaDesafioGoProps) {
   const {
     piedras,
+    piedrasMuertas,
     jugadaJugador,
     estado,
     cantidadCapturas,
@@ -74,12 +75,14 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         boardSize={desafio.tamañoTablero}
         stones={piedras}
         ghost={ayudaVisible ? puntoDeAyuda : null}
+        deadStones={piedrasMuertas}
         correctMoveMarkers={jugadasCorrectasReveladas}
         marks={marcasVisibles}
         playedPoint={jugadaJugador}
         nextMoveColor={SIN_PREVIEW.includes(desafio.tipo) ? undefined : desafio.turno}
         onPointClick={desafio.tipo === 'opciones' ? undefined : jugar}
-        esSeleccionable={desafio.tipo === 'retirar' ? (r, c) => piedras.some((p) => p.r === r && p.c === c) : undefined}
+        esSeleccionable={desafio.tipo === 'retirar' ? (r, c) =>
+            piedras.some((p) => p.r === r && p.c === c) && !piedrasMuertas.some((p) => p.r === r && p.c === c) : undefined}
         disabled={respondido}
         theme={theme}
         aria-label={desafio.titulo}

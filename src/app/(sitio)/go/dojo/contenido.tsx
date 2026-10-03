@@ -19,6 +19,8 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
   // El capítulo vive en la URL (`?capitulo=`): el server baja sus desafíos. `cargando` dura hasta que llegan.
   const elegirCapitulo = (slug: string) => iniciarCarga(() => router.push(`/go/dojo?capitulo=${slug}`, { scroll: false }))
 
+  const siguienteCapitulo = CAPITULOS_OGS[CAPITULOS_OGS.findIndex((c) => c.slug === capitulo) + 1]
+
   return (
     <div className="flex flex-col w-full max-w-6xl px-4 md:px-8 pt-16 pb-32 md:pb-40">
       <h1 className="flex gap-2 items-center justify-center text-3xl md:text-8xl p-4 mb-4">
@@ -58,7 +60,13 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
           )}
         </label>
         {/* `key`: al cambiar de capítulo el progreso y el desafío actual arrancan de cero. */}
-        <ConjuntoDesafios key={capitulo} desafios={challenges} showFilters={false} />
+        <ConjuntoDesafios
+          key={capitulo}
+          desafios={challenges}
+          showFilters={false}
+          storageKey={`go-dojo-progreso-${capitulo}`}
+          onSiguienteCapitulo={siguienteCapitulo && (() => elegirCapitulo(siguienteCapitulo.slug))}
+        />
       </div>
     </div>
   )

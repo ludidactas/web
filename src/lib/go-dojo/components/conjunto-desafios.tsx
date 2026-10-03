@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { TarjetaDesafioGo } from './tarjeta-desafio-go'
+import { useProgresoDojo } from './use-progreso-dojo'
 import type { DesafioDojoGoTheme } from './desafio-dojo-go'
 import type { Desafio } from '../tipos'
 
@@ -12,6 +13,10 @@ export interface ConjuntoDesafiosProps {
   theme?: Partial<DesafioDojoGoTheme>
   /** Muestra los pills de filtro por etiqueta arriba del índice. Default true si hay más de una etiqueta. */
   showFilters?: boolean
+  /** Clave de localStorage donde se guarda el avance (desafíos resueltos y posición actual) en este dispositivo. Sin clave el avance solo vive en memoria. */
+  storageKey?: string
+  /** Si está, en el último desafío el botón "Siguiente" pasa a ser "Siguiente capítulo" y llama a esta función. */
+  onSiguienteCapitulo?: () => void
   className?: string
 }
 
@@ -47,10 +52,11 @@ function TortaProgreso({ porcentaje }: { porcentaje: number }) {
  * Guía lineal de desafíos: un índice (por título, con su progreso) más el desafío actual, uno por
  * vez, con navegación anterior/siguiente — en vez de mostrarlos todos juntos en una grilla.
  */
-export function ConjuntoDesafios({ desafios, theme, showFilters, className }: ConjuntoDesafiosProps) {
+export function ConjuntoDesafios({ desafios, theme, showFilters, storageKey, onSiguienteCapitulo, className }: ConjuntoDesafiosProps) {
   const [filtro, setFiltro] = useState<string>('todos')
   const [indice, setIndice] = useState(0)
-  const [resueltos, setResueltos] = useState<Set<string>>(new Set())
+  const { resueltos: resueltosGuardados, actualGuardado, cargado, marcarResuelto, guardarActual } =
+    useProgresoDojo(storageKey)
 
   const etiquetas = useMemo(() => [...new Set(desafios.map((d) => d.etiqueta))], [desafios])
   const mostrarFiltros = showFilters ?? etiquetas.length > 1
@@ -70,9 +76,29 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, className }: Co
   const actual = visibles[indiceActivo]
   const irA = (i: number) => setIndice(Math.min(Math.max(i, 0), visibles.length - 1))
 
+  // Lo guardado puede incluir ids de desafíos que ya no existen en el contenido: no cuentan para el progreso.
+  const resueltos = useMemo(
+    () => new Set(desafios.filter((d) => resueltosGuardados.has(d.id)).map((d) => d.id)),
+    [desafios, resueltosGuardados]
+  )
   const porcentajeProgreso = desafios.length ? Math.round((resueltos.size / desafios.length) * 100) : 0
 
-  const handleResuelto = (id: string) => setResueltos((prev) => (prev.has(id) ? prev : new Set(prev).add(id)))
+  // Retoma en el desafío donde el estudiante quedó, una vez leído el storage.
+  useEffect(() => {
+    if (!cargado || !actualGuardado) return
+    const i = desafios.findIndex((d) => d.id === actualGuardado)
+    if (i >= 0) {
+      setFiltro('todos')
+      setIndice(i)
+    }
+  }, [cargado, actualGuardado, desafios])
+
+  const idActual = actual?.id
+  useEffect(() => {
+    if (cargado && idActual) guardarActual(idActual)
+  }, [cargado, idActual, guardarActual])
+
+  const handleResuelto = marcarResuelto
 
   return (
     <div className={className}>
@@ -183,7 +209,18 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, className }: Co
                       Siguiente →
                     </button>
                   )}
-                  {indiceActivo >= visibles.length - 1 && <div className="w-32" />}
+                  {indiceActivo >= visibles.length - 1 &&
+                    (onSiguienteCapitulo ? (
+                      <button
+                        type="button"
+                        onClick={onSiguienteCapitulo}
+                        className="text-sm px-4 py-2 rounded-full bg-ld-violeta text-white hover:scale-105 transition"
+                      >
+                        Siguiente capítulo →
+                      </button>
+                    ) : (
+                      <div className="w-32" />
+                    ))}
                 </div>
               </>
             ) : (

@@ -1,7 +1,7 @@
 "use client";
 
-import { CELDA_PX, coordenadaEnPixeles, TableroGoBase, type EstadoPiedra } from "@/lib/go/tablero-go-base";
-import { NEGRO, VACIO, type Color } from "@/lib/go/motor";
+import { BLANCO, NEGRO, VACIO, type Color } from "@/lib/go/motor";
+import { BLANCO_MUERTA, CELDA_PX, coordenadaEnPixeles, TableroGoBase, type EstadoPiedra } from "@/lib/go/tablero-go-base";
 import { tableroDesdePiedras } from "../motor-desafio";
 import type { Punto, Marca, Piedra } from "../tipos";
 
@@ -86,7 +86,7 @@ function MarkGlyph({ mark, x, y, theme }: { mark: Marca; x: number; y: number; t
     case "triangulo":
       return (
         <path
-          d={trianglePath(x, y + radius * 0.3, radius * 1.2)}
+          d={trianglePath(x, y + radius * 0.05, radius * 0.9)}
           fill="none"
           stroke={theme.markFill}
           strokeWidth={2.5}
@@ -112,6 +112,8 @@ export interface DesafioDojoGoProps {
   pixelSize?: number;
   /** Punto a mostrar como marcador de ayuda translúcido, si hay alguno. */
   ghost?: Punto | null;
+  /** Piedras (ya incluidas en `stones`) que se dibujan atenuadas, como las marcadas muertas al contar una partida. */
+  deadStones?: Piedra[];
   /** Puntos a marcar con un anillo verde, mostrados tras una respuesta incorrecta. */
   correctMoveMarkers?: Punto[];
   /** Anotaciones puramente decorativas del tablero (letras de referencia, círculos, etc.) — nunca intercepta clicks. */
@@ -140,6 +142,7 @@ export function DesafioDojoGo({
   stones,
   pixelSize = 400,
   ghost = null,
+  deadStones = [],
   correctMoveMarkers = [],
   marks = [],
   playedPoint = null,
@@ -155,6 +158,13 @@ export function DesafioDojoGo({
   const tablero = tableroDesdePiedras(stones, boardSize);
 
   const estadoPiedra = (r: number, c: number, color: Color): EstadoPiedra => {
+    if (deadStones.some((p) => p.r === r && p.c === c)) {
+      return {
+        opacidad: 0.35,
+        fill: color === BLANCO ? BLANCO_MUERTA : undefined,
+        titulo: "Marcada como muerta",
+      };
+    }
     const isPlayed = !!playedPoint && playedPoint[0] === r && playedPoint[1] === c;
     if (!isPlayed) return {};
     return {

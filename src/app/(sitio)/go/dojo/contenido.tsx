@@ -37,28 +37,41 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
         Cada uno te muestra una posición del tablero: encontrá la jugada correcta.
       </p>
       <div className="w-full bg-white rounded-xl p-6 md:p-10 shadow-sm">
-        <label className="flex items-center gap-2 mb-6 text-slate-600">
-          Capítulo
-          <select
-            value={capitulo}
-            disabled={cargando}
-            onChange={(e) => elegirCapitulo(e.target.value)}
-            className="flex-1 md:flex-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-ld-violeta-oscuro disabled:opacity-50"
-          >
-            {CAPITULOS_OGS.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.titulo}
-              </option>
-            ))}
-          </select>
-          {cargando && (
-            <span
-              role="status"
-              aria-label="Cargando"
-              className="w-4 h-4 rounded-full border-2 border-ld-violeta border-t-transparent animate-spin"
-            />
-          )}
-        </label>
+        <div className="flex flex-col gap-2 mb-6 md:flex-row md:items-center md:justify-between">
+          <label className="flex items-center gap-2 text-slate-600">
+            Capítulo
+            <select
+              value={capitulo}
+              disabled={cargando}
+              onChange={(e) => elegirCapitulo(e.target.value)}
+              className="flex-1 md:flex-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-ld-violeta-oscuro disabled:opacity-50"
+            >
+              {CAPITULOS_OGS.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.titulo}
+                </option>
+              ))}
+            </select>
+            {cargando && (
+              <span
+                role="status"
+                aria-label="Cargando"
+                className="w-4 h-4 rounded-full border-2 border-ld-violeta border-t-transparent animate-spin"
+              />
+            )}
+          </label>
+          <p className="text-xs text-slate-500">
+            Problemas adaptados de OGS (AGPL-3.0) ·{' '}
+            <a
+              href="https://github.com/ludidactas/desafios-ogs/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-ld-violeta-oscuro"
+            >
+              código fuente
+            </a>
+          </p>
+        </div>
         {/* `key`: al cambiar de capítulo el progreso y el desafío actual arrancan de cero. */}
         <ConjuntoDesafios
           key={capitulo}

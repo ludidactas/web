@@ -10,12 +10,18 @@ const desafios = await getDesafiosFundamentos()
 const porId = (id: string) => desafios.find((d) => d.id === `fundamentos-${id}`)!
 
 /** Recorre todos los caminos del árbol de una secuencia aplicando jugada del estudiante + respuesta del rival. */
-function recorrer(d: Desafio, nodo: NodoSecuencia, piedras: Piedra[], capturasPrevias: number, visita: (hoja: { correcto: boolean; capturas: number }) => void) {
+function recorrer(
+  d: Desafio,
+  nodo: NodoSecuencia,
+  piedras: Piedra[],
+  capturasPrevias: number,
+  visita: (hoja: { correcto: boolean; capturas: number }) => void
+) {
   for (const rama of nodo.ramas) {
     expect(estaOcupado(piedras, rama.en[0], rama.en[1])).toBe(false)
     const tras = aplicarJugada(piedras, rama.en[0], rama.en[1], d.turno, d.tamañoTablero)
     let tablero = tras.piedras
-    let capturas = capturasPrevias + tras.capturadas.size
+    const capturas = capturasPrevias + tras.capturadas.size
     if (rama.respuestaRival && (rama.siguiente || !rama.correcto)) {
       const [rr, rc] = rama.respuestaRival
       expect(estaOcupado(tablero, rr, rc)).toBe(false)
@@ -49,17 +55,28 @@ test('las piedras iniciales no se pisan ni salen del tablero', () => {
 describe('tipo "jugada"', () => {
   const jugadas = desafios.filter((d) => d.tipo === 'jugada')
 
-  test.each(jugadas.map((d) => [d.id, d] as const))('%s: todas las jugadas correctas son legibles y caen en puntos libres', (_id, d) => {
-    for (const [r, c] of d.jugadasCorrectas!) {
-      expect(r).toBeLessThan(d.tamañoTablero)
-      expect(c).toBeLessThan(d.tamañoTablero)
-      expect(evaluarJugada(d, r, c)?.esCorrecta).toBe(true)
+  test.each(jugadas.map((d) => [d.id, d] as const))(
+    '%s: todas las jugadas correctas son legibles y caen en puntos libres',
+    (_id, d) => {
+      for (const [r, c] of d.jugadasCorrectas!) {
+        expect(r).toBeLessThan(d.tamañoTablero)
+        expect(c).toBeLessThan(d.tamañoTablero)
+        expect(evaluarJugada(d, r, c)?.esCorrecta).toBe(true)
+      }
     }
-  })
+  )
 
   // En los problemas de captura la jugada correcta es la única que captura: si las coordenadas
   // estuvieran transpuestas o espejadas, o no capturaría nada o capturaría en otro punto.
-  const captura = ['capturar-una-piedra', 'atari', 'autocaptura-1', 'autocaptura-2', 'autocaptura-3', 'que-es-un-ojo', 'regla-del-ko']
+  const captura = [
+    'capturar-una-piedra',
+    'atari',
+    'autocaptura-1',
+    'autocaptura-2',
+    'autocaptura-3',
+    'que-es-un-ojo',
+    'regla-del-ko',
+  ]
   test.each(captura)('%s: solo la jugada correcta captura', (id) => {
     const d = porId(id)
     const correctas = new Set(d.jugadasCorrectas!.map(([r, c]) => `${r},${c}`))
@@ -101,11 +118,14 @@ describe('tipo "jugada"', () => {
 describe('tipo "secuencia"', () => {
   const secuencias = desafios.filter((d) => d.tipo === 'secuencia')
 
-  test.each(secuencias.map((d) => [d.id, d] as const))('%s: todas las jugadas del árbol son legales y hay un final correcto', (_id, d) => {
-    const hojas: { correcto: boolean; capturas: number }[] = []
-    recorrer(d, d.secuencia!, d.piedras, 0, (h) => hojas.push(h))
-    expect(hojas.some((h) => h.correcto)).toBe(true)
-  })
+  test.each(secuencias.map((d) => [d.id, d] as const))(
+    '%s: todas las jugadas del árbol son legales y hay un final correcto',
+    (_id, d) => {
+      const hojas: { correcto: boolean; capturas: number }[] = []
+      recorrer(d, d.secuencia!, d.piedras, 0, (h) => hojas.push(h))
+      expect(hojas.some((h) => h.correcto)).toBe(true)
+    }
+  )
 
   test('las ramas correctas capturan lo que dice la explicación', () => {
     const capturasDe = (id: string) => {
@@ -131,7 +151,10 @@ describe('tipo "secuencia"', () => {
   test('uno-o-dos-ojos: los extremos del ojo son incorrectos y el centro es correcto', () => {
     const { ramas } = porId('uno-o-dos-ojos').secuencia!
     expect(ramas.find((r) => r.en[0] === 1 && r.en[1] === 8)!.correcto).toBe(true)
-    expect(ramas.filter((r) => !r.correcto).map((r) => r.en as Punto)).toEqual([[2, 8], [0, 8]])
+    expect(ramas.filter((r) => !r.correcto).map((r) => r.en as Punto)).toEqual([
+      [2, 8],
+      [0, 8],
+    ])
   })
 })
 
@@ -140,7 +163,10 @@ describe('tipo "opciones"', () => {
   // Piedras muertas por desafío: se retiran antes de contar y valen un punto más como prisioneras.
   const muertas: Record<string, [number, number][]> = {
     'fundamentos-territorio-muertas-1': [[6, 7]],
-    'fundamentos-territorio-muertas-2': [[7, 4], [7, 5]],
+    'fundamentos-territorio-muertas-2': [
+      [7, 4],
+      [7, 5],
+    ],
   }
 
   test('hay 12 preguntas de territorio y cada una tiene exactamente una opción correcta', () => {
@@ -149,15 +175,18 @@ describe('tipo "opciones"', () => {
   })
 
   // La zona cerrada es la región de territorio más chica del tablero; la otra es el espacio abierto.
-  test.each(quizzes.map((d) => [d.id, d] as const))('%s: la opción correcta es el territorio que calcula el motor', (id, d) => {
-    const removidas = Array.from({ length: d.tamañoTablero }, () => Array(d.tamañoTablero).fill(false))
-    for (const [r, c] of muertas[id] ?? []) removidas[r][c] = true
-    const territorio = calcularTerritorio(tableroDesdePiedras(d.piedras, d.tamañoTablero), removidas, d.tamañoTablero)
-    const cuenta = { [NEGRO]: 0, [BLANCO]: 0 } as Record<string, number>
-    for (const fila of territorio) for (const v of fila) if (v === NEGRO || v === BLANCO) cuenta[v]++
-    const esperado = Math.min(cuenta[NEGRO], cuenta[BLANCO]) + (muertas[id]?.length ?? 0)
-    expect(Number(d.opciones!.find((o) => o.correcta)!.texto)).toBe(esperado)
-  })
+  test.each(quizzes.map((d) => [d.id, d] as const))(
+    '%s: la opción correcta es el territorio que calcula el motor',
+    (id, d) => {
+      const removidas = Array.from({ length: d.tamañoTablero }, () => Array(d.tamañoTablero).fill(false))
+      for (const [r, c] of muertas[id] ?? []) removidas[r][c] = true
+      const territorio = calcularTerritorio(tableroDesdePiedras(d.piedras, d.tamañoTablero), removidas, d.tamañoTablero)
+      const cuenta = { [NEGRO]: 0, [BLANCO]: 0 } as Record<string, number>
+      for (const fila of territorio) for (const v of fila) if (v === NEGRO || v === BLANCO) cuenta[v]++
+      const esperado = Math.min(cuenta[NEGRO], cuenta[BLANCO]) + (muertas[id]?.length ?? 0)
+      expect(Number(d.opciones!.find((o) => o.correcta)!.texto)).toBe(esperado)
+    }
+  )
 
   test('los botones de Pasar y Terminar tienen una única opción correcta', () => {
     for (const id of ['pasar', 'contar-puntos']) {
@@ -206,7 +235,17 @@ describe('tipo "retirar"', () => {
   })
 
   test('con dos grupos muertos, el desafío se completa recién al retirar el segundo', () => {
-    const dos = { ...d, piedras: [{ r: 0, c: 0, color: 'N' as const }, { r: 8, c: 8, color: 'N' as const }], piedrasMuertas: [[0, 0], [8, 8]] as [number, number][] }
+    const dos = {
+      ...d,
+      piedras: [
+        { r: 0, c: 0, color: 'N' as const },
+        { r: 8, c: 8, color: 'N' as const },
+      ],
+      piedrasMuertas: [
+        [0, 0],
+        [8, 8],
+      ] as [number, number][],
+    }
     const primero = retirarGrupo(dos, dos.piedras, 0, 0)!
     expect(primero.completo).toBe(false)
     expect(retirarGrupo(dos, primero.piedras, 8, 8)!.completo).toBe(true)
@@ -230,11 +269,15 @@ describe('validación del schema para los tipos nuevos', () => {
   })
 
   test('retirar apuntando a un punto sin piedra es inválido', () => {
-    expect(() => parsearDesafios(`${base}  tipo: retirar\n  piedrasMuertas:\n    - [3, 3]\n`)).toThrow(/no hay ninguna piedra/)
+    expect(() => parsearDesafios(`${base}  tipo: retirar\n  piedrasMuertas:\n    - [3, 3]\n`)).toThrow(
+      /no hay ninguna piedra/
+    )
   })
 
   test('opciones y retirar válidos no necesitan jugadasCorrectas ni explicacion', () => {
-    expect(parsearDesafios(`${base}  tipo: opciones\n  opciones:\n    - { texto: Ok, correcta: true }\n`).length).toBe(1)
+    expect(parsearDesafios(`${base}  tipo: opciones\n  opciones:\n    - { texto: Ok, correcta: true }\n`).length).toBe(
+      1
+    )
     expect(parsearDesafios(`${base}  tipo: retirar\n  piedrasMuertas:\n    - [0, 0]\n`).length).toBe(1)
   })
 })

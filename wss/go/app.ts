@@ -10,10 +10,18 @@ import {
   partidaIdSchema,
   Resultado,
 } from '../validators/go'
-import { calcularVivos } from './benson'
+import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
 import { conLock } from './lock'
-import * as motor from './motor'
+import * as motor from '@/lib/go/motor'
+
+/**
+ * Lógica de servidor de una partida de Go: comandos (invitar/aceptar/jugar/pasar/marcarMuerta/
+ * confirmarConteo/abandonar/observar), persistidos en Redis (`./db.ts`) bajo un lock por partida
+ * (`./lock.ts`) y transmitidos a los sockets de la sala vía `broadcastPartida`. Las reglas del juego
+ * en sí (capturas, territorio, vida) vienen de `@/lib/go/motor`/`@/lib/go/benson` — acá solo se
+ * orquesta el estado de la partida alrededor de esas funciones puras.
+ */
 
 export function salaGoRoom(salaId: string, partidaId: string) {
   return `sala:${salaId}:go:${partidaId}`
@@ -30,7 +38,7 @@ function assertEsJugador(partida: Partida, userId: string) {
     throw new Error('No sos parte de esta partida')
 }
 
-function colorDe(partida: Partida, userId: string): 1 | 2 {
+function colorDe(partida: Partida, userId: string): motor.Color {
   if (partida.negro.userId === userId) return motor.NEGRO
   if (partida.blanco.userId === userId) return motor.BLANCO
   throw new Error('No sos parte de esta partida')
@@ -208,7 +216,7 @@ export async function estudianteGo(idSala: string, userId: string) {
   }
 
   async function jugar(payload: unknown) {
-    const { partidaId, x, y } = jugadaSchema.parse(payload)
+    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -216,11 +224,11 @@ export async function estudianteGo(idSala: string, userId: string) {
       if (partida.turno !== color) throw new Error('No es tu turno')
 
       const historial = new Set(partida.historial)
-      const { tablero, capturas } = motor.jugar(partida.tablero, partida.tamaño, x, y, color, historial)
+      const { tablero, capturas } = motor.jugar(partida.tablero, partida.tamaño, fila, columna, color, historial)
 
       partida.tablero = tablero
       partida.historial.push(motor.hashTablero(tablero))
-      partida.ultimaJugada = { x, y }
+      partida.ultimaJugada = { fila, columna }
       if (color === motor.NEGRO) partida.capturasNegras += capturas
       else partida.capturasBlancas += capturas
       partida.turno = motor.rival(color)
@@ -259,21 +267,21 @@ export async function estudianteGo(idSala: string, userId: string) {
   }
 
   async function marcarMuerta(payload: unknown) {
-    const { partidaId, x, y } = jugadaSchema.parse(payload)
+    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Contando || !partida.removidas)
         throw new Error('La partida no está en conteo')
 
-      const grupo = motor.grupoEn(partida.tablero, x, y, partida.tamaño)
+      const grupo = motor.grupoEn(partida.tablero, fila, columna, partida.tamaño)
       if (grupo.length === 0) throw new Error('Ahí no hay ninguna piedra')
-      if (partida.vivo?.[y][x])
+      if (partida.vivo?.[fila][columna])
         throw new Error('Ese grupo está incondicionalmente vivo, no se puede marcar como muerto')
 
       // Toggle: si el grupo ya estaba marcado como muerto, lo restauramos.
-      const marcar = !partida.removidas[y][x]
-      for (const [gx, gy] of grupo) partida.removidas[gy][gx] = marcar
+      const marcar = !partida.removidas[fila][columna]
+      for (const [gf, gc] of grupo) partida.removidas[gf][gc] = marcar
 
       // Cualquier cambio en el marcado invalida las confirmaciones previas.
       partida.confirmaron = { negro: false, blanco: false }
@@ -359,8 +367,8 @@ async function finalizar(
   await db.guardarPartida(partida)
   await db.limpiarPartidaActiva(partida.salaId, partida.negro.userId)
   await db.limpiarPartidaActiva(partida.salaId, partida.blanco.userId)
-  await db.incrementarStats(partida.negro.userId, ganadorUserId === partida.negro.userId)
-  await db.incrementarStats(partida.blanco.userId, ganadorUserId === partida.blanco.userId)
+  await db.incrementarStats(partida.salaId, partida.negro.userId, ganadorUserId === partida.negro.userId)
+  await db.incrementarStats(partida.salaId, partida.blanco.userId, ganadorUserId === partida.blanco.userId)
 
   console.log(`🏁 Partida de Go ${partida.id} terminada por ${motivoFin}. Ganador: ${ganadorUserId ?? 'empate'}`)
 

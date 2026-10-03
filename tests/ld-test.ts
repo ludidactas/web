@@ -49,6 +49,11 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   // Hacemos login como profe de prueba
   await loginFake(profePage, profe)
 
+  // /salas abre el dialog "¿Qué es una sala?" solo, automáticamente, en la primera visita de cada
+  // browser context (ver salas-page-client.tsx) — un context de test siempre arranca sin ese flag en
+  // localStorage, así que sin esto el dialog tapa "Crear sala" en todo test que arme una sala.
+  await profePage.addInitScript(() => localStorage.setItem('salas-saber-mas-visto', '1'))
+
   // Vamos a la gestión de salas y abrimos el flujo de "Crear sala"
   await profePage.goto('/salas')
   await profePage.getByRole('button', { name: 'Crear sala' }).click()
@@ -63,8 +68,9 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   }
 
   await profePage.getByRole('button', { name: 'Crear e ingresar', exact: true }).click()
-  // La URL de operación es /salas/<id>/encuestas: el id es el segundo segmento, no el último.
-  await profePage.waitForURL(/\/salas\/.+\/encuestas/, { timeout: 20_000 })
+  // La URL de operación es /salas/<id>/go (default tras crear la sala): el id es el segundo segmento,
+  // no el último.
+  await profePage.waitForURL(/\/salas\/.+\/go/, { timeout: 20_000 })
 
   // El link público del estudiante es /sala/<id>/ con el mismo id que la URL de operación
   const idSala = new URL(profePage.url()).pathname.split('/').filter(Boolean)[1]

@@ -1,4 +1,4 @@
-import { BLANCO, Color, NEGRO, Tablero, VACIO } from './motor'
+import { BLANCO, Color, NEGRO, Tablero, VACIO, vecinos } from '@/lib/go/motor'
 
 /**
  * Algoritmo de Benson (1976): determina qué cadenas están "incondicionalmente vivas" — vivas sin
@@ -18,17 +18,8 @@ import { BLANCO, Color, NEGRO, Tablero, VACIO } from './motor'
  * - Lo que queda en X son las cadenas incondicionalmente vivas.
  */
 
-function vecinos(x: number, y: number, tamaño: number): Array<[number, number]> {
-  const pts: Array<[number, number]> = []
-  if (x > 0) pts.push([x - 1, y])
-  if (x < tamaño - 1) pts.push([x + 1, y])
-  if (y > 0) pts.push([x, y - 1])
-  if (y < tamaño - 1) pts.push([x, y + 1])
-  return pts
-}
-
-function clave(x: number, y: number): string {
-  return `${x},${y}`
+function clave(fila: number, columna: number): string {
+  return `${fila},${columna}`
 }
 
 interface Cadena {
@@ -41,20 +32,20 @@ function calcularCadenas(tablero: Tablero, tamaño: number, color: Color): Caden
   const visitados = new Set<string>()
   const cadenas: Cadena[] = []
 
-  for (let y = 0; y < tamaño; y++) {
-    for (let x = 0; x < tamaño; x++) {
-      if (tablero[y][x] !== color || visitados.has(clave(x, y))) continue
+  for (let fila = 0; fila < tamaño; fila++) {
+    for (let columna = 0; columna < tamaño; columna++) {
+      if (tablero[fila][columna] !== color || visitados.has(clave(fila, columna))) continue
 
       const puntos = new Set<string>()
-      const stack: Array<[number, number]> = [[x, y]]
+      const stack: Array<[number, number]> = [[fila, columna]]
       while (stack.length > 0) {
-        const [cx, cy] = stack.pop()!
-        const k = clave(cx, cy)
+        const [cf, cc] = stack.pop()!
+        const k = clave(cf, cc)
         if (visitados.has(k)) continue
         visitados.add(k)
         puntos.add(k)
-        for (const [nx, ny] of vecinos(cx, cy, tamaño)) {
-          if (tablero[ny][nx] === color && !visitados.has(clave(nx, ny))) stack.push([nx, ny])
+        for (const [nf, nc] of vecinos(cf, cc, tamaño)) {
+          if (tablero[nf][nc] === color && !visitados.has(clave(nf, nc))) stack.push([nf, nc])
         }
       }
       cadenas.push({ id: cadenas.length, puntos })
@@ -69,20 +60,20 @@ function calcularRegionesVacias(tablero: Tablero, tamaño: number): Array<Set<st
   const visitados = new Set<string>()
   const regiones: Array<Set<string>> = []
 
-  for (let y = 0; y < tamaño; y++) {
-    for (let x = 0; x < tamaño; x++) {
-      if (tablero[y][x] !== VACIO || visitados.has(clave(x, y))) continue
+  for (let fila = 0; fila < tamaño; fila++) {
+    for (let columna = 0; columna < tamaño; columna++) {
+      if (tablero[fila][columna] !== VACIO || visitados.has(clave(fila, columna))) continue
 
       const puntos = new Set<string>()
-      const stack: Array<[number, number]> = [[x, y]]
+      const stack: Array<[number, number]> = [[fila, columna]]
       while (stack.length > 0) {
-        const [cx, cy] = stack.pop()!
-        const k = clave(cx, cy)
+        const [cf, cc] = stack.pop()!
+        const k = clave(cf, cc)
         if (visitados.has(k)) continue
         visitados.add(k)
         puntos.add(k)
-        for (const [nx, ny] of vecinos(cx, cy, tamaño)) {
-          if (tablero[ny][nx] === VACIO && !visitados.has(clave(nx, ny))) stack.push([nx, ny])
+        for (const [nf, nc] of vecinos(cf, cc, tamaño)) {
+          if (tablero[nf][nc] === VACIO && !visitados.has(clave(nf, nc))) stack.push([nf, nc])
         }
       }
       regiones.push(puntos)
@@ -95,9 +86,9 @@ function calcularRegionesVacias(tablero: Tablero, tamaño: number): Array<Set<st
 /** ¿Ninguna piedra rival de `color` bordea esta región? (condición de "región encerrada"). */
 function esRegionEncerradaPor(tablero: Tablero, tamaño: number, region: Set<string>, color: Color): boolean {
   for (const k of region) {
-    const [x, y] = k.split(',').map(Number)
-    for (const [nx, ny] of vecinos(x, y, tamaño)) {
-      const v = tablero[ny][nx]
+    const [fila, columna] = k.split(',').map(Number)
+    for (const [nf, nc] of vecinos(fila, columna, tamaño)) {
+      const v = tablero[nf][nc]
       if (v !== VACIO && v !== color) return false
     }
   }
@@ -107,9 +98,9 @@ function esRegionEncerradaPor(tablero: Tablero, tamaño: number, region: Set<str
 /** ¿Todos los puntos de la región son libertad (vecino directo) de esta cadena en particular? */
 function esVitalPara(tablero: Tablero, tamaño: number, region: Set<string>, cadena: Cadena, color: Color): boolean {
   for (const k of region) {
-    const [x, y] = k.split(',').map(Number)
-    const esLibertadDeLaCadena = vecinos(x, y, tamaño).some(
-      ([nx, ny]) => tablero[ny][nx] === color && cadena.puntos.has(clave(nx, ny))
+    const [fila, columna] = k.split(',').map(Number)
+    const esLibertadDeLaCadena = vecinos(fila, columna, tamaño).some(
+      ([nf, nc]) => tablero[nf][nc] === color && cadena.puntos.has(clave(nf, nc))
     )
     if (!esLibertadDeLaCadena) return false
   }
@@ -122,7 +113,7 @@ function cadenasVivas(tablero: Tablero, tamaño: number, color: Color): Cadena[]
   if (cadenas.length === 0) return []
 
   let regiones = calcularRegionesVacias(tablero, tamaño).filter((r) => esRegionEncerradaPor(tablero, tamaño, r, color))
-  let vivas = new Set(cadenas.map((c) => c.id))
+  const vivas = new Set(cadenas.map((c) => c.id))
 
   let cambio = true
   while (cambio) {
@@ -150,9 +141,9 @@ function cadenasVivas(tablero: Tablero, tamaño: number, color: Color): Cadena[]
         if (vivas.has(cadena.id)) return true // cadena viva: no hace caer la región
         // cadena ya no viva: si la región la bordea, se cae
         for (const k of region) {
-          const [x, y] = k.split(',').map(Number)
-          const tocaEstaCadena = vecinos(x, y, tamaño).some(
-            ([nx, ny]) => tablero[ny][nx] === color && cadena.puntos.has(clave(nx, ny))
+          const [fila, columna] = k.split(',').map(Number)
+          const tocaEstaCadena = vecinos(fila, columna, tamaño).some(
+            ([nf, nc]) => tablero[nf][nc] === color && cadena.puntos.has(clave(nf, nc))
           )
           if (tocaEstaCadena) return false
         }
@@ -175,8 +166,8 @@ export function calcularVivos(tablero: Tablero, tamaño: number): boolean[][] {
   for (const color of [NEGRO, BLANCO] as const) {
     for (const cadena of cadenasVivas(tablero, tamaño, color)) {
       for (const k of cadena.puntos) {
-        const [x, y] = k.split(',').map(Number)
-        vivo[y][x] = true
+        const [fila, columna] = k.split(',').map(Number)
+        vivo[fila][columna] = true
       }
     }
   }

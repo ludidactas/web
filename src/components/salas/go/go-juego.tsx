@@ -5,11 +5,22 @@ import { storeGo } from '@/wss-cli/stores/go-store'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
-import { BLANCO, calcularPuntaje, NEGRO, PiedraIcono, RELLENO, TableroGo } from './tablero-go'
+import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { PartidaGo } from './partida-go'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import Link from 'next/link'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Iconito } from '@/components/custom/ld-icon'
+
+/**
+ * Todo el flujo de Go de quien juega en una sala — buscar contrincante, invitaciones, la partida
+ * propia en curso, observar la de otro — como varios componentes chicos que comparten el mismo estado
+ * (`storeGo`, poblado por los eventos de sockets) y se turnan según el estado de la partida. El
+ * tablero en sí (dibujo + click) es aparte, en `./partida-go.tsx`.
+ */
 
 /** Comandos de Go de una conexión (estudiante o profe): ambas comparten exactamente esta forma, ver
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
@@ -18,9 +29,9 @@ export type AccionesGo = {
   invitar: (contrincanteId: string, tamaño?: TamañoTablero) => Promise<Partida>
   aceptar: (partidaId: string) => Promise<Partida>
   rechazar: (partidaId: string) => Promise<void>
-  jugar: (partidaId: string, x: number, y: number) => Promise<Partida>
+  jugar: (partidaId: string, fila: number, columna: number) => Promise<Partida>
   pasar: (partidaId: string) => Promise<Partida>
-  marcarMuerta: (partidaId: string, x: number, y: number) => Promise<Partida>
+  marcarMuerta: (partidaId: string, fila: number, columna: number) => Promise<Partida>
   confirmarConteo: (partidaId: string) => Promise<Partida>
   abandonar: (partidaId: string) => Promise<Partida>
   observar: (partidaId: string) => Promise<Partida>
@@ -263,6 +274,24 @@ function BuscarContrincante({
       {invitacionesEntrantes.length > 0 && (
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
+
+      <div className="flex flex-col gap-3 items-center w-full mt-4">
+        <p className="text-slate-500 text-sm text-center">
+          Si aún no sabés cómo jugar, te invitamos a que visites nuestro Dojo de Go y practiques con nosotros.
+        </p>
+        <Link href="/go/dojo">
+          <Boton
+            color="#6366f1"
+            shadowColor="#4338ca"
+            classNames={{ root: 'flex items-center p-2 justify-center w-36 h-16 hover:scale-105 transition-transform' }}
+          >
+            <div className='flex items-center gap-1'>
+            <Icon className="text-white" icon={'fluent-emoji-high-contrast:shinto-shrine'}/>
+            <span className="text-md font-bold text-white">Ir al Dojo</span>
+            </div>
+          </Boton>
+        </Link>
+      </div>
     </div>
   )
 }
@@ -347,7 +376,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
       <div className="flex flex-col items-center gap-3">
-        <TableroGo
+        <PartidaGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
           removidas={partida.removidas}
@@ -450,7 +479,7 @@ function PartidaEnCurso({
   // Jugada elegida en el tablero pero todavía sin enviar al server: el click ya no juega directo,
   // solo marca la intersección candidata. Se confirma (o cancela) con los botones de abajo, así el
   // jugador puede "probar" dónde poner la ficha antes de comprometerse.
-  const [jugadaPendiente, setJugadaPendiente] = useState<{ x: number; y: number } | null>(null)
+  const [jugadaPendiente, setJugadaPendiente] = useState<{ fila: number; columna: number } | null>(null)
   const [confirmando, setConfirmando] = useState(false)
 
   // Si dejó de ser mi turno (jugada confirmada, o volví a la sala y perdí el estado), no tiene
@@ -462,7 +491,7 @@ function PartidaEnCurso({
   function confirmarJugada() {
     if (!jugadaPendiente) return
     setConfirmando(true)
-    jugar(partida.id, jugadaPendiente.x, jugadaPendiente.y)
+    jugar(partida.id, jugadaPendiente.fila, jugadaPendiente.columna)
       .then(() => setJugadaPendiente(null))
       .catch((e) => toast.error(e.message))
       .finally(() => setConfirmando(false))
@@ -539,7 +568,7 @@ function PartidaEnCurso({
       )}
 
       <div className="flex flex-col items-center gap-3">
-        <TableroGo
+        <PartidaGo
           tablero={partida.tablero}
           tamaño={partida.tamaño}
           removidas={partida.removidas}
@@ -553,12 +582,14 @@ function PartidaEnCurso({
           deshabilitado={
             partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'
           }
-          onJugar={(x, y) => {
+          onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
-              setJugadaPendiente((actual) => (actual && actual.x === x && actual.y === y ? null : { x, y }))
+              setJugadaPendiente((actual) =>
+                actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
+              )
             } else if (partida.estado === 'contando') {
-              marcarMuerta(partida.id, x, y).catch((e) => toast.error(e.message))
+              marcarMuerta(partida.id, fila, columna).catch((e) => toast.error(e.message))
             }
           }}
         />

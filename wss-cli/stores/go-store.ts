@@ -1,6 +1,8 @@
 import { Partida } from '@/wss/validators/go'
 import { create } from 'zustand'
 
+/** Estado cliente (zustand) de Go — lo pueblan `estudiante-go-handlers.ts`/`profe-go-handlers.ts`
+ * (los eventos de socket), lo consume `GoJuego` (`src/components/salas/go/go-juego.tsx`). */
 interface GoState {
   /** `false` hasta que llega la respuesta del primer `go:mi_partida`. Mientras tanto no sabemos si
    * ya hay una partida en curso, así que la UI debe mostrar un loading en vez de asumir que no hay. */

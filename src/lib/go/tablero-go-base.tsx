@@ -181,6 +181,8 @@ export interface TableroGoBaseProps {
   /** Margen extra en el viewBox, afuera del contenido, para halos que necesiten asomar sin que los
    * recorte el propio viewBox (ej. el glow de turno de PartidaGo). Default 0. */
   glowMargen?: number
+  /** Si está, solo se muestra esa ventana de la grilla (índices inclusivos). Las coordenadas de piedras, marcas y clicks siguen siendo las del tablero completo. */
+  region?: { filaMin: number; filaMax: number; columnaMin: number; columnaMax: number }
   className?: string
   style?: React.CSSProperties
   disabled?: boolean
@@ -204,6 +206,7 @@ export function TableroGoBase({
   tablero,
   tamaño,
   glowMargen = 0,
+  region,
   className,
   style,
   disabled = false,
@@ -220,7 +223,12 @@ export function TableroGoBase({
   const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<[number, number] | null>(null)
   const lado = CELDA_PX * (tamaño - 1) + MARGEN_PX * 2
-  const viewBoxLado = lado + glowMargen * 2
+  // La ventana deja `MARGEN_PX` más allá de sus puntos extremos: en un borde real del tablero es el margen
+  // normal, y en un corte la grilla simplemente sigue un poco más.
+  const vistaX = region ? coordenadaEnPixeles(region.columnaMin) - MARGEN_PX : 0
+  const vistaY = region ? coordenadaEnPixeles(region.filaMin) - MARGEN_PX : 0
+  const vistaAncho = region ? (region.columnaMax - region.columnaMin) * CELDA_PX + MARGEN_PX * 2 : lado
+  const vistaAlto = region ? (region.filaMax - region.filaMin) * CELDA_PX + MARGEN_PX * 2 : lado
 
   // Ids únicos por instancia para que gradientes/filtros no colisionen si hay más de un tablero
   // montado a la vez en la misma página.
@@ -291,7 +299,7 @@ export function TableroGoBase({
   return (
     <svg
       ref={svgRef}
-      viewBox={`${-glowMargen} ${-glowMargen} ${viewBoxLado} ${viewBoxLado}`}
+      viewBox={`${vistaX - glowMargen} ${vistaY - glowMargen} ${vistaAncho + glowMargen * 2} ${vistaAlto + glowMargen * 2}`}
       width="100%"
       height="100%"
       role="img"

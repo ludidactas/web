@@ -1,5 +1,5 @@
 import { capturasEnJugada, grupoEn, tableroVacio, type Color, type Tablero } from "@/lib/go/motor";
-import type { Desafio, Punto, Desenlace, ResultadoEvaluacion, Piedra } from "./tipos";
+import type { Desafio, Punto, Desenlace, ResultadoEvaluacion, Piedra, NodoSecuencia } from "./tipos";
 
 /**
  * Lógica de un desafío del dojo: evalúa la jugada de un estudiante contra un `Desafio` armando un
@@ -161,5 +161,68 @@ export function evaluarJugada(
     capturadas,
     esCorrecta: esJugadaCorrecta(desafio, r, c),
     desenlace: desenlace ? { texto: desenlace.texto, marcas: desenlace.marcas } : undefined,
+  };
+}
+
+/** Ventana cuadrada de la grilla, en índices inclusivos de fila/columna. */
+export interface RegionTablero {
+  filaMin: number;
+  filaMax: number;
+  columnaMin: number;
+  columnaMax: number;
+}
+
+/** Intersecciones de aire que se dejan alrededor de lo que hay en el desafío. */
+const MARGEN_REGION = 2;
+/** Lado mínimo de la ventana, para que un desafío chico no se amplíe más que uno de 9x9. */
+const LADO_MIN_REGION = 9;
+
+function puntosDeSecuencia(nodo: NodoSecuencia): Punto[] {
+  return nodo.ramas.flatMap((rama) => [
+    rama.en,
+    ...(rama.respuestaRival ? [rama.respuestaRival] : []),
+    ...rama.marcas.map((m): Punto => [m.r, m.c]),
+    ...(rama.siguiente ? puntosDeSecuencia(rama.siguiente) : []),
+  ]);
+}
+
+/**
+ * Ventana de la grilla que contiene todo lo que el desafío puede mostrar o pedir tocar (piedras,
+ * marcas, jugadas correctas, desenlaces, ramas de la secuencia, ayuda) más un margen. Es cuadrada y
+ * depende solo del desafío, no del estado de juego, así que no cambia mientras el estudiante juega.
+ * Devuelve null cuando la ventana cubriría casi todo el tablero (no hay nada que recortar).
+ */
+export function regionDeDesafio(desafio: Desafio): RegionTablero | null {
+  const n = desafio.tamañoTablero;
+  const puntos: Punto[] = [
+    ...desafio.piedras.map((p): Punto => [p.r, p.c]),
+    ...desafio.marcas.map((m): Punto => [m.r, m.c]),
+    ...(desafio.jugadasCorrectas ?? []),
+    ...(desafio.piedrasMuertas ?? []),
+    ...(desafio.ayuda ? [desafio.ayuda] : []),
+    ...(desafio.desenlaces ?? []).flatMap((d) => [d.en, ...d.marcas.map((m): Punto => [m.r, m.c])]),
+    ...(desafio.secuencia ? puntosDeSecuencia(desafio.secuencia) : []),
+  ];
+  if (!puntos.length) return null;
+
+  const filas = puntos.map(([r]) => r);
+  const columnas = puntos.map(([, c]) => c);
+  const [filaMin, filaMax] = [Math.min(...filas), Math.max(...filas)];
+  const [columnaMin, columnaMax] = [Math.min(...columnas), Math.max(...columnas)];
+
+  const lado = Math.max(filaMax - filaMin, columnaMax - columnaMin) + 1 + 2 * MARGEN_REGION;
+  const ladoVentana = Math.max(lado, LADO_MIN_REGION);
+  if (ladoVentana >= n - 1) return null;
+
+  // Centrada en lo que hay, y corrida hacia adentro si se sale del tablero.
+  const inicio = (min: number, max: number) =>
+    Math.min(Math.max(Math.round((min + max - (ladoVentana - 1)) / 2), 0), n - ladoVentana);
+  const filaIni = inicio(filaMin, filaMax);
+  const colIni = inicio(columnaMin, columnaMax);
+  return {
+    filaMin: filaIni,
+    filaMax: filaIni + ladoVentana - 1,
+    columnaMin: colIni,
+    columnaMax: colIni + ladoVentana - 1,
   };
 }

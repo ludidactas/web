@@ -2,7 +2,7 @@
 
 import { BLANCO, NEGRO, VACIO, type Color } from "@/lib/go/motor";
 import { BLANCO_MUERTA, CELDA_PX, coordenadaEnPixeles, TableroGoBase, type EstadoPiedra } from "@/lib/go/tablero-go-base";
-import { tableroDesdePiedras } from "../motor-desafio";
+import { tableroDesdePiedras, type RegionTablero } from "../motor-desafio";
 import type { Punto, Marca, Piedra } from "../tipos";
 
 /**
@@ -112,6 +112,8 @@ export interface DesafioDojoGoProps {
   pixelSize?: number;
   /** Punto a mostrar como marcador de ayuda translúcido, si hay alguno. */
   ghost?: Punto | null;
+  /** Ventana de la grilla a mostrar (ver `regionDeDesafio`); sin ella se dibuja el tablero completo. */
+  region?: RegionTablero | null;
   /** Piedras (ya incluidas en `stones`) que se dibujan atenuadas, como las marcadas muertas al contar una partida. */
   deadStones?: Piedra[];
   /** Puntos a marcar con un anillo verde, mostrados tras una respuesta incorrecta. */
@@ -143,6 +145,7 @@ export function DesafioDojoGo({
   pixelSize = 400,
   ghost = null,
   deadStones = [],
+  region,
   correctMoveMarkers = [],
   marks = [],
   playedPoint = null,
@@ -184,6 +187,7 @@ export function DesafioDojoGo({
     <TableroGoBase
       tablero={tablero}
       tamaño={boardSize}
+      region={region ?? undefined}
       disabled={disabled}
       onPointClick={onPointClick}
       esSeleccionable={esSeleccionable}

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { DesafioDojoGo, type DesafioDojoGoTheme } from './desafio-dojo-go'
 import { useDesafioGo } from './use-desafio-go'
+import { regionDeDesafio } from '../motor-desafio'
 import type { Desafio } from '../tipos'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
@@ -44,6 +45,8 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
     elegirOpcion,
   } = useDesafioGo(desafio)
 
+  const region = useMemo(() => regionDeDesafio(desafio), [desafio])
+
   // Dispara onSolved exactamente una vez, en el render donde estado pasa a "correcto".
   const notifiedRef = useRef(false)
   useEffect(() => {
@@ -76,6 +79,7 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         stones={piedras}
         ghost={ayudaVisible ? puntoDeAyuda : null}
         deadStones={piedrasMuertas}
+        region={region}
         correctMoveMarkers={jugadasCorrectasReveladas}
         marks={marcasVisibles}
         playedPoint={jugadaJugador}

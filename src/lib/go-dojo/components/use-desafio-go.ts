@@ -33,7 +33,7 @@ export interface EstadoDesafioGo {
   jugadasCorrectasReveladas: Punto[];
   /** Texto de feedback para el punto/rama que el estudiante está viendo — tiene prioridad sobre el mensajeExito/mensajeError genérico del desafío cuando está seteado (siempre seteado para "exploracion"/"secuencia", solo para "jugada" cuando define `desenlaces`). */
   textoActivo: string | null;
-  /** `desafio.marcas` combinado con lo que revele el desenlace/rama actual. Pasalo directo a <DesafioDojoGo marks={...} />. */
+  /** `desafio.marcas` combinado con lo que revele el desenlace/rama actual (sin los triángulos una vez `respondido`). Pasalo directo a <DesafioDojoGo marks={...} />. */
   marcasVisibles: Marca[];
   /** Adónde debería apuntar el botón "Ayuda": estático para "jugada", dinámico (la rama correcta del nodo actual del árbol) para "secuencia", el primer grupo todavía en pie para "retirar", null para "exploracion" (nada que ayudar — cada punto ya está marcado) y "opciones" (no hay punto). */
   puntoDeAyuda: Punto | null;
@@ -239,10 +239,11 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
     return (desafio.desenlaces ?? []).filter((d) => d.correcto).map((d) => d.en);
   }, [desafio.tipo, desafio.jugadasCorrectas, desafio.desenlaces, estado]);
 
-  const marcasVisibles = useMemo<Marca[]>(
-    () => [...desafio.marcas, ...marcasActivas],
-    [desafio.marcas, marcasActivas]
-  );
+  // Los triángulos señalan piedras de la consigna: una vez respondido el desafío dejan de mostrarse.
+  const marcasVisibles = useMemo<Marca[]>(() => {
+    const todas = [...desafio.marcas, ...marcasActivas];
+    return respondido ? todas.filter((m) => m.tipo !== "triangulo") : todas;
+  }, [desafio.marcas, marcasActivas, respondido]);
 
   const puntoDeAyudaDinamico = useMemo<Punto | null>(() => {
     if (desafio.tipo === "exploracion" || desafio.tipo === "opciones") return null;

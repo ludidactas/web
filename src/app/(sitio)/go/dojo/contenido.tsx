@@ -8,6 +8,13 @@ import { CAPITULOS_OGS, type SlugCapituloOgs } from '@/lib/go-dojo/desafios/capi
 import type { Desafio } from '@/lib/go-dojo/tipos'
 import Image from 'next/image'
 import { Outlined } from '@/components/fx/filtros'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 /** Mismo lenguaje visual que el resto de Go en el sitio (`go-estudiante.tsx`, `go-juego.tsx`): título
  * en `ld-violeta-oscuro` con ícono, tarjeta blanca redondeada — no la tipografía/paleta "editorial"
@@ -38,20 +45,25 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
       </p>
       <div className="w-full bg-white rounded-xl p-6 md:p-10 shadow-sm">
         <div className="flex flex-col gap-2 mb-6 md:flex-row md:items-center md:justify-between">
-          <label className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2 text-slate-600">
             Capítulo
-            <select
-              value={capitulo}
-              disabled={cargando}
-              onChange={(e) => elegirCapitulo(e.target.value)}
-              className="flex-1 md:flex-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-ld-violeta-oscuro disabled:opacity-50"
-            >
-              {CAPITULOS_OGS.map((c) => (
-                <option key={c.slug} value={c.slug}>
-                  {c.titulo}
-                </option>
-              ))}
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                disabled={cargando}
+                className="flex-1 md:flex-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-left text-ld-violeta-oscuro disabled:opacity-50"
+              >
+                {CAPITULOS_OGS.find((c) => c.slug === capitulo)?.titulo}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuRadioGroup value={capitulo} onValueChange={elegirCapitulo}>
+                  {CAPITULOS_OGS.map((c) => (
+                    <DropdownMenuRadioItem key={c.slug} value={c.slug}>
+                      {c.titulo}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {cargando && (
               <span
                 role="status"
@@ -59,7 +71,7 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
                 className="w-4 h-4 rounded-full border-2 border-ld-violeta border-t-transparent animate-spin"
               />
             )}
-          </label>
+          </div>
           <p className="text-xs text-slate-500">
             Problemas adaptados de OGS (AGPL-3.0) ·{' '}
             <a

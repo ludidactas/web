@@ -1,12 +1,12 @@
 'use client'
 
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { TarjetaDesafioGo } from './tarjeta-desafio-go'
-import { useProgresoDojo } from './use-progreso-dojo'
+import { useProgresoDojo, type SincronizacionDojo } from './use-progreso-dojo'
 import type { DesafioDojoGoTheme } from './desafio-dojo-go'
 import type { Desafio } from '../tipos'
 
@@ -17,6 +17,10 @@ export interface ConjuntoDesafiosProps {
   showFilters?: boolean
   /** Clave de localStorage donde se guarda el avance (desafíos resueltos y posición actual) en este dispositivo. Sin clave el avance solo vive en memoria. */
   storageKey?: string
+  /** Copia remota del avance, además de la de `storageKey`. */
+  sincronizacion?: SincronizacionDojo
+  /** Contenido debajo del índice de desafíos. */
+  pieIndice?: ReactNode
   /** Si está, en el último desafío el botón "Siguiente" pasa a ser "Siguiente capítulo" y llama a esta función. */
   onSiguienteCapitulo?: () => void
   className?: string
@@ -59,13 +63,15 @@ export function ConjuntoDesafios({
   theme,
   showFilters,
   storageKey,
+  sincronizacion,
+  pieIndice,
   onSiguienteCapitulo,
   className,
 }: ConjuntoDesafiosProps) {
   const [filtro, setFiltro] = useState<string>('todos')
   const [indice, setIndice] = useState(0)
   const { resueltos: resueltosGuardados, actualGuardado, cargado, marcarResuelto, guardarActual } =
-    useProgresoDojo(storageKey)
+    useProgresoDojo(storageKey, sincronizacion)
 
   const etiquetas = useMemo(() => [...new Set(desafios.map((d) => d.etiqueta))], [desafios])
   const mostrarFiltros = showFilters ?? etiquetas.length > 1
@@ -243,6 +249,7 @@ export function ConjuntoDesafios({
               </Accordion>
             </nav>
           </div>
+          {pieIndice}
         </div>
 
         <div ref={columnaTablero} className="order-1 md:order-2 flex-1 w-full flex flex-col items-center">

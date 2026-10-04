@@ -4,6 +4,7 @@ import { SocketEstudiante, SocketProfe } from './middleware/roles'
 import { conSession, SocketConSesion } from './middleware/session'
 import { mount } from './mount'
 import { handlersGoEstudiante } from './go/handlers'
+import { handlersDojo } from './dojo/handlers'
 import { handlersEncuestasEstudiante, handlersEncuestasOverlay } from './polls/handlers'
 import { handlersAdmin, handlersGestionSalasProfe, handlersSalaEstudiante, handlersSalaPublico } from './salas/handlers'
 import { RolSala } from './validators/auth'
@@ -17,8 +18,13 @@ io.use(conErrorLogging)
   .use(conSession)
   // Despachamos los handlers según el rol del usuario:
   .on('connection', async (socket: SocketConSesion) => {
+    // Dojo: visitante anónimo, sin sesión ni sala
+    if (socket.handshake.auth.rol === RolSala.Dojo) {
+      await handlersDojo(socket)
+    }
+
     // Publico: no requiere sesión, pero sí el id de sala para validar que exista y enviar la config pública
-    if (isNullish(socket.data) || isNullish(socket.data.session)) {
+    else if (isNullish(socket.data) || isNullish(socket.data.session)) {
       await handlersSalaPublico(socket, socket.handshake.auth.idSala)
       await handlersEncuestasOverlay(socket, socket.handshake.auth.idSala)
     }

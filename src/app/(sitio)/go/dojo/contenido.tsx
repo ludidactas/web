@@ -15,6 +15,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import useClipboard from '@/components/hooks/use-clipboard'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { linkProgresoDojo, useSincronizacionDojo } from './use-sincronizacion-dojo'
 
 /** Mismo lenguaje visual que el resto de Go en el sitio (`go-estudiante.tsx`, `go-juego.tsx`): título
  * en `ld-violeta-oscuro` con ícono, tarjeta blanca redondeada — no la tipografía/paleta "editorial"
@@ -27,6 +30,9 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
   const elegirCapitulo = (slug: string) => iniciarCarga(() => router.push(`/go/dojo?capitulo=${slug}`, { scroll: false }))
 
   const siguienteCapitulo = CAPITULOS_OGS[CAPITULOS_OGS.findIndex((c) => c.slug === capitulo) + 1]
+
+  const { idDojo, sincronizacion } = useSincronizacionDojo(capitulo)
+  const { justCopied, handleCopy } = useClipboard()
 
   return (
     <div className="flex flex-col w-full max-w-6xl px-4 md:px-8 pt-16 pb-32 md:pb-40">
@@ -90,6 +96,31 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
           desafios={challenges}
           showFilters={false}
           storageKey={`go-dojo-progreso-${capitulo}`}
+          sincronizacion={sincronizacion}
+          pieIndice={
+            idDojo && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopy(linkProgresoDojo(idDojo))}
+                  className="flex flex-1 items-center justify-center gap-2 px-3 py-2 rounded-xl border border-dashed border-ld-violeta text-sm font-semibold text-ld-violeta-oscuro bg-white/60 hover:bg-white transition"
+                >
+                  <Icon icon={justCopied ? 'akar-icons:check' : 'akar-icons:link-chain'} className="w-5 h-5 shrink-0" />
+                  {justCopied ? '¡Enlace copiado!' : 'Enlace a tu progreso'}
+                </button>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger type="button" aria-label="Qué es el enlace a tu progreso" className="text-ld-violeta-oscuro">
+                      <Icon icon="akar-icons:info" className="w-5 h-5" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[16rem] text-center">
+                      Siempre vas a poder acceder y retomar todo tu progreso de aprendizaje usando este enlace, ¡Guardalo!
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )
+          }
           onSiguienteCapitulo={siguienteCapitulo && (() => elegirCapitulo(siguienteCapitulo.slug))}
         />
       </div>

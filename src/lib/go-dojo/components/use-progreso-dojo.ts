@@ -6,6 +6,13 @@ interface ProgresoGuardado {
   actual: string | null
 }
 
+/** Copia remota del progreso de un capítulo. `sincronizar` sube lo local y devuelve la unión con lo remoto. */
+export interface SincronizacionDojo {
+  sincronizar: (resueltos: string[]) => Promise<{ resueltos: string[]; actual: string | null }>
+  marcarResuelto: (id: string) => void
+  guardarActual: (id: string) => void
+}
+
 export interface ProgresoDojo {
   resueltos: Set<string>
   /** Id del desafío en el que el estudiante quedó la última vez, o null si no hay nada guardado. */
@@ -41,8 +48,9 @@ function escribir(clave: string, progreso: ProgresoGuardado) {
 /**
  * Progreso del dojo persistido en localStorage bajo `clave` (por dispositivo). Sin `clave` funciona
  * solo en memoria. El storage se lee después de montar para que el primer render coincida con el del server.
+ * Con `sincronizacion`, `cargado` pasa a true recién cuando responde (o falla) la sincronización inicial.
  */
-export function useProgresoDojo(clave?: string): ProgresoDojo {
+export function useProgresoDojo(clave?: string, sincronizacion?: SincronizacionDojo): ProgresoDojo {
   const [resueltos, setResueltos] = useState<Set<string>>(new Set())
   const [actualGuardado, setActualGuardado] = useState<string | null>(null)
   const [cargado, setCargado] = useState(false)
@@ -52,8 +60,32 @@ export function useProgresoDojo(clave?: string): ProgresoDojo {
     const guardado = leer(clave)
     setResueltos(new Set(guardado.resueltos))
     setActualGuardado(guardado.actual)
-    setCargado(true)
-  }, [clave])
+    if (!sincronizacion) {
+      setCargado(true)
+      return
+    }
+
+    let vigente = true
+    setCargado(false)
+    sincronizacion
+      .sincronizar(guardado.resueltos)
+      .then((remoto) => {
+        if (!vigente) return
+        const local = leer(clave)
+        const unidos = [...new Set([...local.resueltos, ...remoto.resueltos])]
+        const actual = remoto.actual ?? local.actual
+        escribir(clave, { resueltos: unidos, actual })
+        setResueltos(new Set(unidos))
+        setActualGuardado(actual)
+      })
+      .catch((error: unknown) => console.error('No se pudo sincronizar el progreso del dojo', error))
+      .finally(() => {
+        if (vigente) setCargado(true)
+      })
+    return () => {
+      vigente = false
+    }
+  }, [clave, sincronizacion])
 
   const marcarResuelto = useCallback(
     (id: string) => {
@@ -67,16 +99,18 @@ export function useProgresoDojo(clave?: string): ProgresoDojo {
         }
         return siguiente
       })
+      sincronizacion?.marcarResuelto(id)
     },
-    [clave]
+    [clave, sincronizacion]
   )
 
   const guardarActual = useCallback(
     (id: string | null) => {
       if (!clave) return
       escribir(clave, { ...leer(clave), actual: id })
+      if (id) sincronizacion?.guardarActual(id)
     },
-    [clave]
+    [clave, sincronizacion]
   )
 
   return { resueltos, actualGuardado, cargado, marcarResuelto, guardarActual }

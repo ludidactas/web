@@ -50,10 +50,12 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
     use-desafio-go.ts                # hook: estado de jugar/reiniciar/ayuda/explicación de un Desafio
     tarjeta-desafio-go.tsx           # tarjeta de un desafío (hook + tablero + texto + botones)
     conjunto-desafios.tsx            # índice + desafío actual + navegación anterior/siguiente
+    use-progreso-dojo.ts             # hook: progreso en localStorage + copia remota opcional (SincronizacionDojo)
 
 src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   page.tsx                           # server component: carga getDesafiosEjemplo()
-  contenido.tsx                      # client component: título + ConjuntoDesafios
+  contenido.tsx                      # client component: título + ConjuntoDesafios + copiar link de progreso
+  use-sincronizacion-dojo.ts         # id anónimo del visitante + socket al WSS que implementa SincronizacionDojo
 
 wss/go/                              # capa 3: servidor de la partida en vivo
   app.ts                             # comandos (invitar/jugar/pasar/...) — orquesta 1 + db.ts + lock.ts
@@ -61,6 +63,11 @@ wss/go/                              # capa 3: servidor de la partida en vivo
   db.ts                              # persistencia en Redis
   lock.ts                            # mutex por partida (evita carreras get→mutar→set)
 wss/validators/go.ts                 # zod schemas/tipos de Partida — el contrato server↔cliente
+
+wss/dojo/                            # progreso anónimo del dojo (ver "Progreso del dojo")
+  handlers.ts                        # comandos dojo:sincronizar / dojo:resuelto / dojo:actual
+  db.ts                              # claves dojo:<idDojo>:... en Redis
+wss/validators/dojo.ts               # zod de los payloads del dojo
 
 wss-cli/                             # capa 4: espejo cliente del servidor
   handlers/estudiante-go-handlers.ts # emite comandos, actualiza el store, identidad = estudiante
@@ -80,6 +87,37 @@ src/app/(herramientas)/…/go/page.tsx # las dos rutas que montan la partida en 
 
 tests/go-*.spec.ts                   # e2e (Playwright): benson, espectador, profe-contrincante, reinvitación
 ```
+
+## Progreso del dojo
+
+`/go/dojo` es pública: sin sala ni login. El navegador se conecta al WSS con el pasaporte
+`{ rol: 'dojo' }`, que no abre sesión, y pide su id con `dojo:identificarse`. Los ids los emite solo el
+server (32 hex al azar, registrados en `dojo:<idDojo>:visto`): si el id pedido no fue emitido por el
+server, devuelve uno nuevo. El navegador lo guarda en localStorage (`go-dojo-id`). El progreso de cada
+capítulo vive en dos lugares: localStorage (`go-dojo-progreso-<capitulo>`) y Redis.
+
+- **Claves**: `dojo:<idDojo>:resueltos:<capitulo>` (ZSET, score = timestamp de la primera resolución),
+  `dojo:<idDojo>:actual` (HASH capítulo → desafío) y `dojo:<idDojo>:visto` (registro del id emitido +
+  último timestamp de conexión).
+- **Merge**: al cargar un capítulo, `dojo:sincronizar` sube los resueltos locales y devuelve la unión.
+  Resolver es lo único que modifica `resueltos`, así que la unión nunca pierde nada. Para `actual` gana
+  el del server; después, cada cambio local lo pisa.
+- **Otro dispositivo**: "Copiar link de mi progreso" copia `/go/dojo?id=<idDojo>`. Al abrirlo, ese id
+  reemplaza al local, sale de la URL, y lo que había en ese navegador se suma al progreso del id. Un
+  link con un id que el server no emitió termina en un id nuevo.
+- **Reconexión**: el socket del dojo se reconecta solo y vuelve a mandar `dojo:identificarse` en cada
+  conexión. En el server, los demás comandos esperan a que esa identificación termine.
+- **Sin WSS**: el dojo sigue con localStorage. El `sincronizar` inicial espera hasta 5 s antes de
+  retomar en el desafío guardado.
+- **Análisis**: `SCAN dojo:*:resueltos:*` + `ZRANGE ... WITHSCORES` da resueltos por capítulo y desafío con
+  fecha; `dojo:*:visto`, la actividad por visitante.
+
+Límites conocidos, aceptados:
+
+- Cualquiera puede pedir ids nuevos y escribir progreso en ellos: es anónimo. Lo acotan los límites de
+  payload (`wss/validators/dojo.ts`); no hay rate limit. El volumen esperado no lo justifica.
+- Quien tenga el link con el id ve y modifica ese progreso: el id es la única credencial.
+- Las claves `dojo:*` no vencen y no cuelgan de ninguna sala, así que borrar salas no las limpia.
 
 ## Cosas que confunden fácil
 

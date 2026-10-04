@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { handshake, type SocketWssCli } from '@/wss-cli/utils-socket-wss'
+import { io, type Socket } from 'socket.io-client'
 import type { Ack } from '@/wss/middleware/error-handling'
-import { RolSala } from '@/wss/validators/auth'
 import type { ProgresoDojoRemoto } from '@/wss/validators/dojo'
 import type { SincronizacionDojo } from '@/lib/go-dojo/components/use-progreso-dojo'
 
 const CLAVE_ID = 'go-dojo-id'
 const PARAM_ID = 'id'
 
-async function conAck<T>(socket: SocketWssCli, evento: string, payload: unknown): Promise<T> {
+function handshakeDojo(): Socket {
+  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/dojo`, { autoConnect: false, reconnection: true })
+}
+
+async function conAck<T>(socket: Socket, evento: string, payload: unknown): Promise<T> {
   const res: Ack<T> = await socket.timeout(5000).emitWithAck(evento, payload)
   if (!res.ok) throw new Error(res.error)
   return res.data
@@ -41,38 +44,34 @@ export function linkProgresoDojo(idDojo: string) {
  */
 export function useSincronizacionDojo(capitulo: string) {
   const [idDojo, setIdDojo] = useState<string | null>(null)
-  const [socket, setSocket] = useState<SocketWssCli | null>(null)
+  const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
     let pedido = idCandidato()
-    let sock: SocketWssCli | null = null
     let vigente = true
+    const sock = handshakeDojo()
 
-    async function identificarse(s: SocketWssCli) {
+    async function identificarse() {
       try {
-        const id = await conAck<string>(s, 'dojo:identificarse', { idDojo: pedido })
+        const id = await conAck<string>(sock, 'dojo:identificarse', { idDojo: pedido })
         if (!vigente) return
         pedido = id
         try {
           localStorage.setItem(CLAVE_ID, id)
         } catch {}
         setIdDojo(id)
-        setSocket(s)
+        setSocket(sock)
       } catch (error: unknown) {
         console.error('No se pudo identificar al visitante del dojo', error)
       }
     }
 
-    handshake({ rol: RolSala.Dojo }, { reconnection: true }).then((s) => {
-      if (!vigente) return
-      sock = s
-      s.on('connect', () => identificarse(s))
-      s.connect()
-    })
+    sock.on('connect', identificarse)
+    sock.connect()
 
     return () => {
       vigente = false
-      sock?.disconnect()
+      sock.disconnect()
     }
   }, [])
 

@@ -8,20 +8,20 @@ const k = {
   resueltos: (idDojo: string, capitulo: string) => `dojo:${idDojo}:resueltos:${capitulo}`,
   /** HASH — capítulo -> id del desafío abierto por última vez. */
   actual: (idDojo: string) => `dojo:${idDojo}:actual`,
-  /** STRING — timestamp de la última conexión. */
-  visto: (idDojo: string) => `dojo:${idDojo}:visto`,
+  /** STRING — timestamp de creación del id. */
+  creado: (idDojo: string) => `dojo:${idDojo}:creado`,
 }
 
 /** Crea un id de visitante nuevo y lo registra. */
 export async function emitirId(ahora = Date.now()): Promise<string> {
   const idDojo = randomBytes(16).toString('hex')
-  await redis.set(k.visto(idDojo), ahora)
+  await redis.set(k.creado(idDojo), ahora)
   return idDojo
 }
 
 /** Si `idDojo` fue emitido por `emitirId`. */
 export async function existe(idDojo: string): Promise<boolean> {
-  return (await redis.exists(k.visto(idDojo))) === 1
+  return (await redis.exists(k.creado(idDojo))) === 1
 }
 
 /** Agrega desafíos resueltos sin pisar el timestamp de los que ya estaban. */
@@ -40,9 +40,5 @@ export async function getProgreso(idDojo: string, capitulo: string): Promise<Pro
     redis.hget(k.actual(idDojo), capitulo),
   ])
   return { resueltos, actual }
-}
-
-export async function marcarVisto(idDojo: string, ahora = Date.now()) {
-  await redis.set(k.visto(idDojo), ahora)
 }
 

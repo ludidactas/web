@@ -9,10 +9,7 @@ import {
 import * as db from './db'
 
 async function resolverId(pedido: string | undefined): Promise<string> {
-  if (pedido && FORMATO_ID_DOJO.test(pedido) && (await db.existe(pedido))) {
-    await db.marcarVisto(pedido)
-    return pedido
-  }
+  if (pedido && FORMATO_ID_DOJO.test(pedido) && (await db.existe(pedido))) return pedido
   return db.emitirId()
 }
 

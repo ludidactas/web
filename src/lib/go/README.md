@@ -55,7 +55,7 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
 src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   page.tsx                           # server component: carga getDesafiosEjemplo()
   contenido.tsx                      # client component: título + ConjuntoDesafios + copiar link de progreso
-  use-sincronizacion-dojo.ts         # id anónimo del visitante + socket al WSS que implementa SincronizacionDojo
+  use-sincronizacion-dojo.ts         # id anónimo del visitante + socket al namespace /dojo que implementa SincronizacionDojo
 
 wss/go/                              # capa 3: servidor de la partida en vivo
   app.ts                             # comandos (invitar/jugar/pasar/...) — orquesta 1 + db.ts + lock.ts
@@ -90,15 +90,15 @@ tests/go-*.spec.ts                   # e2e (Playwright): benson, espectador, pro
 
 ## Progreso del dojo
 
-`/go/dojo` es pública: sin sala ni login. El navegador se conecta al WSS con el pasaporte
-`{ rol: 'dojo' }`, que no abre sesión, y pide su id con `dojo:identificarse`. Los ids los emite solo el
-server (32 hex al azar, registrados en `dojo:<idDojo>:visto`): si el id pedido no fue emitido por el
+`/go/dojo` es pública: sin sala ni login. El navegador se conecta al namespace `/dojo` del WSS, que no
+pasa por los middlewares de sesión del namespace principal, y pide su id con `dojo:identificarse`. Los ids los emite solo el
+server (32 hex al azar, registrados en `dojo:<idDojo>:creado`): si el id pedido no fue emitido por el
 server, devuelve uno nuevo. El navegador lo guarda en localStorage (`go-dojo-id`). El progreso de cada
 capítulo vive en dos lugares: localStorage (`go-dojo-progreso-<capitulo>`) y Redis.
 
 - **Claves**: `dojo:<idDojo>:resueltos:<capitulo>` (ZSET, score = timestamp de la primera resolución),
-  `dojo:<idDojo>:actual` (HASH capítulo → desafío) y `dojo:<idDojo>:visto` (registro del id emitido +
-  último timestamp de conexión).
+  `dojo:<idDojo>:actual` (HASH capítulo → desafío) y `dojo:<idDojo>:creado` (registro del id emitido,
+  con su timestamp de creación).
 - **Merge**: al cargar un capítulo, `dojo:sincronizar` sube los resueltos locales y devuelve la unión.
   Resolver es lo único que modifica `resueltos`, así que la unión nunca pierde nada. Para `actual` gana
   el del server; después, cada cambio local lo pisa.
@@ -110,7 +110,7 @@ capítulo vive en dos lugares: localStorage (`go-dojo-progreso-<capitulo>`) y Re
 - **Sin WSS**: el dojo sigue con localStorage. El `sincronizar` inicial espera hasta 5 s antes de
   retomar en el desafío guardado.
 - **Análisis**: `SCAN dojo:*:resueltos:*` + `ZRANGE ... WITHSCORES` da resueltos por capítulo y desafío con
-  fecha; `dojo:*:visto`, la actividad por visitante.
+  fecha; `dojo:*:creado`, cuándo apareció cada visitante.
 
 Límites conocidos, aceptados:
 

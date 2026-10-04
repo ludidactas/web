@@ -18,13 +18,8 @@ io.use(conErrorLogging)
   .use(conSession)
   // Despachamos los handlers según el rol del usuario:
   .on('connection', async (socket: SocketConSesion) => {
-    // Dojo: visitante anónimo, sin sesión ni sala
-    if (socket.handshake.auth.rol === RolSala.Dojo) {
-      await handlersDojo(socket)
-    }
-
     // Publico: no requiere sesión, pero sí el id de sala para validar que exista y enviar la config pública
-    else if (isNullish(socket.data) || isNullish(socket.data.session)) {
+    if (isNullish(socket.data) || isNullish(socket.data.session)) {
       await handlersSalaPublico(socket, socket.handshake.auth.idSala)
       await handlersEncuestasOverlay(socket, socket.handshake.auth.idSala)
     }
@@ -47,3 +42,6 @@ io.use(conErrorLogging)
       await handlersAdmin(socket)
     }
   })
+
+// Dojo de Go: visitantes anónimos, sin sesión ni sala
+io.of('/dojo').on('connection', handlersDojo)

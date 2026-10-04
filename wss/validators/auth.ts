@@ -5,7 +5,6 @@ export enum RolSala {
   Profe = 'profe',
   Estudiante = 'estudiante',
   Publico = 'publico',
-  Dojo = 'dojo',
 }
 
 export enum MetodosLogin {
@@ -74,19 +73,11 @@ export const PasaportePublicoSchema = z
   })
   .strict()
 
-/** Visitante anónimo del dojo de Go. Su id lo emite el server con `dojo:identificarse`. */
-export const PasaporteDojoSchema = z
-  .object({
-    rol: z.literal(RolSala.Dojo),
-  })
-  .strict()
-
 export const PasaporteSchema = z.union([
   PasaporteEstudianteSchema,
   PasaporteProfeSchema,
   PasaporteAdminSchema,
   PasaportePublicoSchema,
-  PasaporteDojoSchema,
 ])
 
 export type Pasaporte = z.infer<typeof PasaporteSchema>
@@ -94,4 +85,3 @@ export type PasaporteEstudiante = z.infer<typeof PasaporteEstudianteSchema>
 export type PasaporteProfe = z.infer<typeof PasaporteProfeSchema>
 export type PasaportePublico = z.infer<typeof PasaportePublicoSchema>
 export type PasaporteAdmin = z.infer<typeof PasaporteAdminSchema>
-export type PasaporteDojo = z.infer<typeof PasaporteDojoSchema>

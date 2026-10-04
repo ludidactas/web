@@ -51,12 +51,12 @@ describe('dojo:identificarse', () => {
     expect(await db.existe(id)).toBe(true)
   })
 
-  it('con un id emitido devuelve el mismo y lo marca visto', async () => {
+  it('con un id emitido devuelve el mismo sin tocar su creación', async () => {
     const id = await db.emitirId(1000)
     emitidos.push(id)
     const { id: devuelto } = await identificado(id)
     expect(devuelto).toBe(id)
-    expect(Number(await redis.get(`dojo:${id}:visto`))).toBeGreaterThan(1000)
+    expect(await redis.get(`dojo:${id}:creado`)).toBe('1000')
   })
 
   it('con un id no emitido emite uno nuevo', async () => {

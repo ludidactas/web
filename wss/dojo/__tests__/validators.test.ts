@@ -1,21 +1,10 @@
 import { describe, it, expect } from 'bun:test'
-import { PasaporteSchema, RolSala } from '../../validators/auth'
 import {
   FORMATO_ID_DOJO,
   MAX_RESUELTOS_SINCRONIZAR,
   desafioDojoSchema,
   sincronizarDojoSchema,
 } from '../../validators/dojo'
-
-describe('pasaporte dojo', () => {
-  it('acepta solo el rol', () => {
-    expect(PasaporteSchema.safeParse({ rol: RolSala.Dojo }).success).toBe(true)
-  })
-
-  it('rechaza un id elegido por el cliente', () => {
-    expect(PasaporteSchema.safeParse({ rol: RolSala.Dojo, idDojo: 'a'.repeat(32) }).success).toBe(false)
-  })
-})
 
 describe('formato del id', () => {
   it('32 hex en minúscula', () => {

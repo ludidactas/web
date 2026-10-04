@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useResizeObserver } from 'usehooks-ts'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { TarjetaDesafioGo } from './tarjeta-desafio-go'
 import { useProgresoDojo } from './use-progreso-dojo'
 import type { DesafioDojoGoTheme } from './desafio-dojo-go'
@@ -52,7 +54,14 @@ function TortaProgreso({ porcentaje }: { porcentaje: number }) {
  * Guía lineal de desafíos: un índice (por título, con su progreso) más el desafío actual, uno por
  * vez, con navegación anterior/siguiente — en vez de mostrarlos todos juntos en una grilla.
  */
-export function ConjuntoDesafios({ desafios, theme, showFilters, storageKey, onSiguienteCapitulo, className }: ConjuntoDesafiosProps) {
+export function ConjuntoDesafios({
+  desafios,
+  theme,
+  showFilters,
+  storageKey,
+  onSiguienteCapitulo,
+  className,
+}: ConjuntoDesafiosProps) {
   const [filtro, setFiltro] = useState<string>('todos')
   const [indice, setIndice] = useState(0)
   const { resueltos: resueltosGuardados, actualGuardado, cargado, marcarResuelto, guardarActual } =
@@ -65,6 +74,20 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, storageKey, onS
     () => desafios.filter((d) => filtro === 'todos' || d.etiqueta === filtro),
     [desafios, filtro]
   )
+
+  const secciones = useMemo(() => {
+    const corridas: { base: string; items: { desafio: Desafio; i: number }[] }[] = []
+    visibles.forEach((desafio, i) => {
+      const base = desafio.titulo.replace(/\s*\(\d+\)$/, '')
+      const ultima = corridas.at(-1)
+      if (ultima?.base === base) ultima.items.push({ desafio, i })
+      else corridas.push({ base, items: [{ desafio, i }] })
+    })
+    return corridas.map((c) => ({ titulo: c.items.length > 4 ? c.base : null, items: c.items }))
+  }, [visibles])
+
+  const columnaTablero = useRef<HTMLDivElement>(null)
+  const { height: altoTablero } = useResizeObserver({ ref: columnaTablero, box: 'border-box' })
 
   // Al cambiar de filtro, el índice anterior puede apuntar a un desafío que ya no está visible.
   const cambiarFiltro = (etiqueta: string) => {
@@ -97,6 +120,44 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, storageKey, onS
   useEffect(() => {
     if (cargado && idActual) guardarActual(idActual)
   }, [cargado, idActual, guardarActual])
+
+  const botonDesafio = ({ desafio, i }: { desafio: Desafio; i: number }) => {
+    const esActual = i === indiceActivo
+    const resuelto = resueltos.has(desafio.id)
+    return (
+      <button
+        key={desafio.id}
+        type="button"
+        onClick={() => setIndice(i)}
+        className={cn(
+          'flex items-center gap-2 shrink-0 md:shrink text-left px-3 py-2 rounded-xl border text-sm transition whitespace-nowrap md:whitespace-normal bg-white',
+          esActual
+            ? 'border-ld-violeta text-ld-violeta-oscuro font-semibold'
+            : 'text-slate-600 border-slate-200 hover:border-slate-300'
+        )}
+      >
+        <span
+          className={cn(
+            'inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] shrink-0',
+            resuelto
+              ? 'bg-emerald-500 text-white'
+              : esActual
+              ? 'bg-ld-violeta text-white'
+              : 'bg-slate-200 text-slate-600'
+          )}
+        >
+          {resuelto ? '✓' : i + 1}
+        </span>
+        <span>{desafio.titulo}</span>
+      </button>
+    )
+  }
+
+  const [abiertos, setAbiertos] = useState<string[]>([])
+  const seccionActual = secciones.find((s) => s.titulo && s.items.some(({ i }) => i === indiceActivo))?.items[0].desafio.id
+  useEffect(() => {
+    if (seccionActual) setAbiertos((a) => (a.includes(seccionActual) ? a : [...a, seccionActual]))
+  }, [seccionActual])
 
   const handleResuelto = marcarResuelto
 
@@ -137,48 +198,54 @@ export function ConjuntoDesafios({ desafios, theme, showFilters, storageKey, onS
       )}
 
       <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start bg-ld-violeta-oscuro/10 p-4 rounded-xl">
-        <nav
-          className={cn(
-            'order-2 md:order-1 flex flex-col gap-2 w-full md:w-56 md:shrink-0',
-            // md:pt-6 compensa el padding de la tarjeta, para que el índice arranque a la altura del título.
-            'overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 md:pt-6',
-            'max-w-[30rem] md:max-w-none md:max-h-[30rem] md:overflow-y-auto'
-          )}
-        >
-          {visibles.map((desafio, i) => {
-            const esActual = i === indiceActivo
-            const resuelto = resueltos.has(desafio.id)
-            return (
-              <button
-                key={desafio.id}
-                type="button"
-                onClick={() => setIndice(i)}
-                className={cn(
-                  'flex items-center gap-2 shrink-0 md:shrink text-left px-3 py-2 rounded-xl border text-sm transition whitespace-nowrap md:whitespace-normal bg-white',
-                  esActual
-                    ? 'border-ld-violeta text-ld-violeta-oscuro font-semibold'
-                    : 'text-slate-600 border-slate-200 hover:border-slate-300'
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] shrink-0',
-                    resuelto
-                      ? 'bg-emerald-500 text-white'
-                      : esActual
-                      ? 'bg-ld-violeta text-white'
-                      : 'bg-slate-200 text-slate-600'
-                  )}
-                >
-                  {resuelto ? '✓' : i + 1}
-                </span>
-                <span>{desafio.titulo}</span>
-              </button>
-            )
-          })}
-        </nav>
+        <div className="order-2 md:order-1 w-full md:w-56 md:shrink-0 flex flex-col gap-3" style={{ height: altoTablero }}>
+          <div className="relative flex-1 min-h-0">
+            <nav
+              className={cn(
+                'flex flex-col gap-2 w-full mx-auto absolute inset-0',
+                // md:pt-6 compensa el padding de la tarjeta, para que el índice arranque a la altura del título.
+                'overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 md:pt-6',
+                'max-w-[30rem] md:max-w-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+              )}
+            >
+              <Accordion type="multiple" value={abiertos} onValueChange={setAbiertos} className="contents">
+                {secciones.map((seccion) => {
+                  const clave = seccion.items[0].desafio.id
+                  const resueltasEnSeccion = seccion.items.filter(({ desafio }) => resueltos.has(desafio.id)).length
+                  return seccion.titulo ? (
+                    <AccordionItem key={clave} value={clave} className="shrink-0 border-b-0">
+                      <AccordionTrigger
+                        className={cn(
+                          'w-full px-3 py-2 rounded-xl border border-dashed text-sm text-left font-semibold transition bg-slate-50 text-slate-600 border-slate-300 hover:border-slate-400 hover:no-underline [&>svg]:hidden',
+                          'data-[state=open]:border-solid data-[state=open]:bg-ld-violeta/10 data-[state=open]:border-ld-violeta/40 data-[state=open]:text-ld-violeta-oscuro'
+                        )}
+                      >
+                        <span className="flex flex-1 items-center gap-2">
+                          {resueltasEnSeccion === seccion.items.length && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] shrink-0 bg-emerald-500 text-white">
+                              ✓
+                            </span>
+                          )}
+                          {seccion.titulo}
+                          <span className="ml-auto text-xs font-normal text-slate-400">
+                            {resueltasEnSeccion}/{seccion.items.length}
+                          </span>
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent className="flex flex-col gap-2 pt-2 pb-0 pl-3">
+                        {seccion.items.map(botonDesafio)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ) : (
+                    <Fragment key={clave}>{seccion.items.map(botonDesafio)}</Fragment>
+                  )
+                })}
+              </Accordion>
+            </nav>
+          </div>
+        </div>
 
-        <div className="order-1 md:order-2 flex-1 w-full flex flex-col items-center">
+        <div ref={columnaTablero} className="order-1 md:order-2 flex-1 w-full flex flex-col items-center">
           <div className="w-full max-w-md">
             {actual ? (
               <>

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { MetodosLogin } from './auth'
 import { CONFIG_DEFAULTS, estadisticaSvgConfigValidator } from './overlay'
 import { condicionAsistenciaSchema } from './asistencia'
+import type { WssEstudianteSession } from './session'
 
 /** Data enviada al momento de crear la sala */
 export const configCreacionSala = z.object({
@@ -42,6 +43,15 @@ export const configActualizable = configSala
   .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true })
   .strict()
 
+/** `configActualizable` con todos los campos opcionales: lo que el profe puede mandar para cambiar la config. */
+export const configActualizableParcial = configActualizable.partial()
+
+/** Payload de `sala:crear`: la config inicial es opcional. */
+export const crearSalaSchema = z.object({ config: configCreacionSala.default({}) }).default({})
+
+/** Payload de los comandos que operan sobre una sala del profe. */
+export const idSalaSchema = z.object({ idSala: z.string().min(1) })
+
 /** La data completa de una sala tal como se persiste en redis. */
 export const salaData = z.object({
   id: z.string(),
@@ -56,3 +66,33 @@ export type ConfigCreacionSala = z.input<typeof configCreacionSala>
 export type ConfigSala = z.infer<typeof configSala>
 export type ConfigActualizable = z.infer<typeof configActualizable>
 export type SalaData = z.infer<typeof salaData>
+
+export type ConfigActualizableParcial = z.infer<typeof configActualizableParcial>
+
+// `WssEstudianteSession` es una unión discriminada por método (dni/nombre/google), donde `dni`,
+// `email` y `avatar` viven solo en su variante. Para la vista del profe necesitamos acceder a esos
+// campos sin discriminar, así que intersectamos la unión con ellos como opcionales (más los campos
+// de presentación). No re-enumeramos los campos comunes (userId, nombre, etc.): vienen de la unión.
+/** Estudiante de la planilla de la sala, tal como lo ve el profe. */
+export type EstudianteDeSala = WssEstudianteSession & {
+  conectado: boolean
+  dni?: string
+  email?: string
+  avatar?: string
+  votos?: Record<string, string[]>
+}
+
+/** Una fila de la planilla completa: el estudiante + su nombre provisto (si el profe le asignó uno como
+ * invitado) + el texto de las opciones que votó en cada encuesta. */
+export type FilaPlanillaCompleta = EstudianteDeSala & { nombreProvisto?: string; respuestas: Record<string, string> }
+
+export type PlanillaCompleta = {
+  preguntas: { id: string; pregunta: string }[]
+  filas: FilaPlanillaCompleta[]
+}
+
+/** Lista de invitados de una sala (DNIs) con los nombres que el profe les asignó. */
+export type ListaPermitidosConNombres = { lista: string[]; nombres: Record<string, string> }
+
+/** Una sala en el listado del profe. */
+export type SalaResumen = { id: string; nombre?: string }

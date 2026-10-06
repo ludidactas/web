@@ -1,5 +1,7 @@
 import { Socket } from 'socket.io'
-import { conAck, conErrorHandling } from '../middleware/error-handling'
+import { comandosSalaActivaProfe, comandosSalaConfig, comandosSalasGestion } from '../contrato/salas'
+import { registrar } from '../contrato/registrar'
+import { conErrorHandling } from '../middleware/error-handling'
 import * as db from './db'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
@@ -9,7 +11,7 @@ import { handlersGoProfe } from '../go/handlers'
 import { io } from '../server'
 import { Sala, Salas } from './app'
 import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
-import { configCreacionSala } from '../validators/salas'
+import type { PlanillaCompleta } from '../validators/salas'
 import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
 
@@ -40,7 +42,7 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * a los estudiantes que estuvieron conectados en algún momento de la ventana
  * `[ahora - minutos, ahora]` (según el log de asistencia), para acotar la exportación a la clase actual.
  */
-async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
+async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<PlanillaCompleta> {
   const [estudiantesTotales, nombresProvistos, encuestas, asistencia] = await Promise.all([
     sala.listarEstudiantes(),
     sala.listaPermitidos().nombres(),
@@ -78,88 +80,63 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number) {
 }
 
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
-async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala, safe: ReturnType<typeof conErrorHandling>) {
+async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   socket.data.salaActiva = sala.id
   socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`, `sala:${sala.id}:${socket.data.session.userId}`])
   console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
-  socket.on(
-    'sala:actualizar_config',
-    safe(async (payload: unknown) => {
-      await sala.actualizarConfig(payload)
+  registrar(socket, comandosSalaActivaProfe, {
+    'sala:actualizar_config': async (config) => {
+      await sala.actualizarConfig(config)
       await sala.sanitizar()
       await sala.broadcast('sala:config_actualizada', await sala.config())
-    })
-  )
+    },
 
-  socket.on(
-    'sala:listar_estudiantes',
-    safe(async () => {
+    'sala:listar_estudiantes': async () => {
       socket.emit('sala:estudiantes', await sala.listarEstudiantes())
-    })
-  )
+    },
 
-  // Comando con ack: el profe pide la planilla completa (estado durable del server, no el store
-  // del FE) para exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente.
-  // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
-  // atrás (para acotar la exportación a la clase actual).
-  socket.on(
-    'sala:pedir_planilla_completa',
-    conAck(socket)(async (minutos?: number) => armarPlanillaCompleta(sala, minutos))
-  )
+    // El profe pide la planilla completa (estado durable del server, no el store del FE) para
+    // exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente. `minutos`, si
+    // viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia atrás (para
+    // acotar la exportación a la clase actual).
+    'sala:pedir_planilla_completa': async (minutos) => armarPlanillaCompleta(sala, minutos),
 
-  socket.on(
-    'sala:permitidos_agregar',
-    safe(async (list: string[]) => {
-      await sala.listaPermitidos().agregar(list)
+    'sala:permitidos_agregar': async (lista) => {
+      await sala.listaPermitidos().agregar(lista)
       await sala.sanitizar()
       await emitirPermitidos(socket, sala)
-    })
-  )
+    },
 
-  socket.on(
-    'sala:permitidos_remover',
-    safe(async (list: string[]) => {
-      await sala.listaPermitidos().remover(list)
+    'sala:permitidos_remover': async (lista) => {
+      await sala.listaPermitidos().remover(lista)
       await sala.sanitizar()
       await emitirPermitidos(socket, sala)
-    })
-  )
+    },
 
-  socket.on(
-    'sala:permitidos_limpiar',
-    safe(async () => {
+    'sala:permitidos_limpiar': async () => {
       await sala.listaPermitidos().limpiar()
       await emitirPermitidos(socket, sala)
-    })
-  )
+    },
 
-  // Nombre que el profe le asigna a un invitado (por DNI) antes de que se conecte. Es independiente
-  // del alta en la lista (`permitidos_agregar`): permite ponerle/cambiarle nombre a un DNI ya cargado.
-  socket.on(
-    'sala:permitidos_nombre',
-    safe(async ({ dni, nombre }: { dni: string; nombre: string }) => {
+    // Nombre que el profe le asigna a un invitado (por DNI) antes de que se conecte. Es independiente
+    // del alta en la lista (`permitidos_agregar`): permite ponerle/cambiarle nombre a un DNI ya cargado.
+    'sala:permitidos_nombre': async ({ dni, nombre }) => {
       const nombreTrimmed = nombre.trim().slice(0, MAX_LEN_NOMBRE)
       if (!nombreTrimmed) throw new Error('El nombre no puede estar vacío')
       await sala.listaPermitidos().setNombre(dni, nombreTrimmed)
       await emitirPermitidos(socket, sala)
-    })
-  )
+    },
 
-  // Las asistencias pendientes (normalmente una sola clase, la última cerrada) quedan en redis hasta
-  // que el FE confirma que las escribió en Drive: si las borráramos al entregarlas, un fallo de
-  // subida (Drive desconectado, red) perdería la clase.
-  socket.on(
-    'sala:asistencias_pendientes',
-    conAck(socket)(async () => db.getAsistenciasPendientes(sala.id))
-  )
+    // Las asistencias pendientes (normalmente una sola clase, la última cerrada) quedan en redis hasta
+    // que el FE confirma que las escribió en Drive: si las borráramos al entregarlas, un fallo de
+    // subida (Drive desconectado, red) perdería la clase.
+    'sala:asistencias_pendientes': async () => db.getAsistenciasPendientes(sala.id),
 
-  socket.on(
-    'sala:descartar_asistencias_pendientes',
-    conAck(socket)(async () => {
+    'sala:descartar_asistencias_pendientes': async () => {
       await db.borrarAsistenciasPendientes(sala.id)
-    })
-  )
+    },
+  })
 
   await handlersEncuestasProfe(socket, sala)
   await handlersGoProfe(socket, sala.id)
@@ -196,18 +173,16 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     // de asistencia es el mismo.
     await registrarApertura(sala.id)
     if (socket.data.salaActiva === sala.id) return emitirAbierta(socket, sala)
-    await handlersSalaActivaProfe(socket, sala, safe)
+    await handlersSalaActivaProfe(socket, sala)
   }
 
-  socket.on('salas:listar', emitirLista)
+  registrar(socket, comandosSalasGestion, {
+    'salas:listar': async () => emitirLista(),
 
-  // Responde por ack con el id de la sala nueva; el cliente navega a `/salas/[id]` para operarla
-  // (gestión no abre salas). `emitirLista` refresca el listado en las demás pestañas del profe.
-  socket.on(
-    'sala:crear',
-    conAck(socket)(async (payload: { config?: unknown }) => {
+    // Responde por ack con el id de la sala nueva; el cliente navega a `/salas/[id]` para operarla
+    // (gestión no abre salas). `emitirLista` refresca el listado en las demás pestañas del profe.
+    'sala:crear': async ({ config: { listaPermitidos, nombresPermitidos, ...config } }) => {
       await assertPuedeCrearSala(email)
-      const { listaPermitidos, nombresPermitidos, ...config } = configCreacionSala.parse(payload?.config ?? {})
 
       const sala = await Salas.crear(socket, config)
       if (listaPermitidos.length > 0) await sala.listaPermitidos().agregar(listaPermitidos)
@@ -218,39 +193,30 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
       return { idSala: sala.id }
-    })
-  )
+    },
 
-  socket.on(
-    'sala:renombrar',
-    safe(async ({ idSala, nombre }: { idSala: string; nombre: string }) => {
+    'sala:renombrar': async ({ idSala, nombre }) => {
       await Salas.assertEsDueño(email, idSala)
       const sala = await Salas.get(idSala)
       await sala.actualizarConfig({ nombre: nombre.trim() })
       await sala.broadcast('sala:config_actualizada', await sala.config())
       await emitirLista()
-    })
-  )
+    },
 
-  // Responde por ack: el cliente necesita saber si la eliminación realmente ocurrió (ej: sala ya
-  // borrada por otra pestaña) antes de sacarla de su lista, en vez de asumir éxito optimistamente.
-  socket.on(
-    'sala:eliminar',
-    conAck(socket)(async ({ idSala }: { idSala: string }) => {
+    // Responde por ack: el cliente necesita saber si la eliminación realmente ocurrió (ej: sala ya
+    // borrada por otra pestaña) antes de sacarla de su lista, en vez de asumir éxito optimistamente.
+    'sala:eliminar': async ({ idSala }) => {
       await Salas.assertEsDueño(email, idSala)
       await Salas.eliminar(email, idSala)
       if (socket.data.salaActiva === idSala) socket.data.salaActiva = undefined
       await emitirLista()
-    })
-  )
+    },
 
-  socket.on(
-    'sala:abrir',
-    safe(async ({ idSala }: { idSala: string }) => {
+    'sala:abrir': async ({ idSala }) => {
       await Salas.assertEsDueño(email, idSala)
       await abrir(await Salas.get(idSala))
-    })
-  )
+    },
+  })
 
   await emitirLista()
 
@@ -296,12 +262,11 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   )
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
-  socket.on(
-    'sala:pedir_config',
-    safe(async () => {
+  registrar(socket, comandosSalaConfig, {
+    'sala:pedir_config': async () => {
       socket.emit('sala:config_actualizada', await sala.config())
-    })
-  )
+    },
+  })
 
   // Al conectarse un estudiante...
   const emitir = safe(async () => {
@@ -333,17 +298,14 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   // Rooms
   socket.join([`sala:${idSala}`, `sala:${idSala}:publico`])
 
-  const safe = conErrorHandling(socket)
-
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
-  socket.on(
-    'sala:pedir_config',
-    safe(async () => {
+  registrar(socket, comandosSalaConfig, {
+    'sala:pedir_config': async () => {
       const sala = await Salas.get(idSala)
       if (!sala) throw new Error(`Sala ${idSala} no existe!`)
       socket.emit('sala:config_actualizada', await sala.config())
-    })
-  )
+    },
+  })
 }
 
 export const handlersAdmin = async (socket: SocketConSesion) => {

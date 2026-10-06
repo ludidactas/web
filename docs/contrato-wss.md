@@ -82,11 +82,10 @@ Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.
 | Encuestas — profe, estudiante, overlay | ✅ `wss/polls/handlers.ts` | ✅ `wss-cli/handlers/*-encuestas-handlers.ts` |
 | Dojo (visitante anónimo) | ✅ `wss/dojo/handlers.ts` | ✅ `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts` |
 | Go (estudiante y profe) | ⏳ `wss/go/handlers.ts` | ⏳ `estudiante-go-handlers.ts`, `profe-go-handlers.ts` |
-| Salas — gestión (ABM) y sala activa del profe | ⏳ `wss/salas/handlers.ts` | ⏳ `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts` |
-| Salas — estudiante y público | ⏳ | ⏳ `estudiante-sala-handlers.ts`, `public-sala-handlers.ts`, `base-sala-handlers.ts` |
-| Asistencia | ⏳ | ⏳ `profe-asistencia-handlers.ts` |
+| Salas — gestión (ABM), sala activa del profe, estudiante y público | ✅ `wss/salas/handlers.ts` | ✅ `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
+| Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | ✅ `wss/salas/handlers.ts` | ✅ `profe-asistencia-handlers.ts` |
 
-Pendiente transversal, una vez migradas todas las features: tipar los eventos server→cliente en los
+Pendiente transversal, una vez migradas todas las features (solo falta Go): tipar los eventos server→cliente en los
 sockets del server (`SocketProfe`/`SocketEstudiante`, `io.to(...).emit`, `sala.broadcast`). Hoy están
 con `DefaultEventsMap` porque un mapa parcial rechazaría los eventos de las features sin migrar. Cuando
 estén todas, retirar `conErrorHandling`/`conAck` sueltos y unificar el tipo `Ack` en `wss/contrato`.
@@ -98,6 +97,13 @@ El contrato deja a la vista los eventos que solo existían de un lado. En encues
 - `poll:votantes` (server → profe): ningún cliente lo escucha; no está en el contrato. `consultarVotantes` sigue en `wss/polls/app.ts`.
 - `poll:created` (cliente profe y estudiante) y `polls:list` (cliente profe): el server nunca los emite
   (crear y actualizar viajan como `poll:updated`; el profe recibe sus encuestas en `sala:abierta`). Se quitaron los listeners.
+
+En salas:
+
+- `sala:limpar_estudiantes_sala` y `sala:pedir_asistencia` (cliente): el server ya no los atiende; se quitó la acción `limpiarEstudiantes`.
+- `sala:eliminada` (cliente profe): el server no lo emite (al eliminar una sala los estudiantes reciben `sala:kick`). Se quitó el listener.
+- `consultarNombreDisponible` (cliente público): emite `sala:consultar_nombre_disponible`, que el server no implementa. Sigue en `public-sala-handlers.ts` porque queda fuera del contrato hasta que exista el comando.
+- `sala:pedir_config` lo emite también el profe (`base-sala-handlers.ts`), pero el server solo lo atiende para estudiante y público; el profe recibe su config en `sala:abierta`.
 
 ## Para quien agrega código en paralelo
 

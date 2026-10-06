@@ -5,7 +5,7 @@ import { RemoteSocket } from 'socket.io'
 import { io } from '../server'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { configActualizable, configSala, ConfigSala, SalaData } from '../validators/salas'
+import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { CONFIG_DEFAULTS } from '../validators/overlay'
 import { WssEstudianteSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
@@ -150,11 +150,8 @@ export namespace Salas {
       return reconstruirIntervalos(await db.getEventosAsistencia(salaId))
     }
 
-    async function actualizarConfig(payload: unknown) {
+    async function actualizarConfig(config: ConfigActualizableParcial) {
       const sala = await getFromDb()
-
-      // Validamos: solo se pueden tocar los campos mutables.
-      const config = configActualizable.partial().parse(payload)
       const configActual = sala.config
       const merged = { ...mergeDeep(configActual, config) }
 
@@ -198,7 +195,7 @@ export namespace Salas {
       /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
       intervalosDeConexion,
 
-      /** Valida lo que recibe y si pasa actualiza la config de la sala */
+      /** Actualiza los campos mutables de la config de la sala (ya validados, ver `configActualizableParcial`) */
       actualizarConfig,
 
       /** Gestión de la lista de usuarios permitidos */

@@ -36,6 +36,8 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
   tipos.ts                           # schema (zod) de un Desafio — el contrato del YAML
   motor-desafio.ts                   # evalúa una jugada de un Desafio, delega en motor.ts
   motor-desafio.test.ts
+  progreso.ts                        # fusionarProgreso: unión del progreso local con el remoto de un capítulo
+  agrupar-desafios.ts                # agrupa desafíos consecutivos de igual título base en secciones del índice
   index.ts                           # barrel público (isomórfico: sin node:fs)
   desafios/
     cargador.ts                      # parseo/validación YAML → Desafio[] (puro, sin node:fs)
@@ -55,7 +57,7 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
 src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   page.tsx                           # server component: carga getDesafiosEjemplo()
   contenido.tsx                      # client component: título + ConjuntoDesafios + copiar link de progreso
-  use-sincronizacion-dojo.ts         # id anónimo del visitante + socket al namespace /dojo que implementa SincronizacionDojo
+  use-sincronizacion-dojo.ts         # id anónimo del visitante + conexión (rol dojo) que implementa SincronizacionDojo
 
 wss/go/                              # capa 3: servidor de la partida en vivo
   app.ts                             # comandos (invitar/jugar/pasar/...) — orquesta 1 + db.ts + lock.ts
@@ -65,7 +67,7 @@ wss/go/                              # capa 3: servidor de la partida en vivo
 wss/validators/go.ts                 # zod schemas/tipos de Partida — el contrato server↔cliente
 
 wss/dojo/                            # progreso anónimo del dojo (ver "Progreso del dojo")
-  handlers.ts                        # comandos dojo:sincronizar / dojo:resuelto / dojo:actual
+  handlers.ts                        # comandos dojo:identificarse / dojo:sincronizar / dojo:resuelto / dojo:actual
   db.ts                              # claves dojo:<idDojo>:... en Redis
 wss/validators/dojo.ts               # zod de los payloads del dojo
 
@@ -90,25 +92,33 @@ tests/go-*.spec.ts                   # e2e (Playwright): benson, espectador, pro
 
 ## Progreso del dojo
 
-`/go/dojo` es pública: sin sala ni login. El navegador se conecta al namespace `/dojo` del WSS, que no
-pasa por los middlewares de sesión del namespace principal, y pide su id con `dojo:identificarse`. Los ids los emite solo el
-server (32 hex al azar, registrados en `dojo:<idDojo>:creado`): si el id pedido no fue emitido por el
-server, devuelve uno nuevo. El navegador lo guarda en localStorage (`go-dojo-id`). El progreso de cada
+`/go/dojo` es pública: sin sala ni login. El navegador se conecta al mismo namespace que el resto de la
+app, con el pasaporte `{ rol: 'dojo', idDojo? }` (`PasaporteDojoSchema`) y el `handshake` de `wss-cli`; el
+dispatcher de `wss/server.ts` le cablea `handlersDojo`, sin sesión. Los ids los emite solo el server (32 hex
+al azar, registrados en `dojo:<idDojo>:creado`): al conectar, el server usa el `idDojo` del pasaporte si
+fue emitido por él, o genera uno nuevo, y `dojo:identificarse` devuelve el definitivo. El navegador lo guarda
+en localStorage (`go-dojo-id`) y en `socket.auth`, para presentarlo al reconectar. El progreso de cada
 capítulo vive en dos lugares: localStorage (`go-dojo-progreso-<capitulo>`) y Redis.
 
-- **Claves**: `dojo:<idDojo>:resueltos:<capitulo>` (ZSET, score = timestamp de la primera resolución),
-  `dojo:<idDojo>:actual` (HASH capítulo → desafío) y `dojo:<idDojo>:creado` (registro del id emitido,
-  con su timestamp de creación).
-- **Merge**: al cargar un capítulo, `dojo:sincronizar` sube los resueltos locales y devuelve la unión.
-  Resolver es lo único que modifica `resueltos`, así que la unión nunca pierde nada. Para `actual` gana
-  el del server; después, cada cambio local lo pisa.
-- **Otro dispositivo**: "Copiar link de mi progreso" copia `/go/dojo?id=<idDojo>`. Al abrirlo, ese id
+- **Capítulo**: la unidad de sincronización es `{ coleccion, capitulo }` (`COLECCION_OGS` = `ogs`). Los
+  slugs de capítulo solo son únicos dentro de una colección.
+- **Claves**: `dojo:<idDojo>:resueltos:<coleccion>:<capitulo>` (ZSET, score = timestamp de la primera
+  resolución), `dojo:<idDojo>:actual` (HASH `<coleccion>:<capitulo>` → desafío) y `dojo:<idDojo>:creado`
+  (registro del id emitido, con su timestamp de creación).
+- **Merge**: al cargar un capítulo, `dojo:sincronizar` sube los resueltos locales y devuelve la unión
+  (`fusionarProgreso` la aplica del lado del cliente). Resolver es lo único que modifica `resueltos`, así
+  que la unión nunca pierde nada. Para `actual` gana el del server; después, cada cambio local lo pisa.
+- **Otro dispositivo**: "Enlace a tu progreso" copia `/go/dojo?id=<idDojo>`. Al abrirlo, ese id
   reemplaza al local, sale de la URL, y lo que había en ese navegador se suma al progreso del id. Un
   link con un id que el server no emitió termina en un id nuevo.
-- **Reconexión**: el socket del dojo se reconecta solo y vuelve a mandar `dojo:identificarse` en cada
-  conexión. En el server, los demás comandos esperan a que esa identificación termine.
-- **Sin WSS**: el dojo sigue con localStorage. El `sincronizar` inicial espera hasta 5 s antes de
-  retomar en el desafío guardado.
+- **Reconexión**: el socket se reconecta solo y vuelve a presentar el id definitivo. En el server, cada
+  comando espera a que termine la resolución del id, así que los que el cliente acumuló mientras estaba
+  desconectado se aplican en cualquier orden respecto de `dojo:identificarse`.
+- **Escrituras**: `dojo:resuelto` y `dojo:actual` esperan su ack y, si falla, lo loguean. Lo que se pierde
+  offline queda en localStorage y sube en el próximo `dojo:sincronizar` del capítulo (`actual` no se reenvía).
+- **Sin WSS**: el dojo sigue con localStorage. El avance no se muestra hasta tener id (o hasta que falle la
+  conexión, o pasen 5 s); con id, el `sincronizar` inicial espera hasta 5 s antes de retomar en el desafío
+  guardado. Mientras tanto la tarjeta del desafío queda oculta, así no aparece el primero y salta al guardado.
 - **Análisis**: `SCAN dojo:*:resueltos:*` + `ZRANGE ... WITHSCORES` da resueltos por capítulo y desafío con
   fecha; `dojo:*:creado`, cuándo apareció cada visitante.
 

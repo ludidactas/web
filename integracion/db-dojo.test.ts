@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach, afterAll } from 'bun:test'
-import { FORMATO_ID_DOJO } from '../wss/validators/dojo'
+import { FORMATO_ID_DOJO, type CapituloDojo } from '../wss/validators/dojo'
 
 import redis from '../wss/redis'
 import * as db from '../wss/dojo/db'
 
 const ID = 'f'.repeat(32)
-const CAPITULO = '01-fundamentos'
+const CAPITULO: CapituloDojo = { coleccion: 'ogs', capitulo: '01-fundamentos' }
 
 const emitidos: string[] = []
 
@@ -47,13 +47,22 @@ describe('progreso del dojo en redis', () => {
   it('no pisa el timestamp de un desafío ya resuelto', async () => {
     await db.agregarResueltos(ID, CAPITULO, ['a'], 1000)
     await db.agregarResueltos(ID, CAPITULO, ['a'], 2000)
-    expect(await redis.zscore(`dojo:${ID}:resueltos:${CAPITULO}`, 'a')).toBe('1000')
+    expect(await redis.zscore(`dojo:${ID}:resueltos:ogs:01-fundamentos`, 'a')).toBe('1000')
   })
 
   it('separa capítulos', async () => {
     await db.agregarResueltos(ID, CAPITULO, ['a'])
     await db.setActual(ID, CAPITULO, 'a')
-    expect(await db.getProgreso(ID, '02-principios-basicos')).toEqual({ resueltos: [], actual: null })
+    expect(await db.getProgreso(ID, { ...CAPITULO, capitulo: '02-principios-basicos' })).toEqual({
+      resueltos: [],
+      actual: null,
+    })
+  })
+
+  it('separa colecciones con el mismo capítulo', async () => {
+    await db.agregarResueltos(ID, CAPITULO, ['a'])
+    await db.setActual(ID, CAPITULO, 'a')
+    expect(await db.getProgreso(ID, { ...CAPITULO, coleccion: 'otra' })).toEqual({ resueltos: [], actual: null })
   })
 
   it('el actual es el último guardado', async () => {

@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach, afterAll } from 'bun:test'
 import type { Socket } from 'socket.io'
 import type { Ack } from '../wss/middleware/error-handling'
-import { FORMATO_ID_DOJO } from '../wss/validators/dojo'
+import { FORMATO_ID_DOJO, type CapituloDojo } from '../wss/validators/dojo'
 
 import redis from '../wss/redis'
 import * as db from '../wss/dojo/db'
 import { handlersDojo } from '../wss/dojo/handlers'
 
-const CAPITULO = '01-fundamentos'
+const CAPITULO: CapituloDojo = { coleccion: 'ogs', capitulo: '01-fundamentos' }
 
 const emitidos: string[] = []
 
@@ -21,15 +21,17 @@ async function limpiar() {
 afterEach(limpiar)
 afterAll(limpiar)
 
-async function conectar() {
+/** Conecta un visitante con el `idDojo` pedido en el pasaporte y devuelve cómo emitirle comandos. */
+function conectar(idDojo?: string) {
   const handlers = new Map<string, (...args: unknown[]) => Promise<void>>()
   const socket = {
+    handshake: { auth: { rol: 'dojo', idDojo } },
     on: (evento: string, fn: (...args: unknown[]) => Promise<void>) => handlers.set(evento, fn),
     emit: () => true,
   } as unknown as Socket
-  await handlersDojo(socket)
+  handlersDojo(socket)
 
-  return async function emitir<T>(evento: string, payload: unknown): Promise<Ack<T>> {
+  return async function emitir<T>(evento: string, payload?: unknown): Promise<Ack<T>> {
     let respuesta: Ack<T> | undefined
     await handlers.get(evento)!(payload, (res: Ack<T>) => (respuesta = res))
     return respuesta!
@@ -37,8 +39,8 @@ async function conectar() {
 }
 
 async function identificado(idDojo?: string) {
-  const emitir = await conectar()
-  const res = await emitir<string>('dojo:identificarse', { idDojo })
+  const emitir = conectar(idDojo)
+  const res = await emitir<string>('dojo:identificarse')
   if (!res.ok) throw new Error(res.error)
   emitidos.push(res.data)
   return { emitir, id: res.data }
@@ -70,13 +72,24 @@ describe('dojo:identificarse', () => {
     const { id } = await identificado('dojo:*')
     expect(id).toMatch(FORMATO_ID_DOJO)
   })
+
+  it('devuelve siempre el mismo id en una conexión', async () => {
+    const { emitir, id } = await identificado()
+    const otra = await emitir<string>('dojo:identificarse')
+    expect(otra).toEqual({ ok: true, data: id })
+  })
 })
 
 describe('comandos del dojo', () => {
-  it('rechaza comandos antes de identificarse', async () => {
-    const emitir = await conectar()
-    const res = await emitir('dojo:sincronizar', { capitulo: CAPITULO, resueltos: [] })
-    expect(res).toEqual({ ok: false, error: 'Visitante del dojo sin identificar' })
+  it('un comando antes de identificarse espera al id y se guarda en él', async () => {
+    const id = await db.emitirId()
+    emitidos.push(id)
+    const emitir = conectar(id)
+
+    const res = await emitir('dojo:resuelto', { ...CAPITULO, desafio: 'offline' })
+
+    expect(res.ok).toBe(true)
+    expect((await db.getProgreso(id, CAPITULO)).resueltos).toEqual(['offline'])
   })
 
   it('sincronizar devuelve la unión con lo guardado', async () => {
@@ -85,7 +98,7 @@ describe('comandos del dojo', () => {
     await db.setActual(id, CAPITULO, 'a')
 
     const res = await emitir<{ resueltos: string[]; actual: string | null }>('dojo:sincronizar', {
-      capitulo: CAPITULO,
+      ...CAPITULO,
       resueltos: ['b'],
     })
 
@@ -96,14 +109,20 @@ describe('comandos del dojo', () => {
 
   it('resuelto y actual quedan guardados', async () => {
     const { emitir, id } = await identificado()
-    expect((await emitir('dojo:resuelto', { capitulo: CAPITULO, desafio: 'a' })).ok).toBe(true)
-    expect((await emitir('dojo:actual', { capitulo: CAPITULO, desafio: 'b' })).ok).toBe(true)
+    expect((await emitir('dojo:resuelto', { ...CAPITULO, desafio: 'a' })).ok).toBe(true)
+    expect((await emitir('dojo:actual', { ...CAPITULO, desafio: 'b' })).ok).toBe(true)
     expect(await db.getProgreso(id, CAPITULO)).toEqual({ resueltos: ['a'], actual: 'b' })
   })
 
   it('rechaza un payload inválido', async () => {
     const { emitir } = await identificado()
-    const res = await emitir('dojo:actual', { capitulo: '01:fundamentos', desafio: 'a' })
+    const res = await emitir('dojo:actual', { ...CAPITULO, capitulo: '01:fundamentos', desafio: 'a' })
+    expect(res.ok).toBe(false)
+  })
+
+  it('rechaza un payload sin colección', async () => {
+    const { emitir } = await identificado()
+    const res = await emitir('dojo:actual', { capitulo: CAPITULO.capitulo, desafio: 'a' })
     expect(res.ok).toBe(false)
   })
 })

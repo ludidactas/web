@@ -21,12 +21,19 @@ import { linkProgresoDojo, useSincronizacionDojo } from './use-sincronizacion-do
 /** Mismo lenguaje visual que el resto de Go en el sitio (`go-estudiante.tsx`, `go-juego.tsx`): título
  * en `ld-violeta-oscuro` con ícono, tarjeta blanca redondeada — no la tipografía/paleta "editorial"
  * del resto del sitio marketing. */
-export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: Desafio[]; capitulo: SlugCapituloOgs }) {
+export default function ContenidoDojoGo({
+  challenges,
+  capitulo,
+}: {
+  challenges: Desafio[]
+  capitulo: SlugCapituloOgs
+}) {
   const router = useRouter()
   const [cargando, iniciarCarga] = useTransition()
 
   // El capítulo vive en la URL (`?capitulo=`): el server baja sus desafíos. `cargando` dura hasta que llegan.
-  const elegirCapitulo = (slug: string) => iniciarCarga(() => router.push(`/go/dojo?capitulo=${slug}`, { scroll: false }))
+  const elegirCapitulo = (slug: string) =>
+    iniciarCarga(() => router.push(`/go/dojo?capitulo=${slug}`, { scroll: false }))
 
   const siguienteCapitulo = CAPITULOS_OGS[CAPITULOS_OGS.findIndex((c) => c.slug === capitulo) + 1]
 
@@ -36,15 +43,17 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
   return (
     <div className="flex flex-col w-full max-w-6xl px-4 md:px-8 pt-16 pb-32 md:pb-40">
       <h1 className="flex gap-2 items-center justify-center text-3xl md:text-8xl p-4 mb-4">
-        <Image className='w-52' width={1000} height={1000} src={'/img/dojo.png'} alt={'dojo'} />
+        <Image className="w-52" width={1000} height={1000} src={'/img/dojo.png'} alt={'dojo'} />
         {/* <Icon className="-rotate-3" icon="bi:grid-3x3" /> */}
         {/* <Outlined outlineColor='black' radius={2} className='text-red-600 rounded-xl'>Dojo de Go</Outlined> */}
         Dojo de Go
       </h1>
       <p className="text-center text-slate-600 ">
-        Un Dojo es un un <span className='text-black font-bold '>espacio destinado a la práctica y enseñanza. </span></p>
+        Un Dojo es un un <span className="text-black font-bold ">espacio destinado a la práctica y enseñanza. </span>
+      </p>
       <p className="text-center text-slate-600">
-        ¡Intentá resolver cada uno de los problemas propuestos y practicá con nosotros!</p>
+        ¡Intentá resolver cada uno de los problemas propuestos y practicá con nosotros!
+      </p>
       <p className="text-center text-slate-600 ">
         Cada uno te muestra una posición del tablero: encontrá la jugada correcta.
       </p>
@@ -110,11 +119,16 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
                 </button>
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
-                    <TooltipTrigger type="button" aria-label="Qué es el enlace a tu progreso" className="text-ld-violeta-oscuro">
+                    <TooltipTrigger
+                      type="button"
+                      aria-label="Qué es el enlace a tu progreso"
+                      className="text-ld-violeta-oscuro"
+                    >
                       <Icon icon="akar-icons:info" className="w-5 h-5" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[16rem] text-center">
-                      Siempre vas a poder acceder y retomar todo tu progreso de aprendizaje usando este enlace, ¡Guardalo!
+                      Podés retomar tu progreso en el dojo usando este enlace desde otros dispositivos o navegadores,
+                      ¡Guardalo!
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

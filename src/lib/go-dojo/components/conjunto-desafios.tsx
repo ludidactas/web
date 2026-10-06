@@ -1,10 +1,11 @@
 'use client'
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { agruparDesafios } from '../agrupar-desafios'
 import { TarjetaDesafioGo } from './tarjeta-desafio-go'
 import { useProgresoDojo, type SincronizacionDojo } from './use-progreso-dojo'
 import type { DesafioDojoGoTheme } from './desafio-dojo-go'
@@ -19,6 +20,8 @@ export interface ConjuntoDesafiosProps {
   storageKey?: string
   /** Copia remota del avance, además de la de `storageKey`. */
   sincronizacion?: SincronizacionDojo
+  /** True mientras todavía no se sabe si habrá `sincronizacion`: el avance no se muestra hasta saberlo. */
+  esperandoSincronizacion?: boolean
   /** Contenido debajo del índice de desafíos. */
   pieIndice?: ReactNode
   /** Si está, en el último desafío el botón "Siguiente" pasa a ser "Siguiente capítulo" y llama a esta función. */
@@ -64,6 +67,7 @@ export function ConjuntoDesafios({
   showFilters,
   storageKey,
   sincronizacion,
+  esperandoSincronizacion,
   pieIndice,
   onSiguienteCapitulo,
   className,
@@ -71,7 +75,7 @@ export function ConjuntoDesafios({
   const [filtro, setFiltro] = useState<string>('todos')
   const [indice, setIndice] = useState(0)
   const { resueltos: resueltosGuardados, actualGuardado, cargado, marcarResuelto, guardarActual } =
-    useProgresoDojo(storageKey, sincronizacion)
+    useProgresoDojo(storageKey, sincronizacion, esperandoSincronizacion)
 
   const etiquetas = useMemo(() => [...new Set(desafios.map((d) => d.etiqueta))], [desafios])
   const mostrarFiltros = showFilters ?? etiquetas.length > 1
@@ -81,16 +85,7 @@ export function ConjuntoDesafios({
     [desafios, filtro]
   )
 
-  const secciones = useMemo(() => {
-    const corridas: { base: string; items: { desafio: Desafio; i: number }[] }[] = []
-    visibles.forEach((desafio, i) => {
-      const base = desafio.titulo.replace(/\s*\(\d+\)$/, '')
-      const ultima = corridas.at(-1)
-      if (ultima?.base === base) ultima.items.push({ desafio, i })
-      else corridas.push({ base, items: [{ desafio, i }] })
-    })
-    return corridas.map((c) => ({ titulo: c.items.length > 4 ? c.base : null, items: c.items }))
-  }, [visibles])
+  const secciones = useMemo(() => agruparDesafios(visibles), [visibles])
 
   const columnaTablero = useRef<HTMLDivElement>(null)
   const { height: altoTablero } = useResizeObserver({ ref: columnaTablero, box: 'border-box' })
@@ -112,8 +107,9 @@ export function ConjuntoDesafios({
   )
   const porcentajeProgreso = desafios.length ? Math.round((resueltos.size / desafios.length) * 100) : 0
 
-  // Retoma en el desafío donde el estudiante quedó, una vez leído el storage.
-  useEffect(() => {
+  // Retoma en el desafío donde el estudiante quedó, una vez leído el storage. Antes de pintar: así
+  // el primer cuadro con la tarjeta visible ya es el del desafío guardado.
+  useLayoutEffect(() => {
     if (!cargado || !actualGuardado) return
     const i = desafios.findIndex((d) => d.id === actualGuardado)
     if (i >= 0) {
@@ -253,7 +249,8 @@ export function ConjuntoDesafios({
         </div>
 
         <div ref={columnaTablero} className="order-1 md:order-2 flex-1 w-full flex flex-col items-center">
-          <div className="w-full max-w-md">
+          {/* Oculto hasta leer el progreso, para no mostrar el primer desafío y saltar al guardado. */}
+          <div className={cn('w-full max-w-md', !cargado && 'invisible')} aria-busy={!cargado}>
             {actual ? (
               <>
                 <TarjetaDesafioGo key={actual.id} desafio={actual} theme={theme} onSolved={handleResuelto} />

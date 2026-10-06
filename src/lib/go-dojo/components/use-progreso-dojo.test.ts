@@ -32,6 +32,37 @@ describe('sin sincronización', () => {
   })
 })
 
+describe('esperando la sincronización', () => {
+  test('no está cargado mientras se espera y carga lo local al dejar de esperar', async () => {
+    guardar(['a'], 'a')
+    const { result, rerender } = renderHook(({ espera }) => useProgresoDojo(CLAVE, undefined, espera), {
+      initialProps: { espera: true },
+    })
+
+    await waitFor(() => expect(result.current.resueltos).toEqual(new Set(['a'])))
+    expect(result.current.cargado).toBe(false)
+
+    rerender({ espera: false })
+    await waitFor(() => expect(result.current.cargado).toBe(true))
+    expect(result.current.actualGuardado).toBe('a')
+  })
+
+  test('al llegar la sincronización no pasa por cargado', async () => {
+    const sincronizacion = sincronizacionCon(async () => ({ resueltos: [], actual: null }))
+    const { result, rerender } = renderHook(
+      ({ sync, espera }) => useProgresoDojo(CLAVE, sync, espera),
+      { initialProps: { sync: undefined as SincronizacionDojo | undefined, espera: true } }
+    )
+    const vistos: boolean[] = []
+
+    rerender({ sync: sincronizacion, espera: false })
+    vistos.push(result.current.cargado)
+    await waitFor(() => expect(result.current.cargado).toBe(true))
+
+    expect(vistos).toEqual([false])
+  })
+})
+
 describe('con sincronización', () => {
   test('no está cargado hasta que responde la sincronización', async () => {
     let responder!: (r: { resueltos: string[]; actual: string | null }) => void

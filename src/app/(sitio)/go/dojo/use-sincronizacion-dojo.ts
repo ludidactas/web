@@ -1,36 +1,48 @@
 import { useEffect, useMemo, useState } from 'react'
-import { io, type Socket } from 'socket.io-client'
-import type { Ack } from '@/wss/middleware/error-handling'
-import type { ProgresoDojoRemoto } from '@/wss/validators/dojo'
+import { emitirConAck } from '@/wss-cli/emitir-con-ack'
+import { handshake, type SocketWssCli } from '@/wss-cli/utils-socket-wss'
+import { RolSala } from '@/wss/validators/auth'
+import { FORMATO_ID_DOJO, type ProgresoDojoRemoto } from '@/wss/validators/dojo'
 import type { SincronizacionDojo } from '@/lib/go-dojo/components/use-progreso-dojo'
 
 const CLAVE_ID = 'go-dojo-id'
 const PARAM_ID = 'id'
+/** Cuánto se espera a tener conexión e id antes de seguir solo con localStorage. */
+const ESPERA_MAXIMA_MS = 5000
 
-function handshakeDojo(): Socket {
-  return io(`${process.env.NEXT_PUBLIC_ENCUESTA_HOST}/dojo`, { autoConnect: false, reconnection: true })
+function leerIdGuardado(): string | undefined {
+  try {
+    return localStorage.getItem(CLAVE_ID) ?? undefined
+  } catch {
+    return undefined
+  }
 }
 
-async function conAck<T>(socket: Socket, evento: string, payload: unknown): Promise<T> {
-  const res: Ack<T> = await socket.timeout(5000).emitWithAck(evento, payload)
-  if (!res.ok) throw new Error(res.error)
-  return res.data
+function guardarId(id: string) {
+  try {
+    localStorage.setItem(CLAVE_ID, id)
+  } catch {
+    // Storage bloqueado (modo privado): el id vive mientras dure la pestaña.
+  }
 }
 
-/** El id de `?id=` (que sale de la URL) o, si no hay, el guardado en localStorage. */
+/**
+ * El id de `?id=` (que sale de la URL) o, si no hay, el guardado en localStorage. El de la URL se guarda
+ * enseguida, así una segunda corrida del efecto (StrictMode) lo lee de localStorage.
+ */
 function idCandidato(): string | undefined {
   const url = new URL(window.location.href)
   const deUrl = url.searchParams.get(PARAM_ID)
   if (deUrl !== null) {
     url.searchParams.delete(PARAM_ID)
     window.history.replaceState(window.history.state, '', url)
-    return deUrl
+    if (FORMATO_ID_DOJO.test(deUrl)) {
+      guardarId(deUrl)
+      return deUrl
+    }
   }
-  try {
-    return localStorage.getItem(CLAVE_ID) ?? undefined
-  } catch {
-    return undefined
-  }
+  const guardado = leerIdGuardado()
+  return guardado && FORMATO_ID_DOJO.test(guardado) ? guardado : undefined
 }
 
 /** Link que abre el dojo con el progreso de `idDojo`. */
@@ -39,50 +51,73 @@ export function linkProgresoDojo(idDojo: string) {
 }
 
 /**
- * Conexión al WSS como visitante anónimo del dojo y copia remota del progreso de `capitulo`. El id lo
- * emite el server (`dojo:identificarse`), en cada conexión o reconexión; hasta tenerlo no hay `sincronizacion`.
+ * Conexión al WSS como visitante anónimo del dojo y copia remota del progreso de un capítulo. El id lo
+ * valida el server al conectar y `dojo:identificarse` lo confirma, en cada conexión o reconexión; hasta
+ * tenerlo no hay `sincronizacion`. `esperando` es true hasta que hay id, falla la conexión o se agota la
+ * espera máxima.
  */
-export function useSincronizacionDojo(capitulo: string) {
+export function useSincronizacionDojo(coleccion: string, capitulo: string) {
   const [idDojo, setIdDojo] = useState<string | null>(null)
-  const [socket, setSocket] = useState<Socket | null>(null)
+  const [socket, setSocket] = useState<SocketWssCli | null>(null)
+  const [esperando, setEsperando] = useState(true)
 
   useEffect(() => {
-    let pedido = idCandidato()
     let vigente = true
-    const sock = handshakeDojo()
+    const dejarDeEsperar = () => vigente && setEsperando(false)
+    const timer = setTimeout(dejarDeEsperar, ESPERA_MAXIMA_MS)
+    let sock: SocketWssCli | undefined
 
-    async function identificarse() {
+    async function identificarse(sock: SocketWssCli) {
       try {
-        const id = await conAck<string>(sock, 'dojo:identificarse', { idDojo: pedido })
+        const id = await emitirConAck<string>(sock, 'dojo:identificarse')
         if (!vigente) return
-        pedido = id
-        try {
-          localStorage.setItem(CLAVE_ID, id)
-        } catch {}
+        // Las reconexiones presentan el id definitivo.
+        sock.auth = { rol: RolSala.Dojo, idDojo: id }
+        guardarId(id)
         setIdDojo(id)
         setSocket(sock)
+        setEsperando(false)
       } catch (error: unknown) {
         console.error('No se pudo identificar al visitante del dojo', error)
+        dejarDeEsperar()
       }
     }
 
-    sock.on('connect', identificarse)
-    sock.connect()
+    async function conectar() {
+      const nuevo = await handshake({ rol: RolSala.Dojo, idDojo: idCandidato() }, { reconnection: true })
+      if (!vigente) return
+      sock = nuevo
+      nuevo.on('connect', () => void identificarse(nuevo))
+      nuevo.on('connect_error', dejarDeEsperar)
+      nuevo.connect()
+    }
+    void conectar()
 
     return () => {
       vigente = false
-      sock.disconnect()
+      clearTimeout(timer)
+      sock?.disconnect()
     }
   }, [])
 
   const sincronizacion = useMemo<SincronizacionDojo | undefined>(() => {
     if (!socket) return undefined
-    return {
-      sincronizar: (resueltos) => conAck<ProgresoDojoRemoto>(socket, 'dojo:sincronizar', { capitulo, resueltos }),
-      marcarResuelto: (desafio) => socket.emit('dojo:resuelto', { capitulo, desafio }),
-      guardarActual: (desafio) => socket.emit('dojo:actual', { capitulo, desafio }),
-    }
-  }, [socket, capitulo])
 
-  return { idDojo, sincronizacion }
+    async function enviar(evento: string, payload: unknown) {
+      try {
+        await emitirConAck(socket!, evento, payload)
+      } catch (error: unknown) {
+        console.error(`No se pudo enviar ${evento} al progreso remoto del dojo`, error)
+      }
+    }
+
+    return {
+      sincronizar: (resueltos) =>
+        emitirConAck<ProgresoDojoRemoto>(socket, 'dojo:sincronizar', { coleccion, capitulo, resueltos }),
+      marcarResuelto: (desafio) => void enviar('dojo:resuelto', { coleccion, capitulo, desafio }),
+      guardarActual: (desafio) => void enviar('dojo:actual', { coleccion, capitulo, desafio }),
+    }
+  }, [socket, coleccion, capitulo])
+
+  return { idDojo, sincronizacion, esperando }
 }

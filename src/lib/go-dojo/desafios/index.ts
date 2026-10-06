@@ -30,4 +30,4 @@ export function getDesafiosFundamentos(): Promise<Desafio[]> {
   return getDesafiosOgs("01-fundamentos");
 }
 
-export { CAPITULOS_OGS, capituloOgsOInicial, type SlugCapituloOgs } from "./capitulos";
+export { CAPITULOS_OGS, COLECCION_OGS, capituloOgsOInicial, type SlugCapituloOgs } from "./capitulos";

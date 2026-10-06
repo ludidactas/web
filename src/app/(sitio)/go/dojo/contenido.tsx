@@ -1,13 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { Icon } from '@iconify/react/dist/iconify.js'
-import { ConjuntoDesafios } from '@/lib/go-dojo/components/conjunto-desafios'
-import { CAPITULOS_OGS, type SlugCapituloOgs } from '@/lib/go-dojo/desafios/capitulos'
-import type { Desafio } from '@/lib/go-dojo/tipos'
-import Image from 'next/image'
-import { Outlined } from '@/components/fx/filtros'
+import useClipboard from '@/components/hooks/use-clipboard'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +8,14 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import useClipboard from '@/components/hooks/use-clipboard'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ConjuntoDesafios } from '@/lib/go-dojo/components/conjunto-desafios'
+import { CAPITULOS_OGS, COLECCION_OGS, type SlugCapituloOgs } from '@/lib/go-dojo/desafios/capitulos'
+import type { Desafio } from '@/lib/go-dojo/tipos'
+import { Icon } from '@iconify/react/dist/iconify.js'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 import { linkProgresoDojo, useSincronizacionDojo } from './use-sincronizacion-dojo'
 
 /** Mismo lenguaje visual que el resto de Go en el sitio (`go-estudiante.tsx`, `go-juego.tsx`): título
@@ -31,7 +30,7 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
 
   const siguienteCapitulo = CAPITULOS_OGS[CAPITULOS_OGS.findIndex((c) => c.slug === capitulo) + 1]
 
-  const { idDojo, sincronizacion } = useSincronizacionDojo(capitulo)
+  const { idDojo, sincronizacion, esperando } = useSincronizacionDojo(COLECCION_OGS, capitulo)
   const { justCopied, handleCopy } = useClipboard()
 
   return (
@@ -97,6 +96,7 @@ export default function ContenidoDojoGo({ challenges, capitulo }: { challenges: 
           showFilters={false}
           storageKey={`go-dojo-progreso-${capitulo}`}
           sincronizacion={sincronizacion}
+          esperandoSincronizacion={esperando}
           pieIndice={
             idDojo && (
               <div className="flex items-center gap-2">

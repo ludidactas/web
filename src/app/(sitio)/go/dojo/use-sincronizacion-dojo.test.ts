@@ -1,27 +1,39 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { StrictMode } from 'react'
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 
 const ID = 'a'.repeat(32)
+const PEDIDO = 'b'.repeat(32)
+const GUARDADO = 'c'.repeat(32)
+const COLECCION = 'ogs'
+const CAPITULO = '01-fundamentos'
+
+type Respuesta = { ok: true; data?: unknown } | { ok: false; error: string }
 
 function crearSocket() {
   const oyentes = new Map<string, () => void>()
-  const emitWithAck = mock(async (evento: string, _payload: unknown): Promise<unknown> => {
-    if (evento === 'dojo:identificarse') return { ok: true, data: ID }
-    return { ok: false, error: 'sin conexión' }
+  const respuestas: Record<string, Respuesta> = { 'dojo:identificarse': { ok: true, data: ID } }
+  const emitWithAck = mock(async (evento: string, _payload: unknown): Promise<Respuesta> => {
+    return respuestas[evento] ?? { ok: true }
   })
   return {
+    auth: {} as Record<string, unknown>,
     oyentes,
+    respuestas,
     emitWithAck,
     on: (evento: string, fn: () => void) => oyentes.set(evento, fn),
     connect: () => oyentes.get('connect')?.(),
     disconnect: mock(),
-    emit: mock(),
     timeout: () => ({ emitWithAck }),
   }
 }
 
-let socket: ReturnType<typeof crearSocket>
-const handshake = mock(async () => socket)
+let sockets: ReturnType<typeof crearSocket>[]
+const handshake = mock(async (_auth: unknown, _opciones?: unknown) => {
+  const socket = crearSocket()
+  sockets.push(socket)
+  return socket
+})
 
 mock.module('@/wss-cli/utils-socket-wss', () => ({ handshake }))
 
@@ -31,9 +43,15 @@ function irA(ruta: string) {
   window.happyDOM.setURL(`http://localhost${ruta}`)
 }
 
+const usar = (opciones?: { wrapper?: typeof StrictMode }) =>
+  renderHook(() => useSincronizacionDojo(COLECCION, CAPITULO), opciones)
+
+/** El socket con el que quedó la conexión (el último que creó el handshake). */
+const ultimo = () => sockets.at(-1)!
+
 beforeEach(() => {
   irA('/go/dojo')
-  socket = crearSocket()
+  sockets = []
   handshake.mockClear()
 })
 
@@ -42,32 +60,56 @@ afterEach(() => {
   localStorage.clear()
 })
 
-function idPedido(llamada = 0) {
-  const identificaciones = socket.emitWithAck.mock.calls.filter(([evento]) => evento === 'dojo:identificarse')
-  return (identificaciones[llamada][1] as { idDojo?: string }).idDojo
+function idPresentado(llamada = 0) {
+  return (handshake.mock.calls[llamada][0] as { idDojo?: string }).idDojo
 }
 
 describe('identificación', () => {
-  test('pide el id de la URL y lo saca de la URL', async () => {
-    irA('/go/dojo?id=b')
-    localStorage.setItem('go-dojo-id', 'c')
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+  test('presenta el id de la URL y lo saca de la URL', async () => {
+    irA(`/go/dojo?id=${PEDIDO}`)
+    localStorage.setItem('go-dojo-id', GUARDADO)
+    const { result } = usar()
 
     await waitFor(() => expect(result.current.idDojo).toBe(ID))
-    expect(idPedido()).toBe('b')
+    expect(idPresentado()).toBe(PEDIDO)
     expect(window.location.search).toBe('')
   })
 
-  test('sin id en la URL pide el de localStorage', async () => {
-    localStorage.setItem('go-dojo-id', 'c')
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+  test('el handshake es del rol dojo y se reconecta solo', async () => {
+    const { result } = usar()
+    await waitFor(() => expect(result.current.idDojo).toBe(ID))
+
+    expect(handshake.mock.calls[0][0]).toEqual({ rol: 'dojo', idDojo: undefined })
+    expect(handshake.mock.calls[0][1]).toEqual({ reconnection: true })
+  })
+
+  test('sin id en la URL presenta el de localStorage', async () => {
+    localStorage.setItem('go-dojo-id', GUARDADO)
+    const { result } = usar()
 
     await waitFor(() => expect(result.current.idDojo).toBe(ID))
-    expect(idPedido()).toBe('c')
+    expect(idPresentado()).toBe(GUARDADO)
+  })
+
+  test('un id con formato inválido no se presenta', async () => {
+    irA('/go/dojo?id=dojo:*')
+    localStorage.setItem('go-dojo-id', 'xyz')
+    const { result } = usar()
+
+    await waitFor(() => expect(result.current.idDojo).toBe(ID))
+    expect(idPresentado()).toBeUndefined()
+  })
+
+  test('el id de la URL sobrevive a que el efecto corra dos veces (StrictMode)', async () => {
+    irA(`/go/dojo?id=${PEDIDO}`)
+    const { result } = usar({ wrapper: StrictMode })
+
+    await waitFor(() => expect(result.current.idDojo).toBe(ID))
+    expect(handshake.mock.calls.map((_, i) => idPresentado(i))).toEqual([PEDIDO, PEDIDO])
   })
 
   test('guarda el id emitido y habilita la sincronización', async () => {
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+    const { result } = usar()
     expect(result.current.sincronizacion).toBeUndefined()
 
     await waitFor(() => expect(result.current.idDojo).toBe(ID))
@@ -75,44 +117,115 @@ describe('identificación', () => {
     expect(result.current.sincronizacion).toBeDefined()
   })
 
-  test('al reconectar pide el id obtenido', async () => {
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+  test('las reconexiones presentan el id definitivo', async () => {
+    const { result } = usar()
     await waitFor(() => expect(result.current.idDojo).toBe(ID))
 
-    await act(async () => socket.connect())
+    expect(ultimo().auth).toEqual({ rol: 'dojo', idDojo: ID })
+    await act(async () => ultimo().connect())
+    expect(ultimo().emitWithAck.mock.calls.filter(([e]) => e === 'dojo:identificarse')).toHaveLength(2)
+  })
 
-    expect(idPedido(1)).toBe(ID)
+  test('si no se puede identificar no hay sincronización', async () => {
+    const consoleError = console.error
+    console.error = mock()
+    handshake.mockImplementationOnce(async () => {
+      const socket = crearSocket()
+      socket.respuestas['dojo:identificarse'] = { ok: false, error: 'redis caído' }
+      sockets.push(socket)
+      return socket
+    })
+    const { result } = usar()
+    await waitFor(() => expect(ultimo().emitWithAck).toHaveBeenCalled())
+    console.error = consoleError
+
+    expect(result.current.sincronizacion).toBeUndefined()
   })
 
   test('al desmontar desconecta', async () => {
-    const { result, unmount } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+    const { result, unmount } = usar()
     await waitFor(() => expect(result.current.idDojo).toBe(ID))
 
     unmount()
 
-    expect(socket.disconnect).toHaveBeenCalled()
+    expect(ultimo().disconnect).toHaveBeenCalled()
+  })
+})
+
+describe('espera', () => {
+  test('espera hasta tener el id', async () => {
+    const { result } = usar()
+    expect(result.current.esperando).toBe(true)
+
+    await waitFor(() => expect(result.current.idDojo).toBe(ID))
+    expect(result.current.esperando).toBe(false)
+  })
+
+  test('deja de esperar si falla la conexión', async () => {
+    handshake.mockImplementationOnce(async () => {
+      const socket = crearSocket()
+      socket.connect = () => socket.oyentes.get('connect_error')?.()
+      sockets.push(socket)
+      return socket
+    })
+    const { result } = usar()
+
+    await waitFor(() => expect(result.current.esperando).toBe(false))
+    expect(result.current.sincronizacion).toBeUndefined()
+  })
+
+  test('deja de esperar si no se puede identificar', async () => {
+    const consoleError = console.error
+    console.error = mock()
+    handshake.mockImplementationOnce(async () => {
+      const socket = crearSocket()
+      socket.respuestas['dojo:identificarse'] = { ok: false, error: 'redis caído' }
+      sockets.push(socket)
+      return socket
+    })
+    const { result } = usar()
+
+    await waitFor(() => expect(result.current.esperando).toBe(false))
+    console.error = consoleError
   })
 })
 
 describe('sincronización', () => {
-  test('emite los comandos con el capítulo', async () => {
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+  test('envía los comandos con ack, colección y capítulo', async () => {
+    const { result } = usar()
     await waitFor(() => expect(result.current.sincronizacion).toBeDefined())
 
     result.current.sincronizacion!.marcarResuelto('a')
     result.current.sincronizacion!.guardarActual('b')
 
-    expect(socket.emit).toHaveBeenCalledWith('dojo:resuelto', { capitulo: '01-fundamentos', desafio: 'a' })
-    expect(socket.emit).toHaveBeenCalledWith('dojo:actual', { capitulo: '01-fundamentos', desafio: 'b' })
+    await waitFor(() => {
+      expect(ultimo().emitWithAck).toHaveBeenCalledWith('dojo:resuelto', { coleccion: COLECCION, capitulo: CAPITULO, desafio: 'a' })
+      expect(ultimo().emitWithAck).toHaveBeenCalledWith('dojo:actual', { coleccion: COLECCION, capitulo: CAPITULO, desafio: 'b' })
+    })
+  })
+
+  test('una escritura rechazada se loguea y no rompe', async () => {
+    const { result } = usar()
+    await waitFor(() => expect(result.current.sincronizacion).toBeDefined())
+    const error = mock()
+    const consoleError = console.error
+    console.error = error
+    ultimo().respuestas['dojo:resuelto'] = { ok: false, error: 'sin conexión' }
+
+    result.current.sincronizacion!.marcarResuelto('a')
+    await waitFor(() => expect(error).toHaveBeenCalled())
+    console.error = consoleError
   })
 
   test('sincronizar rechaza con el error del ack', async () => {
-    const { result } = renderHook(() => useSincronizacionDojo('01-fundamentos'))
+    const { result } = usar()
     await waitFor(() => expect(result.current.sincronizacion).toBeDefined())
+    ultimo().respuestas['dojo:sincronizar'] = { ok: false, error: 'sin conexión' }
 
     await expect(result.current.sincronizacion!.sincronizar(['a'])).rejects.toThrow('sin conexión')
-    expect(socket.emitWithAck).toHaveBeenCalledWith('dojo:sincronizar', {
-      capitulo: '01-fundamentos',
+    expect(ultimo().emitWithAck).toHaveBeenCalledWith('dojo:sincronizar', {
+      coleccion: COLECCION,
+      capitulo: CAPITULO,
       resueltos: ['a'],
     })
   })

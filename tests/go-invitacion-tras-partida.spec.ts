@@ -51,7 +51,9 @@ test('una invitación que llega mientras mirás tu partida ya terminada no te sa
   await expect(pepe.locator('svg.touch-none')).toBeVisible()
 
   // Pepe abandona sin volver a la sala: se queda mirando la pantalla de resultado ("terminada").
+  // "Abandonar" abre un dialog de confirmación — hay que confirmar ahí adentro también.
   await pepe.getByRole('button', { name: 'Abandonar' }).click()
+  await pepe.getByRole('dialog').getByRole('button', { name: 'Abandonar' }).click()
   await expect(pepe.getByText('Terminó por abandono')).toBeVisible()
 
   // El profe (que también era jugador de esa partida) sí vuelve a la sala, para poder invitar de

@@ -3,6 +3,7 @@ import {
   BLANCO,
   calcularPuntaje,
   calcularTerritorio,
+  DAME,
   grupoEn,
   hashTablero,
   jugar,
@@ -19,7 +20,7 @@ import {
  * las dos (dame), y la derecha (x=4) solo con la blanca.
  */
 function tableroDeParedes(): Tablero {
-  const fila = (): number[] => [0, NEGRO, 0, BLANCO, 0]
+  const fila = (): Tablero[number] => [VACIO, NEGRO, VACIO, BLANCO, VACIO]
   return Array.from({ length: 5 }, fila)
 }
 
@@ -33,9 +34,9 @@ describe('calcularTerritorio', () => {
 
     for (let y = 0; y < 5; y++) {
       expect(territorio[y][0]).toBe(NEGRO)
-      expect(territorio[y][1]).toBe(0) // hay una piedra, no es territorio
-      expect(territorio[y][2]).toBe(3) // dame: bordeado por negro y blanco
-      expect(territorio[y][3]).toBe(0)
+      expect(territorio[y][1]).toBe(VACIO) // hay una piedra, no es territorio
+      expect(territorio[y][2]).toBe(DAME) // dame: bordeado por negro y blanco
+      expect(territorio[y][3]).toBe(VACIO)
       expect(territorio[y][4]).toBe(BLANCO)
     }
   })
@@ -43,15 +44,15 @@ describe('calcularTerritorio', () => {
   test('una piedra marcada muerta pasa a ser territorio de quien la rodea', () => {
     // Piedra blanca en (2,2), encerrada por negro en cruz (arriba/abajo/izquierda/derecha).
     const tablero: Tablero = [
-      [0, 0, 0, 0, 0],
-      [0, 0, NEGRO, 0, 0],
-      [0, NEGRO, BLANCO, NEGRO, 0],
-      [0, 0, NEGRO, 0, 0],
-      [0, 0, 0, 0, 0],
+      [VACIO, VACIO, VACIO, VACIO, VACIO],
+      [VACIO, VACIO, NEGRO, VACIO, VACIO],
+      [VACIO, NEGRO, BLANCO, NEGRO, VACIO],
+      [VACIO, VACIO, NEGRO, VACIO, VACIO],
+      [VACIO, VACIO, VACIO, VACIO, VACIO],
     ]
 
     const antes = calcularTerritorio(tablero, sinRemovidas(5), 5)
-    expect(antes[2][2]).toBe(0) // piedra en pie: no cuenta como territorio
+    expect(antes[2][2]).toBe(VACIO) // piedra en pie: no cuenta como territorio
 
     const removidas = sinRemovidas(5)
     removidas[2][2] = true
@@ -75,7 +76,7 @@ describe('calcularPuntaje', () => {
   test('negro puede ganar pese al komi si su ventaja de territorio lo supera', () => {
     // Tres paredes negras (columnas 0, 2, 4) encierran dos franjas de territorio negro (columnas 1 y
     // 3); no hay blanco en el tablero, así que su puntaje es puro komi.
-    const fila = () => [NEGRO, 0, NEGRO, 0, NEGRO]
+    const fila = (): Tablero[number] => [NEGRO, VACIO, NEGRO, VACIO, NEGRO]
     const tablero: Tablero = Array.from({ length: 5 }, fila)
 
     const puntaje = calcularPuntaje(tablero, 5, sinRemovidas(5), 0, 0)
@@ -94,15 +95,15 @@ describe('grupoEn', () => {
 
 describe('jugar', () => {
   test('captura un grupo rival que se queda sin libertades', () => {
-    // Piedra blanca en (1,1) rodeada por negro en tres lados; el cuarto lado, (1,2), es su última
-    // libertad.
+    // Piedra blanca en (fila 1, columna 1) rodeada por negro en tres lados; el cuarto lado, (fila 2,
+    // columna 1), es su última libertad.
     const tablero: Tablero = [
-      [0, NEGRO, 0],
+      [VACIO, NEGRO, VACIO],
       [NEGRO, BLANCO, NEGRO],
-      [0, VACIO, 0],
+      [VACIO, VACIO, VACIO],
     ]
 
-    const { tablero: resultado, capturas } = jugar(tablero, 3, 1, 2, NEGRO, new Set())
+    const { tablero: resultado, capturas } = jugar(tablero, 3, 2, 1, NEGRO, new Set())
 
     expect(capturas).toBe(1)
     expect(resultado[1][1]).toBe(VACIO)
@@ -113,11 +114,11 @@ describe('jugar', () => {
     // Dos piedras blancas sueltas (no conectadas entre sí) en (1,2) y (3,2), cada una con su única
     // libertad en (2,2). Negro juega ahí y captura ambos grupos.
     const tablero: Tablero = [
-      [0, 0, 0, 0, 0],
-      [0, NEGRO, 0, NEGRO, 0],
+      [VACIO, VACIO, VACIO, VACIO, VACIO],
+      [VACIO, NEGRO, VACIO, NEGRO, VACIO],
       [NEGRO, BLANCO, VACIO, BLANCO, NEGRO],
-      [0, NEGRO, 0, NEGRO, 0],
-      [0, 0, 0, 0, 0],
+      [VACIO, NEGRO, VACIO, NEGRO, VACIO],
+      [VACIO, VACIO, VACIO, VACIO, VACIO],
     ]
 
     const { tablero: resultado, capturas } = jugar(tablero, 5, 2, 2, NEGRO, new Set())
@@ -128,26 +129,26 @@ describe('jugar', () => {
     expect(resultado[2][2]).toBe(NEGRO)
   })
 
-  test('rechaza una jugada suicida (sin libertades propias y sin capturar nada)', () => {
+  test('rechaza una jugada de autocaptura (sin libertades propias y sin capturar nada)', () => {
     // (1,1) rodeado en cruz por piedras negras que a su vez tienen libertades propias en las
     // esquinas: blanco jugando en el centro no captura nada y se queda sin libertades.
     const tablero: Tablero = [
-      [0, NEGRO, 0],
+      [VACIO, NEGRO, VACIO],
       [NEGRO, VACIO, NEGRO],
-      [0, NEGRO, 0],
+      [VACIO, NEGRO, VACIO],
     ]
 
     expect(() => jugar(tablero, 3, 1, 1, BLANCO, new Set())).toThrow(JugadaInvalida)
   })
 
-  test('una jugada que capturaría fuera suicida en otro caso es legal (se chequea captura antes que suicidio)', () => {
+  test('una jugada que capturaría fuera autocaptura en otro caso es legal (se chequea captura antes que autocaptura)', () => {
     // Dos piedras blancas sueltas en (1,0) y (0,1), cada una con su única libertad en la esquina
     // (0,0). Si negro jugara ahí y las libertades se chequearan antes de aplicar la captura, parecería
-    // suicida (sin libertades propias); pero como las captura, se libera esa misma esquina.
+    // autocaptura (sin libertades propias); pero como las captura, se libera esa misma esquina.
     const tablero: Tablero = [
       [VACIO, BLANCO, NEGRO],
-      [BLANCO, NEGRO, 0],
-      [NEGRO, 0, 0],
+      [BLANCO, NEGRO, VACIO],
+      [NEGRO, VACIO, VACIO],
     ]
 
     const { tablero: resultado, capturas } = jugar(tablero, 3, 0, 0, NEGRO, new Set())
@@ -173,15 +174,15 @@ describe('jugar', () => {
 
   test('rechaza una jugada que repite una posición anterior de la partida (ko/superko)', () => {
     const tablero: Tablero = [
-      [0, NEGRO, 0],
+      [VACIO, NEGRO, VACIO],
       [NEGRO, BLANCO, NEGRO],
-      [0, VACIO, 0],
+      [VACIO, VACIO, VACIO],
     ]
 
     // La posición resultante de esta captura ya "pasó" antes en la partida (queda en el historial).
-    const { tablero: posicionRepetida } = jugar(tablero, 3, 1, 2, NEGRO, new Set())
+    const { tablero: posicionRepetida } = jugar(tablero, 3, 2, 1, NEGRO, new Set())
     const historial = new Set([hashTablero(posicionRepetida)])
 
-    expect(() => jugar(tablero, 3, 1, 2, NEGRO, historial)).toThrow(JugadaInvalida)
+    expect(() => jugar(tablero, 3, 2, 1, NEGRO, historial)).toThrow(JugadaInvalida)
   })
 })

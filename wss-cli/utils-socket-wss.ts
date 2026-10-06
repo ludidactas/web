@@ -1,5 +1,5 @@
 import { Pasaporte } from '@/wss/validators/auth'
-import { io, Socket } from 'socket.io-client'
+import { io, Socket, type ManagerOptions, type SocketOptions } from 'socket.io-client'
 
 const encuestaHost = process.env.NEXT_PUBLIC_ENCUESTA_HOST
 if (!encuestaHost) {
@@ -13,12 +13,16 @@ export interface SocketWssCli extends Socket {
   auth: Pasaporte
 }
 
-/** Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless. */
-export async function handshake(auth: Pasaporte) {
+/**
+ * Conecta el socket al servidor de encuestas con el token que devuelve `solicitarAuth`. Stateless.
+ * `opciones` pisa los defaults (por ejemplo `reconnection` para el dojo, que se reconecta solo).
+ */
+export async function handshake(auth: Pasaporte, opciones?: Partial<ManagerOptions & SocketOptions>) {
   return io(encuestaHost, {
     auth,
     autoConnect: false,
     reconnection: false,
+    ...opciones,
   }) as SocketWssCli
 }
 

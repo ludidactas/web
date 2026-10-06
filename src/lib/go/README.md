@@ -36,6 +36,8 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
   tipos.ts                           # schema (zod) de un Desafio — el contrato del YAML
   motor-desafio.ts                   # evalúa una jugada de un Desafio, delega en motor.ts
   motor-desafio.test.ts
+  progreso.ts                        # fusionarProgreso: unión del progreso local con el remoto de un capítulo
+  agrupar-desafios.ts                # agrupa desafíos consecutivos de igual título base en secciones del índice
   index.ts                           # barrel público (isomórfico: sin node:fs)
   desafios/
     cargador.ts                      # parseo/validación YAML → Desafio[] (puro, sin node:fs)
@@ -50,10 +52,12 @@ src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, s
     use-desafio-go.ts                # hook: estado de jugar/reiniciar/ayuda/explicación de un Desafio
     tarjeta-desafio-go.tsx           # tarjeta de un desafío (hook + tablero + texto + botones)
     conjunto-desafios.tsx            # índice + desafío actual + navegación anterior/siguiente
+    use-progreso-dojo.ts             # hook: progreso en localStorage + copia remota opcional (SincronizacionDojo)
 
 src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   page.tsx                           # server component: carga getDesafiosEjemplo()
-  contenido.tsx                      # client component: título + ConjuntoDesafios
+  contenido.tsx                      # client component: título + ConjuntoDesafios + copiar link de progreso
+  use-sincronizacion-dojo.ts         # id anónimo del visitante + conexión (rol dojo) que implementa SincronizacionDojo
 
 wss/go/                              # capa 3: servidor de la partida en vivo
   app.ts                             # comandos (invitar/jugar/pasar/...) — orquesta 1 + db.ts + lock.ts
@@ -61,6 +65,11 @@ wss/go/                              # capa 3: servidor de la partida en vivo
   db.ts                              # persistencia en Redis
   lock.ts                            # mutex por partida (evita carreras get→mutar→set)
 wss/validators/go.ts                 # zod schemas/tipos de Partida — el contrato server↔cliente
+
+wss/dojo/                            # progreso anónimo del dojo (ver wss/dojo/README.md)
+  handlers.ts                        # comandos dojo:identificarse / dojo:sincronizar / dojo:resuelto / dojo:actual
+  db.ts                              # claves dojo:<idDojo>:... en Redis
+wss/validators/dojo.ts               # zod de los payloads del dojo
 
 wss-cli/                             # capa 4: espejo cliente del servidor
   handlers/estudiante-go-handlers.ts # emite comandos, actualiza el store, identidad = estudiante
@@ -80,6 +89,11 @@ src/app/(herramientas)/…/go/page.tsx # las dos rutas que montan la partida en 
 
 tests/go-*.spec.ts                   # e2e (Playwright): benson, espectador, profe-contrincante, reinvitación
 ```
+
+## Progreso del dojo
+
+`/go/dojo` guarda el progreso de cada visitante anónimo en localStorage y en Redis, bajo un id que emite el
+server. El detalle (conexión, comandos, claves, límites) está en [`wss/dojo/README.md`](../../../wss/dojo/README.md).
 
 ## Cosas que confunden fácil
 

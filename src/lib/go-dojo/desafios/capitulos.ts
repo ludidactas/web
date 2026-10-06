@@ -2,6 +2,9 @@
  * Capítulos de la colección de OGS (`ludidactas/desafios-ogs`): `slug` es el nombre de su carpeta en
  * el repo. Sin dependencias de Node, así que se puede importar desde código cliente.
  */
+/** Identifica a la colección de OGS donde se guarda su progreso; los slugs de capítulo solo son únicos dentro de una colección. */
+export const COLECCION_OGS = "ogs";
+
 export const CAPITULOS_OGS = [
   { slug: "01-fundamentos", titulo: "Fundamentos" },
   { slug: "02-principios-basicos", titulo: "Principios básicos" },

@@ -12,6 +12,8 @@ import type { Desafio, Punto, Marca, NodoSecuencia, Piedra } from "../tipos";
 
 export type EstadoDesafio = "inactivo" | "jugando" | "correcto" | "incorrecto";
 
+export const DURACION_AYUDA_MS = 1500;
+
 export interface EstadoDesafioGo {
   /** Piedras a dibujar: el setup del desafío, evolucionado por lo que se jugó hasta ahora. */
   piedras: Piedra[];
@@ -213,10 +215,11 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
   }, [desafio]);
 
   const mostrarAyuda = useCallback(() => {
+    if (ayudaVisible) return;
     setAyudaVisible(true);
-    const timer = setTimeout(() => setAyudaVisible(false), 1500);
+    const timer = setTimeout(() => setAyudaVisible(false), DURACION_AYUDA_MS);
     return () => clearTimeout(timer);
-  }, []);
+  }, [ayudaVisible]);
 
   const mostrarExplicacion = useCallback(() => setExplicacionVisible(true), []);
 

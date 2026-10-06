@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { DesafioDojoGo, type DesafioDojoGoTheme } from './desafio-dojo-go'
-import { useDesafioGo } from './use-desafio-go'
+import { DURACION_AYUDA_MS, useDesafioGo } from './use-desafio-go'
 import { regionDeDesafio } from '../motor-desafio'
 import type { Desafio } from '../tipos'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { motion } from 'framer-motion'
 
 /**
  * Tarjeta de un desafío: combina `useDesafioGo` (estado) con `DesafioDojoGo` (tablero) y agrega el
@@ -162,10 +163,21 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
           <button
             type="button"
             onClick={mostrarAyuda}
-            className="flex gap-1 items-center text-sm px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
+            className="relative overflow-hidden flex gap-1 items-center text-sm px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
           >
-            Pista
-            <Icon className='' icon={'fluent:search-12-filled'} />
+            {ayudaVisible && (
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 opacity-40 bg-[conic-gradient(theme(colors.ld-violeta.DEFAULT)_var(--restante),transparent_0)]"
+                initial={{ '--restante': '360deg' }}
+                animate={{ '--restante': '0deg' }}
+                transition={{ duration: DURACION_AYUDA_MS / 1000, ease: 'linear' }}
+              />
+            )}
+            <span className="relative flex gap-1 items-center">
+              Pista
+              <Icon className='' icon={'fluent:search-12-filled'} />
+            </span>
           </button>
         )}
         {desafio.explicacion && (

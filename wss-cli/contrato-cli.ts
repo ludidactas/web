@@ -5,6 +5,11 @@ import type { Ack } from '@/wss/middleware/error-handling'
 
 const TIMEOUT_ACK_MS = 5000
 
+export interface OpcionesComandos {
+  /** Cuánto espera `pedir` el ack antes de rechazar. Default: 5000. */
+  timeoutMs?: number
+}
+
 /** Claves del contrato cuyo comando responde por ack. */
 type ConAck<C extends Contrato> = { [K in keyof C]: C[K] extends Comando<any, any, true> ? K : never }[keyof C] & string
 
@@ -23,9 +28,10 @@ type RespuestaDe<D> = D extends Comando<any, infer R, true> ? R : never
  * - `enviar`: comando sin respuesta. Si el server falla, el error llega por `wss:error`.
  * - `pedir`: comando con ack. Resuelve con el dato de la respuesta y rechaza con el error del server.
  *
+ * `timeoutMs` ajusta la espera de `pedir` para los comandos lentos.
  * Sin socket (`null`, todavía no conectó) `enviar` no hace nada y `pedir` rechaza.
  */
-export function comandos<C extends Contrato>(socket: Socket | null) {
+export function comandos<C extends Contrato>(socket: Socket | null, { timeoutMs = TIMEOUT_ACK_MS }: OpcionesComandos = {}) {
   return {
     enviar: <K extends SinAck<C>>(evento: K, ...[payload]: ArgsDe<C, K>): void => {
       socket?.emit(evento, payload)
@@ -36,7 +42,7 @@ export function comandos<C extends Contrato>(socket: Socket | null) {
       ...[payload]: ArgsDe<C, K>
     ): Promise<RespuestaDe<C[K]>> => {
       if (!socket) throw new Error('Sin conexión')
-      const res: Ack<RespuestaDe<C[K]>> = await socket.timeout(TIMEOUT_ACK_MS).emitWithAck(evento, payload)
+      const res: Ack<RespuestaDe<C[K]>> = await socket.timeout(timeoutMs).emitWithAck(evento, payload)
       if (!res.ok) throw new Error(res.error)
       return res.data
     },

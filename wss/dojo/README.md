@@ -23,7 +23,7 @@ Al conectar, el server toma el `idDojo` del pasaporte si lo emitió él, o gener
 `dojo:identificarse` devuelve el id definitivo; el navegador lo guarda en localStorage (`go-dojo-id`) y en
 `socket.auth`, así las reconexiones lo presentan.
 
-**Comandos** (todos responden por ack, ver `conAck`):
+**Comandos** (todos responden por ack, ver `wss/contrato/dojo.ts`):
 
 | Comando | Efecto |
 |---|---|
@@ -68,7 +68,6 @@ wss/dojo/
 wss/validators/dojo.ts                 # zod de los payloads y formato del id
 wss/validators/auth.ts                 # PasaporteDojoSchema
 wss-cli/utils-socket-wss.ts            # handshake
-wss-cli/emitir-con-ack.ts              # emite un comando y espera su ack
 src/app/(sitio)/go/dojo/
   use-sincronizacion-dojo.ts           # conexión, id del visitante, SincronizacionDojo
   contenido.tsx                        # enlace a tu progreso

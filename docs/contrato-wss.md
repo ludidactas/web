@@ -80,6 +80,7 @@ Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.
 | Feature | Server | Cliente |
 | --- | --- | --- |
 | Encuestas — profe, estudiante, overlay | ✅ `wss/polls/handlers.ts` | ✅ `wss-cli/handlers/*-encuestas-handlers.ts` |
+| Dojo (visitante anónimo) | ✅ `wss/dojo/handlers.ts` | ✅ `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts` |
 | Go (estudiante y profe) | ⏳ `wss/go/handlers.ts` | ⏳ `estudiante-go-handlers.ts`, `profe-go-handlers.ts` |
 | Salas — gestión (ABM) y sala activa del profe | ⏳ `wss/salas/handlers.ts` | ⏳ `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts` |
 | Salas — estudiante y público | ⏳ | ⏳ `estudiante-sala-handlers.ts`, `public-sala-handlers.ts`, `base-sala-handlers.ts` |
@@ -115,4 +116,4 @@ mover el schema al contrato, borrar el `parse` interno y pasar el handler a `reg
   solo con ack. Un comando sin ack que falla en el server avisa por `wss:error`, no por una promesa.
 - Los componentes pueden pasar el `output` de un schema donde el contrato espera el `input` (los
   defaults de zod son opcionales en la entrada), por eso `CrearEncuesta` (output) se acepta en `pedir`.
-- `pedir` usa un timeout de 5 s. Un comando lento necesita un timeout propio (pendiente de exponer al migrar `sala:pedir_planilla_completa`).
+- `pedir` espera el ack 5 s. Un comando lento usa su propio emisor: `comandos<C>(socket, { timeoutMs: 10_000 })`.

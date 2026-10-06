@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { emitirConAck } from '@/wss-cli/emitir-con-ack'
+import { comandos } from '@/wss-cli/contrato-cli'
+import type { comandosDojo } from '@/wss/contrato/dojo'
 import { handshake, type SocketWssCli } from '@/wss-cli/utils-socket-wss'
 import { RolSala } from '@/wss/validators/auth'
-import { FORMATO_ID_DOJO, type ProgresoDojoRemoto } from '@/wss/validators/dojo'
+import { FORMATO_ID_DOJO } from '@/wss/validators/dojo'
 import type { SincronizacionDojo } from '@/lib/go-dojo/components/use-progreso-dojo'
 
 const CLAVE_ID = 'go-dojo-id'
@@ -69,7 +70,7 @@ export function useSincronizacionDojo(coleccion: string, capitulo: string) {
 
     async function identificarse(sock: SocketWssCli) {
       try {
-        const id = await emitirConAck<string>(sock, 'dojo:identificarse')
+        const id = await comandos<typeof comandosDojo>(sock).pedir('dojo:identificarse')
         if (!vigente) return
         // Las reconexiones presentan el id definitivo.
         sock.auth = { rol: RolSala.Dojo, idDojo: id }
@@ -103,19 +104,21 @@ export function useSincronizacionDojo(coleccion: string, capitulo: string) {
   const sincronizacion = useMemo<SincronizacionDojo | undefined>(() => {
     if (!socket) return undefined
 
-    async function enviar(evento: string, payload: unknown) {
+    const cmd = comandos<typeof comandosDojo>(socket)
+
+    /** Las escrituras no frenan al visitante: si fallan, queda lo local y sube en la próxima sincronización. */
+    async function escribir(evento: 'dojo:resuelto' | 'dojo:actual', desafio: string) {
       try {
-        await emitirConAck(socket!, evento, payload)
+        await cmd.pedir(evento, { coleccion, capitulo, desafio })
       } catch (error: unknown) {
         console.error(`No se pudo enviar ${evento} al progreso remoto del dojo`, error)
       }
     }
 
     return {
-      sincronizar: (resueltos) =>
-        emitirConAck<ProgresoDojoRemoto>(socket, 'dojo:sincronizar', { coleccion, capitulo, resueltos }),
-      marcarResuelto: (desafio) => void enviar('dojo:resuelto', { coleccion, capitulo, desafio }),
-      guardarActual: (desafio) => void enviar('dojo:actual', { coleccion, capitulo, desafio }),
+      sincronizar: (resueltos) => cmd.pedir('dojo:sincronizar', { coleccion, capitulo, resueltos }),
+      marcarResuelto: (desafio) => void escribir('dojo:resuelto', desafio),
+      guardarActual: (desafio) => void escribir('dojo:actual', desafio),
     }
   }, [socket, coleccion, capitulo])
 

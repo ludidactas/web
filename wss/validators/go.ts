@@ -1,4 +1,11 @@
 import z from 'zod'
+import type { Color, Tablero } from '@/lib/go/motor'
+
+/**
+ * Zod schemas + tipos de una partida de Go — el contrato entre servidor y cliente (`Partida` es lo
+ * que viaja por el socket y se persiste tal cual en Redis). `Color`/`Tablero` vienen del motor
+ * compartido (`@/lib/go/motor`), no se redefinen acá.
+ */
 
 export const TAMAÑOS_TABLERO = [9, 13, 19] as const
 export type TamañoTablero = (typeof TAMAÑOS_TABLERO)[number]
@@ -29,15 +36,15 @@ export interface Partida {
   tamaño: TamañoTablero
   negro: JugadorPartida
   blanco: JugadorPartida
-  tablero: number[][]
-  turno: 1 | 2
+  tablero: Tablero
+  turno: Color
   capturasNegras: number
   capturasBlancas: number
   pases: number
   /** Hashes de posiciones ya vistas en la partida, para detectar ko / superko. */
   historial: string[]
   /** Coordenadas de la última piedra jugada (no cambia al pasar), para resaltarla en el tablero. */
-  ultimaJugada: { x: number; y: number } | null
+  ultimaJugada: { fila: number; columna: number } | null
   /** Solo se usa durante la fase de conteo (`estado === 'contando'`). */
   removidas: boolean[][] | null
   /**
@@ -67,6 +74,6 @@ export const partidaIdSchema = z.object({
 
 export const jugadaSchema = z.object({
   partidaId: z.string().min(1),
-  x: z.number().int(),
-  y: z.number().int(),
+  fila: z.number().int(),
+  columna: z.number().int(),
 })

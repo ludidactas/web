@@ -9,7 +9,11 @@ RUN npm ci --omit=dev
 FROM oven/bun:1.2.19-slim
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY tsconfig.json ./
 COPY wss ./wss
+# El wss importa el motor de Go vía el alias `@/` (tsconfig → src/). Solo se copian los .ts de
+# lógica pura (sin React) que usa el server.
+COPY src/lib/go/motor.ts src/lib/go/benson.ts ./src/lib/go/
 
 ENV NODE_ENV=production
 

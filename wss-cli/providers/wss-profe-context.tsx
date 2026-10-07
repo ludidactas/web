@@ -9,6 +9,7 @@ import baseSalaHandlers from '../handlers/base-sala-handlers'
 import profeGestionSalasHandlers from '../handlers/profe-gestion-salas-handlers'
 import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
+import profeAsistenciaHandlers from '../handlers/profe-asistencia-handlers'
 import profeGoHandlers from '../handlers/profe-go-handlers'
 import { useWss } from '../use-wss'
 import { StatusDeConexion } from '../conexion-wss'
@@ -30,6 +31,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       salaActiva: profeSalaActivaHandlers(socket),
       base: baseSalaHandlers(socket),
       encuestas: profeEncuestasHandlers(socket),
+      asistencia: profeAsistenciaHandlers(socket),
       go: profeGoHandlers(socket),
     }),
     [socket]
@@ -44,6 +46,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
     handlers.salaActiva.montar()
     handlers.base.montar()
     handlers.encuestas.montar()
+    handlers.asistencia.montar()
     if (abrirSalaId) handlers.go.montar()
 
     return () => {
@@ -51,6 +54,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       handlers.salaActiva.desmontar()
       handlers.base.desmontar()
       handlers.encuestas.desmontar()
+      handlers.asistencia.desmontar()
       if (abrirSalaId) handlers.go.desmontar()
     }
   }, [handlers, abrirSalaId])

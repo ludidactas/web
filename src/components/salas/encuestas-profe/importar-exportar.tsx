@@ -7,9 +7,9 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { conectarConDrive } from '@/lib/google/conexion'
+import { DriveNoConectado } from '@/lib/google/comun'
 import {
   ColeccionPreguntasEnDrive,
-  DriveNoConectado,
   guardarColeccion as guardarColeccionEnDrive,
   leerColecciones as leerColeccionesDeDrive,
 } from '@/lib/google/recursos-colecciones'

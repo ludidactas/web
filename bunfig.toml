@@ -1,0 +1,3 @@
+[test]
+# DOM (happy-dom) para los tests de componentes React (*.test.tsx) — ver happydom.ts.
+preload = ["./happydom.ts"]

@@ -20,7 +20,9 @@ import {
 import { cn } from '@/lib/utils'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { MetodosLogin } from '@/wss/validators/auth'
+import type { CondicionAsistencia } from '@/wss/validators/asistencia'
 import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import { SelectorCondicionDeAsistencia } from '@/components/salas/encuestas-profe/condicion-asistencia'
 import {
   Dialog,
   DialogClose,
@@ -51,6 +53,7 @@ type FormState = {
   soloInvitados: boolean
   lista: string[]
   nombres: Record<string, string>
+  condicionAsistencia: CondicionAsistencia | null
 }
 
 const FORM_INICIAL: FormState = {
@@ -60,6 +63,7 @@ const FORM_INICIAL: FormState = {
   soloInvitados: false,
   lista: [],
   nombres: {},
+  condicionAsistencia: null,
 }
 
 // Carga mínima tras "Crear": el OK llega cuando ocurre lo último entre la confirmación y este lapso.
@@ -97,12 +101,13 @@ function FormCrearSala() {
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
               nombresPermitidos: form.nombres,
+              condicion_asistencia: form.condicionAsistencia,
             },
           }),
           delay(CARGA_MINIMA_MS),
         ])
         toast.success('Sala creada con éxito')
-        router.push(`/salas/${idSala}/encuestas`)
+        router.push(`/salas/${idSala}/go`)
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'No se pudo crear la sala')
       }
@@ -203,6 +208,11 @@ function FormCrearSala() {
         )}
       </AnimatePresence>
 
+      <SelectorCondicionDeAsistencia
+        condicion={form.condicionAsistencia}
+        onChange={(condicionAsistencia) => setForm((f) => ({ ...f, condicionAsistencia }))}
+      />
+
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="self-center" tabIndex={razonDisabled ? 0 : -1}>
@@ -284,7 +294,7 @@ function FilaSala({
   return (
     <li className={cn('flex items-center gap-2 rounded-xl border bg-white/60 overflow-hidden')}>
       <NavLink
-        href={`/salas/${sala.id}/encuestas`}
+        href={`/salas/${sala.id}/go`}
         overlayMensaje="Renderizando sala..."
         className={cn('flex-1 px-4 py-3 font-medium hover:bg-slate-50 transition-colors')}
       >
@@ -464,38 +474,50 @@ export default function SalasPageClient() {
                     className="max-w-xl max-h-[85vh] overflow-y-auto"
                   >
                     <DialogHeader>
-                      <DialogTitle className='text-ld-violeta-oscuro text-2xl'>¿Qué es una sala?</DialogTitle>
+                      <DialogTitle className="text-ld-violeta-oscuro text-2xl">¿Qué es una sala?</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-3 text-sm text-foreground">
                       <p>
                         Una sala agrupa a tus participantes –generalmente estudiantes– bajo un mismo link o QR, con el
-                        nivel de acceso que vos elijas: nombre libre, DNI, o una lista de invitadxs. Adentro podés encontrar estas
-                        herramientas:
+                        nivel de acceso que vos elijas: nombre libre, DNI, o una lista de invitadxs. Adentro podés
+                        encontrar estas herramientas:
                       </p>
                       <p>
-                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6' icon="fluent:chat-bubbles-question-16-regular"/>Encuestas en vivo.</span> Lanzá preguntas y ejercicios para tu
-                        clase, mirá los resultados actualizarse en tiempo real, y compartilos en pantalla con un
-                        visualizador que se puede embeber en OBS.
+                        <span className="flex gap-2 items-center font-bold text-xl">
+                          <Icon className="w-6 h-6" icon="fluent:chat-bubbles-question-16-regular" />
+                          Encuestas en vivo
+                        </span>{' '}
+                        Lanzá preguntas y ejercicios para tu clase, mirá los resultados actualizarse en tiempo real, y
+                        compartilos en pantalla con un visualizador que se puede embeber en OBS.
                       </p>
                       <p>
-                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6 -rotate-3' icon="bi:grid-3x3"/>Go.</span> Tus estudiantes pueden jugar entre ellxs, jugar con vos,
-                        y observar las partidas de otrxs mientras están en curso.
+                        <span className="flex gap-2 items-center font-bold text-xl">
+                          <Icon className="w-6 h-6 -rotate-3" icon="bi:grid-3x3" />
+                          Go
+                        </span>{' '}
+                        Tus estudiantes pueden jugar entre ellxs, jugar con vos, y observar las partidas de otrxs
+                        mientras están en curso.
                       </p>
                       <p>
-                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6 ' icon="bi:people"/>Participantes.</span> Mirá quién se conectó y cuándo, y exportá ese
-                        registro a Excel.
+                        <span className="flex gap-2 items-center font-bold text-xl">
+                          <Icon className="w-6 h-6 " icon="bi:people" />
+                          Participantes
+                        </span>{' '}
+                        Mirá quién se conectó y cuándo, y exportá ese registro a Excel.
                       </p>
                       <p>
-                        <span className="flex gap-2 items-center font-bold text-xl"><Icon className='w-6 h-6' icon="mage:box-question-mark"/>Colecciones.</span> Tus preguntas (y pronto tus partidas de Go) se
-                        exportan e importan en YAML –un formato simple, editable a mano o con ayuda de una IA– y también
-                        se guardan directo en tu Google Drive.
+                        <span className="flex gap-2 items-center font-bold text-xl">
+                          <Icon className="w-6 h-6" icon="mage:box-question-mark" />
+                          Colecciones
+                        </span>{' '}
+                        Tus preguntas (y pronto tus partidas de Go) se exportan e importan en YAML –un formato simple,
+                        editable a mano o con ayuda de una IA– y también se guardan directo en tu Google Drive.
                       </p>
-                      <p className='font-bold text-ld-violeta-oscuro my-4 text-center'>
+                      <p className="font-bold text-ld-violeta-oscuro my-4 text-center">
                         ¡Creá tu sala y explorá cada uno de sus recursos!
                       </p>
                     </div>
                     <DialogFooter className="gap-2">
-                     
                       <Button
                         className="bg-ld-violeta"
                         onClick={() => {
@@ -505,7 +527,7 @@ export default function SalasPageClient() {
                       >
                         Crear sala
                       </Button>
-                       <DialogClose asChild>
+                      <DialogClose asChild>
                         <Button variant="outline">Cerrar</Button>
                       </DialogClose>
                     </DialogFooter>

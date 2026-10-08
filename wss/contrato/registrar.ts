@@ -37,3 +37,22 @@ export function registrar<C extends Contrato>(socket: Socket, contrato: C, handl
     })
   }
 }
+
+/**
+ * Corre código de una conexión que no es un comando (init, `disconnect`): un error se loguea y se notifica
+ * por `wss:error`, y nunca llega a ser una `unhandledRejection` (que tira el proceso, ver `wss/mount.ts`).
+ * Dentro de un handler, envuelve un efecto secundario cuyo fallo no debe fallar al comando (ver docs/contrato-wss.md).
+ */
+export async function protegido(socket: Socket, fn: () => Promise<unknown> | unknown): Promise<void> {
+  try {
+    await fn()
+  } catch (err: unknown) {
+    console.error(`🚨 conexión ${socket.id}: error fuera de un comando:`, err)
+    socket.emit('wss:error', { message: mensajeDe(err) })
+  }
+}
+
+/** `socket.on('disconnect')` con el mismo manejo de errores que `protegido`. */
+export function alDesconectar(socket: Socket, fn: (motivo: string) => Promise<unknown> | unknown) {
+  socket.on('disconnect', (motivo) => protegido(socket, () => fn(motivo)))
+}

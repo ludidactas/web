@@ -1,7 +1,6 @@
 import { Socket } from 'socket.io'
 import { comandosGo } from '../contrato/go'
-import { registrar } from '../contrato/registrar'
-import { conErrorHandling } from '../middleware/error-handling'
+import { alDesconectar, registrar } from '../contrato/registrar'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo, salaGoRoom } from './app'
@@ -45,23 +44,17 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
  * devuelve el init: avisar a la sala que apareció como contrincante disponible.
  */
 export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: string) => {
-  const safe = conErrorHandling(socket)
   const { userId, nombre } = socket.data.session
 
-  // Al desconectar, si no le queda otro socket vivo (multi-pestaña), avisamos a la sala que dejó de
-  // estar disponible como contrincante.
-  socket.on(
-    'disconnect',
-    safe(async () => {
-      const sala = await Salas.get(idSala)
-      if (!(await sala.sigueConectado(userId, socket.id))) await avisarContrincantesActualizados(idSala)
-    })
-  )
+  // Si no le queda otro socket vivo (multi-pestaña), la sala deja de verlo como contrincante disponible.
+  alDesconectar(socket, async () => {
+    const sala = await Salas.get(idSala)
+    if (!(await sala.sigueConectado(userId, socket.id))) await avisarContrincantesActualizados(idSala)
+  })
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  // Con `safe`, un throw (ej. `Salas.get` si la sala ya no existe) no tira el proceso (unhandledRejection).
-  return safe(() => avisarContrincantesActualizados(idSala))
+  return () => avisarContrincantesActualizados(idSala)
 }
 
 /**
@@ -71,18 +64,14 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
  * estudiante (ver `handlersGoEstudiante`, que también describe el init que devuelve).
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
-  const safe = conErrorHandling(socket)
   const { userId, nombre } = socket.data.session
 
-  socket.on(
-    'disconnect',
-    safe(async () => {
-      const sala = await Salas.get(idSala)
-      if (!(await sala.profeConectado(socket.id))) await avisarContrincantesActualizados(idSala)
-    })
-  )
+  alDesconectar(socket, async () => {
+    const sala = await Salas.get(idSala)
+    if (!(await sala.profeConectado(socket.id))) await avisarContrincantesActualizados(idSala)
+  })
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  return safe(() => avisarContrincantesActualizados(idSala))
+  return () => avisarContrincantesActualizados(idSala)
 }

@@ -1,7 +1,6 @@
 import { Socket } from 'socket.io'
 import { comandosSalaActivaProfe, comandosSalaConfig, comandosSalasGestion } from '../contrato/salas'
-import { registrar } from '../contrato/registrar'
-import { conErrorHandling } from '../middleware/error-handling'
+import { alDesconectar, protegido, registrar } from '../contrato/registrar'
 import * as db from './db'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
@@ -134,26 +133,26 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
 
   await handlersEncuestasProfe(socket, sala)
   const iniciarGo = await handlersGoProfe(socket, sala.id)
-  await iniciarGo()
+  await protegido(socket, iniciarGo) // secundario: no debe impedir `sala:abierta`
 
   await emitirAbierta(socket, sala)
 }
 
 /** GESTIÓN (ABM) — token-only, sin sala fija. La operación se engancha al abrir (`handlersSalaActivaProfe`). */
 export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
-  const safe = conErrorHandling(socket)
   const email = socket.data.session.email
 
   socket.join(`profe:${email}`)
 
-  /** Emite la lista de salas a todas las conexiones del profe (room `profe:${email}`). */
-  const emitirLista = safe(async () => {
-    const salas = await Salas.getSalasDeProfe(email)
-    io.to(`profe:${email}`).emit(
-      'salas:lista',
-      salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
-    )
-  })
+  /** Emite la lista de salas a todas las conexiones del profe (room `profe:${email}`). Protegido: es un efecto posterior al cambio, no debe fallar al comando que lo pide. */
+  const emitirLista = () =>
+    protegido(socket, async () => {
+      const salas = await Salas.getSalasDeProfe(email)
+      io.to(`profe:${email}`).emit(
+        'salas:lista',
+        salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
+      )
+    })
 
   /**
    * Abre una sala en esta conexión. Modelo página-por-sala: una conexión opera UNA sala. Si ya hay
@@ -229,8 +228,6 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 
 /** Registra los comandos del estudiante y devuelve su init (registro en la planilla, aviso al profe). */
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
-  const safe = conErrorHandling(socket)
-
   // Rooms -- la última de estas tres es su 'personal room' para mensajes dirigidos a este cliente en particular (ej: kickeo, cambios que lo afectan, etc.)
   // A esta altura el `userId` ya está resuelto dependiendo el metodo_login de la sala (nombre/DNI/email).
   socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.userId}`])
@@ -240,23 +237,20 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   const salaPendiente = Salas.get(idSala)
   salaPendiente.catch(() => {})
 
-  socket.on(
-    'disconnect',
-    safe(async (reason) => {
-      console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
-      const sala = await salaPendiente
-      const { userId } = socket.data.session
+  alDesconectar(socket, async (reason) => {
+    console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+    const sala = await salaPendiente
+    const { userId } = socket.data.session
 
-      // No tocamos la planilla: el estudiante sigue registrado, solo deja de tener socket vivo.
-      // La presencia se deduce de los sockets al listar; acá solo anotamos el evento de asistencia.
-      await sala.registrarDesconexion(userId)
+    // No tocamos la planilla: el estudiante sigue registrado, solo deja de tener socket vivo.
+    // La presencia se deduce de los sockets al listar; acá solo anotamos el evento de asistencia.
+    await sala.registrarDesconexion(userId)
 
-      // Solo le avisamos al profe que se desconectó si NO le queda ningún otro socket vivo (ej:
-      // sigue conectado desde otra pestaña/clientId). Excluimos el socket actual del chequeo.
-      if (!(await sala.sigueConectado(userId, socket.id)))
-        await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: userId })
-    })
-  )
+    // Solo le avisamos al profe que se desconectó si NO le queda ningún otro socket vivo (ej:
+    // sigue conectado desde otra pestaña/clientId). Excluimos el socket actual del chequeo.
+    if (!(await sala.sigueConectado(userId, socket.id)))
+      await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: userId })
+  })
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
   registrar(socket, comandosSalaConfig, {
@@ -265,8 +259,8 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     },
   })
 
-  // Init de la conexión: lo corre `server.ts` cuando ya están registrados los comandos de todos los grupos.
-  return safe(async () => {
+  // Init: lo corre `server.ts` cuando ya están registrados los comandos de todos los grupos.
+  return async () => {
     const sala = await salaPendiente
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
 
@@ -285,7 +279,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
         socket.emit('sala:invitado', { nombreProvisto: nombres[userId] })
       }
     }
-  })
+  }
 }
 
 /** Handlers para exponer info pública de la sala */

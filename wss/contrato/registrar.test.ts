@@ -4,7 +4,7 @@ import { io as ioClient, Socket as SocketCli } from 'socket.io-client'
 import { z } from 'zod'
 import { comandos, escuchar } from '../../wss-cli/contrato-cli'
 import { comando, comandoAck, devuelve, sinPayload } from './definir'
-import { registrar } from './registrar'
+import { alDesconectar, protegido, registrar } from './registrar'
 
 const contrato = {
   'cosa:borrar': comando(z.object({ id: z.string().min(1, 'Falta el id') })),
@@ -97,4 +97,45 @@ describe('registrar + comandos/escuchar', () => {
     // @ts-expect-error evento fuera del contrato
     c().enviar('cosa:inexistente')
   }
+})
+
+describe('código de conexión fuera de un comando', () => {
+  const eventos: string[] = []
+  let servidor: Server
+  let clienteLifecycle: SocketCli
+  let puerto: number
+
+  beforeAll(async () => {
+    servidor = new Server()
+    servidor.on('connection', (socket) => {
+      // Ambos lanzan: sin protección serían una `unhandledRejection`.
+      void protegido(socket, async () => {
+        eventos.push('init')
+        throw new Error('init falla')
+      })
+      alDesconectar(socket, async (motivo) => {
+        eventos.push(`desconexion:${motivo}`)
+        throw new Error('desconexion falla')
+      })
+    })
+    servidor.listen(0)
+    puerto = (servidor.httpServer.address() as { port: number }).port
+  })
+
+  afterAll(() => {
+    servidor.close()
+  })
+
+  test('un error del init se notifica por wss:error y no tira el proceso', async () => {
+    clienteLifecycle = ioClient(`http://localhost:${puerto}`, { reconnection: false })
+    const error = new Promise<{ message: string }>((resolve) => clienteLifecycle.once('wss:error', resolve))
+    expect((await error).message).toBe('init falla')
+    expect(eventos).toContain('init')
+  })
+
+  test('un error en el handler de desconexión no tira el proceso', async () => {
+    clienteLifecycle.disconnect()
+    await Bun.sleep(100)
+    expect(eventos).toContain('desconexion:client namespace disconnect')
+  })
 })

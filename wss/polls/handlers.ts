@@ -1,7 +1,6 @@
 import { Socket } from 'socket.io'
 import { comandosPollsEstudiante, comandosPollsOverlay, comandosPollsProfe } from '../contrato/polls'
 import { registrar } from '../contrato/registrar'
-import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Sala, Salas } from '../salas/app'
 import { Encuesta, PollIdPayload } from '../validators/polls'
@@ -71,8 +70,7 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
     },
   })
 
-  // Init: la lista inicial. Con el wrapper, un throw no tira el proceso (unhandledRejection).
-  return conErrorHandling(socket)(emitirLista)
+  return emitirLista
 }
 
 export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {

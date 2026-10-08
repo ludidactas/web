@@ -47,8 +47,15 @@ registrar(socket, comandosXProfe, {
 - Los errores de zod se resumen con `extractZodErrorMessages` (mensajes legibles, no el JSON de zod).
 - `registrar` deja los listeners puestos al retornar: llamarlo **antes** de cualquier `await` de I/O de
   la conexión evita perder comandos que el cliente emite apenas conecta.
-- El código que corre fuera de un comando (init de cada conexión, `disconnect`) se protege con
-  `conErrorHandling(socket)(fn)()`: un throw ahí sin wrapper es una `unhandledRejection` que tira el proceso.
+- Nada de lo que corre en una conexión puede tirar el proceso (una `unhandledRejection` lo hace, ver
+  `wss/mount.ts`): los comandos van por `registrar`, el `disconnect` por `alDesconectar(socket, fn)`, y
+  `server.ts` corre el armado de la conexión y cada init dentro de `protegido(socket, fn)`. En los tres un
+  error se loguea y se notifica por `wss:error`.
+- Dentro de un handler, un error es la respuesta del comando. Un efecto que viene **después** de que la
+  operación principal ya se hizo (refrescar `salas:lista` tras `sala:crear`, el init de Go al abrir una sala)
+  se corre con `protegido` a propósito: si fallara sin él, el cliente vería "no se pudo crear" sobre una sala
+  que existe (y reintentaría), o el profe nunca recibiría `sala:abierta`. Qué cuenta como secundario depende
+  de la operación; `registrar` no puede decidirlo.
 
 ## Eventos server→cliente
 
@@ -79,7 +86,7 @@ desmontar: () => dejar()                     // quita solo los listeners que reg
 
 | Código viejo | Con el contrato |
 | --- | --- |
-| `socket.on('ev', safe(async (p) => ...))` | entrada en `registrar(socket, contrato, { 'ev': async (p) => ... })` |
+| `socket.on('ev', safe(async (p) => ...))` (wrapper que loguea y avisa por `wss:error`) | entrada en `registrar(socket, contrato, { 'ev': async (p) => ... })` |
 | `socket.on('ev', conAck(socket)(async (p) => ...))` | `comandoAck(schema, devuelve<R>())` + entrada en `registrar` |
 | `payload: unknown` + `schema.parse(payload)` dentro del handler/`app.ts` | schema en el contrato; el handler recibe el tipo parseado |
 | ack ad hoc (`responder(error?)`) | `comandoAck(..., devuelve<void>())`; el cliente hace `await pedir(...)` |
@@ -99,8 +106,8 @@ Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.
 | Salas — gestión (ABM), sala activa del profe, estudiante y público | `wss/salas/handlers.ts` | `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
 | Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | `wss/salas/handlers.ts` | `profe-asistencia-handlers.ts` |
 
-Todos los comandos del cliente pasan por el contrato. Lo que se registra a mano son los `disconnect`, el
-`connect_error` del middleware y el init de cada conexión.
+Todos los comandos del cliente pasan por el contrato y el código de conexión por `alDesconectar` y `protegido`.
+Solo el `connect_error` del middleware y los `disconnect` que manejan sus propios errores (profe, admin) se registran a mano.
 
 ## Eventos sin contraparte
 

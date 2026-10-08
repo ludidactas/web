@@ -5,11 +5,12 @@ payload. El server registra handlers contra ese contrato y el cliente emite cont
 renombrar un evento, cambiar un payload o usar `enviar` donde corresponde `pedir` rompe la compilación.
 
 ```
-wss/contrato/definir.ts     builders (comando, comandoAck, devuelve, sinPayload) y tipos derivados
+wss/contrato/definir.ts     builders (comando, comandoAck, devuelve, sinPayload), el tipo `Ack` y tipos derivados
 wss/contrato/registrar.ts   server: valida con zod, ejecuta el handler, responde por ack o `wss:error`
-wss/contrato/<feature>.ts   contrato de una feature: comandos por rol + eventos server→cliente
+wss/contrato/<feature>.ts   contrato de una feature: comandos por rol + eventos server→cliente (polls, salas, dojo, go)
+wss/contrato/eventos.ts     eventos por rol (`EventosProfe`, `EventosEstudiante`, `EventosPublico`) y su unión
 wss-cli/contrato-cli.ts     cliente: `comandos<C>(socket)` → enviar/pedir, `escuchar<E>(socket, {...})`
-wss/contrato/registrar.test.ts   test con socket.io real (server + cliente en proceso)
+wss/contrato/*.test.ts      registrar con socket.io real (server + cliente en proceso), schemas de salas, tipos de `emit`
 ```
 
 ## Cómo se declara una feature
@@ -46,8 +47,21 @@ registrar(socket, comandosXProfe, {
 - Los errores de zod se resumen con `extractZodErrorMessages` (mensajes legibles, no el JSON de zod).
 - `registrar` deja los listeners puestos al retornar: llamarlo **antes** de cualquier `await` de I/O de
   la conexión evita perder comandos que el cliente emite apenas conecta.
-- El código de init que corre en cada conexión (fuera de un comando) sigue protegido con
+- El código que corre fuera de un comando (init de cada conexión, `disconnect`) se protege con
   `conErrorHandling(socket)(fn)()`: un throw ahí sin wrapper es una `unhandledRejection` que tira el proceso.
+
+## Eventos server→cliente
+
+`wss/contrato/eventos.ts` reúne los eventos de cada feature por rol. Con eso:
+
+- `SocketProfe` y `SocketEstudiante` tipan `socket.emit`: rechaza un evento que ese rol no recibe o un
+  payload que no le corresponde.
+- El `io` de `wss/mount.ts` tipa `io.to(room).emit` con `EventosServidorTodos`: para cada evento, la unión
+  de sus payloads entre roles (el destinatario de un room puede ser de cualquier rol).
+- `sala.broadcast(evento, ...)` recibe el nombre del evento como `string`, sin tipar.
+
+Un evento nuevo se declara en la interfaz `Eventos<Feature><Rol>` de su contrato; `eventos.test.ts` fija con
+`@ts-expect-error` lo que el compilador debe rechazar.
 
 ## Cliente
 
@@ -79,40 +93,38 @@ Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.
 
 | Feature | Server | Cliente |
 | --- | --- | --- |
-| Encuestas — profe, estudiante, overlay | ✅ `wss/polls/handlers.ts` | ✅ `wss-cli/handlers/*-encuestas-handlers.ts` |
-| Dojo (visitante anónimo) | ✅ `wss/dojo/handlers.ts` | ✅ `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts` |
-| Go (estudiante y profe) | ⏳ `wss/go/handlers.ts` | ⏳ `estudiante-go-handlers.ts`, `profe-go-handlers.ts` |
-| Salas — gestión (ABM), sala activa del profe, estudiante y público | ✅ `wss/salas/handlers.ts` | ✅ `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
-| Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | ✅ `wss/salas/handlers.ts` | ✅ `profe-asistencia-handlers.ts` |
+| Encuestas — profe, estudiante, overlay | `wss/polls/handlers.ts` | `wss-cli/handlers/*-encuestas-handlers.ts` |
+| Dojo (visitante anónimo) | `wss/dojo/handlers.ts` | `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts` |
+| Go — estudiante y profe | `wss/go/handlers.ts` | `wss-cli/handlers/go-handlers.ts` (compartido por `estudiante-go-handlers.ts` y `profe-go-handlers.ts`) |
+| Salas — gestión (ABM), sala activa del profe, estudiante y público | `wss/salas/handlers.ts` | `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
+| Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | `wss/salas/handlers.ts` | `profe-asistencia-handlers.ts` |
 
-Pendiente transversal, una vez migradas todas las features (solo falta Go): tipar los eventos server→cliente en los
-sockets del server (`SocketProfe`/`SocketEstudiante`, `io.to(...).emit`, `sala.broadcast`). Hoy están
-con `DefaultEventsMap` porque un mapa parcial rechazaría los eventos de las features sin migrar. Cuando
-estén todas, retirar `conErrorHandling`/`conAck` sueltos y unificar el tipo `Ack` en `wss/contrato`.
+Todos los comandos del cliente pasan por el contrato. Lo que se registra a mano son los `disconnect`, el
+`connect_error` del middleware y el init de cada conexión.
 
-## Eventos sin contraparte detectados al migrar
+## Eventos sin contraparte
 
-El contrato deja a la vista los eventos que solo existían de un lado. En encuestas:
+El contrato deja a la vista los eventos que existen de un solo lado. Estos no tienen contraparte y no están en él:
 
-- `poll:votantes` (server → profe): ningún cliente lo escucha; no está en el contrato. `consultarVotantes` sigue en `wss/polls/app.ts`.
-- `poll:created` (cliente profe y estudiante) y `polls:list` (cliente profe): el server nunca los emite
-  (crear y actualizar viajan como `poll:updated`; el profe recibe sus encuestas en `sala:abierta`). Se quitaron los listeners.
-
-En salas:
-
-- `sala:limpar_estudiantes_sala` y `sala:pedir_asistencia` (cliente): el server ya no los atiende; se quitó la acción `limpiarEstudiantes`.
-- `sala:eliminada` (cliente profe): el server no lo emite (al eliminar una sala los estudiantes reciben `sala:kick`). Se quitó el listener.
-- `consultarNombreDisponible` (cliente público): emite `sala:consultar_nombre_disponible`, que el server no implementa. Sigue en `public-sala-handlers.ts` porque queda fuera del contrato hasta que exista el comando.
-- `sala:pedir_config` lo emite también el profe (`base-sala-handlers.ts`), pero el server solo lo atiende para estudiante y público; el profe recibe su config en `sala:abierta`.
+- `poll:votantes`: sin listener en ningún cliente. `consultarVotantes` (`wss/polls/app.ts`) no tiene llamadores.
+- `poll:created` y `polls:list` hacia el profe: el server no los emite (crear y actualizar viajan como
+  `poll:updated`; el profe recibe sus encuestas en `sala:abierta`).
+- `sala:limpar_estudiantes_sala` y `sala:pedir_asistencia`: el server no los atiende.
+- `sala:eliminada`: el server no lo emite (al eliminar una sala los estudiantes reciben `sala:kick`).
+- `sala:consultar_nombre_disponible` (`consultarNombreDisponible` en `public-sala-handlers.ts`): el server no lo
+  implementa; queda fuera del contrato hasta que exista el comando.
+- `sala:pedir_config` lo emite también el profe (`base-sala-handlers.ts`), pero el server solo lo atiende para
+  estudiante y público; el profe recibe su config en `sala:abierta`.
 
 ## Para quien agrega código en paralelo
 
-Mientras una feature no esté migrada, sus handlers viejos (`safe`, `conAck`, `montar`/`desmontar` a mano)
-siguen funcionando: el contrato convive con ellos. Un comando nuevo en una feature **ya migrada** se
-agrega al contrato (`wss/contrato/<feature>.ts`) y a `registrar`; el compilador marca el resto.
+Un comando nuevo se agrega al contrato de su feature (`wss/contrato/<feature>.ts`) y a `registrar`; un evento
+nuevo, a la interfaz de eventos de ese contrato. El compilador marca el resto: handler faltante del server,
+payload mal formado en el cliente, `enviar` donde corresponde `pedir`.
 
-Al integrar código de una feature migrada que llegó con el patrón viejo, aplicar la receta de arriba:
-mover el schema al contrato, borrar el `parse` interno y pasar el handler a `registrar`.
+Si llega código con `socket.on` + `safe`/`conAck`, `payload: unknown` con `.parse` adentro o
+`montar`/`desmontar` con `removeAllListeners`, se convierte con la receta de arriba: mover el schema al
+contrato, borrar el `parse` interno y pasar el handler a `registrar`.
 
 ## Detalles que confunden fácil
 
@@ -123,3 +135,8 @@ mover el schema al contrato, borrar el `parse` interno y pasar el handler a `reg
 - Los componentes pueden pasar el `output` de un schema donde el contrato espera el `input` (los
   defaults de zod son opcionales en la entrada), por eso `CrearEncuesta` (output) se acepta en `pedir`.
 - `pedir` espera el ack 5 s. Un comando lento usa su propio emisor: `comandos<C>(socket, { timeoutMs: 10_000 })`.
+- Un handler registrado después de un `await` de I/O pierde los comandos que el cliente emite apenas conecta.
+  `server.ts` despacha los grupos de handlers con `await` en secuencia, así que los de Go (cableados al final)
+  pueden registrarse tarde: el cliente de Go pide `go:mi_partida` con reintentos por eso.
+- Los comandos que devuelven la `Partida` por ack no esperan el broadcast `go:partida`: el socket recién se une
+  a la sala de la partida (`seguir`) después de que el server responde.

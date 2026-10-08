@@ -4,10 +4,8 @@ import { ExtendedError, Socket } from 'socket.io'
 type Middleware<T extends unknown[]> = (...args: T) => Promise<void>
 
 /**
- * Wrapper para el código de una conexión que no es un comando del cliente (init al conectar,
- * `disconnect`): si falla, se loguea y se le notifica al cliente por `wss:error`. Sin este wrapper, un
- * throw ahí es una `unhandledRejection` que tira el proceso (ver `wss/mount.ts`). Los comandos del
- * cliente se registran con `registrar` (`wss/contrato`).
+ * Para el código de una conexión que no es un comando (init, `disconnect`): loguea el error y lo notifica
+ * por `wss:error`. Sin él, un throw es una `unhandledRejection` que tira el proceso (ver `wss/mount.ts`).
  */
 export const conErrorHandling =
   (socket: Socket) =>

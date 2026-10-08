@@ -7,11 +7,7 @@ import {
   type Partida,
 } from '../validators/go'
 
-/**
- * Comandos de Go de una conexión (estudiante o profe: comparten la mecánica, solo cambia la identidad).
- * Los que devuelven la `Partida` por ack no esperan el broadcast `go:partida`: el socket recién se une
- * a la sala de la partida después de que el server responde.
- */
+/** Comandos de Go de una conexión: estudiante y profe comparten la mecánica, cambia la identidad. */
 export const comandosGo = {
   'go:contrincantes': comandoAck(sinPayload, devuelve<ContrincanteGo[]>()),
   /** Mi partida activa (pendiente o en curso), o `null`. */
@@ -29,7 +25,6 @@ export const comandosGo = {
   'go:abandonar': comandoAck(partidaIdSchema, devuelve<Partida>()),
 }
 
-/** Eventos de Go que el server le emite a quien juega (estudiante o profe). */
 export interface EventosGo {
   /** Una partida en la que estoy adentro (jugando u observando) cambió. */
   'go:partida': Partida

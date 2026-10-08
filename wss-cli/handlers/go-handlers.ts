@@ -5,24 +5,15 @@ import { toast } from 'sonner'
 import { comandos, escuchar } from '../contrato-cli'
 import { storeGo } from '../stores/go-store'
 
-/**
- * Espejo cliente de `registrarComandosGo`: estudiante y profe usan los mismos comandos de Go, solo
- * cambia la identidad con la que el server los atiende.
- */
+/** Espejo cliente de `registrarComandosGo`: estudiante y profe usan los mismos comandos, con otra identidad. */
 export default function goHandlers(socket: Socket | null) {
   const store = storeGo.getState()
   const cmd = comandos<typeof comandosGo>(socket)
-  // `desmontar()` lo pone en true para cancelar un loop de reintentos en curso: sin esto, un montaje
-  // reemplazado (StrictMode en dev, o un socket nuevo tras reconectar) deja corriendo el loop viejo en
-  // paralelo con el nuevo, y cada uno puede terminar en su propio toast de error duplicado.
+  // `desmontar` corta el loop de reintentos: un montaje reemplazado (StrictMode, reconexión) dejaría dos en paralelo.
   let desmontado = false
   let dejarDeEscuchar = () => {}
 
-  /**
-   * Ejecuta un comando que devuelve la partida por ack (en vez de por el broadcast `go:partida`, que a
-   * esta altura puede no incluir todavía a este socket: recién se une a la sala de la partida después
-   * de que el server le respondió) y actualiza el store con la respuesta.
-   */
+  /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket. */
   async function guardandoPartida(pedido: Promise<Partida>): Promise<Partida> {
     const partida = await pedido
     store.set(partida)
@@ -30,11 +21,8 @@ export default function goHandlers(socket: Socket | null) {
   }
 
   /**
-   * Pide `go:mi_partida` con reintentos: justo al conectar, el socket puede emitirlo antes de que el
-   * server termine de registrar ese listener (queda cableado después de otros handlers de la sala), en
-   * cuyo caso el evento se pierde y el ack tarda los 5s completos en expirar. Sin reintento, esa única
-   * falla dejaba al store en "sin partida" para siempre (hasta el próximo refresh), botando al
-   * estudiante de una partida en curso.
+   * Con reintentos: al conectar, el server puede no haber registrado todavía el listener y el ack expira
+   * (ver docs/contrato-wss.md); una sola falla dejaría el store en "sin partida" hasta refrescar.
    */
   async function pedirMiPartidaConReintentos() {
     const intentos = 3
@@ -57,28 +45,23 @@ export default function goHandlers(socket: Socket | null) {
       if (!socket) return
 
       dejarDeEscuchar = escuchar<EventosGo>(socket, {
-        // Actualización de una partida en la que estoy adentro: si es la que estoy observando como
-        // espectador va a `observando`, si no es la mía propia (jugadas, pases, conteo, fin de partida).
+        // Una partida en la que estoy: la que observo va a `observando`; si no, es la mía.
         'go:partida': (partida) => {
           if (storeGo.getState().observando?.id === partida.id) store.setObservando(partida)
           else store.set(partida)
         },
 
-        // Alguien me invita.
         'go:invitacion': (partida) => store.agregarInvitacion(partida),
         'go:invitacion_rechazada': ({ partidaId }) => {
           store.quitarInvitacion(partidaId)
           if (storeGo.getState().partida?.id === partidaId) store.set(null)
         },
 
-        // Alguien de la sala entró o salió de una partida: refresca "la sala" en vivo (el profe también
-        // la recibe, para ver con quién juega cada estudiante).
+        // También lo recibe el profe.
         'go:contrincantes_actualizados': (contrincantes) => store.setContrincantes(contrincantes),
       })
 
-      // Al conectar, pedimos si ya tenemos una partida en curso (soporta reconexión/refresh). Hasta
-      // que esto resuelve, `inicializado` queda en false para que la UI muestre un loading en vez de
-      // asumir "no hay partida" y mostrar por un instante el buscador de contrincantes.
+      // `inicializado` queda en false hasta que resuelve: la UI muestra un loading, no el buscador de contrincantes.
       pedirMiPartidaConReintentos().finally(store.marcarInicializado)
     },
 
@@ -87,9 +70,7 @@ export default function goHandlers(socket: Socket | null) {
       invitar: (contrincanteId: string, tamaño: TamañoTablero = 9) =>
         guardandoPartida(cmd.pedir('go:invitar', { contrincanteId, tamaño })),
       aceptar: (partidaId: string) => guardandoPartida(cmd.pedir('go:aceptar', { partidaId })),
-      // También sirve para cancelar una invitación propia todavía pendiente: el server trata ambos
-      // casos igual (termina la partida pendiente y avisa al otro jugador por `go:invitacion_rechazada`),
-      // así que acá limpiamos tanto la lista de entrantes como `partida` si es la que estábamos esperando.
+      // También cancela una invitación propia pendiente: se limpian las invitaciones y `partida` si era la esperada.
       rechazar: async (partidaId: string) => {
         await cmd.pedir('go:rechazar', { partidaId })
         store.quitarInvitacion(partidaId)

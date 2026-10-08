@@ -23,10 +23,8 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
   return {
     montar: () => {
       dejarDeEscuchar = escuchar<EventosSalaProfe>(socket, {
-        // Al recibir estudiantes los almacenamos en el store
         'sala:estudiantes': almacenEstudiantes.set,
 
-        // Al conectar o desconectar estudiantes...
         'sala:estudiante_conectado': (estudiante) => {
           toast.success(`Estudiante conectado: ${estudiante.nombre}`)
           almacenEstudiantes.add({ ...estudiante, conectado: true })

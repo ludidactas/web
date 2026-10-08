@@ -46,10 +46,8 @@ export const configActualizable = configSala
 /** `configActualizable` con todos los campos opcionales: lo que el profe puede mandar para cambiar la config. */
 export const configActualizableParcial = configActualizable.partial()
 
-/** Payload de `sala:crear`: la config inicial es opcional. */
 export const crearSalaSchema = z.object({ config: configCreacionSala.default({}) }).default({})
 
-/** Payload de los comandos que operan sobre una sala del profe. */
 export const idSalaSchema = z.object({ idSala: z.string().min(1) })
 
 /** La data completa de una sala tal como se persiste en redis. */
@@ -69,10 +67,8 @@ export type SalaData = z.infer<typeof salaData>
 
 export type ConfigActualizableParcial = z.infer<typeof configActualizableParcial>
 
-// `WssEstudianteSession` es una unión discriminada por método (dni/nombre/google), donde `dni`,
-// `email` y `avatar` viven solo en su variante. Para la vista del profe necesitamos acceder a esos
-// campos sin discriminar, así que intersectamos la unión con ellos como opcionales (más los campos
-// de presentación). No re-enumeramos los campos comunes (userId, nombre, etc.): vienen de la unión.
+// `WssEstudianteSession` es una unión por método de login: `dni`, `email` y `avatar` se suman como opcionales
+// para leerlos sin discriminar.
 /** Estudiante de la planilla de la sala, tal como lo ve el profe. */
 export type EstudianteDeSala = WssEstudianteSession & {
   conectado: boolean
@@ -82,8 +78,7 @@ export type EstudianteDeSala = WssEstudianteSession & {
   votos?: Record<string, string[]>
 }
 
-/** Una fila de la planilla completa: el estudiante + su nombre provisto (si el profe le asignó uno como
- * invitado) + el texto de las opciones que votó en cada encuesta. */
+/** Fila de la planilla: el estudiante, su nombre provisto (si es invitado) y el texto de lo que votó en cada encuesta. */
 export type FilaPlanillaCompleta = EstudianteDeSala & { nombreProvisto?: string; respuestas: Record<string, string> }
 
 export type PlanillaCompleta = {
@@ -94,5 +89,4 @@ export type PlanillaCompleta = {
 /** Lista de invitados de una sala (DNIs) con los nombres que el profe les asignó. */
 export type ListaPermitidosConNombres = { lista: string[]; nombres: Record<string, string> }
 
-/** Una sala en el listado del profe. */
 export type SalaResumen = { id: string; nombre?: string }

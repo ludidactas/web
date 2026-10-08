@@ -63,12 +63,10 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
   registrar(socket, comandosPollsEstudiante, {
     'polls:list': emitirLista,
 
-    // Estudiantes votan. Broadcasteamos la poll updateada.
     'poll:vote': async (voto) => broadcastPoll(sala, await estudiante.votar(voto)),
   })
 
-  // Al conectarse el estudiante, le enviamos la lista de encuestas activas hidratadas. Sin el wrapper,
-  // un throw acá quedaría como unhandled rejection y tiraría abajo el proceso del wss.
+  // Lista inicial al conectar. Con el wrapper, un throw no tira el proceso (unhandledRejection).
   await conErrorHandling(socket)(emitirLista)()
 }
 

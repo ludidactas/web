@@ -11,7 +11,7 @@ export interface OpcionesComandos {
 /** Claves del contrato cuyo comando responde por ack. */
 type ConAck<C extends Contrato> = { [K in keyof C]: C[K] extends Comando<any, any, true> ? K : never }[keyof C] & string
 
-/** Claves del contrato cuyo comando no responde datos. */
+/** Claves del contrato cuyo comando no responde. */
 type SinAck<C extends Contrato> = Exclude<keyof C & string, ConAck<C>>
 
 /** Argumentos de un comando: el payload es opcional si su schema acepta `undefined`. */
@@ -22,12 +22,11 @@ type ArgsDe<C extends Contrato, K extends keyof C> = undefined extends Entrada<C
 type RespuestaDe<D> = D extends Comando<any, infer R, true> ? R : never
 
 /**
- * Emisor tipado contra el contrato `C` (los comandos que el rol del socket puede mandar):
- * - `enviar`: comando sin respuesta. Si el server falla, el error llega por `wss:error`.
- * - `pedir`: comando con ack. Resuelve con el dato de la respuesta y rechaza con el error del server.
+ * Emisor tipado contra el contrato `C`:
+ * - `enviar`: comando sin respuesta (un error del server llega por `wss:error`).
+ * - `pedir`: comando con ack; rechaza con el error del server o por `timeoutMs`.
  *
- * `timeoutMs` ajusta la espera de `pedir` para los comandos lentos.
- * Sin socket (`null`, todavía no conectó) `enviar` no hace nada y `pedir` rechaza.
+ * Sin socket, `enviar` no hace nada y `pedir` rechaza.
  */
 export function comandos<C extends Contrato>(socket: Socket | null, { timeoutMs = TIMEOUT_ACK_MS }: OpcionesComandos = {}) {
   return {
@@ -47,10 +46,7 @@ export function comandos<C extends Contrato>(socket: Socket | null, { timeoutMs 
   }
 }
 
-/**
- * Suscribe `handlers` a los eventos del server `E`. Devuelve la función que quita exactamente esos
- * listeners (no los de otros módulos sobre el mismo evento).
- */
+/** Suscribe `handlers` a los eventos del server `E`; devuelve la función que quita solo esos listeners. */
 export function escuchar<E extends EventosServidor>(
   socket: Socket | null,
   handlers: Partial<ListenersDe<E>>

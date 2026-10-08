@@ -45,13 +45,12 @@ export const comandosSalaConfig = {
   'sala:pedir_config': comando(sinPayload),
 }
 
-/** Eventos comunes a todos los roles. */
+/** Eventos que reciben todos los roles. */
 interface EventosBase {
   'wss:error': { message: string }
   'sala:config_actualizada': ConfigSala
 }
 
-/** Eventos de sala que el server le emite al profe. */
 export interface EventosSalaProfe extends EventosBase {
   'salas:lista': SalaResumen[]
   'sala:abierta': {
@@ -67,7 +66,6 @@ export interface EventosSalaProfe extends EventosBase {
   'sala:lista_permitidos': ListaPermitidosConNombres
 }
 
-/** Eventos de sala que el server le emite al estudiante. */
 export interface EventosSalaEstudiante extends EventosBase {
   /** El server lo desconecta de la sala (fuera de la lista de invitados, sala eliminada). */
   'sala:kick': { motivo: string }
@@ -75,5 +73,4 @@ export interface EventosSalaEstudiante extends EventosBase {
   'sala:invitado': { nombreProvisto?: string }
 }
 
-/** Eventos de sala que el server le emite al cliente público. */
 export type EventosSalaPublico = EventosBase

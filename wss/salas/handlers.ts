@@ -96,10 +96,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
       socket.emit('sala:estudiantes', await sala.listarEstudiantes())
     },
 
-    // El profe pide la planilla completa (estado durable del server, no el store del FE) para
-    // exportarla a Excel. Devuelve datos crudos; el archivo se arma en el cliente. `minutos`, si
-    // viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia atrás (para
-    // acotar la exportación a la clase actual).
+    // Datos crudos para exportar a Excel (el archivo se arma en el cliente); ver `armarPlanillaCompleta`.
     'sala:pedir_planilla_completa': async (minutos) => armarPlanillaCompleta(sala, minutos),
 
     'sala:permitidos_agregar': async (lista) => {
@@ -119,8 +116,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
       await emitirPermitidos(socket, sala)
     },
 
-    // Nombre que el profe le asigna a un invitado (por DNI) antes de que se conecte. Es independiente
-    // del alta en la lista (`permitidos_agregar`): permite ponerle/cambiarle nombre a un DNI ya cargado.
+    // Independiente de `permitidos_agregar`: nombra o renombra un DNI ya cargado.
     'sala:permitidos_nombre': async ({ dni, nombre }) => {
       const nombreTrimmed = nombre.trim().slice(0, MAX_LEN_NOMBRE)
       if (!nombreTrimmed) throw new Error('El nombre no puede estar vacío')
@@ -128,9 +124,7 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
       await emitirPermitidos(socket, sala)
     },
 
-    // Las asistencias pendientes (normalmente una sola clase, la última cerrada) quedan en redis hasta
-    // que el FE confirma que las escribió en Drive: si las borráramos al entregarlas, un fallo de
-    // subida (Drive desconectado, red) perdería la clase.
+    // Quedan en redis hasta que el FE confirma que las escribió en Drive: un fallo de subida no pierde la clase.
     'sala:asistencias_pendientes': async () => db.getAsistenciasPendientes(sala.id),
 
     'sala:descartar_asistencias_pendientes': async () => {
@@ -179,8 +173,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   registrar(socket, comandosSalasGestion, {
     'salas:listar': async () => emitirLista(),
 
-    // Responde por ack con el id de la sala nueva; el cliente navega a `/salas/[id]` para operarla
-    // (gestión no abre salas). `emitirLista` refresca el listado en las demás pestañas del profe.
+    // El cliente navega a `/salas/[id]`; `emitirLista` refresca las demás pestañas del profe.
     'sala:crear': async ({ config: { listaPermitidos, nombresPermitidos, ...config } }) => {
       await assertPuedeCrearSala(email)
 
@@ -203,8 +196,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
       await emitirLista()
     },
 
-    // Responde por ack: el cliente necesita saber si la eliminación realmente ocurrió (ej: sala ya
-    // borrada por otra pestaña) antes de sacarla de su lista, en vez de asumir éxito optimistamente.
+    // Por ack: el cliente confirma que la eliminación ocurrió (ej. no la borró otra pestaña) antes de sacarla de su lista.
     'sala:eliminar': async ({ idSala }) => {
       await Salas.assertEsDueño(email, idSala)
       await Salas.eliminar(email, idSala)

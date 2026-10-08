@@ -35,21 +35,18 @@ export const comandosPollsOverlay = {
   'poll:pedir_enfocada': comandoAck(sinPayload, devuelve<EncuestaConVotos | null>()),
 }
 
-/** Eventos de encuestas que el server le emite al profe. */
 export interface EventosPollsProfe {
   'poll:updated': EncuestaHidratadaProfe
   'poll:deleted': { pollId: string }
   'poll:votos:usuario': { userId: string; votos: Record<string, string[]> }
 }
 
-/** Eventos de encuestas que el server le emite al estudiante. */
 export interface EventosPollsEstudiante {
   'polls:list': EncuestaHidratadaEstudiante[]
   'poll:updated': EncuestaHidratadaEstudiante
   'poll:deleted': { pollId: string }
 }
 
-/** Eventos de encuestas que el server le emite al overlay. */
 export interface EventosPollsOverlay {
   'poll:updated': EncuestaConVotos
   'poll:deleted': { pollId: string }

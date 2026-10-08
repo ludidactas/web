@@ -28,10 +28,7 @@ export default function estudianteSalaHandlers(socket: Socket | null) {
           }
         },
 
-        // El server avisa que estamos en la lista de invitados de la sala (con nuestro nombre
-        // provisto, si el profe nos puso uno) para mostrar el aviso y tomar asistencia. El toast usa
-        // el nombre provisto por el profe (es la prueba de que la asistencia matcheó contra la lista),
-        // nunca el nombre que tipeó el estudiante; si el profe no le puso nombre, cae al DNI.
+        // El toast usa el nombre que puso el profe (prueba de que la asistencia matcheó la lista), no el tipeado; si falta, el DNI.
         'sala:invitado': ({ nombreProvisto }) => {
           storeInvitado.getState().set({ nombreProvisto })
           const { dni } = storeEstudianteLogin.getState()

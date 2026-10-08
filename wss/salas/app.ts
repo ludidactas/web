@@ -195,7 +195,7 @@ export namespace Salas {
       /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
       intervalosDeConexion,
 
-      /** Actualiza los campos mutables de la config de la sala (ya validados, ver `configActualizableParcial`) */
+      /** Actualiza los campos mutables de la config (ya validados: `configActualizableParcial`) */
       actualizarConfig,
 
       /** Gestión de la lista de usuarios permitidos */

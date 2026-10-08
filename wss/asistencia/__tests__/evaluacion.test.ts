@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { estuvoPresente, evaluarClase, type VentanaDeClase } from '../evaluacion'
+import { DURACION_MINIMA_CLASE_MS, estuvoPresente, evaluarClase, type VentanaDeClase } from '../evaluacion'
 import {
   asistenciaDeClaseSchema,
   condicionAsistenciaSchema,
@@ -232,13 +232,15 @@ describe('evaluarClase', () => {
   }
 
   it('devuelve null si la clase duró menos del mínimo', () => {
-    const eventos = [evento('Juan', 'conexion', 0), evento('Juan', 'desconexion', 29 * MIN)]
-    expect(evaluarClase(eventos, planilla('Juan'), condicion, ventanaHasta(T0 + 30 * MIN - 1))).toBeNull()
+    const eventos = [evento('Juan', 'conexion', 0), evento('Juan', 'desconexion', DURACION_MINIMA_CLASE_MS - 1)]
+    expect(
+      evaluarClase(eventos, planilla('Juan'), condicion, ventanaHasta(T0 + DURACION_MINIMA_CLASE_MS - 1))
+    ).toBeNull()
   })
 
   it('evalúa en el borde exacto del mínimo de duración', () => {
-    const eventos = [evento('Juan', 'conexion', 0), evento('Juan', 'desconexion', 30 * MIN)]
-    const asistencia = evaluarClase(eventos, planilla('Juan'), condicion, ventanaHasta(T0 + 30 * MIN))
+    const eventos = [evento('Juan', 'conexion', 0), evento('Juan', 'desconexion', DURACION_MINIMA_CLASE_MS)]
+    const asistencia = evaluarClase(eventos, planilla('Juan'), condicion, ventanaHasta(T0 + DURACION_MINIMA_CLASE_MS))
     expect(asistencia).not.toBeNull()
   })
 

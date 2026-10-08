@@ -1,11 +1,13 @@
 import { z } from 'zod'
-import type { Ack } from '../middleware/error-handling'
 
 // Contrato server↔cliente: cada comando que el cliente puede mandar se declara una sola vez, con el
 // schema zod de su payload y (si responde por ack) el tipo de su respuesta. El server registra
 // handlers contra el contrato (`registrar`) y el cliente emite contra el mismo contrato
 // (`wss-cli/contrato-cli.ts`), así que renombrar un evento o cambiar un payload rompe la compilación
 // de ambos lados.
+
+/** Envelope de respuesta de los comandos con ack. El cliente decide la UI según `ok`. */
+export type Ack<T> = { ok: true; data: T } | { ok: false; error: string }
 
 /** Un comando del cliente al server. `ack` indica si el server responde con un envelope `Ack<R>`. */
 export interface Comando<I extends z.ZodTypeAny = z.ZodTypeAny, R = unknown, A extends boolean = boolean> {

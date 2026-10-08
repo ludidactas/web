@@ -1,4 +1,6 @@
 import { DefaultEventsMap, Socket } from 'socket.io'
+import type { EventosEstudiante, EventosProfe } from '../contrato/eventos'
+import type { ListenersDe } from '../contrato/definir'
 import { WssEstudianteSession, WssProfeSession } from '../validators/session'
 
 /**
@@ -8,7 +10,7 @@ import { WssEstudianteSession, WssProfeSession } from '../validators/session'
  */
 export type SocketProfe = Socket<
   DefaultEventsMap,
-  DefaultEventsMap,
+  ListenersDe<EventosProfe>,
   DefaultEventsMap,
   {
     session: WssProfeSession
@@ -19,7 +21,7 @@ export type SocketProfe = Socket<
 /** Socket de estudiante. Además de .session tiene .sala con el id de la sala a la que se está conectando */
 export type SocketEstudiante = Socket<
   DefaultEventsMap,
-  DefaultEventsMap,
+  ListenersDe<EventosEstudiante>,
   DefaultEventsMap,
   {
     session: WssEstudianteSession

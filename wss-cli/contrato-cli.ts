@@ -1,7 +1,5 @@
 import type { Socket } from 'socket.io-client'
-import type { Contrato, Entrada, EventosServidor, ListenersDe } from '@/wss/contrato/definir'
-import type { Comando } from '@/wss/contrato/definir'
-import type { Ack } from '@/wss/middleware/error-handling'
+import type { Ack, Comando, Contrato, Entrada, EventosServidor, ListenersDe } from '@/wss/contrato/definir'
 
 const TIMEOUT_ACK_MS = 5000
 

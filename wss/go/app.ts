@@ -2,12 +2,13 @@ import { randomUUID } from 'crypto'
 import { io } from '../server'
 import { Salas } from '../salas/app'
 import {
-  invitacionSchema,
+  ContrincanteGo,
   EstadoPartida,
-  jugadaSchema,
+  Invitacion,
+  Jugada,
   JugadorPartida,
   Partida,
-  partidaIdSchema,
+  PartidaIdPayload,
   Resultado,
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
@@ -71,7 +72,11 @@ async function personasDeSala(idSala: string) {
 
 /** Con qué compañeros de `personas` (ya resuelta) puede jugar `userId`: si están o no disponibles
  * para invitar (ya en una partida) y, en ese caso, contra quién (ej: en la lista de participantes). */
-async function contrincantesDesde(personas: Awaited<ReturnType<typeof personasDeSala>>, idSala: string, userId: string) {
+async function contrincantesDesde(
+  personas: Awaited<ReturnType<typeof personasDeSala>>,
+  idSala: string,
+  userId: string
+): Promise<ContrincanteGo[]> {
   const conectados = personas.filter((e) => e.conectado && e.userId !== userId)
 
   return Promise.all(
@@ -120,8 +125,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
   /** A diferencia del resto de las operaciones, no requiere ser jugador de la partida: cualquier
    * estudiante de la sala puede pedir observarla. */
-  async function observar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function observar({ partidaId }: PartidaIdPayload) {
     return assertPartidaExiste(idSala, partidaId)
   }
 
@@ -132,9 +136,8 @@ export async function estudianteGo(idSala: string, userId: string) {
   // propio puntero. Una única cola por sala alcanza: el volumen de invitar/aceptar en un aula es bajo.
   const conLockInvitaciones = <T>(fn: () => Promise<T>) => conLock(`${idSala}:go:invitaciones`, fn)
 
-  async function invitar(payload: unknown, nombre: string) {
+  async function invitar({ contrincanteId, tamaño }: Invitacion, nombre: string) {
     return conLockInvitaciones(async () => {
-      const { contrincanteId, tamaño } = invitacionSchema.parse(payload)
 
       if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
@@ -184,9 +187,8 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function aceptar(payload: unknown) {
+  async function aceptar({ partidaId }: PartidaIdPayload) {
     return conLockInvitaciones(async () => {
-      const { partidaId } = partidaIdSchema.parse(payload)
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
@@ -199,9 +201,8 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function rechazar(payload: unknown) {
+  async function rechazar({ partidaId }: PartidaIdPayload) {
     return conLockInvitaciones(async () => {
-      const { partidaId } = partidaIdSchema.parse(payload)
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
@@ -215,8 +216,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function jugar(payload: unknown) {
-    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
+  async function jugar({ partidaId, fila, columna }: Jugada) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -240,8 +240,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function pasar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function pasar({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -266,8 +265,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function marcarMuerta(payload: unknown) {
-    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
+  async function marcarMuerta({ partidaId, fila, columna }: Jugada) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
@@ -292,8 +290,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function confirmarConteo(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function confirmarConteo({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -324,8 +321,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function abandonar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function abandonar({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)

@@ -1,8 +1,10 @@
-import { Server } from 'socket.io'
+import { DefaultEventsMap, Server } from 'socket.io'
+import type { ListenersDe } from './contrato/definir'
+import type { EventosServidorTodos } from './contrato/eventos'
 
 /** Crea el socket y le registra los eventos base */
 export const mount = (port: number) => {
-  const io = new Server({
+  const io = new Server<DefaultEventsMap, ListenersDe<EventosServidorTodos>>({
     cors: {
       origin: '*',
       methods: ['GET', 'POST'],

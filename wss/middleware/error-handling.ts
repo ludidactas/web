@@ -4,8 +4,10 @@ import { ExtendedError, Socket } from 'socket.io'
 type Middleware<T extends unknown[]> = (...args: T) => Promise<void>
 
 /**
- * Wrapper de handlers que agrega error handling al socket.
- * Cuando ocurre un error, se lo notifica al cliente que emitió el evento y se loguea.
+ * Wrapper para el código de una conexión que no es un comando del cliente (init al conectar,
+ * `disconnect`): si falla, se loguea y se le notifica al cliente por `wss:error`. Sin este wrapper, un
+ * throw ahí es una `unhandledRejection` que tira el proceso (ver `wss/mount.ts`). Los comandos del
+ * cliente se registran con `registrar` (`wss/contrato`).
  */
 export const conErrorHandling =
   (socket: Socket) =>
@@ -29,38 +31,6 @@ export const conErrorHandling =
         )
 
         socket.emit('wss:error', { message: err.message })
-      }
-    }
-  }
-
-/** Envelope de respuesta para comandos con ack. El cliente decide la UI según `ok`. */
-export type Ack<T> = { ok: true; data: T } | { ok: false; error: string }
-
-/**
- * Wrapper para handlers de comando que responden por ack (último argumento). Resultado y error
- * viajan por el callback, así el `emitWithAck` del cliente nunca queda colgado. El error se entrega
- * por el ack; solo cae a `wss:error` si no vino callback.
- */
-export const conAck =
-  (socket: Socket) =>
-  <A extends unknown[], R>(handler: (...args: A) => Promise<R>) => {
-    return async (...args: unknown[]) => {
-      const posibleAck = args[args.length - 1]
-      const ack = typeof posibleAck === 'function' ? (posibleAck as (res: Ack<R>) => void) : null
-      const handlerArgs = (ack ? args.slice(0, -1) : args) as A
-      try {
-        const data = await handler(...handlerArgs)
-        ack?.({ ok: true, data })
-      } catch (err: unknown) {
-        console.error(
-          `🚨 error-handling.ts (ack): Handler ${handler.name} con args:`,
-          handlerArgs,
-          'emitió error:',
-          err
-        )
-        const message = err instanceof Error ? err.message : 'Error desconocido'
-        if (ack) ack({ ok: false, error: message })
-        else socket.emit('wss:error', { message })
       }
     }
   }

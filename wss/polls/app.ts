@@ -75,12 +75,8 @@ export async function profeSala(salaId: string) {
     )
   }
 
-  async function consultarVotosPorUsuario({ pollId, userId }: { pollId?: string; userId: string }) {
-    if (pollId) {
-      await assertPollExists(salaId, pollId)
-      return await db.getVotosUsuario(salaId, pollId, userId)
-    }
-    // Si no me pasan pollId, devuelvo un objeto con los votos de ese usuario en todas las encuestas
+  /** Los votos de un usuario en todas las encuestas de la sala: `pollId` → ids de las opciones que votó. */
+  async function consultarVotosPorUsuario({ userId }: { userId: string }) {
     const pollIds = await db.getIdsEncuestas(salaId)
     const votosPorEncuesta: Record<string, string[]> = {}
     await Promise.all(

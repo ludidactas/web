@@ -1,9 +1,11 @@
 import { Socket } from 'socket.io'
-import { conAck, conErrorHandling } from '../middleware/error-handling'
+import { comandosGo } from '../contrato/go'
+import { registrar } from '../contrato/registrar'
+import { conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo, salaGoRoom } from './app'
-import { Partida, partidaIdSchema } from '../validators/go'
+import { Partida } from '../validators/go'
 
 /**
  * Registra los comandos de Go de una conexión bajo una identidad (`userId`/`nombre`) dada. La
@@ -11,77 +13,30 @@ import { Partida, partidaIdSchema } from '../validators/go'
  * mecánica (invitar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
  */
 async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
-  const ack = conAck(socket)
   const go = await estudianteGo(idSala, userId)
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
-  function seguir(partida: Partida | null) {
+  function seguir<T extends Partida | null>(partida: T): T {
     if (partida) socket.join(salaGoRoom(idSala, partida.id))
     return partida
   }
 
-  socket.on(
-    'go:contrincantes',
-    ack(async () => go.contrincantesDisponibles())
-  )
-
-  socket.on(
-    'go:mi_partida',
-    ack(async () => seguir(await go.miPartida()))
-  )
-
-  socket.on(
-    'go:observar',
-    ack(async (payload: unknown) => seguir(await go.observar(payload)))
-  )
-
-  socket.on(
-    'go:dejar_observar',
-    ack(async (payload: unknown) => {
-      const { partidaId } = partidaIdSchema.parse(payload)
+  registrar(socket, comandosGo, {
+    'go:contrincantes': async () => go.contrincantesDisponibles(),
+    'go:mi_partida': async () => seguir(await go.miPartida()),
+    'go:observar': async (payload) => seguir(await go.observar(payload)),
+    'go:dejar_observar': async ({ partidaId }) => {
       socket.leave(salaGoRoom(idSala, partidaId))
-    })
-  )
-
-  socket.on(
-    'go:invitar',
-    ack(async (payload: unknown) => seguir(await go.invitar(payload, nombre)))
-  )
-
-  socket.on(
-    'go:aceptar',
-    ack(async (payload: unknown) => seguir(await go.aceptar(payload)))
-  )
-
-  socket.on(
-    'go:rechazar',
-    ack(async (payload: unknown) => go.rechazar(payload))
-  )
-
-  socket.on(
-    'go:jugar',
-    ack(async (payload: unknown) => go.jugar(payload))
-  )
-
-  socket.on(
-    'go:pasar',
-    ack(async (payload: unknown) => go.pasar(payload))
-  )
-
-  socket.on(
-    'go:marcar_muerta',
-    ack(async (payload: unknown) => go.marcarMuerta(payload))
-  )
-
-  socket.on(
-    'go:confirmar_conteo',
-    ack(async (payload: unknown) => go.confirmarConteo(payload))
-  )
-
-  socket.on(
-    'go:abandonar',
-    ack(async (payload: unknown) => go.abandonar(payload))
-  )
+    },
+    'go:invitar': async (payload) => seguir(await go.invitar(payload, nombre)),
+    'go:aceptar': async (payload) => seguir(await go.aceptar(payload)),
+    'go:rechazar': async (payload) => go.rechazar(payload),
+    'go:jugar': async (payload) => go.jugar(payload),
+    'go:pasar': async (payload) => go.pasar(payload),
+    'go:marcar_muerta': async (payload) => go.marcarMuerta(payload),
+    'go:confirmar_conteo': async (payload) => go.confirmarConteo(payload),
+    'go:abandonar': async (payload) => go.abandonar(payload),
+  })
 }
 
 /**

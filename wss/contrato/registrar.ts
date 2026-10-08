@@ -1,8 +1,7 @@
 import type { Socket } from 'socket.io'
 import { z } from 'zod'
-import type { Ack } from '../middleware/error-handling'
 import { extractZodErrorMessages } from '../utils'
-import type { Contrato, HandlersDe } from './definir'
+import type { Ack, Contrato, HandlersDe } from './definir'
 
 /** Mensaje legible del error de un handler: los de validación de zod se resumen en sus `message`. */
 const mensajeDe = (err: unknown) => {

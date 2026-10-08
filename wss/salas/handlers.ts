@@ -133,7 +133,8 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   })
 
   await handlersEncuestasProfe(socket, sala)
-  await handlersGoProfe(socket, sala.id)
+  const iniciarGo = await handlersGoProfe(socket, sala.id)
+  await iniciarGo()
 
   await emitirAbierta(socket, sala)
 }
@@ -226,6 +227,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   })
 }
 
+/** Registra los comandos del estudiante y devuelve su init (registro en la planilla, aviso al profe). */
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
 
@@ -234,12 +236,15 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.userId}`])
 
   const user = socket.data.session.nombre
-  const sala = await Salas.get(idSala)
+  // La sala se resuelve en segundo plano: registrar los comandos no espera I/O.
+  const salaPendiente = Salas.get(idSala)
+  salaPendiente.catch(() => {})
 
   socket.on(
     'disconnect',
     safe(async (reason) => {
       console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+      const sala = await salaPendiente
       const { userId } = socket.data.session
 
       // No tocamos la planilla: el estudiante sigue registrado, solo deja de tener socket vivo.
@@ -256,12 +261,13 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
   registrar(socket, comandosSalaConfig, {
     'sala:pedir_config': async () => {
-      socket.emit('sala:config_actualizada', await sala.config())
+      socket.emit('sala:config_actualizada', await (await salaPendiente).config())
     },
   })
 
-  // Al conectarse un estudiante...
-  const emitir = safe(async () => {
+  // Init de la conexión: lo corre `server.ts` cuando ya están registrados los comandos de todos los grupos.
+  return safe(async () => {
+    const sala = await salaPendiente
     console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
 
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
@@ -280,7 +286,6 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
       }
     }
   })
-  await emitir()
 }
 
 /** Handlers para exponer info pública de la sala */

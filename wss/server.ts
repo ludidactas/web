@@ -32,9 +32,15 @@ io.use(conErrorLogging)
 
     // Estudiante: requiere sesión de estudiante válida, y permisos para la sala (chequeados en `conSession`)
     else if (socket.data.session.rol === RolSala.Estudiante) {
-      await handlersSalaEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
-      await handlersEncuestasEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
-      await handlersGoEstudiante(socket as SocketEstudiante, socket.data.session.idSala)
+      // Primero se registran los comandos de todos los grupos y recién después corren sus init (I/O): un
+      // comando que el cliente emite apenas conecta no se pierde (ver docs/contrato-wss.md).
+      const { idSala } = socket.data.session
+      const iniciar = [
+        await handlersSalaEstudiante(socket as SocketEstudiante, idSala),
+        await handlersEncuestasEstudiante(socket as SocketEstudiante, idSala),
+        await handlersGoEstudiante(socket as SocketEstudiante, idSala),
+      ]
+      for (const init of iniciar) await init()
     }
 
     // Profe: requiere sesión de profe válida. Los handlers de operación (incluidas encuestas) se

@@ -135,8 +135,12 @@ contrato, borrar el `parse` interno y pasar el handler a `registrar`.
 - Los componentes pueden pasar el `output` de un schema donde el contrato espera el `input` (los
   defaults de zod son opcionales en la entrada), por eso `CrearEncuesta` (output) se acepta en `pedir`.
 - `pedir` espera el ack 5 s. Un comando lento usa su propio emisor: `comandos<C>(socket, { timeoutMs: 10_000 })`.
-- Un handler registrado después de un `await` de I/O pierde los comandos que el cliente emite apenas conecta.
-  `server.ts` despacha los grupos de handlers con `await` en secuencia, así que los de Go (cableados al final)
-  pueden registrarse tarde: el cliente de Go pide `go:mi_partida` con reintentos por eso.
+- Un comando que el cliente emite apenas conecta se pierde si su handler se registra después de un `await` de
+  I/O. Por eso los grupos de handlers del estudiante (`handlersSalaEstudiante`, `handlersEncuestasEstudiante`,
+  `handlersGoEstudiante`) registran sus comandos sin esperar nada (la sala se resuelve en segundo plano y el
+  handler la espera) y devuelven su init; `server.ts` corre los init recién cuando todos los grupos están
+  registrados. `integracion/registro-temprano.test.ts` lo fija.
+- Los comandos de Go del profe se registran al abrir la sala (`sala:abrir`), y el cliente monta Go antes:
+  `go:mi_partida` se pide con reintentos.
 - Los comandos que devuelven la `Partida` por ack no esperan el broadcast `go:partida`: el socket recién se une
   a la sala de la partida (`seguir`) después de que el server responde.

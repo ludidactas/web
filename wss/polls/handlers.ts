@@ -51,23 +51,28 @@ export const handlersEncuestasProfe = async (socket: SocketProfe, sala: Sala) =>
   })
 }
 
+/** Registra los comandos del estudiante y devuelve su init (enviar la lista de encuestas). */
 export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSala: string) => {
-  const sala = await Salas.get(idSala)
-
-  const estudiante = await estudianteSala(idSala, socket.data.session.userId)
+  // Se resuelven en segundo plano: registrar los comandos no espera I/O.
+  const contexto = Promise.all([Salas.get(idSala), estudianteSala(idSala, socket.data.session.userId)])
+  contexto.catch(() => {})
 
   const emitirLista = async () => {
+    const [, estudiante] = await contexto
     socket.emit('polls:list', await estudiante.listar())
   }
 
   registrar(socket, comandosPollsEstudiante, {
     'polls:list': emitirLista,
 
-    'poll:vote': async (voto) => broadcastPoll(sala, await estudiante.votar(voto)),
+    'poll:vote': async (voto) => {
+      const [sala, estudiante] = await contexto
+      await broadcastPoll(sala, await estudiante.votar(voto))
+    },
   })
 
-  // Lista inicial al conectar. Con el wrapper, un throw no tira el proceso (unhandledRejection).
-  await conErrorHandling(socket)(emitirLista)()
+  // Init: la lista inicial. Con el wrapper, un throw no tira el proceso (unhandledRejection).
+  return conErrorHandling(socket)(emitirLista)
 }
 
 export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {

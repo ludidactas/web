@@ -21,7 +21,7 @@ export default function goHandlers(socket: Socket | null) {
   }
 
   /**
-   * Con reintentos: al conectar, el server puede no haber registrado todavía el listener y el ack expira
+   * Con reintentos: el profe tiene sus comandos de Go recién al abrir la sala, y este pedido sale antes
    * (ver docs/contrato-wss.md); una sola falla dejaría el store en "sin partida" hasta refrescar.
    */
   async function pedirMiPartidaConReintentos() {

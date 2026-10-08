@@ -41,14 +41,15 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
 
 /**
  * Handlers de Go del estudiante, ligados a la sala a la que se conectó. Cada estudiante puede tener
- * a lo sumo una partida activa (pendiente o en curso) por sala a la vez.
+ * a lo sumo una partida activa (pendiente o en curso) por sala a la vez. Registra los comandos y
+ * devuelve el init: avisar a la sala que apareció como contrincante disponible.
  */
 export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   const safe = conErrorHandling(socket)
   const { userId, nombre } = socket.data.session
 
   // Al desconectar, si no le queda otro socket vivo (multi-pestaña), avisamos a la sala que dejó de
-  // estar disponible como contrincante. Al conectar avisamos siempre, más abajo, así reaparece en vivo.
+  // estar disponible como contrincante.
   socket.on(
     'disconnect',
     safe(async () => {
@@ -59,19 +60,15 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  // Recién conectado (o reconectado): avisamos a la sala que apareció como contrincante disponible.
-  // A diferencia de los comandos de arriba, esto corre incondicionalmente en cada conexión (no solo al
-  // ejecutar un comando de Go puntual); sin `safe`, un throw acá (ej. `Salas.get` si la sala ya no
-  // existe en Redis) queda como unhandled rejection del handler de `connection` y tira abajo el proceso
-  // completo del wss (ver `unhandledRejection` en `wss/mount.ts`), no solo esta conexión.
-  await safe(() => avisarContrincantesActualizados(idSala))()
+  // Con `safe`, un throw (ej. `Salas.get` si la sala ya no existe) no tira el proceso (unhandledRejection).
+  return safe(() => avisarContrincantesActualizados(idSala))
 }
 
 /**
  * Handlers de Go del profe: puede invitar y jugar contra los estudiantes de su sala bajo su propia
  * identidad (el email, igual que en el resto de la sesión de profe). También es un contrincante
  * disponible para ellos, así que al conectar/desconectar avisamos a la sala igual que con un
- * estudiante (ver `handlersGoEstudiante`).
+ * estudiante (ver `handlersGoEstudiante`, que también describe el init que devuelve).
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const safe = conErrorHandling(socket)
@@ -87,7 +84,5 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
 
   await registrarComandosGo(socket, idSala, userId, nombre)
 
-  // Ver comentario equivalente en `handlersGoEstudiante`: sin `safe`, un throw acá tira abajo el
-  // proceso completo del wss, no solo esta conexión.
-  await safe(() => avisarContrincantesActualizados(idSala))()
+  return safe(() => avisarContrincantesActualizados(idSala))
 }

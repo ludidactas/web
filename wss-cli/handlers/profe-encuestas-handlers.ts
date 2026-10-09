@@ -12,16 +12,13 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
   const estudiantes = storeEstudiantes.getState()
   const cmd = comandos<typeof comandosPollsProfe>(socket)
 
-  let dejarDeEscuchar = () => {}
-
   return {
-    montar: () => {
-      dejarDeEscuchar = escuchar<EventosPollsProfe>(socket, {
+    montar: () =>
+      escuchar<EventosPollsProfe>(socket, {
         'poll:updated': store.update,
         'poll:deleted': store.remove,
         'poll:votos:usuario': estudiantes.cargarVotosEstudiante,
-      })
-    },
+      }),
 
     acciones: {
       /** Resuelve cuando el server creó la encuesta; rechaza con el motivo si no pudo. */
@@ -39,8 +36,6 @@ const profeEncuestasHandlers = (socket: Socket | null) => {
 
       pedirVotosEstudiante: (userId: string) => cmd.enviar('poll:votos:usuario', { userId }),
     },
-
-    desmontar: () => dejarDeEscuchar(),
   }
 }
 export default profeEncuestasHandlers

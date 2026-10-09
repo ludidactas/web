@@ -9,14 +9,11 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
   const almacenSalas = storeSalas.getState()
   const cmd = comandos<typeof comandosSalasGestion>(socket)
 
-  let dejarDeEscuchar = () => {}
-
   return {
-    montar: () => {
-      dejarDeEscuchar = escuchar<EventosSalaProfe>(socket, {
+    montar: () =>
+      escuchar<EventosSalaProfe>(socket, {
         'salas:lista': (salas) => almacenSalas.set(salas ?? []),
-      })
-    },
+      }),
 
     acciones: {
       listarSalas: () => cmd.enviar('salas:listar'),
@@ -28,7 +25,5 @@ export default function profeGestionSalasHandlers(socket: Socket | null) {
       eliminarSala: (idSala: string) => cmd.pedir('sala:eliminar', { idSala }),
       abrirSala: (idSala: string) => cmd.enviar('sala:abrir', { idSala }),
     },
-
-    desmontar: () => dejarDeEscuchar(),
   }
 }

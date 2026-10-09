@@ -31,13 +31,7 @@ export default function profeAsistenciaHandlers(socket: Socket | null) {
     }
   }
 
-  let dejarDeEscuchar = () => {}
-
   return {
-    montar: () => {
-      dejarDeEscuchar = escuchar<EventosSalaProfe>(socket, { 'sala:abierta': alAbrirSala })
-    },
-
-    desmontar: () => dejarDeEscuchar(),
+    montar: () => escuchar<EventosSalaProfe>(socket, { 'sala:abierta': alAbrirSala }),
   }
 }

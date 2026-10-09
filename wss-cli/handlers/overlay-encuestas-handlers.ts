@@ -9,11 +9,11 @@ export default function overlayEncuestasHandlers(socket: Socket | null) {
   const store = overlayEncuestaStore.getState()
   const cmd = comandos<typeof comandosPollsOverlay>(socket)
 
-  let dejarDeEscuchar = () => {}
-
   return {
     montar: () => {
-      dejarDeEscuchar = escuchar<EventosPollsOverlay>(socket, {
+      if (!socket) return () => {}
+
+      const dejarDeEscuchar = escuchar<EventosPollsOverlay>(socket, {
         'poll:updated': (encuesta) => {
           if (encuesta.isFocused) {
             store.set(encuesta)
@@ -36,10 +36,10 @@ export default function overlayEncuestasHandlers(socket: Socket | null) {
           if (enfocada) store.set(enfocada)
         })
         .catch((err) => console.error('Error pidiendo la encuesta enfocada:', err))
+
+      return dejarDeEscuchar
     },
 
     acciones: {},
-
-    desmontar: () => dejarDeEscuchar(),
   }
 }

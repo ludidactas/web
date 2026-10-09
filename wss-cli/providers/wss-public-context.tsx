@@ -1,4 +1,5 @@
 import { useWss } from '../use-wss'
+import { montarTodos } from '../contrato-cli'
 import { PasaportePublico, RolSala } from '@/wss/validators/auth'
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
@@ -33,15 +34,8 @@ const useHandlersConexionSalaPublico = (auth: Omit<PasaportePublico, 'rol'>) => 
   )
 
   // Cuando el socket conecta...
-  useEffect(() => {
-    // ...los montamos...
-    handlers.base.montar()
-
-    // ...y al desmontar el componente, los desmontamos también.
-    return () => {
-      handlers.base.desmontar()
-    }
-  }, [socket])
+  // Cuando el socket conecta, los montamos; al desmontar el componente, los desmontamos.
+  useEffect(() => montarTodos(handlers), [handlers])
 
   return {
     estado,

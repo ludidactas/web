@@ -9,9 +9,8 @@ import { storeGo } from '../stores/go-store'
 export default function goHandlers(socket: Socket | null) {
   const store = storeGo.getState()
   const cmd = comandos<typeof comandosGo>(socket)
-  // `desmontar` corta el loop de reintentos: un montaje reemplazado (StrictMode, reconexión) dejaría dos en paralelo.
+  // El desmontaje corta el loop de reintentos: un montaje reemplazado (StrictMode, reconexión) dejaría dos en paralelo.
   let desmontado = false
-  let dejarDeEscuchar = () => {}
 
   /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket. */
   async function guardandoPartida(pedido: Promise<Partida>): Promise<Partida> {
@@ -42,9 +41,9 @@ export default function goHandlers(socket: Socket | null) {
 
   return {
     montar: () => {
-      if (!socket) return
+      if (!socket) return () => {}
 
-      dejarDeEscuchar = escuchar<EventosGo>(socket, {
+      const dejarDeEscuchar = escuchar<EventosGo>(socket, {
         // Una partida en la que estoy: la que observo va a `observando`; si no, es la mía.
         'go:partida': (partida) => {
           if (storeGo.getState().observando?.id === partida.id) store.setObservando(partida)
@@ -63,6 +62,11 @@ export default function goHandlers(socket: Socket | null) {
 
       // `inicializado` queda en false hasta que resuelve: la UI muestra un loading, no el buscador de contrincantes.
       pedirMiPartidaConReintentos().finally(store.marcarInicializado)
+
+      return () => {
+        desmontado = true
+        dejarDeEscuchar()
+      }
     },
 
     acciones: {
@@ -92,11 +96,6 @@ export default function goHandlers(socket: Socket | null) {
         await cmd.pedir('go:dejar_observar', { partidaId })
         store.setObservando(null)
       },
-    },
-
-    desmontar: () => {
-      desmontado = true
-      dejarDeEscuchar()
     },
   }
 }

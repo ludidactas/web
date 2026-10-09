@@ -9,11 +9,9 @@ import { storeInvitado } from '../stores/invitado-store'
 export default function estudianteSalaHandlers(socket: Socket | null) {
   const { setIngresado } = storeEstudianteLogin.getState()
 
-  let dejarDeEscuchar = () => {}
-
   return {
-    montar: () => {
-      dejarDeEscuchar = escuchar<EventosSalaEstudiante>(socket, {
+    montar: () =>
+      escuchar<EventosSalaEstudiante>(socket, {
         // Si nos kickean, volver al login
         'sala:kick': ({ motivo }) => {
           console.log('wss-cli sala:kick: fuimos kickeados por:', motivo)
@@ -34,11 +32,8 @@ export default function estudianteSalaHandlers(socket: Socket | null) {
           const { dni } = storeEstudianteLogin.getState()
           toast.success(`Asistencia tomada de ${nombreProvisto || dni}`)
         },
-      })
-    },
+      }),
 
     acciones: {},
-
-    desmontar: () => dejarDeEscuchar(),
   }
 }

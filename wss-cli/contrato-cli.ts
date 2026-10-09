@@ -58,3 +58,14 @@ export function escuchar<E extends EventosServidor>(
     for (const [evento, handler] of registrados) socket.off(evento, handler)
   }
 }
+
+/** Algo que se engancha al socket: `montar` devuelve la función que lo desengancha. */
+export interface Montable {
+  montar: () => () => void
+}
+
+/** Monta cada handler y devuelve la función que desmonta todos. */
+export function montarTodos(handlers: Record<string, Montable>): () => void {
+  const desmontajes = Object.values(handlers).map((handler) => handler.montar())
+  return () => desmontajes.forEach((desmontar) => desmontar())
+}

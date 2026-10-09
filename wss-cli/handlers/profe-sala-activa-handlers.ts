@@ -18,11 +18,9 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
   // La planilla recorre encuestas y estudiantes de la sala: tarda más que un comando común.
   const cmdLento = comandos<typeof comandosSalaActivaProfe>(socket, { timeoutMs: 10_000 })
 
-  let dejarDeEscuchar = () => {}
-
   return {
-    montar: () => {
-      dejarDeEscuchar = escuchar<EventosSalaProfe>(socket, {
+    montar: () =>
+      escuchar<EventosSalaProfe>(socket, {
         'sala:estudiantes': almacenEstudiantes.set,
 
         'sala:estudiante_conectado': (estudiante) => {
@@ -40,8 +38,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
         },
 
         'sala:lista_permitidos': almacenPermitidos.set,
-      })
-    },
+      }),
 
     acciones: {
       actualizarConfig: (config: ConfigActualizableParcial) => cmd.enviar('sala:actualizar_config', config),
@@ -55,7 +52,5 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       pedirPlanillaCompleta: (minutos?: number): Promise<PlanillaCompleta> =>
         cmdLento.pedir('sala:pedir_planilla_completa', minutos),
     },
-
-    desmontar: () => dejarDeEscuchar(),
   }
 }

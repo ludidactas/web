@@ -9,7 +9,10 @@ wss/contrato/definir.ts     builders (comando, comandoAck, devuelve, sinPayload)
 wss/contrato/registrar.ts   server: valida con zod, ejecuta el handler, responde por ack o `wss:error`
 wss/contrato/<feature>.ts   contrato de una feature: comandos por rol + eventos server→cliente (polls, salas, dojo, go)
 wss/contrato/eventos.ts     eventos por rol (`EventosProfe`, `EventosEstudiante`, `EventosPublico`) y su unión
-wss-cli/contrato-cli.ts     cliente: `comandos<C>(socket)` → enviar/pedir, `escuchar<E>(socket, {...})`
+wss-cli/contrato-cli.ts     cliente: `comandos<C>(socket)` → enviar/pedir, `escuchar<E>(socket, {...})`, `montarTodos(handlers)`
+wss/io.ts · wss/mount.ts    el `io` de socket.io y su arranque (listen, cierre ordenado, errores de proceso)
+wss/conexion.ts             despacho por rol: los grupos de handlers de cada rol y el orden registrar → init
+wss/rooms.ts                nombres de los rooms de socket.io
 wss/contrato/*.test.ts      registrar con socket.io real (server + cliente en proceso), schemas de salas, tipos de `emit`
 ```
 
@@ -49,8 +52,8 @@ registrar(socket, comandosXProfe, {
   la conexión evita perder comandos que el cliente emite apenas conecta.
 - Nada de lo que corre en una conexión puede tirar el proceso (una `unhandledRejection` lo hace, ver
   `wss/mount.ts`): los comandos van por `registrar`, el `disconnect` por `alDesconectar(socket, fn)`, y
-  `server.ts` corre el armado de la conexión y cada init dentro de `protegido(socket, fn)`. En los tres un
-  error se loguea y se notifica por `wss:error`.
+  `server.ts` corre `conectar` (el armado de la conexión, `conexion.ts`) dentro de `protegido(socket, fn)`, que
+  también envuelve cada init. En los tres un error se loguea y se notifica por `wss:error`.
 - Dentro de un handler, un error es la respuesta del comando. Un efecto que viene **después** de que la
   operación principal ya se hizo (refrescar `salas:lista` tras `sala:crear`, el init de Go al abrir una sala)
   se corre con `protegido` a propósito: si fallara sin él, el cliente vería "no se pudo crear" sobre una sala
@@ -77,9 +80,11 @@ const cmd = comandos<typeof comandosXProfe>(socket)
 cmd.enviar('x:borrar', { xId })              // solo comandos sin ack
 const xs = await cmd.pedir('x:listar')       // solo comandos con ack; rechaza con Error(mensaje del server)
 
-let dejar = () => {}
-montar:    () => { dejar = escuchar<EventosXProfe>(socket, { 'x:actualizada': store.update }) }
-desmontar: () => dejar()                     // quita solo los listeners que registró este módulo
+// En el handler del cliente: `montar` devuelve cómo desmontarlo (`escuchar` quita solo los listeners de este módulo)
+montar: () => escuchar<EventosXProfe>(socket, { 'x:actualizada': store.update }),
+
+// En el provider: monta todos los handlers y devuelve el desmontaje de todos
+useEffect(() => montarTodos(handlers), [handlers])
 ```
 
 ## Receta de migración (código viejo → contrato)
@@ -91,7 +96,7 @@ desmontar: () => dejar()                     // quita solo los listeners que reg
 | `payload: unknown` + `schema.parse(payload)` dentro del handler/`app.ts` | schema en el contrato; el handler recibe el tipo parseado |
 | ack ad hoc (`responder(error?)`) | `comandoAck(..., devuelve<void>())`; el cliente hace `await pedir(...)` |
 | `socket.emit('ev', p)` / `socket.timeout(n).emitWithAck(...)` + `if (!res.ok) throw` | `cmd.enviar` / `await cmd.pedir` |
-| `socket.on(...)` + `removeAllListeners('ev')` en `desmontar` | `dejar = escuchar<Eventos>(socket, {...})` + `dejar()` |
+| `socket.on(...)` + `removeAllListeners('ev')` en `desmontar` | `montar: () => escuchar<Eventos>(socket, {...})` (devuelve el desmontaje) |
 | request→response con un par de eventos (`emit 'x'` → server `emit 'x'`) | candidato a `comandoAck` + `pedir` |
 
 Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.message`), no `string`.
@@ -145,7 +150,7 @@ contrato, borrar el `parse` interno y pasar el handler a `registrar`.
 - Un comando que el cliente emite apenas conecta se pierde si su handler se registra después de un `await` de
   I/O. Por eso los grupos de handlers del estudiante (`handlersSalaEstudiante`, `handlersEncuestasEstudiante`,
   `handlersGoEstudiante`) registran sus comandos sin esperar nada (la sala se resuelve en segundo plano y el
-  handler la espera) y devuelven su init; `server.ts` corre los init recién cuando todos los grupos están
+  handler la espera) y devuelven su init; `conexion.ts` corre los init recién cuando todos los grupos están
   registrados. `integracion/registro-temprano.test.ts` lo fija.
 - Los comandos de Go del profe se registran al abrir la sala (`sala:abrir`), y el cliente monta Go antes:
   `go:mi_partida` se pide con reintentos.

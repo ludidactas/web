@@ -1,68 +1,40 @@
 import { Socket } from 'socket.io-client'
 
+import { comandosPollsProfe, EventosPollsProfe } from '@/wss/contrato/polls'
 import { CrearEncuesta } from '@/wss/validators/polls'
 import { storeEncuestasProfe } from '../stores/encuestas-store'
 import { storeEstudiantes } from '../stores/estudiantes-store'
+import { comandos, escuchar } from '../contrato-cli'
 
-/** Modela las acciones del server */
+/** Espejo cliente de `handlersEncuestasProfe`. */
 const profeEncuestasHandlers = (socket: Socket | null) => {
   const store = storeEncuestasProfe.getState()
-
   const estudiantes = storeEstudiantes.getState()
+  const cmd = comandos<typeof comandosPollsProfe>(socket)
 
   return {
-    montar: () => {
-      if (!socket) return
+    montar: () =>
+      escuchar<EventosPollsProfe>(socket, {
+        'poll:updated': store.update,
+        'poll:deleted': store.remove,
+        'poll:votos:usuario': estudiantes.cargarVotosEstudiante,
+      }),
 
-      socket.on('polls:list', store.set)
-      socket.on('poll:updated', store.update)
-      socket.on('poll:created', store.add)
-      socket.on('poll:deleted', store.remove)
-
-      socket.on('poll:votos:usuario', estudiantes.cargarVotosEstudiante)
-    },
-
-    // pregunta: string, opciones: string[], admiteAportes = false
     acciones: {
-      crear: (encuesta: CrearEncuesta) =>
-        new Promise<void>((resolve, reject) => {
-          if (!socket) return reject('No hay socket conectado para enviar preguntas!')
+      /** Resuelve cuando el server creó la encuesta; rechaza con el motivo si no pudo. */
+      crear: (encuesta: CrearEncuesta) => cmd.pedir('poll:create', encuesta),
 
-          // Emitimos con callback, para esperar la respuesta del server.
-          socket.emit('poll:create', encuesta, (error?: string) => {
-            if (error) reject(error)
-            else resolve()
-          })
-        }),
+      borrar: (pollId: string) => cmd.enviar('poll:delete', { pollId }),
+      cerrar: (pollId: string) => cmd.enviar('poll:close', { pollId }),
+      abrir: (pollId: string) => cmd.enviar('poll:open', { pollId }),
+      publicar: (pollId: string) => cmd.enviar('poll:publish', { pollId }),
+      esconder: (pollId: string) => cmd.enviar('poll:hide', { pollId }),
+      enfocar: (pollId: string) => cmd.enviar('poll:focus', { pollId }),
+      desenfocar: (pollId: string) => cmd.enviar('poll:unfocus', { pollId }),
+      revelar: (pollId: string) => cmd.enviar('poll:reveal', { pollId }),
+      ocultar: (pollId: string) => cmd.enviar('poll:unreveal', { pollId }),
 
-      borrar: (id: string) => socket?.emit('poll:delete', { pollId: id }),
-
-      cerrar: (id: string) => socket?.emit('poll:close', { pollId: id }),
-
-      abrir: (id: string) => socket?.emit('poll:open', { pollId: id }),
-
-      publicar: (id: string) => socket?.emit('poll:publish', { pollId: id }),
-
-      esconder: (id: string) => socket?.emit('poll:hide', { pollId: id }),
-
-      enfocar: (id: string) => socket?.emit('poll:focus', { pollId: id }),
-
-      desenfocar: (id: string) => socket?.emit('poll:unfocus', { pollId: id }),
-
-      revelar: (id: string) => socket?.emit('poll:reveal', { pollId: id }),
-
-      ocultar: (id: string) => socket?.emit('poll:unreveal', { pollId: id }),
-
-      pedirVotosEstudiante: (userId: string) => socket?.emit('poll:votos:usuario', { userId }),
-    },
-
-    desmontar: () => {
-      if (!socket) return
-
-      socket.removeAllListeners('polls:list')
-      socket.removeAllListeners('poll:updated')
-      socket.removeAllListeners('poll:created')
-      socket.removeAllListeners('poll:deleted')
+      pedirVotosEstudiante: (userId: string) => cmd.enviar('poll:votos:usuario', { userId }),
     },
   }
 }

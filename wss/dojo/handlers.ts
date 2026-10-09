@@ -1,7 +1,8 @@
 import { Socket } from 'socket.io'
-import { conAck } from '../middleware/error-handling'
+import { comandosDojo } from '../contrato/dojo'
+import { registrar } from '../contrato/registrar'
 import { PasaporteDojoSchema } from '../validators/auth'
-import { FORMATO_ID_DOJO, desafioDojoSchema, sincronizarDojoSchema } from '../validators/dojo'
+import { FORMATO_ID_DOJO } from '../validators/dojo'
 import * as db from './db'
 
 async function resolverId(pedido: string | undefined): Promise<string> {
@@ -16,42 +17,28 @@ async function resolverId(pedido: string | undefined): Promise<string> {
  * `dojo:identificarse` devuelve el id definitivo, que el cliente guarda para pedirlo al reconectar.
  */
 export function handlersDojo(socket: Socket) {
-  const ack = conAck(socket)
   const { idDojo: pedido } = PasaporteDojoSchema.parse(socket.handshake.auth)
   const identificacion = resolverId(pedido)
   // Si el rechazo no lo espera ningún comando, `unhandledRejection` tira el proceso (ver `mount.ts`).
   identificacion.catch(() => {})
 
-  socket.on(
-    'dojo:identificarse',
-    ack(async () => identificacion)
-  )
+  registrar(socket, comandosDojo, {
+    'dojo:identificarse': async () => identificacion,
 
-  socket.on(
-    'dojo:sincronizar',
-    ack(async (payload: unknown) => {
+    'dojo:sincronizar': async ({ resueltos, ...capitulo }) => {
       const id = await identificacion
-      const { resueltos, ...capitulo } = sincronizarDojoSchema.parse(payload)
       await db.agregarResueltos(id, capitulo, resueltos)
       return db.getProgreso(id, capitulo)
-    })
-  )
+    },
 
-  socket.on(
-    'dojo:resuelto',
-    ack(async (payload: unknown) => {
+    'dojo:resuelto': async ({ desafio, ...capitulo }) => {
       const id = await identificacion
-      const { desafio, ...capitulo } = desafioDojoSchema.parse(payload)
       await db.agregarResueltos(id, capitulo, [desafio])
-    })
-  )
+    },
 
-  socket.on(
-    'dojo:actual',
-    ack(async (payload: unknown) => {
+    'dojo:actual': async ({ desafio, ...capitulo }) => {
       const id = await identificacion
-      const { desafio, ...capitulo } = desafioDojoSchema.parse(payload)
       await db.setActual(id, capitulo, desafio)
-    })
-  )
+    },
+  })
 }

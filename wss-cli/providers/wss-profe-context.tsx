@@ -12,6 +12,7 @@ import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import profeAsistenciaHandlers from '../handlers/profe-asistencia-handlers'
 import profeGoHandlers from '../handlers/profe-go-handlers'
 import { useWss } from '../use-wss'
+import { montarTodos } from '../contrato-cli'
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
 import { storeGo } from '../stores/go-store'
@@ -37,26 +38,11 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
     [socket]
   )
 
-  // Conectamos el socket a sus handlers. Go es el único que emite algo (`go:mi_partida`) apenas
-  // monta: el server solo registra ese listener cuando hay una sala abierta (`sala:abrir`), así que en
-  // modo gestión (sin `abrirSalaId`, ver `/salas`) el pedido nunca tiene quien lo conteste y termina
-  // siempre en el toast de error tras agotar los reintentos. Lo montamos solo si vamos a abrir una sala.
+  // Go queda fuera del modo gestión (sin `abrirSalaId`, ver `/salas`): su `go:mi_partida` no tiene quién lo
+  // conteste hasta que hay una sala abierta (`sala:abrir`) y terminaría en un toast de error.
   useEffect(() => {
-    handlers.gestion.montar()
-    handlers.salaActiva.montar()
-    handlers.base.montar()
-    handlers.encuestas.montar()
-    handlers.asistencia.montar()
-    if (abrirSalaId) handlers.go.montar()
-
-    return () => {
-      handlers.gestion.desmontar()
-      handlers.salaActiva.desmontar()
-      handlers.base.desmontar()
-      handlers.encuestas.desmontar()
-      handlers.asistencia.desmontar()
-      if (abrirSalaId) handlers.go.desmontar()
-    }
+    const { go, ...sinGo } = handlers
+    return montarTodos(abrirSalaId ? handlers : sinGo)
   }, [handlers, abrirSalaId])
 
   // Página de operación: apenas la conexión está lista, abrimos la sala pedida.

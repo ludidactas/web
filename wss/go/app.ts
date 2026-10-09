@@ -1,13 +1,15 @@
 import { randomUUID } from 'crypto'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import { Salas } from '../salas/app'
 import {
-  invitacionSchema,
+  ContrincanteGo,
   EstadoPartida,
-  jugadaSchema,
+  Invitacion,
+  Jugada,
   JugadorPartida,
   Partida,
-  partidaIdSchema,
+  PartidaIdPayload,
   Resultado,
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
@@ -22,10 +24,6 @@ import * as motor from '@/lib/go/motor'
  * en sí (capturas, territorio, vida) vienen de `@/lib/go/motor`/`@/lib/go/benson` — acá solo se
  * orquesta el estado de la partida alrededor de esas funciones puras.
  */
-
-export function salaGoRoom(salaId: string, partidaId: string) {
-  return `sala:${salaId}:go:${partidaId}`
-}
 
 async function assertPartidaExiste(salaId: string, partidaId: string): Promise<Partida> {
   const partida = await db.getPartida(salaId, partidaId)
@@ -50,7 +48,7 @@ function contrincanteDe(partida: Partida, userId: string): JugadorPartida {
 
 /** Envía el estado completo de la partida a los sockets unidos a su sala (los dos jugadores). */
 export async function broadcastPartida(partida: Partida) {
-  const sockets = await io.to(salaGoRoom(partida.salaId, partida.id)).fetchSockets()
+  const sockets = await io.to(rooms.partidaGo(partida.salaId, partida.id)).fetchSockets()
   await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
 }
 
@@ -71,7 +69,11 @@ async function personasDeSala(idSala: string) {
 
 /** Con qué compañeros de `personas` (ya resuelta) puede jugar `userId`: si están o no disponibles
  * para invitar (ya en una partida) y, en ese caso, contra quién (ej: en la lista de participantes). */
-async function contrincantesDesde(personas: Awaited<ReturnType<typeof personasDeSala>>, idSala: string, userId: string) {
+async function contrincantesDesde(
+  personas: Awaited<ReturnType<typeof personasDeSala>>,
+  idSala: string,
+  userId: string
+): Promise<ContrincanteGo[]> {
   const conectados = personas.filter((e) => e.conectado && e.userId !== userId)
 
   return Promise.all(
@@ -96,7 +98,7 @@ async function calcularContrincantesDisponibles(idSala: string, userId: string) 
  * cliente la vuelva a pedir.
  */
 export async function avisarContrincantesActualizados(idSala: string) {
-  const sockets = await io.in([`sala:${idSala}:estudiantes`, `sala:${idSala}:profe`]).fetchSockets()
+  const sockets = await io.in([rooms.estudiantes(idSala), rooms.profe(idSala)]).fetchSockets()
   // Una sola foto de la sala para todos los destinatarios: si la recalculáramos por socket (como antes
   // de sumar al profe), cada destinatario dispara sus propias consultas de conexión (`fetchSockets`) en
   // paralelo, y nada garantiza que las respuestas lleguen en orden — una más vieja podía pisar a una
@@ -120,8 +122,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
   /** A diferencia del resto de las operaciones, no requiere ser jugador de la partida: cualquier
    * estudiante de la sala puede pedir observarla. */
-  async function observar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function observar({ partidaId }: PartidaIdPayload) {
     return assertPartidaExiste(idSala, partidaId)
   }
 
@@ -132,10 +133,8 @@ export async function estudianteGo(idSala: string, userId: string) {
   // propio puntero. Una única cola por sala alcanza: el volumen de invitar/aceptar en un aula es bajo.
   const conLockInvitaciones = <T>(fn: () => Promise<T>) => conLock(`${idSala}:go:invitaciones`, fn)
 
-  async function invitar(payload: unknown, nombre: string) {
+  async function invitar({ contrincanteId, tamaño }: Invitacion, nombre: string) {
     return conLockInvitaciones(async () => {
-      const { contrincanteId, tamaño } = invitacionSchema.parse(payload)
-
       if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
       const existente = await miPartida()
@@ -177,16 +176,15 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
 
-      io.to(`sala:${idSala}:${contrincanteId}`).emit('go:invitacion', partida)
+      io.to(rooms.usuario(idSala, contrincanteId)).emit('go:invitacion', partida)
       await avisarContrincantesActualizados(idSala)
 
       return partida
     })
   }
 
-  async function aceptar(payload: unknown) {
+  async function aceptar({ partidaId }: PartidaIdPayload) {
     return conLockInvitaciones(async () => {
-      const { partidaId } = partidaIdSchema.parse(payload)
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
@@ -199,9 +197,8 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function rechazar(payload: unknown) {
+  async function rechazar({ partidaId }: PartidaIdPayload) {
     return conLockInvitaciones(async () => {
-      const { partidaId } = partidaIdSchema.parse(payload)
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
@@ -210,13 +207,12 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
       const otro = contrincanteDe(partida, userId)
-      io.to(`sala:${idSala}:${otro.userId}`).emit('go:invitacion_rechazada', { partidaId })
+      io.to(rooms.usuario(idSala, otro.userId)).emit('go:invitacion_rechazada', { partidaId })
       await avisarContrincantesActualizados(idSala)
     })
   }
 
-  async function jugar(payload: unknown) {
-    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
+  async function jugar({ partidaId, fila, columna }: Jugada) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -240,8 +236,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function pasar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function pasar({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -266,8 +261,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function marcarMuerta(payload: unknown) {
-    const { partidaId, fila, columna } = jugadaSchema.parse(payload)
+  async function marcarMuerta({ partidaId, fila, columna }: Jugada) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
@@ -292,8 +286,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function confirmarConteo(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function confirmarConteo({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       const color = colorDe(partida, userId)
@@ -312,7 +305,11 @@ export async function estudianteGo(idSala: string, userId: string) {
           partida.capturasBlancas
         )
         const ganadorUserId =
-          puntaje.ganador === 'empate' ? null : puntaje.ganador === 'negro' ? partida.negro.userId : partida.blanco.userId
+          puntaje.ganador === 'empate'
+            ? null
+            : puntaje.ganador === 'negro'
+              ? partida.negro.userId
+              : partida.blanco.userId
 
         await finalizar(partida, ganadorUserId, 'conteo', puntaje)
       } else {
@@ -324,8 +321,7 @@ export async function estudianteGo(idSala: string, userId: string) {
     })
   }
 
-  async function abandonar(payload: unknown) {
-    const { partidaId } = partidaIdSchema.parse(payload)
+  async function abandonar({ partidaId }: PartidaIdPayload) {
     return conLock(partidaId, async () => {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)

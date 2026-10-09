@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, afterAll } from 'bun:test'
 import type { Socket } from 'socket.io'
-import type { Ack } from '../wss/middleware/error-handling'
+import type { Ack } from '../wss/contrato/definir'
 import { FORMATO_ID_DOJO, type CapituloDojo } from '../wss/validators/dojo'
 
 import redis from '../wss/redis'

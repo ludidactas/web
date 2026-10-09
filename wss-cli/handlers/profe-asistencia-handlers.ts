@@ -1,29 +1,32 @@
-import type { Ack } from '@/wss/middleware/error-handling'
-import type { AsistenciaDeClase } from '@/wss/validators/asistencia'
+import type { comandosSalaActivaProfe, EventosSalaProfe } from '@/wss/contrato/salas'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { escribirAsistenciaEnDrive } from '@/lib/google/recursos-asistencia'
 import { plural } from '@/lib/utils'
+import { comandos, escuchar } from '../contrato-cli'
 
 export default function profeAsistenciaHandlers(socket: Socket | null) {
-  // El handler `profe-sala-activa-handlers` también escucha `sala:abierta`, así que no
-  // podemos desmontar con `removeAllListeners` sin matar al otro (y viceversa).
+  // Escribir en Drive puede tardar: el ack espera más que un comando común.
+  const cmd = comandos<typeof comandosSalaActivaProfe>(socket, { timeoutMs: 10_000 })
+
   const alAbrirSala = async ({ sala }: { sala: { id: string; config: { nombre?: string } } }) => {
     if (!socket) return
 
     try {
       // Quedó asistencia de la clase pasada pendiente de grabar en drive?
-      const res: Ack<AsistenciaDeClase[]> = await socket.timeout(10000).emitWithAck('sala:asistencias_pendientes')
-      if (!res.ok || !res.data || res.data.length === 0) return
+      const pendientes = await cmd.pedir('sala:asistencias_pendientes')
+      if (!pendientes || pendientes.length === 0) return
 
       const nombreSala = sala.config.nombre ?? 'Sala'
-      await escribirAsistenciaEnDrive(sala.id, nombreSala, res.data)
+      await escribirAsistenciaEnDrive(sala.id, nombreSala, pendientes)
 
       // Recién con la planilla escrita las descartamos: si la subida falla o el socket se corta antes,
       // el server conserva las asistencias pendientes y se reintenta la próxima vez que se abre la sala.
-      await socket.timeout(10000).emitWithAck('sala:descartar_asistencias_pendientes')
-      const clases = plural(res.data.length, 'la clase anterior', 'las clases anteriores')
-      toast.success(`Asistencia de ${clases} guardada en Drive (${res.data.length} ${plural(res.data.length, 'clase', 'clases')})`)
+      await cmd.pedir('sala:descartar_asistencias_pendientes')
+      const clases = plural(pendientes.length, 'la clase anterior', 'las clases anteriores')
+      toast.success(
+        `Asistencia de ${clases} guardada en Drive (${pendientes.length} ${plural(pendientes.length, 'clase', 'clases')})`
+      )
     } catch {
       console.warn('No se pudo guardar la asistencia pendiente en Drive')
       toast.error('No se pudo guardar la asistencia pendiente en Drive. Se reintenta la próxima vez que abras la sala.')
@@ -31,14 +34,6 @@ export default function profeAsistenciaHandlers(socket: Socket | null) {
   }
 
   return {
-    montar: () => {
-      if (!socket) return
-
-      socket.on('sala:abierta', alAbrirSala)
-    },
-
-    desmontar: () => {
-      socket?.off('sala:abierta', alAbrirSala)
-    },
+    montar: () => escuchar<EventosSalaProfe>(socket, { 'sala:abierta': alAbrirSala }),
   }
 }

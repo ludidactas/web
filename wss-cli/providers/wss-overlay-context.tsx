@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react'
 import baseSalaHandlers from '../handlers/base-sala-handlers'
 import overlayEncuestasHandlers from '../handlers/overlay-encuestas-handlers'
 import { useWss } from '../use-wss'
+import { montarTodos } from '../contrato-cli'
 
 const useHandlersConexionSalaOverlay = (auth: Omit<PasaportePublico, 'rol'>) => {
   const { socket, estado, error } = useWss({ ...auth, rol: RolSala.Publico })
@@ -16,15 +17,7 @@ const useHandlersConexionSalaOverlay = (auth: Omit<PasaportePublico, 'rol'>) => 
     [socket]
   )
 
-  useEffect(() => {
-    handlers.base.montar()
-    handlers.overlay.montar()
-
-    return () => {
-      handlers.base.desmontar()
-      handlers.overlay.desmontar()
-    }
-  }, [socket])
+  useEffect(() => montarTodos(handlers), [handlers])
 
   return {
     estado,

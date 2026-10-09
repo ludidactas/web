@@ -1,5 +1,6 @@
 import { Queue, Worker } from 'bullmq'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import * as db from '../salas/db'
 import { redisBullMQ } from '../redis'
 import { evaluarClase } from './evaluacion'
@@ -56,7 +57,7 @@ export async function registrarApertura(salaId: string): Promise<void> {
  * (propagación del adapter).
  */
 async function hayProfeConectado(salaId: string, excluirSocketId?: string) {
-  const sockets = await io.in(`sala:${salaId}:profe`).fetchSockets()
+  const sockets = await io.in(rooms.profe(salaId)).fetchSockets()
   return sockets.some((s) => s.id !== excluirSocketId)
 }
 

@@ -17,6 +17,22 @@ no es un documento que se escribe una vez y se congela.
   - Esto aplica también a READMEs de feature, no solo a comentarios de código. Una sección "por qué
     elegimos X" describe el requisito y cómo X lo resuelve, no la implementación anterior que se dejó
     atrás.
+- **Lo mínimo de mayor valor: una línea por defecto.** Un comentario de varias líneas se gana su lugar
+  si previene una trampa o fija un invariante que el código no muestra (el orden en que hay que llamar
+  algo, qué rompe si se saca un wrapper). No se comenta lo que ya dicen el nombre o el tipo: un docstring
+  "Eventos de encuestas del profe" sobre `EventosPollsProfe` sobra.
+- **Cada cosa se explica en una sola capa, y las demás apuntan.**
+  - _Doc de feature o `docs/`:_ el diseño, el porqué y los gotchas ("cosas que confunden fácil").
+  - _Docstring:_ qué hace la función y qué garantiza a quien la llama.
+  - _Comentario en línea:_ por qué esa línea es así.
+  - Si el detalle ya vive en el doc, el código dice una frase y remite a él ("ver
+    `docs/contrato-wss.md`"), en vez de repetirlo en cada archivo que toca el tema. Si se actualiza uno
+    y los demás repiten, se desincronizan.
+- **Lo que previene o mitiga algo se dice en afirmativo y con su consecuencia.** "Con el wrapper, un
+  throw no tira el proceso" orienta más que un párrafo sobre cómo falla sin él.
+- **Si un comentario tiene que justificar por qué algo sigue ahí sin usarse, probablemente sobra el
+  código.** Un tipo o una función sin llamadores se borra, o se anota como pendiente en el doc de la
+  feature, no se deja explicado en el código.
 - **Un README por feature no calca el formato de otro.** El de un feature con capas paralelas e
   independientes (reglas de un juego, por ejemplo) no le queda bien a un pipeline lineal con estado
   (una máquina de estados tipo apertura/cierre de clase). Antes de escribir, preguntarse qué forma
@@ -60,19 +76,9 @@ no es un documento que se escribe una vez y se congela.
   timers por polling periódico: agregaba una capa (el poll loop) sin necesidad real dado el volumen
   (decenas de salas, no miles). La pregunta de corte: ¿el problema real justifica la complejidad de la
   solución, o es sobre-ingeniería para un caso que no va a pasar a esta escala?
-- **Al sacar una restricción arbitraria, pensar qué reemplazo hace falta.** Sacar una lista fija de
-  valores permitidos (`[15,30,45,60,90,120]`) para permitir un valor libre no significa "sin ningún
-  límite" — significa "hay que decidir cuál es el límite real" (acá: positivo, con un techo sensato).
-  Sacar la restricción sin pensar el reemplazo es lo que dejó un hueco real: un valor absurdo pasaba
-  sin aviso y dejaba la condición imposible de cumplir para todo el mundo, silenciosamente.
 
 ## Invariantes y validación
 
-- **Desconfiar de comparaciones con `>=`/`<=` contra un umbral configurable en 0.** Si un umbral puede
-  llegar a ser 0, revisar si la comparación se vuelve una tautología (`x >= 0` es siempre verdad,
-  cualquiera sea `x`). Cuando "sin condición" es un caso de negocio real y distinto (acá: "presente con
-  solo conectarse un instante"), modelarlo como un caso propio y explícito, no como un valor límite de
-  un campo numérico — es más fácil de razonar y evita este tipo de bug.
 - **Encerrar el mismo invariante en todas las capas que puedan violarlo**, no solo en una. Un límite
   que solo vive en el schema del server no protege contra un valor que nunca llegó a mandarse porque
   el input del FE ya lo rechazó visualmente — pero un límite que solo vive en el FE no protege contra

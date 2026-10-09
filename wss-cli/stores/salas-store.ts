@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 
-export type SalaResumen = { id: string; nombre?: string }
+import type { SalaResumen } from '@/wss/validators/salas'
+
+export type { SalaResumen }
 
 interface SalasState {
   /** Lista de salas del profe. `null` = todavía no llegó (cargando). */

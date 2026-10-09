@@ -1,38 +1,31 @@
 import { Socket } from 'socket.io-client'
 
+import { comandosPollsEstudiante, EventosPollsEstudiante } from '@/wss/contrato/polls'
 import { VotarEncuesta } from '@/wss/validators/polls'
 import { storeEncuestasEstudiante } from '../stores/encuestas-store'
+import { comandos, escuchar } from '../contrato-cli'
 
+/** Espejo cliente de `handlersEncuestasEstudiante`. */
 export default function estudianteEncuestasHandlers(socket: Socket | null) {
   const encuestas = storeEncuestasEstudiante.getState()
+  const cmd = comandos<typeof comandosPollsEstudiante>(socket)
 
   return {
     montar: () => {
-      if (!socket) return
+      const dejarDeEscuchar = escuchar<EventosPollsEstudiante>(socket, {
+        'polls:list': encuestas.set,
+        'poll:updated': encuestas.update,
+        'poll:deleted': encuestas.remove,
+      })
 
-      socket.on('polls:list', encuestas.set)
-      socket.on('poll:updated', encuestas.update)
-      socket.on('poll:created', encuestas.add)
-      socket.on('poll:deleted', encuestas.remove)
+      cmd.enviar('polls:list')
 
-      socket.emit('polls:list')
+      return dejarDeEscuchar
     },
 
     acciones: {
       /** Postea un voto */
-      votar: (voto: VotarEncuesta) => {
-        if (!socket) return
-        socket.emit('poll:vote', voto)
-      },
-    },
-
-    desmontar: () => {
-      if (!socket) return
-
-      socket.removeAllListeners('polls:list')
-      socket.removeAllListeners('poll:updated')
-      socket.removeAllListeners('poll:created')
-      socket.removeAllListeners('poll:deleted')
+      votar: (voto: VotarEncuesta) => cmd.enviar('poll:vote', voto),
     },
   }
 }

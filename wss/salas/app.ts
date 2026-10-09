@@ -1,21 +1,29 @@
 import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
-import { RemoteSocket } from 'socket.io'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
-import { configActualizable, configSala, ConfigSala, SalaData } from '../validators/salas'
+import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { CONFIG_DEFAULTS } from '../validators/overlay'
-import { WssEstudianteSession } from '../validators/session'
+import { WssEstudianteSession, WssServerSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
 import { reconstruirIntervalos } from '../asistencia/evaluacion'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { RemoteSocketConSesion } from '../middleware/session'
+import { DataConSesion, RemoteSocketConSesion } from '../middleware/session'
+import type { EventoComun, EventosEstudiante, EventosProfe, EventosPublico, PayloadComun } from '../contrato/eventos'
 
 export type { SalaData } from './db'
+
+/** Cómo arma el payload de un evento para cada rol: ver `broadcastPorRol`. */
+type PayloadPorRol<K extends EventoComun> = {
+  profe: () => Promise<EventosProfe[K]> | EventosProfe[K]
+  estudiante: (userId: string) => Promise<EventosEstudiante[K]> | EventosEstudiante[K]
+  publico: () => Promise<EventosPublico[K]> | EventosPublico[K]
+}
 
 export type Sala = Awaited<ReturnType<typeof Salas.get>>
 
@@ -35,30 +43,40 @@ export namespace Salas {
       return sala
     }
 
-    /**
-     * Envía a admin, profe y estudiantes de la sala
-     *
-     * @param event El evento a emitir
-     * @param data La data a emitir. Debería ser un objeto serializable.
-     * @param [mapper=async (data) => data] Función opcional para mapear los datos a enviar a cada socket, en caso de que queramos enviar data personalizada a cada uno. Recibe la data original y el socket, y debe devolver la data a enviar a ese socket. Lo usamos principalmente para adjuntar a cada estudiante el estado de sus respuestas cuando broadcasteamos una pregunta.
-     */
-    async function broadcast(
-      event: string,
-      data: unknown,
-      mapper: (data: unknown, socket: RemoteSocket<any, any>) => Promise<any> = async (data) => data
+    /** Emite `evento` a cada conexión de la sala con el payload que `payloadDe` arma para su sesión. */
+    async function emitirASala<K extends EventoComun>(
+      evento: K,
+      payloadDe: (sesion: WssServerSession | undefined) => Promise<unknown> | unknown
     ) {
-      console.log(`📡 Broadcasteando evento '${event}' en sala ${salaId}`)
+      console.log(`📡 Broadcasteando evento '${evento}' en sala ${salaId}`)
 
-      const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
+      const sockets = await io.to(rooms.sala(salaId)).fetchSockets()
 
-      const sockets = await io.to(`sala:${salaId}`).fetchSockets()
-
-      await Promise.all(sockets.map(enviarMapeado))
+      await Promise.all(
+        sockets.map(async (s) => {
+          const payload = await payloadDe((s.data as DataConSesion | undefined)?.session)
+          ;(s.emit as (evento: string, payload: unknown) => boolean)(evento, payload)
+        })
+      )
     }
+
+    /** Envía el mismo payload a todos los roles de la sala. */
+    const broadcast = <K extends EventoComun>(evento: K, data: PayloadComun<K>) => emitirASala(evento, () => data)
+
+    /**
+     * Envía a cada conexión de la sala el payload de su rol (profe y admin comparten el del profe; sin
+     * sesión es público), para los eventos cuyo payload depende de quién lo recibe.
+     */
+    const broadcastPorRol = <K extends EventoComun>(evento: K, porRol: PayloadPorRol<K>) =>
+      emitirASala(evento, (sesion) => {
+        if (sesion?.rol === RolSala.Estudiante) return porRol.estudiante(sesion.userId)
+        if (sesion?.rol === RolSala.Profe || sesion?.rol === RolSala.Admin) return porRol.profe()
+        return porRol.publico()
+      })
 
     /** `userIds` de los estudiantes con un socket vivo ahora mismo (cluster-wide). */
     async function userIdsConectados() {
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return new Set(sockets.map((s) => s.data.session.userId))
     }
 
@@ -69,14 +87,14 @@ export namespace Salas {
      * `fetchSockets` por un instante (propagación del adapter).
      */
     async function sigueConectado(userId: string, excluirSocketId?: string) {
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return sockets.some((s) => s.data.session.userId === userId && s.id !== excluirSocketId)
     }
 
     /** Si al profe le queda algún socket vivo, excluyendo `excluirSocketId` (ver `sigueConectado`: el
      * mismo motivo, para no confundir la propagación del adapter con que el profe sigue conectado). */
     async function profeConectado(excluirSocketId?: string) {
-      const sockets = await io.in(`sala:${salaId}:profe`).fetchSockets()
+      const sockets = await io.in(rooms.profe(salaId)).fetchSockets()
       return sockets.some((s) => s.id !== excluirSocketId)
     }
 
@@ -107,7 +125,7 @@ export namespace Salas {
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
       // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       const noPermitidos = sockets.filter(
         (s: RemoteSocketConSesion) =>
           s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.userId)
@@ -150,11 +168,8 @@ export namespace Salas {
       return reconstruirIntervalos(await db.getEventosAsistencia(salaId))
     }
 
-    async function actualizarConfig(payload: unknown) {
+    async function actualizarConfig(config: ConfigActualizableParcial) {
       const sala = await getFromDb()
-
-      // Validamos: solo se pueden tocar los campos mutables.
-      const config = configActualizable.partial().parse(payload)
       const configActual = sala.config
       const merged = { ...mergeDeep(configActual, config) }
 
@@ -183,6 +198,9 @@ export namespace Salas {
       /** Broadcastea un mensaje a todos los sockets en la sala */
       broadcast,
 
+      /** Broadcastea un mensaje cuyo payload depende del rol de cada socket */
+      broadcastPorRol,
+
       /** Registra el ingreso del estudiante en la planilla durable de la sala (persiste su sesión) */
       registrarIngreso,
 
@@ -198,7 +216,7 @@ export namespace Salas {
       /** Devuelve, por userId, los intervalos de conexión reconstruidos del log de asistencia */
       intervalosDeConexion,
 
-      /** Valida lo que recibe y si pasa actualiza la config de la sala */
+      /** Actualiza los campos mutables de la config (ya validados: `configActualizableParcial`) */
       actualizarConfig,
 
       /** Gestión de la lista de usuarios permitidos */
@@ -251,7 +269,7 @@ export namespace Salas {
    * quita la relación con el profe. Se asume que el caller ya validó propiedad (`assertEsDueño`).
    */
   export async function eliminar(email: string, salaId: string) {
-    const sockets = await io.in(`sala:${salaId}`).fetchSockets()
+    const sockets = await io.in(rooms.sala(salaId)).fetchSockets()
     sockets.forEach((s) => {
       s.emit('sala:kick', { motivo: 'La sala fue eliminada.' })
       s.disconnect()

@@ -10,6 +10,7 @@ import {
   JugadaInvalida,
   NEGRO,
   Tablero,
+  tableroAtari,
   tableroVacio,
   VACIO,
 } from './motor'
@@ -184,5 +185,29 @@ describe('jugar', () => {
     const historial = new Set([hashTablero(posicionRepetida)])
 
     expect(() => jugar(tablero, 3, 2, 1, NEGRO, historial)).toThrow(JugadaInvalida)
+  })
+})
+
+describe('tableroAtari', () => {
+  test.each([9, 13, 19])('pone cuatro piedras en cruz en el centro de un tablero de %ix%i', (tamaño) => {
+    const tablero = tableroAtari(tamaño)
+    const c = Math.floor(tamaño / 2)
+
+    expect(tablero[c - 1][c - 1]).toBe(NEGRO)
+    expect(tablero[c][c]).toBe(NEGRO)
+    expect(tablero[c - 1][c]).toBe(BLANCO)
+    expect(tablero[c][c - 1]).toBe(BLANCO)
+    expect(tablero.flat().filter((x) => x !== VACIO)).toHaveLength(4)
+  })
+
+  test('rodeando una piedra de la cruz inicial se la captura', () => {
+    const tablero = tableroAtari(9)
+    const { tablero: t1, capturas: c1 } = jugar(tablero, 9, 5, 3, NEGRO, new Set())
+    expect(c1).toBe(0)
+    const { tablero: t2, capturas: c2 } = jugar(t1, 9, 0, 0, BLANCO, new Set())
+    expect(c2).toBe(0)
+    // La blanca de (4,3) ya tiene negras en (3,3) y (4,4): con (5,3) y (4,2) queda sin libertades.
+    const { capturas } = jugar(t2, 9, 4, 2, NEGRO, new Set())
+    expect(capturas).toBe(1)
   })
 })

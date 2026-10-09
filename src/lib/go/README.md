@@ -114,6 +114,10 @@ server. El detalle (conexión, comandos, claves, límites) está en [`wss/dojo/R
 - **El dojo no reimplementa reglas.** No tiene su propio "motor" — arma un tablero de una sola posición
   con `tableroVacio`/`capturasEnJugada` de `motor.ts` y nada más; no conoce ko ni historial de jugadas
   (no le hacen falta: cada desafío es una posición fija).
+- **Dos modos de desafío sobre la misma `Partida`** (`Partida.modo`, elegido al invitar). `partida` es
+  Go completo (pasar, conteo, komi). `atari` arranca desde `tableroAtari` (cuatro piedras en cruz en el
+  centro), no permite pasar y termina en la primera captura (`motivoFin: 'captura'`, sin `resultado`
+  numérico ni fase de conteo). Las reglas de captura/ko/suicidio son las mismas en ambos.
 
 ## Testing
 

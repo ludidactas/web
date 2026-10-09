@@ -49,6 +49,7 @@ test('un tercer estudiante puede observar una partida ajena en curso', async ({ 
 
   await esperarContrincante(negro, 'Beto')
   await negro.locator('li', { hasText: 'Beto' }).getByRole('button', { name: 'Invitar' }).click()
+  await negro.getByRole('button', { name: /^Partida/ }).click()
 
   await blanco.getByText('¡Te invitaron a jugar Go!').waitFor()
   // El botón "Aceptar" aparece dos veces (la tarjeta de invitación y la fila del contrincante en la

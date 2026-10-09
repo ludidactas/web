@@ -5,6 +5,7 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 
 import getInitials, { getRandomColor } from '@/lib/avatarname'
 import { cn } from '@/lib/utils'
+import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
@@ -51,19 +52,23 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
       <div className="ml-auto flex items-center gap-2">
         {modo === 'go' && e.conectado && (
           <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
-                disabled={!!partidaPropia || !!contrincantes.find((c) => c.userId === e.userId)?.enPartida}
-                onClick={() =>
-                  invitar(e.userId).catch((err) =>
-                    toast.error(err instanceof Error ? err.message : 'No se pudo invitar')
-                  )
-                }
-              >
-                <Icon icon="lucide:play" width={18} height={18} />
-              </button>
-            </TooltipTrigger>
+            <ElegirModoInvitacion
+              nombre={e.nombre}
+              onElegir={(modo) =>
+                invitar(e.userId, { modo }).catch((err) =>
+                  toast.error(err instanceof Error ? err.message : 'No se pudo invitar')
+                )
+              }
+            >
+              <TooltipTrigger asChild>
+                <button
+                  className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
+                  disabled={!!partidaPropia || !!contrincantes.find((c) => c.userId === e.userId)?.enPartida}
+                >
+                  <Icon icon="lucide:play" width={18} height={18} />
+                </button>
+              </TooltipTrigger>
+            </ElegirModoInvitacion>
             <TooltipContent>
               <p className="text-xs">Invitar a {e.nombre} a jugar Go</p>
             </TooltipContent>

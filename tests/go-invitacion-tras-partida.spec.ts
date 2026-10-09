@@ -44,6 +44,7 @@ test('una invitación que llega mientras mirás tu partida ya terminada no te sa
   // Pepe invita al profe y este acepta: arrancan a jugar.
   await esperarContrincante(pepe, profe.name)
   await pepe.locator('li', { hasText: profe.name }).getByRole('button', { name: 'Invitar' }).click()
+  await pepe.getByRole('button', { name: /^Partida/ }).click()
 
   await sala.goto(`/salas/${idSala}/go`)
   await sala.locator('h2:visible', { hasText: '¡Te invitaron a jugar Go!' }).waitFor()
@@ -63,6 +64,7 @@ test('una invitación que llega mientras mirás tu partida ya terminada no te sa
   // El profe lo invita de nuevo mientras Pepe sigue mirando su tablero terminado.
   const botonInvitar = await esperarBotonInvitar(sala, 'Pepe')
   await botonInvitar.click()
+  await sala.getByRole('button', { name: /^Partida/ }).click()
 
   // Es elección de Pepe dejar de mirar su partida: la invitación no lo saca de ahí solo por haber
   // llegado. Le damos un instante para que, si el bug reapareciera, alcance a auto-redirigirlo.

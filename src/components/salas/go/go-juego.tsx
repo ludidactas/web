@@ -6,9 +6,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { PartidaGo } from './partida-go'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
+import { useSonidoJugada } from './use-sonido-jugada'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -44,6 +46,8 @@ export type AccionesGo = {
 export default function GoJuego({ userId, acciones }: { userId: string; acciones: AccionesGo }) {
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
+
+  useSonidoJugada(observando ?? partida, userId)
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
@@ -592,6 +596,8 @@ function PartidaEnCurso({
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
+              // Al colocar la piedra suena de inmediato, sin esperar a confirmar la jugada.
+              if (jugadaPendiente?.fila !== fila || jugadaPendiente?.columna !== columna) sonarJugada()
               setJugadaPendiente((actual) =>
                 actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
               )

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { rival } from "@/lib/go/motor";
+import { sonarJugada } from "@/lib/go/sonido-jugada";
 import {
   aplicarJugada,
   retirarGrupo,
@@ -125,6 +126,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
           siguientesPiedras = trasRival.piedras;
         }
 
+        sonarJugada();
         setPiedrasSecuencia(siguientesPiedras);
         if (rama.siguiente) {
           setNodoSecuencia(rama.siguiente);
@@ -176,6 +178,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
       if (respondido) return;
       const resultado = evaluarJugada(desafio, r, c);
       if (!resultado) return;
+      sonarJugada();
       setJugadaJugador(resultado.jugada);
       setCapturadas(resultado.capturadas);
       setEstado(resultado.esCorrecta ? "correcto" : "incorrecto");

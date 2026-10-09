@@ -25,12 +25,12 @@ Al conectar, el server toma el `idDojo` del pasaporte si lo emitió él, o gener
 
 **Comandos** (todos responden por ack, ver `wss/contrato/dojo.ts`):
 
-| Comando | Efecto |
-|---|---|
-| `dojo:identificarse` | devuelve el id definitivo |
-| `dojo:sincronizar` | suma los resueltos locales del capítulo y devuelve `{ resueltos, actual }` |
-| `dojo:resuelto` | agrega un desafío resuelto |
-| `dojo:actual` | guarda el desafío abierto por última vez |
+| Comando              | Efecto                                                                     |
+| -------------------- | -------------------------------------------------------------------------- |
+| `dojo:identificarse` | devuelve el id definitivo                                                  |
+| `dojo:sincronizar`   | suma los resueltos locales del capítulo y devuelve `{ resueltos, actual }` |
+| `dojo:resuelto`      | agrega un desafío resuelto                                                 |
+| `dojo:actual`        | guarda el desafío abierto por última vez                                   |
 
 Cada comando espera a que termine la resolución del id, así que se aplican en cualquier orden respecto de
 `dojo:identificarse`, incluidos los que el cliente acumula mientras está desconectado.
@@ -49,11 +49,11 @@ el dojo sigue con lo local.
 
 ## Claves de Redis
 
-| Clave | Tipo | Contenido |
-|---|---|---|
-| `dojo:<idDojo>:creado` | STRING | timestamp de creación del id |
-| `dojo:<idDojo>:resueltos:<coleccion>:<capitulo>` | ZSET | desafíos resueltos; score = timestamp de la primera resolución |
-| `dojo:<idDojo>:actual` | HASH | `<coleccion>:<capitulo>` → id del desafío abierto por última vez |
+| Clave                                            | Tipo   | Contenido                                                        |
+| ------------------------------------------------ | ------ | ---------------------------------------------------------------- |
+| `dojo:<idDojo>:creado`                           | STRING | timestamp de creación del id                                     |
+| `dojo:<idDojo>:resueltos:<coleccion>:<capitulo>` | ZSET   | desafíos resueltos; score = timestamp de la primera resolución   |
+| `dojo:<idDojo>:actual`                           | HASH   | `<coleccion>:<capitulo>` → id del desafío abierto por última vez |
 
 Análisis de uso: `SCAN dojo:*:resueltos:*` + `ZRANGE ... WITHSCORES` da resueltos por capítulo y
 desafío con fecha; `dojo:*:creado` da cuándo apareció cada visitante.

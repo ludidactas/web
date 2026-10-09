@@ -25,7 +25,6 @@ import * as motor from '@/lib/go/motor'
  * orquesta el estado de la partida alrededor de esas funciones puras.
  */
 
-
 async function assertPartidaExiste(salaId: string, partidaId: string): Promise<Partida> {
   const partida = await db.getPartida(salaId, partidaId)
   if (!partida) throw new Error('La partida no existe')
@@ -136,7 +135,6 @@ export async function estudianteGo(idSala: string, userId: string) {
 
   async function invitar({ contrincanteId, tamaño }: Invitacion, nombre: string) {
     return conLockInvitaciones(async () => {
-
       if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
       const existente = await miPartida()
@@ -307,7 +305,11 @@ export async function estudianteGo(idSala: string, userId: string) {
           partida.capturasBlancas
         )
         const ganadorUserId =
-          puntaje.ganador === 'empate' ? null : puntaje.ganador === 'negro' ? partida.negro.userId : partida.blanco.userId
+          puntaje.ganador === 'empate'
+            ? null
+            : puntaje.ganador === 'negro'
+              ? partida.negro.userId
+              : partida.blanco.userId
 
         await finalizar(partida, ganadorUserId, 'conteo', puntaje)
       } else {

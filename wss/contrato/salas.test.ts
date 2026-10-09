@@ -6,7 +6,11 @@ describe('contrato de salas', () => {
 
   test('sala:crear completa la config por defecto, con o sin payload', () => {
     for (const payload of [undefined, {}, { config: {} }]) {
-      expect(crear.parse(payload).config).toMatchObject({ metodo_login: 'nombre', solo_invitados: false, listaPermitidos: [] })
+      expect(crear.parse(payload).config).toMatchObject({
+        metodo_login: 'nombre',
+        solo_invitados: false,
+        listaPermitidos: [],
+      })
     }
   })
 

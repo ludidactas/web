@@ -1,11 +1,5 @@
 import { comandoAck, devuelve, sinPayload } from './definir'
-import {
-  invitacionSchema,
-  jugadaSchema,
-  partidaIdSchema,
-  type ContrincanteGo,
-  type Partida,
-} from '../validators/go'
+import { invitacionSchema, jugadaSchema, partidaIdSchema, type ContrincanteGo, type Partida } from '../validators/go'
 
 /** Comandos de Go de una conexión: estudiante y profe comparten la mecánica, cambia la identidad. */
 export const comandosGo = {

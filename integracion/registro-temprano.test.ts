@@ -40,7 +40,10 @@ test('un comando emitido apenas conecta no se pierde', async () => {
         reconnection: false,
       })
       await new Promise<void>((resolver) => socket.on('connect', () => resolver()))
-      const respuesta = await socket.timeout(1500).emitWithAck('go:mi_partida').catch(() => null)
+      const respuesta = await socket
+        .timeout(1500)
+        .emitWithAck('go:mi_partida')
+        .catch(() => null)
       socket.disconnect()
       return respuesta === null
     })

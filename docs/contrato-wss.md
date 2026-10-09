@@ -21,11 +21,12 @@ wss/contrato/*.test.ts      registrar con socket.io real (server + cliente en pr
 ```ts
 // wss/contrato/<feature>.ts
 export const comandosXProfe = {
-  'x:borrar': comando(xIdSchema),                              // sin respuesta: error → `wss:error`
-  'x:crear': comandoAck(crearXSchema, devuelve<void>()),       // con ack: el cliente usa `pedir`
-  'x:listar': comandoAck(sinPayload, devuelve<X[]>()),         // comando sin payload
+  'x:borrar': comando(xIdSchema), // sin respuesta: error → `wss:error`
+  'x:crear': comandoAck(crearXSchema, devuelve<void>()), // con ack: el cliente usa `pedir`
+  'x:listar': comandoAck(sinPayload, devuelve<X[]>()), // comando sin payload
 }
-export interface EventosXProfe {                               // lo que el server emite al cliente
+export interface EventosXProfe {
+  // lo que el server emite al cliente
   'x:actualizada': X
 }
 ```
@@ -79,39 +80,38 @@ Un evento nuevo se declara en la interfaz `Eventos<Feature><Rol>` de su contrato
 
 ```ts
 const cmd = comandos<typeof comandosXProfe>(socket)
-cmd.enviar('x:borrar', { xId })              // solo comandos sin ack
-const xs = await cmd.pedir('x:listar')       // solo comandos con ack; rechaza con Error(mensaje del server)
+cmd.enviar('x:borrar', { xId }) // solo comandos sin ack
+const xs = await cmd.pedir('x:listar') // solo comandos con ack; rechaza con Error(mensaje del server)
 
 // En el handler del cliente: `montar` devuelve cómo desmontarlo (`escuchar` quita solo los listeners de este módulo)
-montar: () => escuchar<EventosXProfe>(socket, { 'x:actualizada': store.update }),
-
-// En el provider: monta todos los handlers y devuelve el desmontaje de todos
-useEffect(() => montarTodos(handlers), [handlers])
+montar: (() => escuchar<EventosXProfe>(socket, { 'x:actualizada': store.update }),
+  // En el provider: monta todos los handlers y devuelve el desmontaje de todos
+  useEffect(() => montarTodos(handlers), [handlers]))
 ```
 
 ## Receta de migración (código viejo → contrato)
 
-| Código viejo | Con el contrato |
-| --- | --- |
-| `socket.on('ev', safe(async (p) => ...))` (wrapper que loguea y avisa por `wss:error`) | entrada en `registrar(socket, contrato, { 'ev': async (p) => ... })` |
-| `socket.on('ev', conAck(socket)(async (p) => ...))` | `comandoAck(schema, devuelve<R>())` + entrada en `registrar` |
-| `payload: unknown` + `schema.parse(payload)` dentro del handler/`app.ts` | schema en el contrato; el handler recibe el tipo parseado |
-| ack ad hoc (`responder(error?)`) | `comandoAck(..., devuelve<void>())`; el cliente hace `await pedir(...)` |
-| `socket.emit('ev', p)` / `socket.timeout(n).emitWithAck(...)` + `if (!res.ok) throw` | `cmd.enviar` / `await cmd.pedir` |
-| `socket.on(...)` + `removeAllListeners('ev')` en `desmontar` | `montar: () => escuchar<Eventos>(socket, {...})` (devuelve el desmontaje) |
-| request→response con un par de eventos (`emit 'x'` → server `emit 'x'`) | candidato a `comandoAck` + `pedir` |
+| Código viejo                                                                           | Con el contrato                                                           |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `socket.on('ev', safe(async (p) => ...))` (wrapper que loguea y avisa por `wss:error`) | entrada en `registrar(socket, contrato, { 'ev': async (p) => ... })`      |
+| `socket.on('ev', conAck(socket)(async (p) => ...))`                                    | `comandoAck(schema, devuelve<R>())` + entrada en `registrar`              |
+| `payload: unknown` + `schema.parse(payload)` dentro del handler/`app.ts`               | schema en el contrato; el handler recibe el tipo parseado                 |
+| ack ad hoc (`responder(error?)`)                                                       | `comandoAck(..., devuelve<void>())`; el cliente hace `await pedir(...)`   |
+| `socket.emit('ev', p)` / `socket.timeout(n).emitWithAck(...)` + `if (!res.ok) throw`   | `cmd.enviar` / `await cmd.pedir`                                          |
+| `socket.on(...)` + `removeAllListeners('ev')` en `desmontar`                           | `montar: () => escuchar<Eventos>(socket, {...})` (devuelve el desmontaje) |
+| request→response con un par de eventos (`emit 'x'` → server `emit 'x'`)                | candidato a `comandoAck` + `pedir`                                        |
 
 Al migrar un comando con ack, los llamadores del cliente reciben `Error` (con `.message`), no `string`.
 
 ## Estado de la migración
 
-| Feature | Server | Cliente |
-| --- | --- | --- |
-| Encuestas — profe, estudiante, overlay | `wss/polls/handlers.ts` | `wss-cli/handlers/*-encuestas-handlers.ts` |
-| Dojo (visitante anónimo) | `wss/dojo/handlers.ts` | `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts` |
-| Go — estudiante y profe | `wss/go/handlers.ts` | `wss-cli/handlers/go-handlers.ts` (compartido por `estudiante-go-handlers.ts` y `profe-go-handlers.ts`) |
-| Salas — gestión (ABM), sala activa del profe, estudiante y público | `wss/salas/handlers.ts` | `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
-| Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | `wss/salas/handlers.ts` | `profe-asistencia-handlers.ts` |
+| Feature                                                                             | Server                  | Cliente                                                                                                                    |
+| ----------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Encuestas — profe, estudiante, overlay                                              | `wss/polls/handlers.ts` | `wss-cli/handlers/*-encuestas-handlers.ts`                                                                                 |
+| Dojo (visitante anónimo)                                                            | `wss/dojo/handlers.ts`  | `src/app/(sitio)/go/dojo/use-sincronizacion-dojo.ts`                                                                       |
+| Go — estudiante y profe                                                             | `wss/go/handlers.ts`    | `wss-cli/handlers/go-handlers.ts` (compartido por `estudiante-go-handlers.ts` y `profe-go-handlers.ts`)                    |
+| Salas — gestión (ABM), sala activa del profe, estudiante y público                  | `wss/salas/handlers.ts` | `profe-gestion-salas-handlers.ts`, `profe-sala-activa-handlers.ts`, `estudiante-sala-handlers.ts`, `base-sala-handlers.ts` |
+| Asistencia (`sala:asistencias_pendientes`, `sala:descartar_asistencias_pendientes`) | `wss/salas/handlers.ts` | `profe-asistencia-handlers.ts`                                                                                             |
 
 Todos los comandos del cliente pasan por el contrato y el código de conexión por `alDesconectar` y `protegido`.
 Solo el `connect_error` del middleware y los `disconnect` que manejan sus propios errores (profe, admin) se registran a mano.

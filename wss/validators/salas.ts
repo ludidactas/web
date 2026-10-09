@@ -15,7 +15,7 @@ export const configCreacionSala = z.object({
   // Ortogonal al metodo_login: restringe el acceso a una lista de invitados.
   solo_invitados: z.boolean().default(false),
 
-  // Listado de asistencia automática 
+  // Listado de asistencia automática
   condicion_asistencia: condicionAsistenciaSchema.nullable().optional(),
 
   // Lista de invitados inicial, lueguito el server la extrae y la guarda en su SET (`sala:<id>:allowed_list`)

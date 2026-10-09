@@ -22,9 +22,9 @@ no es un documento que se escribe una vez y se congela.
   algo, qué rompe si se saca un wrapper). No se comenta lo que ya dicen el nombre o el tipo: un docstring
   "Eventos de encuestas del profe" sobre `EventosPollsProfe` sobra.
 - **Cada cosa se explica en una sola capa, y las demás apuntan.**
-  - *Doc de feature o `docs/`:* el diseño, el porqué y los gotchas ("cosas que confunden fácil").
-  - *Docstring:* qué hace la función y qué garantiza a quien la llama.
-  - *Comentario en línea:* por qué esa línea es así.
+  - _Doc de feature o `docs/`:_ el diseño, el porqué y los gotchas ("cosas que confunden fácil").
+  - _Docstring:_ qué hace la función y qué garantiza a quien la llama.
+  - _Comentario en línea:_ por qué esa línea es así.
   - Si el detalle ya vive en el doc, el código dice una frase y remite a él ("ver
     `docs/contrato-wss.md`"), en vez de repetirlo en cada archivo que toca el tema. Si se actualiza uno
     y los demás repiten, se desincronizan.

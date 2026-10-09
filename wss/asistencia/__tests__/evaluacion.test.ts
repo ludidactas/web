@@ -96,7 +96,6 @@ describe('estuvoPresente — UltimosMinutos', () => {
   })
 })
 
-
 describe('estuvoPresente — matriz 6×2 (umbral × forma)', () => {
   const UMBRALES = [15, 30, 45, 60, 90, 120] as const
   const FIN_OFFSET = 240 * MIN // la clase dura 4 h
@@ -106,23 +105,39 @@ describe('estuvoPresente — matriz 6×2 (umbral × forma)', () => {
       const umbralMs = minutos * MIN
 
       it('TotalMinutos: presente si acumula el mínimo', () => {
-        const c: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos, minutos_minimos: minutos }
+        const c: CondicionAsistencia = {
+          forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos,
+          minutos_minimos: minutos,
+        }
         expect(estuvoPresente([intervalo(0, umbralMs)], c, ventanaHasta(T0 + FIN_OFFSET))).toBe(true)
       })
 
       it('TotalMinutos: ausente si le falta un milisegundo', () => {
-        const c: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos, minutos_minimos: minutos }
+        const c: CondicionAsistencia = {
+          forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos,
+          minutos_minimos: minutos,
+        }
         expect(estuvoPresente([intervalo(0, umbralMs - 1)], c, ventanaHasta(T0 + FIN_OFFSET))).toBe(false)
       })
 
       it('UltimosMinutos: presente si cubre toda la ventana final', () => {
-        const c: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos, minutos_minimos: minutos }
-        expect(estuvoPresente([intervalo(FIN_OFFSET - umbralMs, FIN_OFFSET)], c, ventanaHasta(T0 + FIN_OFFSET))).toBe(true)
+        const c: CondicionAsistencia = {
+          forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos,
+          minutos_minimos: minutos,
+        }
+        expect(estuvoPresente([intervalo(FIN_OFFSET - umbralMs, FIN_OFFSET)], c, ventanaHasta(T0 + FIN_OFFSET))).toBe(
+          true
+        )
       })
 
       it('UltimosMinutos: ausente si le falta un milisegundo de la ventana final', () => {
-        const c: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos, minutos_minimos: minutos }
-        expect(estuvoPresente([intervalo(FIN_OFFSET - umbralMs + 1, FIN_OFFSET)], c, ventanaHasta(T0 + FIN_OFFSET))).toBe(false)
+        const c: CondicionAsistencia = {
+          forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos,
+          minutos_minimos: minutos,
+        }
+        expect(
+          estuvoPresente([intervalo(FIN_OFFSET - umbralMs + 1, FIN_OFFSET)], c, ventanaHasta(T0 + FIN_OFFSET))
+        ).toBe(false)
       })
     })
   }
@@ -153,7 +168,10 @@ describe('estuvoPresente — separador entre formas', () => {
   it('3 h conectado y ausente los últimos 60 min: TotalMinutos presente, UltimosMinutos ausente', () => {
     const intervalos = [intervalo(0, 180 * MIN)] // conectado las primeras 3 h
     const total: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.TotalMinutos, minutos_minimos: 60 }
-    const ultimos: CondicionAsistencia = { forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos, minutos_minimos: 60 }
+    const ultimos: CondicionAsistencia = {
+      forma_evaluacion: FormaEvaluacionAsistencia.UltimosMinutos,
+      minutos_minimos: 60,
+    }
     const ventana = ventanaHasta(T0 + FIN_OFFSET)
 
     expect(estuvoPresente(intervalos, total, ventana)).toBe(true)

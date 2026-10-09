@@ -13,7 +13,9 @@ export type EventosEstudiante = EventosSalaEstudiante & EventosPollsEstudiante &
 /** Todo lo que el server le emite al cliente público (overlay incluido). */
 export type EventosPublico = EventosSalaPublico & EventosPollsOverlay
 
-type UnionDe<A, B> = { [K in keyof A | keyof B]: (K extends keyof A ? A[K] : never) | (K extends keyof B ? B[K] : never) }
+type UnionDe<A, B> = {
+  [K in keyof A | keyof B]: (K extends keyof A ? A[K] : never) | (K extends keyof B ? B[K] : never)
+}
 
 /** Los eventos que reciben los tres roles. */
 export type EventoComun = keyof EventosProfe & keyof EventosEstudiante & keyof EventosPublico

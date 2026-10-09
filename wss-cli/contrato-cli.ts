@@ -15,9 +15,8 @@ type ConAck<C extends Contrato> = { [K in keyof C]: C[K] extends Comando<any, an
 type SinAck<C extends Contrato> = Exclude<keyof C & string, ConAck<C>>
 
 /** Argumentos de un comando: el payload es opcional si su schema acepta `undefined`. */
-type ArgsDe<C extends Contrato, K extends keyof C> = undefined extends Entrada<C[K]>
-  ? [payload?: Entrada<C[K]>]
-  : [payload: Entrada<C[K]>]
+type ArgsDe<C extends Contrato, K extends keyof C> =
+  undefined extends Entrada<C[K]> ? [payload?: Entrada<C[K]>] : [payload: Entrada<C[K]>]
 
 type RespuestaDe<D> = D extends Comando<any, infer R, true> ? R : never
 
@@ -28,16 +27,16 @@ type RespuestaDe<D> = D extends Comando<any, infer R, true> ? R : never
  *
  * Sin socket, `enviar` no hace nada y `pedir` rechaza.
  */
-export function comandos<C extends Contrato>(socket: Socket | null, { timeoutMs = TIMEOUT_ACK_MS }: OpcionesComandos = {}) {
+export function comandos<C extends Contrato>(
+  socket: Socket | null,
+  { timeoutMs = TIMEOUT_ACK_MS }: OpcionesComandos = {}
+) {
   return {
     enviar: <K extends SinAck<C>>(evento: K, ...[payload]: ArgsDe<C, K>): void => {
       socket?.emit(evento, payload)
     },
 
-    pedir: async <K extends ConAck<C>>(
-      evento: K,
-      ...[payload]: ArgsDe<C, K>
-    ): Promise<RespuestaDe<C[K]>> => {
+    pedir: async <K extends ConAck<C>>(evento: K, ...[payload]: ArgsDe<C, K>): Promise<RespuestaDe<C[K]>> => {
       if (!socket) throw new Error('Sin conexión')
       const res: Ack<RespuestaDe<C[K]>> = await socket.timeout(timeoutMs).emitWithAck(evento, payload)
       if (!res.ok) throw new Error(res.error)

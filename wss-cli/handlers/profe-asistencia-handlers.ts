@@ -24,7 +24,9 @@ export default function profeAsistenciaHandlers(socket: Socket | null) {
       // el server conserva las asistencias pendientes y se reintenta la próxima vez que se abre la sala.
       await cmd.pedir('sala:descartar_asistencias_pendientes')
       const clases = plural(pendientes.length, 'la clase anterior', 'las clases anteriores')
-      toast.success(`Asistencia de ${clases} guardada en Drive (${pendientes.length} ${plural(pendientes.length, 'clase', 'clases')})`)
+      toast.success(
+        `Asistencia de ${clases} guardada en Drive (${pendientes.length} ${plural(pendientes.length, 'clase', 'clases')})`
+      )
     } catch {
       console.warn('No se pudo guardar la asistencia pendiente en Drive')
       toast.error('No se pudo guardar la asistencia pendiente en Drive. Se reintenta la próxima vez que abras la sala.')

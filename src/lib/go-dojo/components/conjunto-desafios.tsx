@@ -199,8 +199,8 @@ export function ConjuntoDesafios({
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start bg-ld-violeta-oscuro/10 p-4 rounded-xl">
-        <div className="order-2 md:order-1 w-full md:w-56 md:shrink-0 flex flex-col gap-3" style={{ height: altoTablero }}>
+      <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start p-0 sm:bg-ld-violeta-oscuro/10 sm:p-4 rounded-xl">
+        <div className="order-2 md:order-1 w-full md:w-56 md:shrink-0 flex flex-col gap-3 bg-ld-violeta-oscuro/10 p-2 rounded-xl sm:bg-transparent sm:p-0 sm:rounded-none" style={{ height: altoTablero }}>
           <div className="relative flex-1 min-h-0">
             <nav
               className={cn(

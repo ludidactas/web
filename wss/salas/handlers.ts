@@ -7,7 +7,8 @@ import { SocketConSesion } from '../middleware/session'
 import { profeSala } from '../polls/app'
 import { handlersEncuestasProfe } from '../polls/handlers'
 import { handlersGoProfe } from '../go/handlers'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import { Sala, Salas } from './app'
 import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
 import type { PlanillaCompleta } from '../validators/salas'
@@ -81,7 +82,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
 /** OPERACIÓN — listeners de la sala abierta (ligados a `sala`), registrados recién al abrirla. */
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   socket.data.salaActiva = sala.id
-  socket.join([`sala:${sala.id}`, `sala:${sala.id}:profe`, `sala:${sala.id}:${socket.data.session.userId}`])
+  socket.join([rooms.sala(sala.id), rooms.profe(sala.id), rooms.usuario(sala.id, socket.data.session.userId)])
   console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
   registrar(socket, comandosSalaActivaProfe, {
@@ -142,13 +143,13 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
 export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   const email = socket.data.session.email
 
-  socket.join(`profe:${email}`)
+  socket.join(rooms.cuentaProfe(email))
 
-  /** Emite la lista de salas a todas las conexiones del profe (room `profe:${email}`). Protegido: es un efecto posterior al cambio, no debe fallar al comando que lo pide. */
+  /** Emite la lista de salas a todas las conexiones del profe. Protegido: es un efecto posterior al cambio, no debe fallar al comando que lo pide. */
   const emitirLista = () =>
     protegido(socket, async () => {
       const salas = await Salas.getSalasDeProfe(email)
-      io.to(`profe:${email}`).emit(
+      io.to(rooms.cuentaProfe(email)).emit(
         'salas:lista',
         salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
       )
@@ -210,8 +211,6 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     },
   })
 
-  await emitirLista()
-
   socket.on('disconnect', (reason) => {
     console.log(`❌ Profe ${email} desconectado: ${reason}`)
 
@@ -224,13 +223,15 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
       console.error(`No se pudo programar el cierre de la sala ${salaId}:`, e)
     )
   })
+
+  return emitirLista
 }
 
 /** Registra los comandos del estudiante y devuelve su init (registro en la planilla, aviso al profe). */
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   // Rooms -- la última de estas tres es su 'personal room' para mensajes dirigidos a este cliente en particular (ej: kickeo, cambios que lo afectan, etc.)
   // A esta altura el `userId` ya está resuelto dependiendo el metodo_login de la sala (nombre/DNI/email).
-  socket.join([`sala:${idSala}`, `sala:${idSala}:estudiantes`, `sala:${idSala}:${socket.data.session.userId}`])
+  socket.join([rooms.sala(idSala), rooms.estudiantes(idSala), rooms.usuario(idSala, socket.data.session.userId)])
 
   const user = socket.data.session.nombre
   // La sala se resuelve en segundo plano: registrar los comandos no espera I/O.
@@ -249,7 +250,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     // Solo le avisamos al profe que se desconectó si NO le queda ningún otro socket vivo (ej:
     // sigue conectado desde otra pestaña/clientId). Excluimos el socket actual del chequeo.
     if (!(await sala.sigueConectado(userId, socket.id)))
-      await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_desconectado', { id: userId })
+      await io.to(rooms.profe(sala.id)).emit('sala:estudiante_desconectado', { id: userId })
   })
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
@@ -266,7 +267,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
 
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
     await sala.registrarIngreso(socket.data.session)
-    await io.to(`sala:${sala.id}:profe`).emit('sala:estudiante_conectado', socket.data.session)
+    await io.to(rooms.profe(sala.id)).emit('sala:estudiante_conectado', socket.data.session)
 
     // Si está en la lista de invitados (solo aplica a salas por DNI), le avisamos con su nombre
     // provisto (si el profe le puso uno) para que el FE muestre el aviso y el toast de bienvenida.
@@ -287,7 +288,7 @@ export const handlersSalaPublico = async (socket: Socket, idSala: string) => {
   console.log(`🔍 Cliente público conectado para sala ${idSala} (socket ${socket.id})`)
 
   // Rooms
-  socket.join([`sala:${idSala}`, `sala:${idSala}:publico`])
+  socket.join([rooms.sala(idSala), rooms.publico(idSala)])
 
   // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
   registrar(socket, comandosSalaConfig, {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import { Salas } from '../salas/app'
 import {
   ContrincanteGo,
@@ -24,9 +25,6 @@ import * as motor from '@/lib/go/motor'
  * orquesta el estado de la partida alrededor de esas funciones puras.
  */
 
-export function salaGoRoom(salaId: string, partidaId: string) {
-  return `sala:${salaId}:go:${partidaId}`
-}
 
 async function assertPartidaExiste(salaId: string, partidaId: string): Promise<Partida> {
   const partida = await db.getPartida(salaId, partidaId)
@@ -51,7 +49,7 @@ function contrincanteDe(partida: Partida, userId: string): JugadorPartida {
 
 /** Envía el estado completo de la partida a los sockets unidos a su sala (los dos jugadores). */
 export async function broadcastPartida(partida: Partida) {
-  const sockets = await io.to(salaGoRoom(partida.salaId, partida.id)).fetchSockets()
+  const sockets = await io.to(rooms.partidaGo(partida.salaId, partida.id)).fetchSockets()
   await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
 }
 
@@ -101,7 +99,7 @@ async function calcularContrincantesDisponibles(idSala: string, userId: string) 
  * cliente la vuelva a pedir.
  */
 export async function avisarContrincantesActualizados(idSala: string) {
-  const sockets = await io.in([`sala:${idSala}:estudiantes`, `sala:${idSala}:profe`]).fetchSockets()
+  const sockets = await io.in([rooms.estudiantes(idSala), rooms.profe(idSala)]).fetchSockets()
   // Una sola foto de la sala para todos los destinatarios: si la recalculáramos por socket (como antes
   // de sumar al profe), cada destinatario dispara sus propias consultas de conexión (`fetchSockets`) en
   // paralelo, y nada garantiza que las respuestas lleguen en orden — una más vieja podía pisar a una
@@ -180,7 +178,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
 
-      io.to(`sala:${idSala}:${contrincanteId}`).emit('go:invitacion', partida)
+      io.to(rooms.usuario(idSala, contrincanteId)).emit('go:invitacion', partida)
       await avisarContrincantesActualizados(idSala)
 
       return partida
@@ -211,7 +209,7 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
       const otro = contrincanteDe(partida, userId)
-      io.to(`sala:${idSala}:${otro.userId}`).emit('go:invitacion_rechazada', { partidaId })
+      io.to(rooms.usuario(idSala, otro.userId)).emit('go:invitacion_rechazada', { partidaId })
       await avisarContrincantesActualizados(idSala)
     })
   }

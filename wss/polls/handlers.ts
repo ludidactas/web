@@ -1,3 +1,4 @@
+import { rooms } from '../rooms'
 import { Socket } from 'socket.io'
 import { comandosPollsEstudiante, comandosPollsOverlay, comandosPollsProfe } from '../contrato/polls'
 import { registrar } from '../contrato/registrar'
@@ -74,7 +75,7 @@ export const handlersEncuestasEstudiante = async (socket: SocketEstudiante, idSa
 }
 
 export const handlersEncuestasOverlay = async (socket: Socket, idSala: string) => {
-  socket.join(`sala:${idSala}:overlay`)
+  socket.join(rooms.overlay(idSala))
 
   console.log(`📺 Overlay conectado para sala ${idSala} (socket ${socket.id})`)
 

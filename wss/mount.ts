@@ -1,18 +1,7 @@
-import { DefaultEventsMap, Server } from 'socket.io'
-import type { ListenersDe } from './contrato/definir'
-import type { EventosServidorTodos } from './contrato/eventos'
+import { io } from './io'
 
-/** Crea el socket y le registra los eventos base */
+/** Pone el `io` a escuchar en `port` y le registra los eventos base y el cierre ordenado. */
 export const mount = (port: number) => {
-  const io = new Server<DefaultEventsMap, ListenersDe<EventosServidorTodos>>({
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST'],
-    },
-    // serveClient: false
-  })
-
-  // Start the server
   io.listen(port)
 
   io.engine.on('connection_error', (err) => {
@@ -43,6 +32,4 @@ export const mount = (port: number) => {
     console.error('❌ Rejeccion inesperada en:', promise, 'reason:', reason)
     process.exit(1)
   })
-
-  return io
 }

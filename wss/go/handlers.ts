@@ -1,9 +1,10 @@
+import { rooms } from '../rooms'
 import { Socket } from 'socket.io'
 import { comandosGo } from '../contrato/go'
 import { alDesconectar, registrar } from '../contrato/registrar'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
-import { avisarContrincantesActualizados, estudianteGo, salaGoRoom } from './app'
+import { avisarContrincantesActualizados, estudianteGo } from './app'
 import { Partida } from '../validators/go'
 
 /**
@@ -16,7 +17,7 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
   function seguir<T extends Partida | null>(partida: T): T {
-    if (partida) socket.join(salaGoRoom(idSala, partida.id))
+    if (partida) socket.join(rooms.partidaGo(idSala, partida.id))
     return partida
   }
 
@@ -25,7 +26,7 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
     'go:mi_partida': async () => seguir(await go.miPartida()),
     'go:observar': async (payload) => seguir(await go.observar(payload)),
     'go:dejar_observar': async ({ partidaId }) => {
-      socket.leave(salaGoRoom(idSala, partidaId))
+      socket.leave(rooms.partidaGo(idSala, partidaId))
     },
     'go:invitar': async (payload) => seguir(await go.invitar(payload, nombre)),
     'go:aceptar': async (payload) => seguir(await go.aceptar(payload)),

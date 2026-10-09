@@ -10,7 +10,8 @@ process.env.POLLS_ADMINS ??= 'admin@test.com'
 
 const redis = (await import('../wss/redis')).default
 const { guardarSala, borrarSala } = await import('../wss/salas/db')
-const { io: servidor } = await import('../wss/server')
+await import('../wss/server')
+const { io: servidor } = await import('../wss/io')
 
 const ID_SALA = 'registro-temprano'
 

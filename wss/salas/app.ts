@@ -2,7 +2,8 @@ import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
 import { RemoteSocket } from 'socket.io'
-import { io } from '../server'
+import { io } from '../io'
+import { rooms } from '../rooms'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
 import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
@@ -51,14 +52,14 @@ export namespace Salas {
 
       const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
 
-      const sockets = await io.to(`sala:${salaId}`).fetchSockets()
+      const sockets = await io.to(rooms.sala(salaId)).fetchSockets()
 
       await Promise.all(sockets.map(enviarMapeado))
     }
 
     /** `userIds` de los estudiantes con un socket vivo ahora mismo (cluster-wide). */
     async function userIdsConectados() {
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return new Set(sockets.map((s) => s.data.session.userId))
     }
 
@@ -69,14 +70,14 @@ export namespace Salas {
      * `fetchSockets` por un instante (propagación del adapter).
      */
     async function sigueConectado(userId: string, excluirSocketId?: string) {
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return sockets.some((s) => s.data.session.userId === userId && s.id !== excluirSocketId)
     }
 
     /** Si al profe le queda algún socket vivo, excluyendo `excluirSocketId` (ver `sigueConectado`: el
      * mismo motivo, para no confundir la propagación del adapter con que el profe sigue conectado). */
     async function profeConectado(excluirSocketId?: string) {
-      const sockets = await io.in(`sala:${salaId}:profe`).fetchSockets()
+      const sockets = await io.in(rooms.profe(salaId)).fetchSockets()
       return sockets.some((s) => s.id !== excluirSocketId)
     }
 
@@ -107,7 +108,7 @@ export namespace Salas {
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
       // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
-      const sockets = await io.in(`sala:${salaId}:estudiantes`).fetchSockets()
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       const noPermitidos = sockets.filter(
         (s: RemoteSocketConSesion) =>
           s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.userId)
@@ -248,7 +249,7 @@ export namespace Salas {
    * quita la relación con el profe. Se asume que el caller ya validó propiedad (`assertEsDueño`).
    */
   export async function eliminar(email: string, salaId: string) {
-    const sockets = await io.in(`sala:${salaId}`).fetchSockets()
+    const sockets = await io.in(rooms.sala(salaId)).fetchSockets()
     sockets.forEach((s) => {
       s.emit('sala:kick', { motivo: 'La sala fue eliminada.' })
       s.disconnect()

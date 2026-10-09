@@ -1,7 +1,9 @@
 import { DefaultEventsMap, Socket } from 'socket.io'
 import type { EventosEstudiante, EventosProfe } from '../contrato/eventos'
 import type { ListenersDe } from '../contrato/definir'
+import { RolSala } from '../validators/auth'
 import { WssEstudianteSession, WssProfeSession } from '../validators/session'
+import type { SocketConSesion } from './session'
 
 /**
  * Socket con sesión de profe. La sesión es identidad pura (email/nombre/rol). `salaActiva` es estado
@@ -27,3 +29,9 @@ export type SocketEstudiante = Socket<
     session: WssEstudianteSession
   }
 >
+
+export const esSocketProfe = (socket: SocketConSesion): socket is SocketProfe =>
+  socket.data?.session?.rol === RolSala.Profe
+
+export const esSocketEstudiante = (socket: SocketConSesion): socket is SocketEstudiante =>
+  socket.data?.session?.rol === RolSala.Estudiante

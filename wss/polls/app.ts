@@ -8,7 +8,6 @@ import {
   NuevaEncuesta,
   VotarEncuesta,
 } from '../validators/polls'
-import { RolSala } from '../validators/auth'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
 
@@ -261,19 +260,11 @@ export async function estudianteSala(idSala: string, userId: string) {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
-  await sala.broadcast('poll:updated', poll, async (poll, socket) => {
-    const encuesta = poll as Encuesta
-    if (socket.data.session && socket.data.session.rol === RolSala.Estudiante) {
-      return await hidratarParaEstudiante(sala.id, encuesta, socket.data.session.userId)
-    }
-    if (
-      socket.data.session &&
-      (socket.data.session.rol === RolSala.Profe || socket.data.session.rol === RolSala.Admin)
-    ) {
-      return await hidratarParaProfe(sala.id, encuesta)
-    }
-    // Público/overlay: enviamos con conteo de votos
-    return await pollConVotos(sala.id, encuesta.id, encuesta)
+  await sala.broadcastPorRol('poll:updated', {
+    profe: () => hidratarParaProfe(sala.id, poll),
+    estudiante: (userId) => hidratarParaEstudiante(sala.id, poll, userId),
+    // Público/overlay: con conteo de votos
+    publico: () => pollConVotos(sala.id, poll.id, poll),
   })
 }
 

@@ -68,7 +68,9 @@ registrar(socket, comandosXProfe, {
   payload que no le corresponde.
 - El `io` de `wss/mount.ts` tipa `io.to(room).emit` con `EventosServidorTodos`: para cada evento, la unión
   de sus payloads entre roles (el destinatario de un room puede ser de cualquier rol).
-- `sala.broadcast(evento, ...)` recibe el nombre del evento como `string`, sin tipar.
+- `sala.broadcast(evento, data)` manda el mismo payload a todos los roles (solo eventos que los tres reciben).
+  Si el payload depende de quién lo recibe, `sala.broadcastPorRol(evento, { profe, estudiante, publico })`
+  pide uno por rol, cada uno del tipo que ese rol recibe (p. ej. `poll:updated`, ver `broadcastPoll`).
 
 Un evento nuevo se declara en la interfaz `Eventos<Feature><Rol>` de su contrato; `eventos.test.ts` fija con
 `@ts-expect-error` lo que el compilador debe rechazar.

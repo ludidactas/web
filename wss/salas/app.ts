@@ -1,22 +1,29 @@
 import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
-import { RemoteSocket } from 'socket.io'
 import { io } from '../io'
 import { rooms } from '../rooms'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
 import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { CONFIG_DEFAULTS } from '../validators/overlay'
-import { WssEstudianteSession } from '../validators/session'
+import { WssEstudianteSession, WssServerSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
 import { reconstruirIntervalos } from '../asistencia/evaluacion'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { RemoteSocketConSesion } from '../middleware/session'
+import { DataConSesion, RemoteSocketConSesion } from '../middleware/session'
+import type { EventoComun, EventosEstudiante, EventosProfe, EventosPublico, PayloadComun } from '../contrato/eventos'
 
 export type { SalaData } from './db'
+
+/** Cómo arma el payload de un evento para cada rol: ver `broadcastPorRol`. */
+type PayloadPorRol<K extends EventoComun> = {
+  profe: () => Promise<EventosProfe[K]> | EventosProfe[K]
+  estudiante: (userId: string) => Promise<EventosEstudiante[K]> | EventosEstudiante[K]
+  publico: () => Promise<EventosPublico[K]> | EventosPublico[K]
+}
 
 export type Sala = Awaited<ReturnType<typeof Salas.get>>
 
@@ -36,26 +43,36 @@ export namespace Salas {
       return sala
     }
 
-    /**
-     * Envía a admin, profe y estudiantes de la sala
-     *
-     * @param event El evento a emitir
-     * @param data La data a emitir. Debería ser un objeto serializable.
-     * @param [mapper=async (data) => data] Función opcional para mapear los datos a enviar a cada socket, en caso de que queramos enviar data personalizada a cada uno. Recibe la data original y el socket, y debe devolver la data a enviar a ese socket. Lo usamos principalmente para adjuntar a cada estudiante el estado de sus respuestas cuando broadcasteamos una pregunta.
-     */
-    async function broadcast(
-      event: string,
-      data: unknown,
-      mapper: (data: unknown, socket: RemoteSocket<any, any>) => Promise<any> = async (data) => data
+    /** Emite `evento` a cada conexión de la sala con el payload que `payloadDe` arma para su sesión. */
+    async function emitirASala<K extends EventoComun>(
+      evento: K,
+      payloadDe: (sesion: WssServerSession | undefined) => Promise<unknown> | unknown
     ) {
-      console.log(`📡 Broadcasteando evento '${event}' en sala ${salaId}`)
-
-      const enviarMapeado = async (s: RemoteSocket<any, any>) => s.emit(event, await mapper(data, s))
+      console.log(`📡 Broadcasteando evento '${evento}' en sala ${salaId}`)
 
       const sockets = await io.to(rooms.sala(salaId)).fetchSockets()
 
-      await Promise.all(sockets.map(enviarMapeado))
+      await Promise.all(
+        sockets.map(async (s) => {
+          const payload = await payloadDe((s.data as DataConSesion | undefined)?.session)
+          ;(s.emit as (evento: string, payload: unknown) => boolean)(evento, payload)
+        })
+      )
     }
+
+    /** Envía el mismo payload a todos los roles de la sala. */
+    const broadcast = <K extends EventoComun>(evento: K, data: PayloadComun<K>) => emitirASala(evento, () => data)
+
+    /**
+     * Envía a cada conexión de la sala el payload de su rol (profe y admin comparten el del profe; sin
+     * sesión es público), para los eventos cuyo payload depende de quién lo recibe.
+     */
+    const broadcastPorRol = <K extends EventoComun>(evento: K, porRol: PayloadPorRol<K>) =>
+      emitirASala(evento, (sesion) => {
+        if (sesion?.rol === RolSala.Estudiante) return porRol.estudiante(sesion.userId)
+        if (sesion?.rol === RolSala.Profe || sesion?.rol === RolSala.Admin) return porRol.profe()
+        return porRol.publico()
+      })
 
     /** `userIds` de los estudiantes con un socket vivo ahora mismo (cluster-wide). */
     async function userIdsConectados() {
@@ -180,6 +197,9 @@ export namespace Salas {
 
       /** Broadcastea un mensaje a todos los sockets en la sala */
       broadcast,
+
+      /** Broadcastea un mensaje cuyo payload depende del rol de cada socket */
+      broadcastPorRol,
 
       /** Registra el ingreso del estudiante en la planilla durable de la sala (persiste su sesión) */
       registrarIngreso,

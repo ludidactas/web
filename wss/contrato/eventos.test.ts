@@ -1,6 +1,9 @@
 import { test } from 'bun:test'
 import type { DefaultEventsMap, Server } from 'socket.io'
 import type { SocketEstudiante, SocketProfe } from '../middleware/roles'
+import type { Salas } from '../salas/app'
+import type { Encuesta } from '../validators/polls'
+import type { ConfigSala } from '../validators/salas'
 import type { Partida } from '../validators/go'
 import type { ListenersDe } from './definir'
 import type { EventosServidorTodos } from './eventos'
@@ -23,5 +26,26 @@ test('los tipos de emisión del server se chequean en compilación', () => {
     profe.emit('go:partida', 123)
     // @ts-expect-error `sala:kick` solo lo recibe el estudiante
     profe.emit('sala:kick', { motivo: 'x' })
+
+    const sala = null as unknown as Awaited<ReturnType<typeof Salas.get>>
+    const config = null as unknown as ConfigSala
+    const encuesta = null as unknown as Encuesta
+
+    sala.broadcast('sala:config_actualizada', config)
+    sala.broadcast('poll:deleted', { pollId: 'p1' })
+    sala.broadcastPorRol('poll:updated', {
+      profe: () => null as never,
+      estudiante: () => null as never,
+      publico: () => null as never,
+    })
+
+    // @ts-expect-error evento que ningún rol recibe
+    sala.broadcast('evento:inexistente', {})
+    // @ts-expect-error `poll:updated` cambia según el rol: se manda con `broadcastPorRol`
+    sala.broadcast('poll:updated', encuesta)
+    // @ts-expect-error `sala:kick` no lo reciben todos los roles
+    sala.broadcast('sala:kick', { motivo: 'x' })
+    // @ts-expect-error falta el payload del rol público
+    sala.broadcastPorRol('poll:updated', { profe: () => null as never, estudiante: () => null as never })
   }
 })

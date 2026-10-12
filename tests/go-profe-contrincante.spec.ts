@@ -29,6 +29,7 @@ test('el profe aparece como contrincante disponible y se puede jugar contra él'
   // lo vea disponible, no hace falta que haya entrado a la pestaña de Go todavía.
   await esperarContrincante(ana, profe.name)
   await ana.locator('li', { hasText: profe.name }).getByRole('button', { name: 'Invitar' }).click()
+  await ana.getByRole('button', { name: /^Partida/ }).click()
 
   // El profe entra a Go recién ahora: la invitación ya lo esperaba (persistida en el server, y el
   // store del cliente ya la tenía desde el push en vivo aunque todavía no estuviera en esta pestaña).

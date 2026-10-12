@@ -8,6 +8,8 @@ import { regionDeDesafio } from '../motor-desafio'
 import type { Desafio } from '../tipos'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
+import { useIsMobile } from '@/components/hooks/use-mobile'
 
 /**
  * Tarjeta de un desafío: combina `useDesafioGo` (estado) con `DesafioDojoGo` (tablero) y agrega el
@@ -22,6 +24,8 @@ export interface TarjetaDesafioGoProps {
 }
 
 /** Tipos donde un click no pone una piedra del `turno`, así que el hover no previsualiza ninguna. */
+const ID_TOAST_FEEDBACK = 'dojo-feedback'
+
 const SIN_PREVIEW: Desafio['tipo'][] = ['exploracion', 'opciones', 'retirar']
 
 export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: TarjetaDesafioGoProps) {
@@ -42,11 +46,32 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
     opcionElegida,
     reiniciar,
     mostrarAyuda,
-    mostrarExplicacion,
+    alternarExplicacion,
     elegirOpcion,
   } = useDesafioGo(desafio)
 
   const region = useMemo(() => regionDeDesafio(desafio), [desafio])
+
+  const esMobile = useIsMobile()
+  const mensajeFeedback =
+    estado === 'inactivo'
+      ? null
+      : `${
+          textoActivo ??
+          (estado === 'correcto'
+            ? desafio.mensajeExito ?? 'Correcto! Bien jugado.'
+            : desafio.mensajeError ?? 'Hmmm, no. La jugada correcta está marcada en verde.')
+        }${cantidadCapturas > 0 ? ` Capturaste ${cantidadCapturas} piedra${cantidadCapturas > 1 ? 's' : ''}.` : ''}`
+
+  // En una sola columna el feedback sale como toast arriba de todo: un bloque debajo del tablero empuja el resto del layout.
+  const esPositivo = estado === 'correcto' || estado === 'jugando'
+  useEffect(() => {
+    if (!esMobile) return
+    if (!mensajeFeedback) return void toast.dismiss(ID_TOAST_FEEDBACK)
+    const mostrar = esPositivo ? toast.success : toast.error
+    mostrar(mensajeFeedback, { id: ID_TOAST_FEEDBACK, position: 'top-center', duration: 6000 })
+  }, [esMobile, mensajeFeedback, esPositivo])
+  useEffect(() => () => void toast.dismiss(ID_TOAST_FEEDBACK), [])
 
   // Dispara onSolved exactamente una vez, en el render donde estado pasa a "correcto".
   const notifiedRef = useRef(false)
@@ -58,12 +83,11 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
     if (estado === 'inactivo') notifiedRef.current = false // permite volver a notificar tras un reset
   }, [estado, desafio.id, onSolved])
 
-  const isPositive = estado === 'correcto' || estado === 'jugando'
   // Cualquier jugada saca al desafío de "inactivo", y reiniciar lo devuelve ahí.
   const seJugo = estado !== 'inactivo'
 
   return (
-    <div className={className ?? 'bg-white p-6 rounded-xl text-center'}>
+    <div className={className ?? 'bg-white p-0 sm:p-6 rounded-xl text-center'}>
       <div className="flex items-center justify-center gap-4 mb-4">
         <div>
           <h3 className="text-2xl font-semibold text-ld-violeta-oscuro">{desafio.titulo}</h3>
@@ -120,19 +144,15 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         </div>
       )}
 
-      {estado !== 'inactivo' && (
+      {mensajeFeedback && (
         <div
           className={cn(
-            'mt-4 px-4 py-3 text-sm leading-relaxed rounded-lg border-l-4',
-            isPositive ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-red-500 bg-red-50 text-red-700'
+            'mt-4 hidden md:block px-4 py-3 text-sm leading-relaxed rounded-lg border-l-4',
+            esPositivo ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-red-500 bg-red-50 text-red-700'
           )}
           role="status"
         >
-          {textoActivo ??
-            (estado === 'correcto'
-              ? desafio.mensajeExito ?? 'Correcto! Bien jugado.'
-              : desafio.mensajeError ?? 'Hmmm, no. La jugada correcta está marcada en verde.')}
-          {cantidadCapturas > 0 && ` Capturaste ${cantidadCapturas} piedra${cantidadCapturas > 1 ? 's' : ''}.`}
+          {mensajeFeedback}
         </div>
       )}
 
@@ -143,13 +163,13 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         </div>
       )}
 
-      <div className="w-full mt-6 flex gap-3 flex-wrap items-center justify-between">
+      <div className="w-full mt-6 flex gap-2 sm:gap-3 flex-nowrap sm:flex-wrap items-center justify-between">
         <button
           type="button"
           onClick={reiniciar}
           disabled={!seJugo}
           className={cn(
-            'flex gap-1 items-center text-sm px-4 py-2 rounded-full border transition',
+            'flex gap-1 items-center whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full border transition',
             seJugo
               ? 'border-emerald-500 text-emerald-700 hover:bg-emerald-50'
               : 'border-slate-300 text-slate-600 opacity-40 cursor-not-allowed'
@@ -163,7 +183,7 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
           <button
             type="button"
             onClick={mostrarAyuda}
-            className="relative overflow-hidden flex gap-1 items-center text-sm px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
+            className="relative overflow-hidden flex gap-1 items-center whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full border border-ld-violeta text-ld-violeta-oscuro hover:bg-ld-violeta/10 transition"
           >
             {ayudaVisible && (
               <motion.span
@@ -183,8 +203,8 @@ export function TarjetaDesafioGo({ desafio, theme, className, onSolved }: Tarjet
         {desafio.explicacion && (
           <button
             type="button"
-            onClick={mostrarExplicacion}
-            className="flex gap-1 items-center text-sm px-4 py-2 rounded-full bg-ld-amarillo-oscuro text-white hover:bg-orange-500 transition"
+            onClick={alternarExplicacion}
+            className="flex gap-1 items-center whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full bg-ld-amarillo-oscuro text-white hover:bg-orange-500 transition"
           >
             Explicación
             <Icon className='' icon={'fluent:text-description-20-filled'} />

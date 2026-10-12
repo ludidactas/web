@@ -136,6 +136,7 @@ test('partida de 9x9 casi completa: tres personas conectadas, cadenas vivas y mu
 
   await esperarContrincante(negro, 'Beto')
   await negro.locator('li', { hasText: 'Beto' }).getByRole('button', { name: 'Invitar' }).click()
+  await negro.getByRole('button', { name: /^Partida/ }).click()
 
   await blanco.getByText('¡Te invitaron a jugar Go!').waitFor()
   // El botón "Aceptar" aparece dos veces (la tarjeta de invitación y la fila del contrincante en la

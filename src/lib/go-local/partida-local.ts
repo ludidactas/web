@@ -1,4 +1,5 @@
 import { calcularVivos } from '@/lib/go/benson'
+import type { ModoPartida } from '@/wss/validators/go'
 import {
   calcularPuntaje,
   grupoEn,
@@ -7,6 +8,7 @@ import {
   JugadaInvalida,
   NEGRO,
   rival,
+  tableroAtari,
   tableroVacio,
   type Color,
   type Puntaje,
@@ -23,6 +25,8 @@ export type FasePartidaLocal = 'jugando' | 'contando' | 'terminada'
 
 export interface PartidaLocal {
   tamaño: number
+  /** `atari`: arranca con cuatro piedras en cruz en el centro, no se puede pasar y gana quien captura primero. */
+  modo: ModoPartida
   tablero: Tablero
   turno: Color
   capturasNegras: number
@@ -41,10 +45,11 @@ export interface PartidaLocal {
   resultado: Puntaje | null
 }
 
-export function nuevaPartidaLocal(tamaño: number): PartidaLocal {
+export function nuevaPartidaLocal(tamaño: number, modo: ModoPartida = 'partida'): PartidaLocal {
   return {
     tamaño,
-    tablero: tableroVacio(tamaño),
+    modo,
+    tablero: modo === 'atari' ? tableroAtari(tamaño) : tableroVacio(tamaño),
     turno: NEGRO,
     capturasNegras: 0,
     capturasBlancas: 0,
@@ -74,22 +79,33 @@ export function jugarLocal(partida: PartidaLocal, fila: number, columna: number)
     new Set(partida.historial)
   )
   const juegaNegro = partida.turno === NEGRO
+  const capturasNegras = partida.capturasNegras + (juegaNegro ? capturas : 0)
+  const capturasBlancas = partida.capturasBlancas + (juegaNegro ? 0 : capturas)
 
-  return {
+  const siguiente: PartidaLocal = {
     ...partida,
     tablero,
     turno: rival(partida.turno),
-    capturasNegras: partida.capturasNegras + (juegaNegro ? capturas : 0),
-    capturasBlancas: partida.capturasBlancas + (juegaNegro ? 0 : capturas),
+    capturasNegras,
+    capturasBlancas,
     pases: 0,
     historial: [...partida.historial, hashTablero(tablero)],
     ultimaJugada: { fila, columna },
+  }
+  if (partida.modo !== 'atari' || capturas === 0) return siguiente
+
+  // Atari Go: la primera captura termina la partida; el resultado son las capturas de cada color.
+  return {
+    ...siguiente,
+    fase: 'terminada',
+    resultado: { negro: capturasNegras, blanco: capturasBlancas, ganador: juegaNegro ? 'negro' : 'blanco' },
   }
 }
 
 /** Dos pases seguidos terminan el juego y abren el conteo de piedras muertas. */
 export function pasarLocal(partida: PartidaLocal): PartidaLocal {
   assertFase(partida, 'jugando')
+  if (partida.modo === 'atari') throw new JugadaInvalida('En Atari Go no se puede pasar')
   const pases = partida.pases + 1
   const siguiente = { ...partida, pases, turno: rival(partida.turno) }
   if (pases < 2) return siguiente

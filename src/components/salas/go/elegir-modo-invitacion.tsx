@@ -18,16 +18,21 @@ const OPCIONES: { modo: ModoPartida; titulo: string; descripcion: string }[] = [
 ]
 
 /**
- * Envuelve al botón "Invitar" (`children`, que hace de trigger): al apretarlo pregunta qué se va a
- * jugar y llama a `onElegir` con el modo escogido.
+ * Envuelve a un botón (`children`, que hace de trigger): al apretarlo pregunta qué se va a jugar y
+ * llama a `onElegir` con el modo escogido. El título por defecto es el de una invitación a `nombre`;
+ * `titulo` lo reemplaza y `aviso` agrega una nota debajo.
  */
 export function ElegirModoInvitacion({
   children,
   nombre,
+  titulo,
+  aviso,
   onElegir,
 }: {
   children: ReactNode
-  nombre: string
+  nombre?: string
+  titulo?: string
+  aviso?: string
   onElegir: (modo: ModoPartida) => void
 }) {
   const [abierto, setAbierto] = useState(false)
@@ -37,8 +42,10 @@ export function ElegirModoInvitacion({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="flex flex-col items-center rounded-xl">
         <DialogHeader>
-          <DialogTitle className="text-center leading-6">¿A qué querés jugar con {nombre}?</DialogTitle>
-          <DialogDescription className="sr-only">Elegí el tipo de desafío</DialogDescription>
+          <DialogTitle className="text-center leading-6">{titulo ?? `¿A qué querés jugar con ${nombre}?`}</DialogTitle>
+          <DialogDescription className={aviso ? 'text-center text-sm text-slate-500' : 'sr-only'}>
+            {aviso ?? 'Elegí el tipo de desafío'}
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col sm:flex-row gap-3 w-full">
           {OPCIONES.map((o) => (

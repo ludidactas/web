@@ -60,9 +60,9 @@ src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   use-sincronizacion-dojo.ts         # id anónimo del visitante + conexión (rol dojo) que implementa SincronizacionDojo
 
 src/lib/go-local/                    # partida de dos personas en un mismo dispositivo (solo cliente, sin red)
-  partida-local.ts                   # transiciones puras de la partida (jugar/pasar/marcar muerta/conteo), delega en motor.ts
+  partida-local.ts                   # transiciones puras de la partida (jugar/pasar/marcar muerta/conteo; modo Atari Go), delega en motor.ts
   partida-local.test.ts
-  store-tablero.ts                   # store (zustand + persist): una partida por tamaño, guardadas en localStorage
+  store-tablero.ts                   # store (zustand + persist): una partida por tamaño (cada una con su modo), en localStorage
   store-tablero.test.ts
 src/app/(sitio)/go/tablero/          # ruta pública /go/tablero: UI de la partida local (reutiliza PartidaGo)
 

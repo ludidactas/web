@@ -1,5 +1,6 @@
 'use client'
 
+import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,
@@ -23,7 +24,7 @@ import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
-import { TAMAÑOS_TABLERO, type TamañoTablero } from '@/wss/validators/go'
+import { TAMAÑOS_TABLERO, type ModoPartida, type TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Toaster, toast } from 'sonner'
@@ -109,9 +110,16 @@ export default function ContenidoTablero() {
   }, [])
 
   // Puntaje en vivo durante el conteo y el final al terminar; en el resto de la partida no hay puntaje que mostrar.
+  // Atari Go no se cuenta: gana quien captura primero, así que el marcador sigue mostrando las capturas.
   const puntaje = useMemo(
     () =>
-      partida.fase === 'contando' ? puntajeLocal(partida) : partida.fase === 'terminada' ? partida.resultado : null,
+      partida.modo === 'atari'
+        ? null
+        : partida.fase === 'contando'
+          ? puntajeLocal(partida)
+          : partida.fase === 'terminada'
+            ? partida.resultado
+            : null,
     [partida]
   )
 
@@ -130,15 +138,16 @@ export default function ContenidoTablero() {
     setTamaño(t)
     setPendiente(null)
   }
-  const reiniciar = () => {
-    nuevaPartida()
+  /** Empieza una partida nueva en el tamaño que se está mirando, en el modo dado. */
+  const empezar = (m: ModoPartida) => {
+    nuevaPartida(m)
     setPendiente(null)
   }
 
   const controlesDeTablero = (
     <>
       <Tamaños tamaño={tamaño} onElegir={elegirTamaño} />
-      <NuevaPartida partida={partida} onConfirmar={reiniciar} />
+      <NuevaPartida partida={partida} onElegir={empezar} />
     </>
   )
 
@@ -162,7 +171,10 @@ export default function ContenidoTablero() {
               <Estado partida={partida} />
               {partida.fase === 'jugando' && partida.historial.length === 0 && (
                 <p className="text-sm text-slate-500 text-center">
-                  Tablero vacío: Negro empieza. Toquen una intersección y confirmen la jugada.
+                  {partida.modo === 'atari'
+                    ? 'Atari Go: gana quien captura primero. Negro empieza.'
+                    : 'Tablero vacío: Negro empieza.'}{' '}
+                  Toquen una intersección y confirmen la jugada.
                 </p>
               )}
             </div>
@@ -204,7 +216,7 @@ export default function ContenidoTablero() {
           <div className="hidden max-md:portrait:flex absolute inset-y-0 left-0 w-8 overflow-hidden whitespace-nowrap [writing-mode:vertical-rl] items-center justify-between gap-1 py-1 text-sm">
             {controlesDeTablero}
           </div>
-          <div className="hidden max-md:portrait:flex absolute inset-y-0 right-0 w-8 overflow-hidden whitespace-nowrap [writing-mode:vertical-rl] items-center justify-between gap-1 py-1 text-sm">
+          <div className="hidden max-md:portrait:flex absolute inset-y-0 right-0 w-9 overflow-hidden whitespace-nowrap [writing-mode:vertical-rl] items-center justify-between gap-1 py-1 text-sm">
             <Estado partida={partida} compacto />
             <Marcador partida={partida} puntaje={puntaje} compacto />
           </div>
@@ -216,23 +228,39 @@ export default function ContenidoTablero() {
   )
 }
 
-/** Quién juega, el conteo en vivo o el resultado: información de la partida, no de un jugador. */
+const ETIQUETA_MODO: Record<ModoPartida, string> = { partida: 'Partida por territorio', atari: 'Atari Go' }
+
+/** El modo de la partida, en letra mínima, debajo del título de estado. */
+function EtiquetaModo({ modo }: { modo: ModoPartida }) {
+  return <span className="text-[10px] leading-none text-slate-400">{ETIQUETA_MODO[modo]}</span>
+}
+
+/** Quién juega, el conteo en vivo o el resultado, con el modo de la partida debajo: información de la partida, no de un jugador. */
 function Estado({ partida, compacto }: { partida: PartidaLocal; compacto?: boolean }) {
+  const titulo = cn('font-bold', compacto ? 'text-sm' : 'text-xl')
+
+  // El ícono de la piedra queda centrado con el alto del título y la etiqueta juntos.
   if (partida.fase === 'jugando')
     return (
-      <p className={cn('flex items-center gap-2 font-bold', compacto ? 'text-sm' : 'text-xl')}>
+      <div className="flex items-center gap-2">
         <PiedraIcono color={partida.turno} className="h-5 w-5" />
-        Juega {NOMBRE[partida.turno].toLowerCase()}
-      </p>
+        <div className="flex flex-col items-start">
+          <p className={titulo}>Juega {NOMBRE[partida.turno].toLowerCase()}</p>
+          <EtiquetaModo modo={partida.modo} />
+        </div>
+      </div>
     )
 
   if (partida.fase === 'contando')
     return (
       <div className="flex flex-col items-center gap-1">
-        <p className={cn('flex items-center gap-1 font-bold', compacto ? 'text-sm' : 'text-xl')}>
-          Confirmar capturas
-          {compacto && <AyudaConteo />}
-        </p>
+        <div className="flex flex-col items-start gap-0.5">
+          <p className={cn('flex items-center gap-1', titulo)}>
+            Confirmar capturas
+            {compacto && <AyudaConteo />}
+          </p>
+          <EtiquetaModo modo={partida.modo} />
+        </div>
         {!compacto && (
           <p className="text-sm text-slate-500 text-center">
             Toquen las piedras muertas para marcarlas, y confirmen el conteo.
@@ -243,11 +271,14 @@ function Estado({ partida, compacto }: { partida: PartidaLocal; compacto?: boole
 
   if (partida.fase === 'terminada' && partida.resultado)
     return (
-      <p className={cn('font-bold', compacto ? 'text-sm' : 'text-xl')}>
-        {partida.resultado.ganador === 'empate'
-          ? 'Empate'
-          : `Ganó ${partida.resultado.ganador === 'negro' ? 'Negro' : 'Blanco'}`}
-      </p>
+      <div className="flex flex-col items-start gap-0.5">
+        <p className={titulo}>
+          {partida.resultado.ganador === 'empate'
+            ? 'Empate'
+            : `Ganó ${partida.resultado.ganador === 'negro' ? 'Negro' : 'Blanco'}`}
+        </p>
+        <EtiquetaModo modo={partida.modo} />
+      </div>
     )
 
   return null
@@ -309,14 +340,16 @@ function Acciones({
         >
           Confirmar jugada
         </button>
-        <button
-          type="button"
-          disabled={!esSuTurno}
-          onClick={() => aplicar(pasarLocal)}
-          className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
-        >
-          Pasar
-        </button>
+        {partida.modo !== 'atari' && (
+          <button
+            type="button"
+            disabled={!esSuTurno}
+            onClick={() => aplicar(pasarLocal)}
+            className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
+          >
+            Pasar
+          </button>
+        )}
       </>
     )
 
@@ -417,43 +450,22 @@ function Tamaños({ tamaño, onElegir }: { tamaño: TamañoTablero; onElegir: (t
   )
 }
 
-/** Vacía el tablero que se está mirando; si hay una partida en curso pide confirmación. */
-function NuevaPartida({ partida, onConfirmar }: { partida: PartidaLocal; onConfirmar: () => void }) {
-  const sinJugadas = partida.historial.length === 0 && partida.pases === 0
-  const enCurso = !sinJugadas && partida.fase !== 'terminada'
+/** Hay una partida empezada y sin terminar: reemplazarla se pierde. */
+const hayPartidaEnCurso = (partida: PartidaLocal) =>
+  (partida.historial.length > 0 || partida.pases > 0) && partida.fase !== 'terminada'
 
-  if (!enCurso)
-    return (
-      <button type="button" onClick={onConfirmar} disabled={sinJugadas} className={CLASE_TEXTBUTTON}>
+/** Empieza una partida nueva en el tablero que se está mirando: pregunta el modo y avisa si se pierde una en curso. */
+function NuevaPartida({ partida, onElegir }: { partida: PartidaLocal; onElegir: (modo: ModoPartida) => void }) {
+  return (
+    <ElegirModoInvitacion
+      titulo="Nueva partida: ¿a qué juegan?"
+      aviso={hayPartidaEnCurso(partida) ? 'Se pierde la partida en curso de este tablero.' : undefined}
+      onElegir={onElegir}
+    >
+      <button type="button" className={CLASE_TEXTBUTTON}>
         Nueva partida
       </button>
-    )
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button type="button" className={CLASE_TEXTBUTTON}>
-          Nueva partida
-        </button>
-      </DialogTrigger>
-      <DialogContent className="flex flex-col items-center rounded-xl">
-        <DialogHeader>
-          <DialogTitle className="text-center leading-6">
-            ¿Vaciar este tablero? Se pierde la partida en curso.
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex gap-2">
-          <DialogClose asChild>
-            <button className="bg-slate-200 px-4 py-2 min-w-32 rounded-full">Cancelar</button>
-          </DialogClose>
-          <DialogClose asChild>
-            <button className="bg-rose-500 text-white px-4 py-2 min-w-32 rounded-full" onClick={onConfirmar}>
-              Nueva partida
-            </button>
-          </DialogClose>
-        </div>
-      </DialogContent>
-    </Dialog>
+    </ElegirModoInvitacion>
   )
 }
 

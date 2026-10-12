@@ -127,4 +127,51 @@ describe('partida local', () => {
       expect(() => alternarConformidadLocal(nuevaPartidaLocal(9), NEGRO)).toThrow(JugadaInvalida)
     })
   })
+
+  describe('atari go', () => {
+    const atari = () => nuevaPartidaLocal(9, 'atari')
+
+    test('empieza con las cuatro piedras en cruz en el centro y juega negro', () => {
+      const p = atari()
+      expect(p.modo).toBe('atari')
+      expect(p.turno).toBe(NEGRO)
+      expect(p.tablero[3][3]).toBe(NEGRO)
+      expect(p.tablero[4][4]).toBe(NEGRO)
+      expect(p.tablero[3][4]).toBe(BLANCO)
+      expect(p.tablero[4][3]).toBe(BLANCO)
+      expect(p.tablero.flat().filter((c) => c !== '.')).toHaveLength(4)
+    })
+
+    test('no se puede pasar', () => {
+      expect(() => pasarLocal(atari())).toThrow(JugadaInvalida)
+    })
+
+    test('una jugada sin captura no termina la partida', () => {
+      const p = jugarLocal(atari(), 0, 0)
+      expect(p.fase).toBe('jugando')
+      expect(p.resultado).toBeNull()
+    })
+
+    test('la primera captura termina la partida y gana quien la hizo', () => {
+      // La blanca de (4,3) ya tiene negras en (3,3) y (4,4): con (5,3) y (4,2) queda sin libertades.
+      const p = jugadas(atari(), [5, 3], [0, 0], [4, 2])
+      expect(p.fase).toBe('terminada')
+      expect(p.capturasNegras).toBe(1)
+      expect(p.resultado).toEqual({ negro: 1, blanco: 0, ganador: 'negro' })
+      expect(() => jugarLocal(p, 8, 8)).toThrow(JugadaInvalida)
+    })
+
+    test('también gana blanco si captura primero', () => {
+      // La negra de (3,3) tiene blancas en (3,4) y (4,3): con (2,3) y (3,2) queda sin libertades.
+      const p = jugadas(atari(), [0, 0], [2, 3], [8, 8], [3, 2])
+      expect(p.fase).toBe('terminada')
+      expect(p.resultado?.ganador).toBe('blanco')
+    })
+
+    test('en modo partida una captura no termina nada', () => {
+      const p = jugadas(nuevaPartidaLocal(9), [0, 1], [0, 0], [1, 0])
+      expect(p.capturasNegras).toBe(1)
+      expect(p.fase).toBe('jugando')
+    })
+  })
 })

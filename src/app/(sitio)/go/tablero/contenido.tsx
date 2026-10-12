@@ -20,6 +20,7 @@ import {
 } from '@/lib/go-local/partida-local'
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
+import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
 import { TAMAÑOS_TABLERO, type TamañoTablero } from '@/wss/validators/go'
@@ -37,7 +38,8 @@ const ESPERA_GRAVEDAD_MS = 150
 const NOMBRE = { [NEGRO]: 'Negro', [BLANCO]: 'Blanco' } as const
 
 type Punto = { fila: number; columna: number }
-type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => void
+/** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
+type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
 
 /** Tablero de Go para dos personas en el mismo dispositivo: se turnan para jugar. Hay una partida por
  * tamaño (9x9, 13x13 y 19x19), guardadas en el dispositivo; elegir un tamaño solo cambia cuál se muestra.
@@ -113,13 +115,14 @@ export default function ContenidoTablero() {
     [partida]
   )
 
-  /** Aplica una transición de la partida; si es ilegal, avisa el motivo y deja todo como estaba. */
   const aplicar: Aplicar = (transicion) => {
     try {
       setPartida(transicion(partida))
       setPendiente(null)
+      return true
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Jugada inválida')
+      return false
     }
   }
 
@@ -299,7 +302,9 @@ function Acciones({
         <button
           type="button"
           disabled={!pendiente || !esSuTurno}
-          onClick={() => pendiente && aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))}
+          onClick={() => {
+            if (pendiente && aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
+          }}
           className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
         >
           Confirmar jugada

@@ -16,6 +16,7 @@ import { storeEstudianteLogin } from '../stores/estudiante-login-store'
 import { storeGo } from '../stores/go-store'
 import { storeInvitado } from '../stores/invitado-store'
 import { useWss } from '../use-wss'
+import { montarTodos } from '../contrato-cli'
 
 /** Cose el socket con el state para estudiante */
 const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'>) => {
@@ -35,22 +36,8 @@ const useHandlersConexionSalaEstudiante = (auth: Omit<PasaporteEstudiante, 'rol'
     [socket]
   )
 
-  // Cuando el socket conecta...
-  useEffect(() => {
-    // ...los montamos...
-    handlers.base.montar()
-    handlers.sala.montar()
-    handlers.encuestas.montar()
-    handlers.go.montar()
-
-    // ...y al desmontar el componente, los desmontamos también.
-    return () => {
-      handlers.base.desmontar()
-      handlers.sala.desmontar()
-      handlers.encuestas.desmontar()
-      handlers.go.desmontar()
-    }
-  }, [socket])
+  // Cuando el socket conecta, los montamos; al desmontar el componente, los desmontamos.
+  useEffect(() => montarTodos(handlers), [handlers])
 
   // Al salir de la sala limpiamos su config, invitado y estado de Go para no dejar valores stale al
   // navegar (o, en un dispositivo compartido, filtrarle a la próxima persona logueada la partida de la

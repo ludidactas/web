@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, mock, setSystemTime } from 'bun:test'
 
-mock.module('../wss/server', () => ({
+mock.module('../wss/io', () => ({
   io: { in: () => ({ fetchSockets: async () => [] }) },
 }))
 

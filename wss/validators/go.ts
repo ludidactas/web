@@ -66,7 +66,7 @@ export const invitacionSchema = z.object({
   contrincanteId: z.string().min(1),
   tamaño: z.union([z.literal(9), z.literal(13), z.literal(19)]).default(9),
 })
-export type Invitacion = z.infer<typeof invitacionSchema>
+export type Invitacion = z.output<typeof invitacionSchema>
 
 export const partidaIdSchema = z.object({
   partidaId: z.string().min(1),
@@ -77,3 +77,15 @@ export const jugadaSchema = z.object({
   fila: z.number().int(),
   columna: z.number().int(),
 })
+
+export type PartidaIdPayload = z.output<typeof partidaIdSchema>
+export type Jugada = z.output<typeof jugadaSchema>
+
+/** Alguien de la sala como contrincante posible: si ya está en una partida, cuál y contra quién. */
+export interface ContrincanteGo {
+  userId: string
+  nombre: string
+  enPartida: boolean
+  partidaId: string | null
+  contrincante: { userId: string; nombre: string } | null
+}

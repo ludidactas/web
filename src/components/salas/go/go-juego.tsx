@@ -10,6 +10,7 @@ import { tableroAPng } from '@/lib/go/exportar-png'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { PartidaGo } from './partida-go'
+import { ReglasGo } from './reglas-go'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -352,6 +353,8 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         </span>
       </div>
 
+      <ReglasGo />
+
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
@@ -560,6 +563,7 @@ function PartidaEnCurso({
         <span className='font-bold  p-2 rounded-xl'> 
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
+        <ReglasGo />
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}

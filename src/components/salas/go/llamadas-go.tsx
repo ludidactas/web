@@ -55,7 +55,7 @@ export function LlamadaTablero({ className }: { className?: string }) {
     <LlamadaGo
       texto="Si tenés alguien con quien jugar, podés usar nuestro tablero para jugar por territorio y atari Go. Al terminar podés guardar el resultado y compartirlo como imágen."
       href="/go/tablero"
-      icono="lucide:grid-3x3"
+      icono="tabler:go-game"
       etiqueta="Ir al tablero"
       className={className}
     />

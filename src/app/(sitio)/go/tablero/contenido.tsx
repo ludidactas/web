@@ -21,6 +21,7 @@ import {
 } from '@/lib/go-local/partida-local'
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
+import { generarImagenResultado } from '@/lib/go-local/imagen-resultado'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
@@ -39,6 +40,25 @@ const ESPERA_GRAVEDAD_MS = 150
 const NOMBRE = { [NEGRO]: 'Negro', [BLANCO]: 'Blanco' } as const
 
 type Punto = { fila: number; columna: number }
+
+/** Estado del botón "Copiar tablero", que copia la imagen del resultado. */
+type CompartirImagen = { copiado: boolean; onCompartir: () => void }
+
+/** "Ganó Negro", "Ganó Blanco" o "Empate", según el resultado de una partida terminada. */
+const tituloResultado = (partida: PartidaLocal) =>
+  partida.resultado?.ganador === 'empate'
+    ? 'Empate'
+    : `Ganó ${partida.resultado?.ganador === 'negro' ? 'Negro' : 'Blanco'}`
+
+/** Qué muestra el marcador: capturas de cada color o, desde el conteo, el puntaje (en vivo y luego el final). Las
+ * capturas de un jugador se muestran con la piedra del color capturado, así que el orden es blanco-negro en ambos casos. */
+function valoresMarcador(partida: PartidaLocal, puntaje: ReturnType<typeof puntajeLocal> | null) {
+  return {
+    etiqueta: !puntaje ? 'Capturas:' : partida.fase === 'contando' ? 'Conteo:' : 'Puntos:',
+    bajoBlanco: puntaje ? puntaje.blanco : partida.capturasNegras,
+    bajoNegro: puntaje ? puntaje.negro : partida.capturasBlancas,
+  }
+}
 
 /** Confirma la jugada elegida (suena si fue legal). Devuelve `false` si no había ninguna elegida. */
 function confirmarJugada(pendiente: Punto | null, aplicar: Aplicar): boolean {
@@ -171,6 +191,32 @@ export default function ContenidoTablero() {
     return () => window.removeEventListener('keydown', alTeclear)
   }, [])
 
+  const [copiado, setCopiado] = useState(false)
+  /** Copia al portapapeles la imagen del resultado: el tablero tal como se ve, con el marcador y la firma. */
+  const compartir = async () => {
+    const tablero = areaJuego.current?.querySelector<SVGSVGElement>('svg.touch-none')
+    if (!tablero || partida.fase !== 'terminada') return
+    const { etiqueta, bajoBlanco, bajoNegro } = valoresMarcador(partida, puntaje)
+    try {
+      // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
+      const imagen = generarImagenResultado({
+        tablero,
+        tamañoTablero: partida.tamaño,
+        titulo: tituloResultado(partida),
+        modo: ETIQUETA_MODO[partida.modo],
+        etiquetaMarcador: etiqueta,
+        bajoBlanco,
+        bajoNegro,
+      })
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
+    }
+  }
+  const compartirImagen: CompartirImagen = { copiado, onCompartir: compartir }
+
   const elegirTamaño = (t: TamañoTablero) => {
     setTamaño(t)
     setPendiente(null)
@@ -200,7 +246,14 @@ export default function ContenidoTablero() {
           !hidratado && 'invisible'
         )}
       >
-        <PanelJugador color={BLANCO} partida={partida} pendiente={pendiente} aplicar={aplicar} className="rotate-180" />
+        <PanelJugador
+          color={BLANCO}
+          partida={partida}
+          pendiente={pendiente}
+          aplicar={aplicar}
+          compartir={compartirImagen}
+          className="rotate-180"
+        />
 
         <div className="relative flex justify-center w-full">
           <div className="flex flex-col items-center gap-4 flex-1 min-w-0 max-md:portrait:px-9">
@@ -244,7 +297,13 @@ export default function ContenidoTablero() {
             <div className="max-md:portrait:hidden flex flex-col items-center gap-4">
               <Marcador partida={partida} puntaje={puntaje} />
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <Acciones color={null} partida={partida} pendiente={pendiente} aplicar={aplicar} />
+                <Acciones
+                  color={null}
+                  partida={partida}
+                  pendiente={pendiente}
+                  aplicar={aplicar}
+                  compartir={compartirImagen}
+                />
               </div>
             </div>
           </div>
@@ -259,7 +318,13 @@ export default function ContenidoTablero() {
           </div>
         </div>
 
-        <PanelJugador color={NEGRO} partida={partida} pendiente={pendiente} aplicar={aplicar} />
+        <PanelJugador
+          color={NEGRO}
+          partida={partida}
+          pendiente={pendiente}
+          aplicar={aplicar}
+          compartir={compartirImagen}
+        />
       </div>
     </div>
   )
@@ -309,11 +374,7 @@ function Estado({ partida, compacto }: { partida: PartidaLocal; compacto?: boole
   if (partida.fase === 'terminada' && partida.resultado)
     return (
       <div className="flex flex-col items-start gap-0.5">
-        <p className={titulo}>
-          {partida.resultado.ganador === 'empate'
-            ? 'Empate'
-            : `Ganó ${partida.resultado.ganador === 'negro' ? 'Negro' : 'Blanco'}`}
-        </p>
+        <p className={titulo}>{tituloResultado(partida)}</p>
         <EtiquetaModo modo={partida.modo} />
       </div>
     )
@@ -333,9 +394,7 @@ function Marcador({
   puntaje: ReturnType<typeof puntajeLocal> | null
   compacto?: boolean
 }) {
-  const etiqueta = !puntaje ? 'Capturas:' : partida.fase === 'contando' ? 'Conteo:' : 'Puntos:'
-  const bajoBlanco = puntaje ? puntaje.blanco : partida.capturasNegras
-  const bajoNegro = puntaje ? puntaje.negro : partida.capturasBlancas
+  const { etiqueta, bajoBlanco, bajoNegro } = valoresMarcador(partida, puntaje)
 
   return (
     <p className={cn('flex items-center text-sm font-semibold text-slate-600', compacto ? 'gap-1' : 'gap-3')}>
@@ -350,13 +409,21 @@ function Marcador({
   )
 }
 
-/** Etiqueta de un botón con, debajo y en bajo contraste, la tecla que lo activa. La tecla solo se muestra en
- * dispositivos con puntero que flota (`hover: hover`), donde hay teclado. */
+/**
+ * Etiqueta de un botón con, debajo y en bajo contraste, la tecla que lo activa. La tecla solo se muestra donde hay
+ * teclado: con puntero fino que flota (mouse o trackpad: `hover: hover` y `pointer: fine`) y fuera del layout de
+ * celular en vertical, que también aparece al achicar la ventana de un escritorio. El `span` exterior oculta ese
+ * layout y el interior el resto de los dispositivos táctiles.
+ */
 function EtiquetaConAtajo({ atajo, children }: { atajo: string; children: ReactNode }) {
   return (
     <span className="flex flex-col items-center leading-tight">
       {children}
-      <span className="hidden [@media(hover:hover)]:block text-[10px] font-normal text-white/70">{atajo}</span>
+      <span className="max-md:portrait:hidden">
+        <span className="hidden [@media(hover:hover)_and_(pointer:fine)]:block text-[10px] font-normal text-white/70">
+          {atajo}
+        </span>
+      </span>
     </span>
   )
 }
@@ -367,11 +434,13 @@ function Acciones({
   partida,
   pendiente,
   aplicar,
+  compartir,
 }: {
   color: Color | null
   partida: PartidaLocal
   pendiente: Punto | null
   aplicar: Aplicar
+  compartir: CompartirImagen
 }) {
   const esSuTurno = color === null || partida.turno === color
 
@@ -416,7 +485,26 @@ function Acciones({
       <BotonConformidad color={color} partida={partida} aplicar={aplicar} />
     )
 
+  if (partida.fase === 'terminada') return <BotonCompartir {...compartir} />
+
   return null
+}
+
+/** Copia la imagen del resultado; mientras confirma la copia, avisa "Imagen copiada". */
+function BotonCompartir({ copiado, onCompartir }: CompartirImagen) {
+  return (
+    <button
+      type="button"
+      onClick={onCompartir}
+      className={cn(
+        'flex items-center gap-1 px-4 py-2 rounded-full text-white transition-colors active:scale-95',
+        copiado ? 'bg-emerald-500' : 'bg-ld-azul hover:bg-ld-azul/80'
+      )}
+    >
+      <Icon icon={copiado ? 'lucide:check' : 'lucide:copy'} width={16} height={16} />
+      {copiado ? 'Imagen copiada' : 'Copiar tablero'}
+    </button>
+  )
 }
 
 /** Conformidad de `color` con el conteo: un toque la da y otro la retira. La partida termina con las dos. */
@@ -459,12 +547,14 @@ function PanelJugador({
   partida,
   pendiente,
   aplicar,
+  compartir,
   className,
 }: {
   color: Color
   partida: PartidaLocal
   pendiente: Punto | null
   aplicar: Aplicar
+  compartir: CompartirImagen
   className?: string
 }) {
   return (
@@ -480,7 +570,7 @@ function PanelJugador({
         {partida.fase === 'jugando' && partida.turno === color && ' — tu turno'}
       </p>
       <div className="flex items-center justify-center gap-3">
-        <Acciones color={color} partida={partida} pendiente={pendiente} aplicar={aplicar} />
+        <Acciones color={color} partida={partida} pendiente={pendiente} aplicar={aplicar} compartir={compartir} />
       </div>
     </div>
   )

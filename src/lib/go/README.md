@@ -64,6 +64,7 @@ src/lib/go-local/                    # partida de dos personas en un mismo dispo
   partida-local.test.ts
   store-tablero.ts                   # store (zustand + persist): una partida por tamaño (cada una con su modo), en localStorage
   store-tablero.test.ts
+  imagen-resultado.ts                # PNG del resultado (tablero + marcador + firma) que copia el botón "Compartir"
 src/app/(sitio)/go/tablero/          # ruta pública /go/tablero: UI de la partida local (reutiliza PartidaGo)
 
 wss/go/                              # capa 3: servidor de la partida en vivo

@@ -3,8 +3,8 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { toast } from 'sonner'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
-import { titulo as fuenteTitulo } from '@/components/fonts'
 import { cn } from '@/lib/utils'
+import { cargarFirma, dibujarFirma, EXPORT_SCALE, FIRMA_ALTO, trazarRectRedondeado } from '@/lib/imagen-compartible'
 import {
   Dialog,
   DialogClose,
@@ -22,18 +22,6 @@ const QR_EXPORT_PADDING = 24
 const QR_EXPORT_TITLE_HEIGHT = 32
 const QR_EXPORT_GAP = 12
 const QR_EXPORT_RADIUS = 6
-// Multiplica la resolución final sin tocar el layout (todo el dibujado sigue en unidades "lógicas"):
-// evita que la imagen pegada en WhatsApp/Slack se vea borrosa al hacer zoom o mostrarla más grande.
-const EXPORT_SCALE = 3
-
-const FOOTER_ICON_SIZE = 28
-const FOOTER_ICON_GAP = 8
-const FOOTER_LEMA_WIDTH = 130
-const FOOTER_LEMA_HEIGHT = Math.round((FOOTER_LEMA_WIDTH * 679) / 6558) // aspect ratio real de lema_sketchy_offlines.webp
-const FOOTER_TAGLINE_GAP = 3
-const FOOTER_TAGLINE_HEIGHT = 14
-const FOOTER_HEIGHT = Math.max(FOOTER_ICON_SIZE, FOOTER_LEMA_HEIGHT + FOOTER_TAGLINE_GAP + FOOTER_TAGLINE_HEIGHT)
-
 const QR_EXPORT_WIDTH = QR_EXPORT_SIZE + QR_EXPORT_PADDING * 2
 const QR_EXPORT_HEIGHT =
   QR_EXPORT_PADDING +
@@ -41,32 +29,8 @@ const QR_EXPORT_HEIGHT =
   QR_EXPORT_GAP +
   QR_EXPORT_SIZE +
   QR_EXPORT_GAP +
-  FOOTER_HEIGHT +
+  FIRMA_ALTO +
   QR_EXPORT_PADDING
-
-/** Traza un rectángulo con las esquinas redondeadas, sin dibujarlo (llamar a fill/clip después). */
-function trazarRectRedondeado(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.lineTo(x + w - r, y)
-  ctx.arcTo(x + w, y, x + w, y + r, r)
-  ctx.lineTo(x + w, y + h - r)
-  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
-  ctx.lineTo(x + r, y + h)
-  ctx.arcTo(x, y + h, x, y + h - r, r)
-  ctx.lineTo(x, y + r)
-  ctx.arcTo(x, y, x + r, y, r)
-  ctx.closePath()
-}
-
-/** Carga una imagen; resuelve `undefined` (en vez de rechazar) si falla, para poder exportar igual sin ella. */
-const cargarImagen = (src: string) =>
-  new Promise<HTMLImageElement | undefined>((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = () => resolve(undefined)
-    img.src = src
-  })
 
 /** Botón + dialog con el QR de la sala. El QR mostrado es el que se usa como fuente al exportar,
  * así garantizamos que ya está pintado (el usuario lo está viendo) al momento de armar la imagen final. */
@@ -79,13 +43,7 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
     const qr = qrRef.current
     if (!qr) return
 
-    const [logo, lema] = await Promise.all([
-      cargarImagen('/img/Logo.webp'),
-      cargarImagen('/img/lema_sketchy_offlines.webp'),
-    ])
-    // La tagline usa la misma tipografía (Chelsea Market) que "Educación emergente" en la home; si no
-    // llega a cargar a tiempo, el canvas cae al fallback de la familia y se ve igual de legible.
-    await document.fonts.load(`${FOOTER_TAGLINE_HEIGHT}px ${fuenteTitulo.style.fontFamily}`).catch(() => {})
+    const firma = await cargarFirma()
 
     const canvasFinal = document.createElement('canvas')
     canvasFinal.width = QR_EXPORT_WIDTH * EXPORT_SCALE
@@ -128,27 +86,7 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
     ctx.drawImage(qr, QR_EXPORT_PADDING, qrY, QR_EXPORT_SIZE, QR_EXPORT_SIZE)
 
     // Firma: logo + (lema arriba, "Educación emergente" abajo), igual que la header del sitio
-    const footerY = qrY + QR_EXPORT_SIZE + QR_EXPORT_GAP
-    const footerAncho = FOOTER_ICON_SIZE + FOOTER_ICON_GAP + FOOTER_LEMA_WIDTH
-    let fx = (QR_EXPORT_WIDTH - footerAncho) / 2
-
-    if (logo) {
-      const logoY = footerY + (FOOTER_HEIGHT - FOOTER_ICON_SIZE) / 2
-      ctx.drawImage(logo, fx, logoY, FOOTER_ICON_SIZE, FOOTER_ICON_SIZE)
-    }
-    fx += FOOTER_ICON_SIZE + FOOTER_ICON_GAP
-
-    if (lema) {
-      ctx.drawImage(lema, fx, footerY, FOOTER_LEMA_WIDTH, FOOTER_LEMA_HEIGHT)
-    }
-
-    ctx.font = `${FOOTER_TAGLINE_HEIGHT - 2}px ${fuenteTitulo.style.fontFamily}`
-    ctx.fillStyle = '#1f2937'
-    ctx.fillText(
-      'Educación emergente',
-      fx,
-      footerY + FOOTER_LEMA_HEIGHT + FOOTER_TAGLINE_GAP + FOOTER_TAGLINE_HEIGHT / 2
-    )
+    dibujarFirma(ctx, firma, QR_EXPORT_WIDTH, qrY + QR_EXPORT_SIZE + QR_EXPORT_GAP)
 
     ctx.restore()
 

@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { LlamadaTablero } from '@/components/salas/go/llamadas-go'
 import { ConjuntoDesafios } from '@/lib/go-dojo/components/conjunto-desafios'
 import { CAPITULOS_OGS, COLECCION_OGS, type SlugCapituloOgs } from '@/lib/go-dojo/desafios/capitulos'
 import type { Desafio } from '@/lib/go-dojo/tipos'
@@ -140,6 +141,8 @@ export default function ContenidoDojoGo({
           onSiguienteCapitulo={siguienteCapitulo && (() => elegirCapitulo(siguienteCapitulo.slug))}
         />
       </div>
+
+      <LlamadaTablero className="mt-12" />
     </div>
   )
 }

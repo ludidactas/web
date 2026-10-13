@@ -1,7 +1,7 @@
 'use client'
 
 import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
-import { LlamadaDojo } from '@/components/salas/go/llamada-dojo'
+import { LlamadaDojo } from '@/components/salas/go/llamadas-go'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,

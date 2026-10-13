@@ -63,7 +63,7 @@ describe('storeTableroLocal', () => {
     store().nuevaPartida('atari')
 
     const guardado = JSON.parse(localStorage.getItem(CLAVE)!)
-    expect(guardado.version).toBe(4)
+    expect(guardado.version).toBe(1)
     expect(guardado.state.tamaño).toBe(19)
     expect(guardado.state.partidas[9].tablero[4][4]).toBe('N')
     expect(guardado.state.partidas[19].modo).toBe('atari')
@@ -74,7 +74,7 @@ describe('storeTableroLocal', () => {
     // Página recién cargada: hay algo guardado y el store todavía no lo leyó.
     localStorage.setItem(
       CLAVE,
-      JSON.stringify({ version: 4, state: { tamaño: 13, partidas: { ...todasNuevas(), 13: partida } } })
+      JSON.stringify({ version: 1, state: { tamaño: 13, partidas: { ...todasNuevas(), 13: partida } } })
     )
     expect(store().tamaño).toBe(9)
 
@@ -85,7 +85,7 @@ describe('storeTableroLocal', () => {
   })
 
   test('descarta lo guardado con otra versión', async () => {
-    localStorage.setItem(CLAVE, JSON.stringify({ version: 3, state: { tamaño: 13, partidas: todasNuevas() } }))
+    localStorage.setItem(CLAVE, JSON.stringify({ version: 2, state: { tamaño: 13, partidas: todasNuevas() } }))
     await storeTableroLocal.persist.rehydrate()
 
     expect(store().tamaño).toBe(9)

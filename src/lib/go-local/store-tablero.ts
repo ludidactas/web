@@ -37,7 +37,7 @@ export const storeTableroLocal = create<TableroLocalState>()(
     }),
     {
       name: 'go-tablero-local',
-      version: 4,
+      version: 1,
       storage: createJSONStorage(() => localStorage),
       partialize: ({ tamaño, partidas }) => ({ tamaño, partidas }),
       skipHydration: true,

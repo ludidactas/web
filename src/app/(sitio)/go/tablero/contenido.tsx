@@ -26,7 +26,7 @@ import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
 import { TAMAÑOS_TABLERO, type ModoPartida, type TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Toaster, toast } from 'sonner'
 
 const PANTALLA_VERTICAL_ANGOSTA = '(max-width: 767px) and (orientation: portrait)'
@@ -39,6 +39,13 @@ const ESPERA_GRAVEDAD_MS = 150
 const NOMBRE = { [NEGRO]: 'Negro', [BLANCO]: 'Blanco' } as const
 
 type Punto = { fila: number; columna: number }
+
+/** Confirma la jugada elegida (suena si fue legal). Devuelve `false` si no había ninguna elegida. */
+function confirmarJugada(pendiente: Punto | null, aplicar: Aplicar): boolean {
+  if (!pendiente) return false
+  if (aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
+  return true
+}
 /** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
 type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
 
@@ -133,6 +140,36 @@ export default function ContenidoTablero() {
       return false
     }
   }
+
+  // Atajos de teclado. Enter y Espacio confirman la jugada elegida (si el foco está en un botón o dentro de un
+  // diálogo, esas teclas ya tienen su efecto propio y no se tocan). La P enfoca "Pasar" y el Espacio siguiente lo
+  // activa: pasar lleva dos pasos para no hacerlo por accidente. El Tab, tras tocar el tablero, llega al mismo botón.
+  // El `ref` mantiene al día lo que ve el listener, que se registra una vez.
+  const confirmarConTeclado = useRef<() => boolean>(() => false)
+  confirmarConTeclado.current = () => partida.fase === 'jugando' && confirmarJugada(pendiente, aplicar)
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
+      const objetivo = e.target instanceof Element ? e.target : null
+
+      if (e.key.toLowerCase() === 'p') {
+        if (objetivo?.closest('input, textarea, select, [contenteditable], [role="dialog"]')) return
+        // Con "Pasar" ausente o deshabilitado (otra fase, Atari Go, no es su turno) la tecla no hace nada.
+        const pasar = [...document.querySelectorAll<HTMLButtonElement>('[data-pasar]')].find(
+          (boton) => !boton.disabled && boton.offsetParent !== null
+        )
+        pasar?.focus()
+        return
+      }
+
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      if (objetivo?.closest('button, a, input, textarea, select, [role="dialog"]')) return
+      // Sin jugada elegida no se intercepta: el Espacio sigue scrolleando la página.
+      if (confirmarConTeclado.current()) e.preventDefault()
+    }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [])
 
   const elegirTamaño = (t: TamañoTablero) => {
     setTamaño(t)
@@ -313,6 +350,17 @@ function Marcador({
   )
 }
 
+/** Etiqueta de un botón con, debajo y en bajo contraste, la tecla que lo activa. La tecla solo se muestra en
+ * dispositivos con puntero que flota (`hover: hover`), donde hay teclado. */
+function EtiquetaConAtajo({ atajo, children }: { atajo: string; children: ReactNode }) {
+  return (
+    <span className="flex flex-col items-center leading-tight">
+      {children}
+      <span className="hidden [@media(hover:hover)]:block text-[10px] font-normal text-white/70">{atajo}</span>
+    </span>
+  )
+}
+
 /** Confirmar/pasar de `color` (solo habilitados en su turno), o de quien juegue si `color` es `null`. */
 function Acciones({
   color,
@@ -333,21 +381,26 @@ function Acciones({
         <button
           type="button"
           disabled={!pendiente || !esSuTurno}
-          onClick={() => {
-            if (pendiente && aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
-          }}
+          onClick={() => confirmarJugada(pendiente, aplicar)}
+          // Se confirma con Enter o Espacio sin pasar por el foco: así, tras tocar el tablero, el siguiente Tab cae en "Pasar".
+          tabIndex={-1}
           className="bg-emerald-500 text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
         >
-          Confirmar jugada
+          <EtiquetaConAtajo atajo="Espacio">Confirmar jugada</EtiquetaConAtajo>
         </button>
         {partida.modo !== 'atari' && (
           <button
             type="button"
             disabled={!esSuTurno}
-            onClick={() => aplicar(pasarLocal)}
-            className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
+            onClick={(e) => {
+              aplicar(pasarLocal)
+              // Sin el foco encima, un Espacio de más no vuelve a pasar: dos pases seguidos terminan la partida.
+              e.currentTarget.blur()
+            }}
+            data-pasar
+            className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ld-violeta-oscuro/40 focus-visible:ring-offset-2"
           >
-            Pasar
+            <EtiquetaConAtajo atajo="P, luego Espacio">Pasar</EtiquetaConAtajo>
           </button>
         )}
       </>
@@ -384,7 +437,11 @@ function BotonConformidad({
     <button
       type="button"
       aria-pressed={conforme}
-      onClick={() => aplicar((p) => alternarConformidadLocal(p, color))}
+      onClick={(e) => {
+        aplicar((p) => alternarConformidadLocal(p, color))
+        // Sin el foco encima, un Espacio de más no alterna la conformidad sin querer.
+        e.currentTarget.blur()
+      }}
       className={cn(
         'flex items-center gap-2 px-4 py-2 rounded-full hover:scale-105',
         conforme ? 'bg-emerald-500 text-white' : 'bg-indigo-500 text-white'

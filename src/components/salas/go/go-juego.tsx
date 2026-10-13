@@ -9,12 +9,12 @@ import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { PartidaGo } from './partida-go'
+import { LlamadaDojo } from './llamada-dojo'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
 import { useSonidoJugada } from './use-sonido-jugada'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import Link from 'next/link'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Iconito } from '@/components/custom/ld-icon'
 
@@ -284,23 +284,7 @@ function BuscarContrincante({
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
 
-      <div className="flex flex-col gap-3 items-center w-full mt-4">
-        <p className="text-slate-500 text-sm text-center">
-          Si aún no sabés cómo jugar, te invitamos a que visites nuestro Dojo de Go y practiques con nosotros.
-        </p>
-        <Link href="/go/dojo">
-          <Boton
-            color="#6366f1"
-            shadowColor="#4338ca"
-            classNames={{ root: 'flex items-center p-2 justify-center w-36 h-16 hover:scale-105 transition-transform' }}
-          >
-            <div className='flex items-center gap-1'>
-            <Icon className="text-white" icon={'fluent-emoji-high-contrast:shinto-shrine'}/>
-            <span className="text-md font-bold text-white">Ir al Dojo</span>
-            </div>
-          </Boton>
-        </Link>
-      </div>
+      <LlamadaDojo className="mt-4" />
     </div>
   )
 }

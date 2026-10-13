@@ -1,6 +1,7 @@
 'use client'
 
 import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
+import { LlamadaDojo } from '@/components/salas/go/llamada-dojo'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,
@@ -326,6 +327,10 @@ export default function ContenidoTablero() {
           compartir={compartirImagen}
         />
       </div>
+
+      {/* Debajo del área de juego: en celular vertical, ésta mide una pantalla, así que la llamada queda fuera de vista
+          con el tablero centrado y se llega a ella scrolleando. */}
+      <LlamadaDojo className="mt-10 max-md:portrait:mt-0" />
     </div>
   )
 }

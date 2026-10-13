@@ -31,6 +31,7 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombr
   link: z.string(),
   overlay: estadisticaSvgConfigValidator.catch(CONFIG_DEFAULTS),
   condicion_asistencia: condicionAsistenciaSchema.nullable().optional().catch(null),
+  guardar_partidas_drive: z.boolean().optional().catch(false),
 })
 
 /**
@@ -39,7 +40,7 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombr
  * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
  */
 export const configActualizable = configSala
-  .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true })
+  .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true, guardar_partidas_drive: true })
   .strict()
 
 /** La data completa de una sala tal como se persiste en redis. */

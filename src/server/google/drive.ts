@@ -1,4 +1,5 @@
 import type { drive_v3 } from '@googleapis/drive'
+import { Readable } from 'node:stream'
 
 import type { ColeccionPreguntasEnDrive } from '@/lib/google/recursos-colecciones'
 import { aSlug } from '@/lib/utils'
@@ -6,6 +7,7 @@ import { aSlug } from '@/lib/utils'
 const MIME_CARPETA = 'application/vnd.google-apps.folder'
 const MIME_YAML = 'text/plain'
 const MEDIA_YAML = `${MIME_YAML}; charset=UTF-8`
+const MIME_PNG = 'image/png'
 
 type PropiedadesApp = Record<string, string>
 type ArchivoDrive = drive_v3.Schema$File & { id: string }
@@ -75,7 +77,7 @@ async function buscarOCrear(api: drive_v3.Drive, datos: ArchivoNuevo) {
   return data as ArchivoDrive
 }
 
-function propiedadesCarpeta(salaId: string, recurso: 'sala' | 'colecciones') {
+function propiedadesCarpeta(salaId: string, recurso: 'sala' | 'colecciones' | 'partidas') {
   return { ludidactasSala: salaId, recurso }
 }
 
@@ -109,6 +111,56 @@ async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
 
 function propiedadesDeSala(salaId: string) {
   return { ludidactasSala: salaId, recurso: 'coleccion' }
+}
+
+async function carpetaDePartidas(api: drive_v3.Drive, sala: SalaDrive) {
+  const raiz = await buscarOCrear(api, {
+    name: 'Ludidactas',
+    mimeType: MIME_CARPETA,
+    appProperties: { ludidactas: 'raiz' },
+  })
+
+  const carpetaSala = await buscarOCrear(api, {
+    name: `Sala - ${sala.nombreSala}`,
+    mimeType: MIME_CARPETA,
+    appProperties: propiedadesCarpeta(sala.salaId, 'sala'),
+    parents: [raiz.id],
+  })
+
+  return buscarOCrear(api, {
+    name: 'Partidas Go',
+    mimeType: MIME_CARPETA,
+    appProperties: propiedadesCarpeta(sala.salaId, 'partidas'),
+    parents: [carpetaSala.id],
+  })
+}
+
+function propiedadesPartida(salaId: string, partidaId: string) {
+  return { ludidactasSala: salaId, recurso: 'partida', partida: partidaId }
+}
+
+export async function guardarImagenPartida(
+  api: drive_v3.Drive,
+  sala: SalaDrive,
+  partidaId: string,
+  nombre: string,
+  png: Buffer
+) {
+  const propiedades = propiedadesPartida(sala.salaId, partidaId)
+  const existente = await buscarArchivo(api, propiedades, MIME_PNG)
+  if (existente) return
+
+  const carpeta = await carpetaDePartidas(api, sala)
+
+  await api.files.create({
+    requestBody: {
+      name: nombre,
+      mimeType: MIME_PNG,
+      appProperties: propiedades,
+      parents: [carpeta.id],
+    },
+    media: { mimeType: MIME_PNG, body: Readable.from(png) },
+  })
 }
 
 function propiedadesColeccion(salaId: string, nombre: string) {

@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { tableroAPng } from '@/lib/go/exportar-png'
+import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { PartidaGo } from './partida-go'
 import { Outlined } from '@/components/fx/filtros'
@@ -497,6 +499,32 @@ function PartidaEnCurso({
       .finally(() => setConfirmando(false))
   }
 
+  async function descargarImagen() {
+    try {
+      const info = infoExport(partida)
+      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, info)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nombreImagenPartida(info, partida.creadaEn)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
+    }
+  }
+
+  async function copiarImagen() {
+    try {
+      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+    } catch {
+      toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
+    }
+  }
+
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
   // nunca puede mostrar un número distinto al que se confirma al terminar la partida.
@@ -617,10 +645,22 @@ function PartidaEnCurso({
           </button>
         )}
         {partida.estado === 'terminada' ? (
-          <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
-            <Icon icon={"akar-icons:arrow-back"}/>
-            Volver a la sala
-          </button>
+          <>
+            <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
+              <Icon icon={"akar-icons:arrow-back"}/>
+              Volver a la sala
+            </button>
+            <div className="flex items-stretch rounded-xl border overflow-hidden divide-x">
+              <button className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100" onClick={descargarImagen}>
+                <Icon className='w-6 h-6' icon={'lucide:download'}/>
+                Descargar imagen
+              </button>
+              <button className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100" onClick={copiarImagen}>
+                <Icon className='w-6 h-6' icon={'lucide:copy'}/>
+                Copiar imagen
+              </button>
+            </div>
+          </>
         ) : (
           <>
             <button className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold" onClick={onVolverASala}>

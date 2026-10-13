@@ -1,9 +1,11 @@
 import { Socket } from 'socket.io'
+import { z } from 'zod'
 import { conAck, conErrorHandling } from '../middleware/error-handling'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo, salaGoRoom } from './app'
 import { Partida, partidaIdSchema } from '../validators/go'
+import * as db from './db'
 
 /**
  * Registra los comandos de Go de una conexión bajo una identidad (`userId`/`nombre`) dada. La
@@ -120,6 +122,7 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const safe = conErrorHandling(socket)
+  const ack = conAck(socket)
   const { userId, nombre } = socket.data.session
 
   socket.on(
@@ -127,6 +130,19 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
     safe(async () => {
       const sala = await Salas.get(idSala)
       if (!(await sala.profeConectado(socket.id))) await avisarContrincantesActualizados(idSala)
+    })
+  )
+
+  socket.on(
+    'go:partidas_drive_pendientes',
+    ack(async () => db.getPartidasDrivePendientes(idSala))
+  )
+
+  socket.on(
+    'go:descartar_partidas_drive',
+    ack(async (payload: unknown) => {
+      const { ids } = z.object({ ids: z.array(z.string()) }).parse(payload)
+      await db.descartarPartidasDrivePendientes(idSala, ids)
     })
   )
 

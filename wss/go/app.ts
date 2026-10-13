@@ -14,6 +14,8 @@ import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
 import { conLock } from './lock'
 import * as motor from '@/lib/go/motor'
+import { getSala } from '../salas/db'
+import { infoExport } from '@/lib/go/info-export'
 
 /**
  * Lógica de servidor de una partida de Go: comandos (invitar/aceptar/jugar/pasar/marcarMuerta/
@@ -369,6 +371,18 @@ async function finalizar(
   await db.limpiarPartidaActiva(partida.salaId, partida.blanco.userId)
   await db.incrementarStats(partida.salaId, partida.negro.userId, ganadorUserId === partida.negro.userId)
   await db.incrementarStats(partida.salaId, partida.blanco.userId, ganadorUserId === partida.blanco.userId)
+
+  const sala = await getSala(partida.salaId)
+  if (sala?.config.guardar_partidas_drive) {
+    await db.encolarPartidaDrive(partida.salaId, {
+      id: partida.id,
+      tablero: partida.tablero,
+      tamaño: partida.tamaño,
+      removidas: partida.removidas,
+      creadaEn: partida.creadaEn,
+      info: infoExport(partida),
+    })
+  }
 
   console.log(`🏁 Partida de Go ${partida.id} terminada por ${motivoFin}. Ganador: ${ganadorUserId ?? 'empate'}`)
 

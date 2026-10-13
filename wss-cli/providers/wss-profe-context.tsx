@@ -11,6 +11,7 @@ import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import profeAsistenciaHandlers from '../handlers/profe-asistencia-handlers'
 import profeGoHandlers from '../handlers/profe-go-handlers'
+import profeGoDriveHandlers from '../handlers/profe-go-drive-handlers'
 import { useWss } from '../use-wss'
 import { StatusDeConexion } from '../conexion-wss'
 import { storeConfig } from '../stores/config-store'
@@ -33,6 +34,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       encuestas: profeEncuestasHandlers(socket),
       asistencia: profeAsistenciaHandlers(socket),
       go: profeGoHandlers(socket),
+      goDrive: profeGoDriveHandlers(socket),
     }),
     [socket]
   )
@@ -47,6 +49,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
     handlers.base.montar()
     handlers.encuestas.montar()
     handlers.asistencia.montar()
+    handlers.goDrive.montar()
     if (abrirSalaId) handlers.go.montar()
 
     return () => {
@@ -55,6 +58,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       handlers.base.desmontar()
       handlers.encuestas.desmontar()
       handlers.asistencia.desmontar()
+      handlers.goDrive.desmontar()
       if (abrirSalaId) handlers.go.desmontar()
     }
   }, [handlers, abrirSalaId])

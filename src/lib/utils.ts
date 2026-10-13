@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 import * as XLSX from 'xlsx'
 
 import { MetodosLogin } from '@/wss/validators/auth'
-import type { PlanillaCompleta } from '@/wss-cli/handlers/profe-sala-activa-handlers'
+import type { PlanillaCompleta } from '@/wss/validators/salas'
 import { ConfigSala } from '@/wss/validators/salas'
 
 export function cn(...inputs: ClassValue[]) {

@@ -1,8 +1,13 @@
 import { isEmpty, merge } from 'remeda'
 import { Salas } from '../salas/app'
-import { Encuesta, EncuestaConVotos, EncuestaHidratadaEstudiante, EncuestaHidratadaProfe } from '../validators/polls'
-import { RolSala } from '../validators/auth'
-import { nuevaEncuesta, voteValidator } from '../validators/polls'
+import {
+  Encuesta,
+  EncuestaConVotos,
+  EncuestaHidratadaEstudiante,
+  EncuestaHidratadaProfe,
+  NuevaEncuesta,
+  VotarEncuesta,
+} from '../validators/polls'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
 
@@ -40,13 +45,12 @@ export async function profeSala(salaId: string) {
     return polls
   }
 
-  async function crearPoll(pollDataUnknown: unknown) {
+  async function crearPoll(datos: NuevaEncuesta) {
     const poll: Encuesta = {
       // Estas dos son server state, no corresponden en el validator:
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-      // Validamos el resto del input
-      ...nuevaEncuesta.parse(pollDataUnknown),
+      ...datos,
     }
 
     await db.guardarEncuesta(salaId, poll)
@@ -70,12 +74,8 @@ export async function profeSala(salaId: string) {
     )
   }
 
-  async function consultarVotosPorUsuario({ pollId, userId }: { pollId?: string; userId: string }) {
-    if (pollId) {
-      await assertPollExists(salaId, pollId)
-      return await db.getVotosUsuario(salaId, pollId, userId)
-    }
-    // Si no me pasan pollId, devuelvo un objeto con los votos de ese usuario en todas las encuestas
+  /** Los votos de un usuario en todas las encuestas de la sala: `pollId` → ids de las opciones que votó. */
+  async function consultarVotosPorUsuario({ userId }: { userId: string }) {
     const pollIds = await db.getIdsEncuestas(salaId)
     const votosPorEncuesta: Record<string, string[]> = {}
     await Promise.all(
@@ -193,8 +193,7 @@ export async function estudianteSala(idSala: string, userId: string) {
     if (await db.yaVoto(idSala, poll.id, user)) throw new Error('Ya votaste en esta encuesta')
   }
 
-  async function votar(posibleVoto: unknown) {
-    const voto = voteValidator.parse(posibleVoto)
+  async function votar(voto: VotarEncuesta) {
     const { pollId, tipo } = voto
 
     await assertPollExists(idSala, pollId)
@@ -261,19 +260,11 @@ export async function estudianteSala(idSala: string, userId: string) {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
-  await sala.broadcast('poll:updated', poll, async (poll, socket) => {
-    const encuesta = poll as Encuesta
-    if (socket.data.session && socket.data.session.rol === RolSala.Estudiante) {
-      return await hidratarParaEstudiante(sala.id, encuesta, socket.data.session.userId)
-    }
-    if (
-      socket.data.session &&
-      (socket.data.session.rol === RolSala.Profe || socket.data.session.rol === RolSala.Admin)
-    ) {
-      return await hidratarParaProfe(sala.id, encuesta)
-    }
-    // Público/overlay: enviamos con conteo de votos
-    return await pollConVotos(sala.id, encuesta.id, encuesta)
+  await sala.broadcastPorRol('poll:updated', {
+    profe: () => hidratarParaProfe(sala.id, poll),
+    estudiante: (userId) => hidratarParaEstudiante(sala.id, poll, userId),
+    // Público/overlay: con conteo de votos
+    publico: () => pollConVotos(sala.id, poll.id, poll),
   })
 }
 

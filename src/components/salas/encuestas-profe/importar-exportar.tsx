@@ -179,7 +179,7 @@ export function ImportarExportar({
         await crear(parseada.data)
         creadas++
       } catch (error) {
-        errores.push(`"${parseada.data.pregunta}": ${typeof error === 'string' ? error : 'no se pudo crear'}`)
+        errores.push(`"${parseada.data.pregunta}": ${error instanceof Error ? error.message : 'no se pudo crear'}`)
       }
     }
 

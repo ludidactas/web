@@ -1,4 +1,4 @@
-import { Partida } from '@/wss/validators/go'
+import { ContrincanteGo, Partida } from '@/wss/validators/go'
 import { create } from 'zustand'
 
 /** Estado cliente (zustand) de Go — lo pueblan `estudiante-go-handlers.ts`/`profe-go-handlers.ts`
@@ -13,13 +13,7 @@ interface GoState {
   invitaciones: Partida[]
   /** Compañeros conectados, con si están o no disponibles para invitar (ya en una partida) y, en ese
    * caso, contra quién. */
-  contrincantes: Array<{
-    userId: string
-    nombre: string
-    enPartida: boolean
-    partidaId: string | null
-    contrincante: { userId: string; nombre: string } | null
-  }>
+  contrincantes: ContrincanteGo[]
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
   observando: Partida | null
   marcarInicializado: () => void

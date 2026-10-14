@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { rival } from "@/lib/go/motor";
+import { sonarJugada } from "@/lib/go/sonido-jugada";
 import {
   aplicarJugada,
   retirarGrupo,
@@ -50,7 +51,8 @@ export interface ResultadoDesafioGo extends EstadoDesafioGo {
   elegirOpcion: (indice: number) => void;
   reiniciar: () => void;
   mostrarAyuda: () => void;
-  mostrarExplicacion: () => void;
+  /** Muestra la explicación si está oculta, y la oculta si está visible. */
+  alternarExplicacion: () => void;
   /** True una vez que el estudiante respondió (o, para "secuencia", llegó a una rama terminal) — se usa para deshabilitar más clicks. Siempre false para "exploracion". */
   respondido: boolean;
 }
@@ -125,6 +127,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
           siguientesPiedras = trasRival.piedras;
         }
 
+        sonarJugada();
         setPiedrasSecuencia(siguientesPiedras);
         if (rama.siguiente) {
           setNodoSecuencia(rama.siguiente);
@@ -176,6 +179,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
       if (respondido) return;
       const resultado = evaluarJugada(desafio, r, c);
       if (!resultado) return;
+      sonarJugada();
       setJugadaJugador(resultado.jugada);
       setCapturadas(resultado.capturadas);
       setEstado(resultado.esCorrecta ? "correcto" : "incorrecto");
@@ -221,7 +225,7 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
     return () => clearTimeout(timer);
   }, [ayudaVisible]);
 
-  const mostrarExplicacion = useCallback(() => setExplicacionVisible(true), []);
+  const alternarExplicacion = useCallback(() => setExplicacionVisible((v) => !v), []);
 
   const piedras = useMemo<Piedra[]>(() => {
     if (desafio.tipo === "secuencia") return piedrasSecuencia;
@@ -280,6 +284,6 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
     elegirOpcion,
     reiniciar,
     mostrarAyuda,
-    mostrarExplicacion,
+    alternarExplicacion,
   };
 }

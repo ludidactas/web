@@ -30,6 +30,20 @@ export function tableroVacio(tamaño: number): Tablero {
   return Array.from({ length: tamaño }, () => Array(tamaño).fill(VACIO))
 }
 
+/**
+ * Posición inicial de Atari Go: las cuatro piedras en cruz en el centro del tablero (negras y blancas
+ * en diagonal, como en un 2x2 alternado). Negro mueve primero.
+ */
+export function tableroAtari(tamaño: number): Tablero {
+  const tablero = tableroVacio(tamaño)
+  const c = Math.floor(tamaño / 2)
+  tablero[c - 1][c - 1] = NEGRO
+  tablero[c][c] = NEGRO
+  tablero[c - 1][c] = BLANCO
+  tablero[c][c - 1] = BLANCO
+  return tablero
+}
+
 function clonar(tablero: Tablero): Tablero {
   return tablero.map((fila) => [...fila])
 }

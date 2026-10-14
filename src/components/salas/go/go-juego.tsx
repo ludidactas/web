@@ -1,22 +1,24 @@
 'use client'
 
-import { cn } from '@/lib/utils'
-import { storeGo } from '@/wss-cli/stores/go-store'
-import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
-import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { Boton } from '@/components/custom/ld-boton-svg'
+import { Outlined } from '@/components/fx/filtros'
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { tableroAPng } from '@/lib/go/exportar-png'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
+import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { cn } from '@/lib/utils'
+import { storeGo } from '@/wss-cli/stores/go-store'
+import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import { Icon } from '@iconify/react/dist/iconify.js'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { ElegirModoInvitacion } from './elegir-modo-invitacion'
+import { LlamadaDojo } from './llamadas-go'
 import { PartidaGo } from './partida-go'
 import { ReglasGo } from './reglas-go'
-import { Outlined } from '@/components/fx/filtros'
-import { Boton } from '@/components/custom/ld-boton-svg'
-import { Icon } from '@iconify/react/dist/iconify.js'
-import Link from 'next/link'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Iconito } from '@/components/custom/ld-icon'
+import { useSonidoJugada } from './use-sonido-jugada'
 
 /**
  * Todo el flujo de Go de quien juega en una sala — buscar contrincante, invitaciones, la partida
@@ -29,7 +31,7 @@ import { Iconito } from '@/components/custom/ld-icon'
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
 export type AccionesGo = {
   pedirContrincantes: () => void
-  invitar: (contrincanteId: string, tamaño?: TamañoTablero) => Promise<Partida>
+  invitar: (contrincanteId: string, opciones?: { tamaño?: TamañoTablero; modo?: ModoPartida }) => Promise<Partida>
   aceptar: (partidaId: string) => Promise<Partida>
   rechazar: (partidaId: string) => Promise<void>
   jugar: (partidaId: string, fila: number, columna: number) => Promise<Partida>
@@ -46,6 +48,8 @@ export type AccionesGo = {
 export default function GoJuego({ userId, acciones }: { userId: string; acciones: AccionesGo }) {
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
+
+  useSonidoJugada(observando ?? partida, userId)
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
@@ -126,7 +130,8 @@ function InvitacionesEntrantes({
       {invitaciones.map((i) => (
         <div key={i.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
           <p>
-            <span className="font-semibold">{i.negro.nombre}</span> te invitó a un tablero de {i.tamaño}x{i.tamaño}
+            <span className="font-semibold">{i.negro.nombre}</span> te invitó a{' '}
+            {i.modo === 'atari' ? 'un Atari Go' : 'una partida'} en un tablero de {i.tamaño}x{i.tamaño}
           </p>
           <div className="flex gap-2">
             <button
@@ -162,7 +167,7 @@ function BuscarContrincante({
   contrincantes: ReturnType<typeof storeGo.getState>['contrincantes']
   invitacionesEntrantes: ReturnType<typeof storeGo.getState>['invitaciones']
   onRefrescar: () => void
-  onInvitar: (contrincanteId: string, tamaño: TamañoTablero) => Promise<unknown>
+  onInvitar: (contrincanteId: string, opciones: { tamaño: TamañoTablero; modo: ModoPartida }) => Promise<unknown>
   onObservar: (partidaId: string) => Promise<unknown>
   onAceptar: (partidaId: string) => Promise<unknown>
   onRechazar: (partidaId: string) => Promise<unknown>
@@ -259,14 +264,18 @@ function BuscarContrincante({
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
-                    disabled={!!partidaEnPausa}
-                    title={partidaEnPausa ? 'Volvé a tu partida antes de invitar a alguien más' : undefined}
-                    onClick={() => onInvitar(c.userId, tamaño).catch((e) => toast.error(e.message))}
+                  <ElegirModoInvitacion
+                    nombre={c.nombre}
+                    onElegir={(modo) => onInvitar(c.userId, { tamaño, modo }).catch((e) => toast.error(e.message))}
                   >
-                    Invitar
-                  </button>
+                    <button
+                      className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
+                      disabled={!!partidaEnPausa}
+                      title={partidaEnPausa ? 'Volvé a tu partida antes de invitar a alguien más' : undefined}
+                    >
+                      Invitar
+                    </button>
+                  </ElegirModoInvitacion>
                 )}
               </li>
             )
@@ -278,23 +287,7 @@ function BuscarContrincante({
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
 
-      <div className="flex flex-col gap-3 items-center w-full mt-4">
-        <p className="text-slate-500 text-sm text-center">
-          Si aún no sabés cómo jugar, te invitamos a que visites nuestro Dojo de Go y practiques con nosotros.
-        </p>
-        <Link href="/go/dojo">
-          <Boton
-            color="#6366f1"
-            shadowColor="#4338ca"
-            classNames={{ root: 'flex items-center p-2 justify-center w-36 h-16 hover:scale-105 transition-transform' }}
-          >
-            <div className='flex items-center gap-1'>
-            <Icon className="text-white" icon={'fluent-emoji-high-contrast:shinto-shrine'}/>
-            <span className="text-md font-bold text-white">Ir al Dojo</span>
-            </div>
-          </Boton>
-        </Link>
-      </div>
+      <LlamadaDojo className="mt-4" />
     </div>
   )
 }
@@ -333,7 +326,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           Esperando a que {partida.blanco.nombre} acepte la invitación de {partida.negro.nombre}...
         </p>
         <button className="flex gap-1 items-center text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-          <Icon icon={"akar-icons:arrow-back"}/>
+          <Icon icon={'akar-icons:arrow-back'} />
           Volver a la Sala
         </button>
       </div>
@@ -365,7 +358,11 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           }}
         >
           {partida.turno === BLANCO ? (
-            <Outlined radius={1.1} outlineColor="black" className="flex items-center gap-2 drop-shadow-2xl tracking-wider">
+            <Outlined
+              radius={1.1}
+              outlineColor="black"
+              className="flex items-center gap-2 drop-shadow-2xl tracking-wider"
+            >
               <PiedraIcono color={partida.turno} className="h-3 w-3" />
               Juega blanco
             </Outlined>
@@ -395,7 +392,10 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
-      <button className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105" onClick={onDejarDeObservar}>
+      <button
+        className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105"
+        onClick={onDejarDeObservar}
+      >
         <Icon icon={'akar-icons:arrow-back'} />
         Volver a la Sala
       </button>
@@ -424,10 +424,16 @@ function BannerResultado({
 
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      <div className='flex gap-2 items-center'>
-      <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'}/>
-      {colorGanador === BLANCO ? <Outlined radius={1.5} outlineColor="negro">{h2}</Outlined> : h2}
-      <Icon className='w-8 h-8' icon={'noto:party-popper'}/>
+      <div className="flex gap-2 items-center">
+        <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'} />
+        {colorGanador === BLANCO ? (
+          <Outlined radius={1.5} outlineColor="negro">
+            {h2}
+          </Outlined>
+        ) : (
+          h2
+        )}
+        <Icon className="w-8 h-8" icon={'noto:party-popper'} />
       </div>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
@@ -435,6 +441,7 @@ function BannerResultado({
         </p>
       )}
       {partida.motivoFin === 'abandono' && <p className="text-slate-500 text-xs">Terminó por abandono</p>}
+      {partida.motivoFin === 'captura' && <p className="text-slate-500 text-xs">Hizo la primera captura</p>}
     </div>
   )
 }
@@ -553,14 +560,18 @@ function PartidaEnCurso({
   )
 
   return (
-    <div ref={setContenedorJuego} className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl">
+    <div
+      ref={setContenedorJuego}
+      className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl"
+    >
       <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
-          Tu color: 
+        <span className="font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5">
+          {partida.modo === 'atari' && <span className="text-indigo-600">Atari Go ·</span>}
+          Tu color:
           <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
-          <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
+          <span className="font-bold ">{soyNegro ? 'Negro' : 'Blanco'}</span>
         </span>
-        <span className='font-bold  p-2 rounded-xl'> 
+        <span className="font-bold  p-2 rounded-xl">
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
         <ReglasGo />
@@ -583,7 +594,7 @@ function PartidaEnCurso({
           ) : (
             <>
               <PiedraIcono color={partida.turno} className="h-3 w-3" />
-               {esMiTurno ? 'Tu turno' : 'Juega negro'}
+              {esMiTurno ? 'Tu turno' : 'Juega negro'}
             </>
           )}
         </p>
@@ -611,12 +622,12 @@ function PartidaEnCurso({
           esMiTurno={partida.estado === 'jugando' && esMiTurno}
           ultimaJugada={partida.ultimaJugada}
           pendiente={partida.estado === 'jugando' ? jugadaPendiente : null}
-          deshabilitado={
-            partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'
-          }
+          deshabilitado={partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'}
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
+              // Al colocar la piedra suena de inmediato, sin esperar a confirmar la jugada.
+              if (jugadaPendiente?.fila !== fila || jugadaPendiente?.columna !== columna) sonarJugada()
               setJugadaPendiente((actual) =>
                 actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
               )
@@ -650,43 +661,57 @@ function PartidaEnCurso({
         )}
         {partida.estado === 'terminada' ? (
           <>
-            <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
-              <Icon icon={"akar-icons:arrow-back"}/>
+            <button
+              className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded"
+              onClick={() => storeGo.getState().reset()}
+            >
+              <Icon icon={'akar-icons:arrow-back'} />
               Volver a la sala
             </button>
             <div className="flex items-stretch rounded-xl border overflow-hidden divide-x">
-              <button className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100" onClick={descargarImagen}>
-                <Icon className='w-6 h-6' icon={'lucide:download'}/>
+              <button
+                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
+                onClick={descargarImagen}
+              >
+                <Icon className="w-6 h-6" icon={'lucide:download'} />
                 Descargar imagen
               </button>
-              <button className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100" onClick={copiarImagen}>
-                <Icon className='w-6 h-6' icon={'lucide:copy'}/>
+              <button
+                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
+                onClick={copiarImagen}
+              >
+                <Icon className="w-6 h-6" icon={'lucide:copy'} />
                 Copiar imagen
               </button>
             </div>
           </>
         ) : (
           <>
-            <button className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold" onClick={onVolverASala}>
-              <Icon className='w-6 h-6' icon={"famicons:arrow-back-circle-outline"}/>
+            <button
+              className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold"
+              onClick={onVolverASala}
+            >
+              <Icon className="w-6 h-6" icon={'famicons:arrow-back-circle-outline'} />
               Volver a la sala
             </button>
             {partida.estado === 'jugando' && (
               <>
-                <button
-                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
-                  disabled={!esMiTurno}
-                  onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
-                >
-                  Pasar
-                </button>
+                {partida.modo !== 'atari' && (
+                  <button
+                    className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
+                    disabled={!esMiTurno}
+                    onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
+                  >
+                    Pasar
+                  </button>
+                )}
                 <Dialog>
                   <DialogTrigger asChild>
                     <button
                       className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
                       disabled={confirmando}
                     >
-                      <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
+                      <Icon className="w-6 h-6" icon={'ci:close-circle'} />
                       Abandonar
                     </button>
                   </DialogTrigger>

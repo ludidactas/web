@@ -135,7 +135,7 @@ export async function estudianteGo(idSala: string, userId: string) {
   // propio puntero. Una única cola por sala alcanza: el volumen de invitar/aceptar en un aula es bajo.
   const conLockInvitaciones = <T>(fn: () => Promise<T>) => conLock(`${idSala}:go:invitaciones`, fn)
 
-  async function invitar({ contrincanteId, tamaño }: Invitacion, nombre: string) {
+  async function invitar({ contrincanteId, tamaño, modo }: Invitacion, nombre: string) {
     return conLockInvitaciones(async () => {
       if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
 
@@ -152,9 +152,10 @@ export async function estudianteGo(idSala: string, userId: string) {
         id,
         salaId: idSala,
         tamaño,
+        modo,
         negro: { userId, nombre },
         blanco: { userId: contrincanteId, nombre: contrincante.nombre },
-        tablero: motor.tableroVacio(tamaño),
+        tablero: modo === 'atari' ? motor.tableroAtari(tamaño) : motor.tableroVacio(tamaño),
         turno: motor.NEGRO,
         capturasNegras: 0,
         capturasBlancas: 0,
@@ -176,7 +177,9 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.setPartidaActiva(idSala, userId, id)
       await db.setPartidaActiva(idSala, contrincanteId, id)
 
-      console.log(`🎲 Invitación de Go creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`)
+      console.log(
+        `🎲 Invitación de Go (${modo}) creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`
+      )
 
       io.to(rooms.usuario(idSala, contrincanteId)).emit('go:invitacion', partida)
       await avisarContrincantesActualizados(idSala)
@@ -232,6 +235,12 @@ export async function estudianteGo(idSala: string, userId: string) {
       partida.turno = motor.rival(color)
       partida.pases = 0
 
+      // Atari Go: la primera captura termina la partida y le da la victoria a quien la hizo.
+      if (partida.modo === 'atari' && capturas > 0) {
+        await finalizar(partida, userId, 'captura')
+        return partida
+      }
+
       await db.guardarPartida(partida)
       await broadcastPartida(partida)
       return partida
@@ -244,6 +253,7 @@ export async function estudianteGo(idSala: string, userId: string) {
       const color = colorDe(partida, userId)
       if (partida.estado !== EstadoPartida.Jugando) throw new Error('La partida no está en curso')
       if (partida.turno !== color) throw new Error('No es tu turno')
+      if (partida.modo === 'atari') throw new Error('En Atari Go no se puede pasar')
 
       partida.pases += 1
       partida.turno = motor.rival(color)
@@ -354,7 +364,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 async function finalizar(
   partida: Partida,
   ganadorUserId: string | null,
-  motivoFin: 'conteo' | 'abandono',
+  motivoFin: 'conteo' | 'abandono' | 'captura',
   resultado?: Resultado
 ) {
   partida.estado = EstadoPartida.Terminada

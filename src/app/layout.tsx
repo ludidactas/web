@@ -13,12 +13,19 @@ export const metadata: Metadata = {
   description: 'Tecnologías Educativas Emergentes',
 }
 
+// GA y GTM solo cargan en el deploy de producción de Vercel; local y preview no mandan datos.
+const esProduccion = process.env.VERCEL_ENV === 'production'
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
       <body className={`${body.className} antialiased`}>
-        <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
-        <GoogleTagManager gtmId="GTM-M4H5VXKB" />
+        {esProduccion && (
+          <>
+            <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
+            <GoogleTagManager gtmId="GTM-M4H5VXKB" />
+          </>
+        )}
         <VercelAnalytics />
         <FiltrosSvg />
         {children}

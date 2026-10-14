@@ -10,6 +10,11 @@ import type { Color, Tablero } from '@/lib/go/motor'
 export const TAMAÑOS_TABLERO = [9, 13, 19] as const
 export type TamañoTablero = (typeof TAMAÑOS_TABLERO)[number]
 
+/** `partida`: Go completo (conteo de territorio y komi). `atari`: Atari Go, arranca con cuatro piedras
+ * en cruz en el centro y gana quien captura primero. */
+export const MODOS_PARTIDA = ['partida', 'atari'] as const
+export type ModoPartida = (typeof MODOS_PARTIDA)[number]
+
 export const EstadoPartida = {
   Pendiente: 'pendiente',
   Jugando: 'jugando',
@@ -34,6 +39,7 @@ export interface Partida {
   id: string
   salaId: string
   tamaño: TamañoTablero
+  modo: ModoPartida
   negro: JugadorPartida
   blanco: JugadorPartida
   tablero: Tablero
@@ -57,7 +63,7 @@ export interface Partida {
   confirmaron: { negro: boolean; blanco: boolean }
   estado: EstadoPartida
   resultado: Resultado | null
-  motivoFin: 'conteo' | 'abandono' | null
+  motivoFin: 'conteo' | 'abandono' | 'captura' | null
   ganadorUserId: string | null
   creadaEn: string
 }
@@ -65,6 +71,7 @@ export interface Partida {
 export const invitacionSchema = z.object({
   contrincanteId: z.string().min(1),
   tamaño: z.union([z.literal(9), z.literal(13), z.literal(19)]).default(9),
+  modo: z.enum(MODOS_PARTIDA).default('partida'),
 })
 export type Invitacion = z.output<typeof invitacionSchema>
 

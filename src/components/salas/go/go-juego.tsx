@@ -4,14 +4,17 @@ import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { PartidaGo } from './partida-go'
+import { LlamadaDojo } from './llamadas-go'
+import { ElegirModoInvitacion } from './elegir-modo-invitacion'
+import { useSonidoJugada } from './use-sonido-jugada'
 import { Outlined } from '@/components/fx/filtros'
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import Link from 'next/link'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Iconito } from '@/components/custom/ld-icon'
 
@@ -26,7 +29,7 @@ import { Iconito } from '@/components/custom/ld-icon'
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
 export type AccionesGo = {
   pedirContrincantes: () => void
-  invitar: (contrincanteId: string, tamaño?: TamañoTablero) => Promise<Partida>
+  invitar: (contrincanteId: string, opciones?: { tamaño?: TamañoTablero; modo?: ModoPartida }) => Promise<Partida>
   aceptar: (partidaId: string) => Promise<Partida>
   rechazar: (partidaId: string) => Promise<void>
   jugar: (partidaId: string, fila: number, columna: number) => Promise<Partida>
@@ -43,6 +46,8 @@ export type AccionesGo = {
 export default function GoJuego({ userId, acciones }: { userId: string; acciones: AccionesGo }) {
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
+
+  useSonidoJugada(observando ?? partida, userId)
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
@@ -123,7 +128,7 @@ function InvitacionesEntrantes({
       {invitaciones.map((i) => (
         <div key={i.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
           <p>
-            <span className="font-semibold">{i.negro.nombre}</span> te invitó a un tablero de {i.tamaño}x{i.tamaño}
+            <span className="font-semibold">{i.negro.nombre}</span> te invitó a {i.modo === 'atari' ? 'un Atari Go' : 'una partida'} en un tablero de {i.tamaño}x{i.tamaño}
           </p>
           <div className="flex gap-2">
             <button
@@ -159,7 +164,7 @@ function BuscarContrincante({
   contrincantes: ReturnType<typeof storeGo.getState>['contrincantes']
   invitacionesEntrantes: ReturnType<typeof storeGo.getState>['invitaciones']
   onRefrescar: () => void
-  onInvitar: (contrincanteId: string, tamaño: TamañoTablero) => Promise<unknown>
+  onInvitar: (contrincanteId: string, opciones: { tamaño: TamañoTablero; modo: ModoPartida }) => Promise<unknown>
   onObservar: (partidaId: string) => Promise<unknown>
   onAceptar: (partidaId: string) => Promise<unknown>
   onRechazar: (partidaId: string) => Promise<unknown>
@@ -256,14 +261,18 @@ function BuscarContrincante({
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
-                    disabled={!!partidaEnPausa}
-                    title={partidaEnPausa ? 'Volvé a tu partida antes de invitar a alguien más' : undefined}
-                    onClick={() => onInvitar(c.userId, tamaño).catch((e) => toast.error(e.message))}
+                  <ElegirModoInvitacion
+                    nombre={c.nombre}
+                    onElegir={(modo) => onInvitar(c.userId, { tamaño, modo }).catch((e) => toast.error(e.message))}
                   >
-                    Invitar
-                  </button>
+                    <button
+                      className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
+                      disabled={!!partidaEnPausa}
+                      title={partidaEnPausa ? 'Volvé a tu partida antes de invitar a alguien más' : undefined}
+                    >
+                      Invitar
+                    </button>
+                  </ElegirModoInvitacion>
                 )}
               </li>
             )
@@ -275,23 +284,7 @@ function BuscarContrincante({
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
 
-      <div className="flex flex-col gap-3 items-center w-full mt-4">
-        <p className="text-slate-500 text-sm text-center">
-          Si aún no sabés cómo jugar, te invitamos a que visites nuestro Dojo de Go y practiques con nosotros.
-        </p>
-        <Link href="/go/dojo">
-          <Boton
-            color="#6366f1"
-            shadowColor="#4338ca"
-            classNames={{ root: 'flex items-center p-2 justify-center w-36 h-16 hover:scale-105 transition-transform' }}
-          >
-            <div className='flex items-center gap-1'>
-            <Icon className="text-white" icon={'fluent-emoji-high-contrast:shinto-shrine'}/>
-            <span className="text-md font-bold text-white">Ir al Dojo</span>
-            </div>
-          </Boton>
-        </Link>
-      </div>
+      <LlamadaDojo className="mt-4" />
     </div>
   )
 }
@@ -430,6 +423,7 @@ function BannerResultado({
         </p>
       )}
       {partida.motivoFin === 'abandono' && <p className="text-slate-500 text-xs">Terminó por abandono</p>}
+      {partida.motivoFin === 'captura' && <p className="text-slate-500 text-xs">Hizo la primera captura</p>}
     </div>
   )
 }
@@ -525,6 +519,7 @@ function PartidaEnCurso({
     <div ref={setContenedorJuego} className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl">
       <div className="flex flex-col items-center gap-2 text-md mb-2">
         <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
+          {partida.modo === 'atari' && <span className="text-indigo-600">Atari Go ·</span>}
           Tu color: 
           <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
           <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
@@ -585,6 +580,8 @@ function PartidaEnCurso({
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
+              // Al colocar la piedra suena de inmediato, sin esperar a confirmar la jugada.
+              if (jugadaPendiente?.fila !== fila || jugadaPendiente?.columna !== columna) sonarJugada()
               setJugadaPendiente((actual) =>
                 actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
               )
@@ -629,13 +626,15 @@ function PartidaEnCurso({
             </button>
             {partida.estado === 'jugando' && (
               <>
-                <button
-                  className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
-                  disabled={!esMiTurno}
-                  onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
-                >
-                  Pasar
-                </button>
+                {partida.modo !== 'atari' && (
+                  <button
+                    className="bg-ld-violeta text-white px-4 py-2 rounded-full disabled:opacity-40 enabled:hover:scale-105"
+                    disabled={!esMiTurno}
+                    onClick={() => pasar(partida.id).catch((e) => toast.error(e.message))}
+                  >
+                    Pasar
+                  </button>
+                )}
                 <Dialog>
                   <DialogTrigger asChild>
                     <button

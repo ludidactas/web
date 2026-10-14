@@ -1,5 +1,5 @@
 import { comandosGo, EventosGo } from '@/wss/contrato/go'
-import { Partida, TamañoTablero } from '@/wss/validators/go'
+import { ModoPartida, Partida, TamañoTablero } from '@/wss/validators/go'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { comandos, escuchar } from '../contrato-cli'
@@ -71,8 +71,8 @@ export default function goHandlers(socket: Socket | null) {
 
     acciones: {
       pedirContrincantes: async () => store.setContrincantes(await cmd.pedir('go:contrincantes')),
-      invitar: (contrincanteId: string, tamaño: TamañoTablero = 9) =>
-        guardandoPartida(cmd.pedir('go:invitar', { contrincanteId, tamaño })),
+      invitar: (contrincanteId: string, opciones: { tamaño?: TamañoTablero; modo?: ModoPartida } = {}) =>
+        guardandoPartida(cmd.pedir('go:invitar', { contrincanteId, ...opciones })),
       aceptar: (partidaId: string) => guardandoPartida(cmd.pedir('go:aceptar', { partidaId })),
       // También cancela una invitación propia pendiente: se limpian las invitaciones y `partida` si era la esperada.
       rechazar: async (partidaId: string) => {

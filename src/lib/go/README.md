@@ -59,6 +59,14 @@ src/app/(sitio)/go/dojo/             # ruta pública que muestra el dojo
   contenido.tsx                      # client component: título + ConjuntoDesafios + copiar link de progreso
   use-sincronizacion-dojo.ts         # id anónimo del visitante + conexión (rol dojo) que implementa SincronizacionDojo
 
+src/lib/go-local/                    # partida de dos personas en un mismo dispositivo (solo cliente, sin red)
+  partida-local.ts                   # transiciones puras de la partida (jugar/pasar/marcar muerta/conteo; modo Atari Go), delega en motor.ts
+  partida-local.test.ts
+  store-tablero.ts                   # store (zustand + persist): una partida por tamaño (cada una con su modo), en localStorage
+  store-tablero.test.ts
+  imagen-resultado.ts                # PNG del resultado (tablero + marcador + firma) que copia el botón "Compartir"
+src/app/(sitio)/go/tablero/          # ruta pública /go/tablero: UI de la partida local (reutiliza PartidaGo)
+
 wss/go/                              # capa 3: servidor de la partida en vivo
   app.ts                             # comandos (invitar/jugar/pasar/...) — orquesta 1 + db.ts + lock.ts
   handlers.ts                        # registra los comandos de socket.io bajo una identidad
@@ -114,6 +122,10 @@ server. El detalle (conexión, comandos, claves, límites) está en [`wss/dojo/R
 - **El dojo no reimplementa reglas.** No tiene su propio "motor" — arma un tablero de una sola posición
   con `tableroVacio`/`capturasEnJugada` de `motor.ts` y nada más; no conoce ko ni historial de jugadas
   (no le hacen falta: cada desafío es una posición fija).
+- **Dos modos de desafío sobre la misma `Partida`** (`Partida.modo`, elegido al invitar). `partida` es
+  Go completo (pasar, conteo, komi). `atari` arranca desde `tableroAtari` (cuatro piedras en cruz en el
+  centro), no permite pasar y termina en la primera captura (`motivoFin: 'captura'`, sin `resultado`
+  numérico ni fase de conteo). Las reglas de captura/ko/suicidio son las mismas en ambos.
 
 ## Testing
 

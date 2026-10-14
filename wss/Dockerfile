@@ -13,7 +13,7 @@ COPY tsconfig.json ./
 COPY wss ./wss
 # El wss importa el motor de Go vía el alias `@/` (tsconfig → src/). Solo se copian los .ts de
 # lógica pura (sin React) que usa el server.
-COPY src/lib/go/motor.ts src/lib/go/benson.ts ./src/lib/go/
+COPY src/lib/go/motor.ts src/lib/go/benson.ts src/lib/go/info-export.ts ./src/lib/go/
 
 ENV NODE_ENV=production
 

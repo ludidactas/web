@@ -1,22 +1,24 @@
 'use client'
 
-import { cn } from '@/lib/utils'
-import { storeGo } from '@/wss-cli/stores/go-store'
-import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import { Boton } from '@/components/custom/ld-boton-svg'
+import { Outlined } from '@/components/fx/filtros'
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { tableroAPng } from '@/lib/go/exportar-png'
+import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
-import { PartidaGo } from './partida-go'
-import { LlamadaDojo } from './llamadas-go'
-import { ElegirModoInvitacion } from './elegir-modo-invitacion'
-import { useSonidoJugada } from './use-sonido-jugada'
-import { Outlined } from '@/components/fx/filtros'
-import { Boton } from '@/components/custom/ld-boton-svg'
+import { cn } from '@/lib/utils'
+import { storeGo } from '@/wss-cli/stores/go-store'
+import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Iconito } from '@/components/custom/ld-icon'
+import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { ElegirModoInvitacion } from './elegir-modo-invitacion'
+import { LlamadaDojo } from './llamadas-go'
+import { PartidaGo } from './partida-go'
+import { ReglasGo } from './reglas-go'
+import { useSonidoJugada } from './use-sonido-jugada'
 
 /**
  * Todo el flujo de Go de quien juega en una sala — buscar contrincante, invitaciones, la partida
@@ -128,7 +130,8 @@ function InvitacionesEntrantes({
       {invitaciones.map((i) => (
         <div key={i.id} className="flex flex-col gap-2 items-center bg-white rounded-xl p-4 w-full border">
           <p>
-            <span className="font-semibold">{i.negro.nombre}</span> te invitó a {i.modo === 'atari' ? 'un Atari Go' : 'una partida'} en un tablero de {i.tamaño}x{i.tamaño}
+            <span className="font-semibold">{i.negro.nombre}</span> te invitó a{' '}
+            {i.modo === 'atari' ? 'un Atari Go' : 'una partida'} en un tablero de {i.tamaño}x{i.tamaño}
           </p>
           <div className="flex gap-2">
             <button
@@ -323,7 +326,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           Esperando a que {partida.blanco.nombre} acepte la invitación de {partida.negro.nombre}...
         </p>
         <button className="flex gap-1 items-center text-sm underline text-slate-500" onClick={onDejarDeObservar}>
-          <Icon icon={"akar-icons:arrow-back"}/>
+          <Icon icon={'akar-icons:arrow-back'} />
           Volver a la Sala
         </button>
       </div>
@@ -343,6 +346,8 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         </span>
       </div>
 
+      <ReglasGo />
+
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
@@ -353,7 +358,11 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           }}
         >
           {partida.turno === BLANCO ? (
-            <Outlined radius={1.1} outlineColor="black" className="flex items-center gap-2 drop-shadow-2xl tracking-wider">
+            <Outlined
+              radius={1.1}
+              outlineColor="black"
+              className="flex items-center gap-2 drop-shadow-2xl tracking-wider"
+            >
               <PiedraIcono color={partida.turno} className="h-3 w-3" />
               Juega blanco
             </Outlined>
@@ -383,7 +392,10 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
       </div>
 
-      <button className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105" onClick={onDejarDeObservar}>
+      <button
+        className="flex gap-1 items-center text-ld-violeta-oscuro text-md hover:scale-105"
+        onClick={onDejarDeObservar}
+      >
         <Icon icon={'akar-icons:arrow-back'} />
         Volver a la Sala
       </button>
@@ -412,10 +424,16 @@ function BannerResultado({
 
   return (
     <div className="flex flex-col gap-1 items-center text-center">
-      <div className='flex gap-2 items-center'>
-      <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'}/>
-      {colorGanador === BLANCO ? <Outlined radius={1.5} outlineColor="negro">{h2}</Outlined> : h2}
-      <Icon className='w-8 h-8' icon={'noto:party-popper'}/>
+      <div className="flex gap-2 items-center">
+        <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'} />
+        {colorGanador === BLANCO ? (
+          <Outlined radius={1.5} outlineColor="negro">
+            {h2}
+          </Outlined>
+        ) : (
+          h2
+        )}
+        <Icon className="w-8 h-8" icon={'noto:party-popper'} />
       </div>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
@@ -491,6 +509,32 @@ function PartidaEnCurso({
       .finally(() => setConfirmando(false))
   }
 
+  async function descargarImagen() {
+    try {
+      const info = infoExport(partida)
+      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, info)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nombreImagenPartida(info, partida.creadaEn)
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
+    }
+  }
+
+  async function copiarImagen() {
+    try {
+      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+    } catch {
+      toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
+    }
+  }
+
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
   // nunca puede mostrar un número distinto al que se confirma al terminar la partida.
@@ -516,17 +560,21 @@ function PartidaEnCurso({
   )
 
   return (
-    <div ref={setContenedorJuego} className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl">
+    <div
+      ref={setContenedorJuego}
+      className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl"
+    >
       <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span className='font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5'>
+        <span className="font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5">
           {partida.modo === 'atari' && <span className="text-indigo-600">Atari Go ·</span>}
-          Tu color: 
+          Tu color:
           <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
-          <span className='font-bold '>{soyNegro ? 'Negro' : 'Blanco'}</span>
+          <span className="font-bold ">{soyNegro ? 'Negro' : 'Blanco'}</span>
         </span>
-        <span className='font-bold  p-2 rounded-xl'> 
+        <span className="font-bold  p-2 rounded-xl">
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
+        <ReglasGo />
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
@@ -546,7 +594,7 @@ function PartidaEnCurso({
           ) : (
             <>
               <PiedraIcono color={partida.turno} className="h-3 w-3" />
-               {esMiTurno ? 'Tu turno' : 'Juega negro'}
+              {esMiTurno ? 'Tu turno' : 'Juega negro'}
             </>
           )}
         </p>
@@ -574,9 +622,7 @@ function PartidaEnCurso({
           esMiTurno={partida.estado === 'jugando' && esMiTurno}
           ultimaJugada={partida.ultimaJugada}
           pendiente={partida.estado === 'jugando' ? jugadaPendiente : null}
-          deshabilitado={
-            partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'
-          }
+          deshabilitado={partida.estado === 'jugando' ? !esMiTurno || confirmando : partida.estado === 'terminada'}
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
@@ -614,14 +660,38 @@ function PartidaEnCurso({
           </button>
         )}
         {partida.estado === 'terminada' ? (
-          <button className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded" onClick={() => storeGo.getState().reset()}>
-            <Icon icon={"akar-icons:arrow-back"}/>
-            Volver a la sala
-          </button>
+          <>
+            <button
+              className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded"
+              onClick={() => storeGo.getState().reset()}
+            >
+              <Icon icon={'akar-icons:arrow-back'} />
+              Volver a la sala
+            </button>
+            <div className="flex items-stretch rounded-xl border overflow-hidden divide-x">
+              <button
+                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
+                onClick={descargarImagen}
+              >
+                <Icon className="w-6 h-6" icon={'lucide:download'} />
+                Descargar imagen
+              </button>
+              <button
+                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
+                onClick={copiarImagen}
+              >
+                <Icon className="w-6 h-6" icon={'lucide:copy'} />
+                Copiar imagen
+              </button>
+            </div>
+          </>
         ) : (
           <>
-            <button className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold" onClick={onVolverASala}>
-              <Icon className='w-6 h-6' icon={"famicons:arrow-back-circle-outline"}/>
+            <button
+              className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold"
+              onClick={onVolverASala}
+            >
+              <Icon className="w-6 h-6" icon={'famicons:arrow-back-circle-outline'} />
               Volver a la sala
             </button>
             {partida.estado === 'jugando' && (
@@ -641,7 +711,7 @@ function PartidaEnCurso({
                       className="flex gap-1 items-center text-sm rounded-xl p-2 text-rose-500 hover:rotate-3 hover:scale-105 "
                       disabled={confirmando}
                     >
-                      <Icon className='w-6 h-6' icon={'ci:close-circle'}/>
+                      <Icon className="w-6 h-6" icon={'ci:close-circle'} />
                       Abandonar
                     </button>
                   </DialogTrigger>

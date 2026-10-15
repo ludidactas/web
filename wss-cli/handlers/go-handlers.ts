@@ -1,3 +1,4 @@
+import { track } from '@/lib/analytics'
 import { comandosGo, EventosGo } from '@/wss/contrato/go'
 import { ModoPartida, Partida, TamañoTablero } from '@/wss/validators/go'
 import { Socket } from 'socket.io-client'
@@ -12,10 +13,20 @@ export default function goHandlers(socket: Socket | null) {
   // El desmontaje corta el loop de reintentos: un montaje reemplazado (StrictMode, reconexión) dejaría dos en paralelo.
   let desmontado = false
 
-  /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket. */
+  /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket.
+   * Una respuesta `terminada` es de quien cerró la partida (los comandos sobre una terminada fallan), así que
+   * el fin se mide una sola vez por partida. */
   async function guardandoPartida(pedido: Promise<Partida>): Promise<Partida> {
     const partida = await pedido
     store.set(partida)
+    if (partida.estado === 'terminada')
+      track({
+        event: 'go_partida_terminada',
+        origen: 'online',
+        modo: partida.modo,
+        tamano: partida.tamaño,
+        motivo: partida.motivoFin ?? undefined,
+      })
     return partida
   }
 
@@ -73,7 +84,12 @@ export default function goHandlers(socket: Socket | null) {
       pedirContrincantes: async () => store.setContrincantes(await cmd.pedir('go:contrincantes')),
       invitar: (contrincanteId: string, opciones: { tamaño?: TamañoTablero; modo?: ModoPartida } = {}) =>
         guardandoPartida(cmd.pedir('go:invitar', { contrincanteId, ...opciones })),
-      aceptar: (partidaId: string) => guardandoPartida(cmd.pedir('go:aceptar', { partidaId })),
+      // Aceptar la invitación es lo que inicia la partida: lo mide quien acepta, una vez por partida.
+      aceptar: async (partidaId: string) => {
+        const partida = await guardandoPartida(cmd.pedir('go:aceptar', { partidaId }))
+        track({ event: 'go_partida_iniciada', origen: 'online', modo: partida.modo, tamano: partida.tamaño })
+        return partida
+      },
       // También cancela una invitación propia pendiente: se limpian las invitaciones y `partida` si era la esperada.
       rechazar: async (partidaId: string) => {
         await cmd.pedir('go:rechazar', { partidaId })

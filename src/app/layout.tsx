@@ -1,4 +1,4 @@
-import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
+import { GoogleTagManager } from '@next/third-parties/google'
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
 
 import type { Metadata } from 'next'
@@ -17,7 +17,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es">
       <body className={`${body.className} antialiased`}>
-        <GoogleAnalytics gaId="G-VYSMHGH9RZ" />
         <GoogleTagManager gtmId="GTM-M4H5VXKB" />
         <VercelAnalytics />
         <FiltrosSvg />

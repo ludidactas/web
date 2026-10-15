@@ -23,6 +23,7 @@ import {
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
 import { generarImagenResultado } from '@/lib/go-local/imagen-resultado'
+import { track } from '@/lib/analytics'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
@@ -66,6 +67,14 @@ function confirmarJugada(pendiente: Punto | null, aplicar: Aplicar): boolean {
   if (!pendiente) return false
   if (aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
   return true
+}
+/** Mide el inicio (primera acción sobre una partida intacta) y el fin de una partida local. */
+function medirTransicion(antes: PartidaLocal, despues: PartidaLocal) {
+  const { modo, tamaño } = despues
+  if (antes.fase === 'jugando' && antes.historial.length === 0 && antes.pases === 0)
+    track({ event: 'go_partida_iniciada', origen: 'tablero', modo, tamano: tamaño })
+  if (antes.fase !== 'terminada' && despues.fase === 'terminada')
+    track({ event: 'go_partida_terminada', origen: 'tablero', modo, tamano: tamaño })
 }
 /** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
 type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
@@ -153,7 +162,9 @@ export default function ContenidoTablero() {
 
   const aplicar: Aplicar = (transicion) => {
     try {
-      setPartida(transicion(partida))
+      const siguiente = transicion(partida)
+      setPartida(siguiente)
+      medirTransicion(partida, siguiente)
       setPendiente(null)
       return true
     } catch (e) {

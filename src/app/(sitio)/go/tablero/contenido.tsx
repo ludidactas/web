@@ -1,7 +1,7 @@
 'use client'
 
 import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
-import { LlamadaDojo } from '@/components/salas/go/llamadas-go'
+import { LlamadaDojo, LlamadaSalaOnline } from '@/components/salas/go/llamadas-go'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,
@@ -144,10 +144,10 @@ export default function ContenidoTablero() {
       partida.modo === 'atari'
         ? null
         : partida.fase === 'contando'
-          ? puntajeLocal(partida)
-          : partida.fase === 'terminada'
-            ? partida.resultado
-            : null,
+        ? puntajeLocal(partida)
+        : partida.fase === 'terminada'
+        ? partida.resultado
+        : null,
     [partida]
   )
 
@@ -331,6 +331,7 @@ export default function ContenidoTablero() {
       {/* Debajo del área de juego: en celular vertical, ésta mide una pantalla, así que la llamada queda fuera de vista
           con el tablero centrado y se llega a ella scrolleando. */}
       <LlamadaDojo className="mt-10 max-md:portrait:mt-0" />
+      <LlamadaSalaOnline className="mt-2 max-md:portrait:mt-0" />
     </div>
   )
 }

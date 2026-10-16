@@ -31,6 +31,9 @@ src/lib/go/                          # capa 1: reglas puras + dibujo del tablero
   benson.test.ts
   tablero-go-base.tsx                # el <svg> del tablero (grilla/hoshi/piedras/click), compartido
   tablero-go-base.test.tsx
+  tablero-svg.tsx                    # el tablero como <svg> de texto, sin DOM (partidas que no están en pantalla)
+  info-export.ts                     # datos y textos de la imagen de una partida (jugadores, ganador, puntos, modo)
+  imagen-partida.ts                  # PNG de una partida terminada: descarga desde la sala y subida a Drive
 
 src/lib/go-dojo/                     # capa 2: dojo de ejercicios (standalone, sin red)
   tipos.ts                           # schema (zod) de un Desafio — el contrato del YAML
@@ -64,7 +67,7 @@ src/lib/go-local/                    # partida de dos personas en un mismo dispo
   partida-local.test.ts
   store-tablero.ts                   # store (zustand + persist): una partida por tamaño (cada una con su modo), en localStorage
   store-tablero.test.ts
-  imagen-resultado.ts                # PNG del resultado (tablero + marcador + firma) que copia el botón "Compartir"
+  imagen-resultado.ts                # compone el PNG del resultado (título, tablero, marcador, firma); lo usan el botón "Compartir" e imagen-partida.ts
 src/app/(sitio)/go/tablero/          # ruta pública /go/tablero: UI de la partida local (reutiliza PartidaGo)
 
 wss/go/                              # capa 3: servidor de la partida en vivo

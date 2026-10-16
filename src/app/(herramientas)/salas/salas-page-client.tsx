@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { NavLink } from '@/components/navegacion/nav-link'
+import { track } from '@/lib/analytics'
 import { storeSalas } from '@/wss-cli/stores/salas-store'
 import { StatusDeConexion, statusesDeCarga } from '@/wss-cli/conexion-wss'
 import { LdSvg } from '@/components/custom/ld-svg'
@@ -106,6 +107,7 @@ function FormCrearSala() {
           }),
           delay(CARGA_MINIMA_MS),
         ])
+        track({ event: 'sala_creada', metodo_login: form.metodoLogin, solo_invitados: !!form.soloInvitados })
         toast.success('Sala creada con éxito')
         router.push(`/salas/${idSala}/go`)
       } catch (e) {

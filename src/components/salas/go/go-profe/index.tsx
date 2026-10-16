@@ -78,7 +78,7 @@ export default function GoProfePage() {
               <div className="flex flex-col items-center p-6 h-screen bg-white">
                 <h1 className="flex gap-2 items-center text-3xl font-medium text-ld-violeta-oscuro">
                   <Grid3x3 />
-                  Partidas
+                  Partidas online
                 </h1>
 
                 <div className="w-full pt-4">
@@ -106,7 +106,7 @@ export default function GoProfePage() {
             <div className="flex items-center p-6 justify-center rounded-t-xl">
               <h1 className="flex gap-2 items-center text-5xl font-medium text-ld-violeta-oscuro">
                 <Grid3x3 className="-rotate-3 w-12 h-12" size={40} />
-                Partidas
+                Partidas online
               </h1>
             </div>
             <div className="px-10 pb-10">

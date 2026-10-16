@@ -3,21 +3,22 @@
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { tableroAPng } from '@/lib/go/exportar-png'
+import { imagenPartida } from '@/lib/go/imagen-partida'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
-import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { BotonesImagen } from './botones-imagen'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
-import { LlamadaDojo } from './llamadas-go'
 import { PartidaGo } from './partida-go'
 import { ReglasGo } from './reglas-go'
+import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { useSonidoJugada } from './use-sonido-jugada'
 
 /**
@@ -49,7 +50,7 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
 
-  useSonidoJugada(observando ?? partida, userId)
+  useSonidoJugada(observando ?? partida)
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
@@ -74,45 +75,67 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
     if (inicializado && (!partida || soyInvitado || enPausa) && !observando) pedirContrincantes()
   }, [inicializado, partida, soyInvitado, enPausa, observando, pedirContrincantes])
 
-  // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
-  // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
-  if (!inicializado)
-    return (
-      <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
-        <Icon className="w-10 h-10" icon={'eos-icons:bubble-loading'} />
-        Cargando…
-      </p>
-    )
-
-  if (observando)
-    return (
-      <PartidaObservada
-        partida={observando}
-        onDejarDeObservar={() => dejarDeObservar(observando.id).catch((e) => toast.error(e.message))}
-      />
-    )
-
   // Sin partida propia, con una pendiente de responder, o pausando la propia: en los tres casos seguís
   // viendo la sala (lista de contrincantes) en vez de que otra vista tape toda la pantalla.
-  if (!partida || soyInvitado || enPausa)
+  const viendoSala = !partida || soyInvitado || enPausa
+
+  function pantalla() {
+    // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
+    // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
+    if (!inicializado)
+      return (
+        <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
+          <Icon className="w-10 h-10" icon={'eos-icons:bubble-loading'} />
+          Cargando…
+        </p>
+      )
+
+    if (observando)
+      return (
+        <PartidaObservada
+          partida={observando}
+          onDejarDeObservar={() => dejarDeObservar(observando.id).catch((e) => toast.error(e.message))}
+        />
+      )
+
+    if (viendoSala)
+      return (
+        <BuscarContrincante
+          contrincantes={contrincantes}
+          invitacionesEntrantes={invitacionesEntrantes}
+          onRefrescar={pedirContrincantes}
+          onInvitar={invitar}
+          onObservar={observar}
+          onAceptar={aceptar}
+          onRechazar={rechazar}
+          partidaEnPausa={enPausa ? partida : null}
+          onVolverAPartida={() => setPausada(false)}
+        />
+      )
+
+    if (partida.estado === 'pendiente')
+      return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
+
     return (
-      <BuscarContrincante
-        contrincantes={contrincantes}
-        invitacionesEntrantes={invitacionesEntrantes}
-        onRefrescar={pedirContrincantes}
-        onInvitar={invitar}
-        onObservar={observar}
-        onAceptar={aceptar}
-        onRechazar={rechazar}
-        partidaEnPausa={enPausa ? partida : null}
-        onVolverAPartida={() => setPausada(false)}
-      />
+      <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
     )
+  }
 
-  if (partida.estado === 'pendiente')
-    return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
+  // Las llamadas son links estáticos: aparecen también mientras carga el estado, y se ocultan con una
+  // partida a la vista (propia u observada).
+  const mostrarLlamadas = !inicializado || (!observando && viendoSala)
 
-  return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
+  return (
+    <>
+      {pantalla()}
+      {mostrarLlamadas && (
+        <div className="flex flex-col gap-10 items-center max-w-md mx-auto w-full mt-10">
+          <LlamadaDojo />
+          <LlamadaTablero />
+        </div>
+      )}
+    </>
+  )
 }
 
 function InvitacionesEntrantes({
@@ -286,8 +309,6 @@ function BuscarContrincante({
       {invitacionesEntrantes.length > 0 && (
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
-
-      <LlamadaDojo className="mt-4" />
     </div>
   )
 }
@@ -512,15 +533,8 @@ function PartidaEnCurso({
   async function descargarImagen() {
     try {
       const info = infoExport(partida)
-      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, info)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = nombreImagenPartida(info, partida.creadaEn)
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
+      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info, partida.creadaEn)
+      descargarBlob(blob, nombreImagenPartida(info, partida.creadaEn))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
     }
@@ -528,8 +542,15 @@ function PartidaEnCurso({
 
   async function copiarImagen() {
     try {
-      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
+      const imagen = imagenPartida(
+        partida.tablero,
+        partida.tamaño,
+        partida.removidas,
+        infoExport(partida),
+        partida.creadaEn
+      )
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
     } catch {
       toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
     }
@@ -626,8 +647,6 @@ function PartidaEnCurso({
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
-              // Al colocar la piedra suena de inmediato, sin esperar a confirmar la jugada.
-              if (jugadaPendiente?.fila !== fila || jugadaPendiente?.columna !== columna) sonarJugada()
               setJugadaPendiente((actual) =>
                 actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
               )
@@ -668,22 +687,7 @@ function PartidaEnCurso({
               <Icon icon={'akar-icons:arrow-back'} />
               Volver a la sala
             </button>
-            <div className="flex items-stretch rounded-xl border overflow-hidden divide-x">
-              <button
-                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
-                onClick={descargarImagen}
-              >
-                <Icon className="w-6 h-6" icon={'lucide:download'} />
-                Descargar imagen
-              </button>
-              <button
-                className="flex flex-1 gap-1 items-center justify-center text-sm p-2 hover:bg-slate-100"
-                onClick={copiarImagen}
-              >
-                <Icon className="w-6 h-6" icon={'lucide:copy'} />
-                Copiar imagen
-              </button>
-            </div>
+            <BotonesImagen onDescargar={descargarImagen} onCopiar={copiarImagen} />
           </>
         ) : (
           <>

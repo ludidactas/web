@@ -23,7 +23,7 @@ import { tableroVacio } from '@/lib/go/motor'
 import * as db from '../go/db'
 
 function pendiente(id: string) {
-  return { id, tablero: tableroVacio(9), tamaño: 9 as const, removidas: null }
+  return { id, tablero: tableroVacio(9), tamaño: 9 as const, removidas: null, creadaEn: '2026-01-01T00:00:00.000Z' }
 }
 
 describe('cola de partidas pendientes de subir a Drive', () => {

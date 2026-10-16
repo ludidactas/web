@@ -1,7 +1,7 @@
 'use client'
 
 import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
-import { LlamadaDojo } from '@/components/salas/go/llamadas-go'
+import { LlamadaDojo, LlamadaSalaOnline } from '@/components/salas/go/llamadas-go'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,
@@ -12,6 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { track } from '@/lib/analytics'
+import { generarImagenResultado, svgDelTableroVivo } from '@/lib/go-local/imagen-resultado'
 import {
   alternarConformidadLocal,
   jugarLocal,
@@ -23,7 +25,6 @@ import {
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
 import { ETIQUETA_MODO } from '@/lib/go/info-export'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
-import { generarImagenResultado, svgDelTableroVivo } from '@/lib/go-local/imagen-resultado'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
@@ -68,6 +69,18 @@ function confirmarJugada(pendiente: Punto | null, aplicar: Aplicar): boolean {
   if (aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
   return true
 }
+/** Mide el inicio (primera acción sobre una partida intacta) y el fin de una partida local. */
+function medirTransicion(antes: PartidaLocal, despues: PartidaLocal) {
+  const { modo, tamaño } = despues
+  if (antes.fase === 'jugando' && antes.historial.length === 0 && antes.pases === 0)
+    track({ event: 'go_partida_iniciada', origen: 'tablero', modo, tamano: tamaño })
+  if (antes.fase !== 'terminada' && despues.fase === 'terminada')
+    track({ event: 'go_partida_terminada', origen: 'tablero', modo, tamano: tamaño })
+}
+/** "16/10/26" */
+const fechaCorta = (fecha: Date) =>
+  fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+
 /** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
 type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
 
@@ -145,16 +158,18 @@ export default function ContenidoTablero() {
       partida.modo === 'atari'
         ? null
         : partida.fase === 'contando'
-          ? puntajeLocal(partida)
-          : partida.fase === 'terminada'
-            ? partida.resultado
-            : null,
+        ? puntajeLocal(partida)
+        : partida.fase === 'terminada'
+        ? partida.resultado
+        : null,
     [partida]
   )
 
   const aplicar: Aplicar = (transicion) => {
     try {
-      setPartida(transicion(partida))
+      const siguiente = transicion(partida)
+      setPartida(siguiente)
+      medirTransicion(partida, siguiente)
       setPendiente(null)
       return true
     } catch (e) {
@@ -330,6 +345,7 @@ export default function ContenidoTablero() {
       {/* Debajo del área de juego: en celular vertical, ésta mide una pantalla, así que la llamada queda fuera de vista
           con el tablero centrado y se llega a ella scrolleando. */}
       <LlamadaDojo className="mt-10 max-md:portrait:mt-0" />
+      <LlamadaSalaOnline className="mt-2 max-md:portrait:mt-0" />
     </div>
   )
 }

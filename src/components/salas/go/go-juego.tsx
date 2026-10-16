@@ -6,7 +6,6 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTr
 import { imagenPartida } from '@/lib/go/imagen-partida'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
-import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
@@ -15,9 +14,9 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
-import { LlamadaDojo } from './llamadas-go'
 import { PartidaGo } from './partida-go'
 import { ReglasGo } from './reglas-go'
+import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { useSonidoJugada } from './use-sonido-jugada'
 
 /**
@@ -49,7 +48,7 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
 
-  useSonidoJugada(observando ?? partida, userId)
+  useSonidoJugada(observando ?? partida)
 
   // Tengo una partida pendiente donde soy el invitado?
   const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
@@ -74,45 +73,67 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
     if (inicializado && (!partida || soyInvitado || enPausa) && !observando) pedirContrincantes()
   }, [inicializado, partida, soyInvitado, enPausa, observando, pedirContrincantes])
 
-  // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
-  // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
-  if (!inicializado)
-    return (
-      <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
-        <Icon className="w-10 h-10" icon={'eos-icons:bubble-loading'} />
-        Cargando…
-      </p>
-    )
-
-  if (observando)
-    return (
-      <PartidaObservada
-        partida={observando}
-        onDejarDeObservar={() => dejarDeObservar(observando.id).catch((e) => toast.error(e.message))}
-      />
-    )
-
   // Sin partida propia, con una pendiente de responder, o pausando la propia: en los tres casos seguís
   // viendo la sala (lista de contrincantes) en vez de que otra vista tape toda la pantalla.
-  if (!partida || soyInvitado || enPausa)
+  const viendoSala = !partida || soyInvitado || enPausa
+
+  function pantalla() {
+    // Hasta que no sabemos si ya hay una partida en curso, no podemos decidir qué pantalla mostrar
+    // (mostrar el buscador de contrincantes de entrada parpadea si después resulta que sí había una).
+    if (!inicializado)
+      return (
+        <p className="flex flex-col items-center gap-2 justify-center mt-20 text-slate-500 text-3xl">
+          <Icon className="w-10 h-10" icon={'eos-icons:bubble-loading'} />
+          Cargando…
+        </p>
+      )
+
+    if (observando)
+      return (
+        <PartidaObservada
+          partida={observando}
+          onDejarDeObservar={() => dejarDeObservar(observando.id).catch((e) => toast.error(e.message))}
+        />
+      )
+
+    if (viendoSala)
+      return (
+        <BuscarContrincante
+          contrincantes={contrincantes}
+          invitacionesEntrantes={invitacionesEntrantes}
+          onRefrescar={pedirContrincantes}
+          onInvitar={invitar}
+          onObservar={observar}
+          onAceptar={aceptar}
+          onRechazar={rechazar}
+          partidaEnPausa={enPausa ? partida : null}
+          onVolverAPartida={() => setPausada(false)}
+        />
+      )
+
+    if (partida.estado === 'pendiente')
+      return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
+
     return (
-      <BuscarContrincante
-        contrincantes={contrincantes}
-        invitacionesEntrantes={invitacionesEntrantes}
-        onRefrescar={pedirContrincantes}
-        onInvitar={invitar}
-        onObservar={observar}
-        onAceptar={aceptar}
-        onRechazar={rechazar}
-        partidaEnPausa={enPausa ? partida : null}
-        onVolverAPartida={() => setPausada(false)}
-      />
+      <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
     )
+  }
 
-  if (partida.estado === 'pendiente')
-    return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
+  // Las llamadas son links estáticos: aparecen también mientras carga el estado, y se ocultan con una
+  // partida a la vista (propia u observada).
+  const mostrarLlamadas = !inicializado || (!observando && viendoSala)
 
-  return <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
+  return (
+    <>
+      {pantalla()}
+      {mostrarLlamadas && (
+        <div className="flex flex-col gap-10 items-center max-w-md mx-auto w-full mt-10">
+          <LlamadaDojo />
+          <LlamadaTablero />
+        </div>
+      )}
+    </>
+  )
 }
 
 function InvitacionesEntrantes({
@@ -286,8 +307,6 @@ function BuscarContrincante({
       {invitacionesEntrantes.length > 0 && (
         <InvitacionesEntrantes invitaciones={invitacionesEntrantes} aceptar={onAceptar} rechazar={onRechazar} />
       )}
-
-      <LlamadaDojo className="mt-4" />
     </div>
   )
 }
@@ -627,8 +646,6 @@ function PartidaEnCurso({
           onJugar={(fila, columna) => {
             if (partida.estado === 'jugando') {
               // Clickear la misma intersección ya elegida la cancela; clickear otra reemplaza la selección.
-              // Al colocar la piedra suena de inmediato, sin esperar a confirmar la jugada.
-              if (jugadaPendiente?.fila !== fila || jugadaPendiente?.columna !== columna) sonarJugada()
               setJugadaPendiente((actual) =>
                 actual && actual.fila === fila && actual.columna === columna ? null : { fila, columna }
               )

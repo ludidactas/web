@@ -51,6 +51,10 @@ const MenuMobile = () => {
           </DropdownMenuItem>
           <Separator className="my-1 border border-black border-dashed" />
           <DropdownMenuItem onSelect={handleItemClick}>
+            <NavLink href="/go/tablero">Go</NavLink>
+          </DropdownMenuItem>
+          <Separator className="my-1 border border-black border-dashed" />
+          <DropdownMenuItem onSelect={handleItemClick}>
             <Link target="_blank" href="https://www.instagram.com/ludidactas/">
               Contacto
             </Link>
@@ -84,6 +88,10 @@ const MenuDesktop = () => (
     <p className="text-2xl">|</p>
     <MenuNavLink href="/salas">
       {(isPending) => <span className={cn(isPending && 'animate-pulse duration-300')}>Sala</span>}
+    </MenuNavLink>
+    <p className="text-2xl">|</p>
+    <MenuNavLink href="/go/tablero">
+      {(isPending) => <span className={cn(isPending && 'animate-pulse duration-300')}>Go</span>}
     </MenuNavLink>
     <p className="text-2xl">|</p>
     {/* <MenuLink href="/roadmap"> Recursos</MenuLink> */}

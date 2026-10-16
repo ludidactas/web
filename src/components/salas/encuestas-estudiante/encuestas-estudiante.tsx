@@ -22,6 +22,7 @@ import { intersection } from 'remeda'
 import { storeEncuestasEstudiante } from '@/wss-cli/stores/encuestas-store'
 import { storeInvitado } from '@/wss-cli/stores/invitado-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { track } from '@/lib/analytics'
 import { BannerSalaEstudiante } from '../banner-sala-estudiante'
 
 /** Avisa al estudiante que su DNI está en la lista de invitados de la sala (se le tomó asistencia). */
@@ -135,6 +136,13 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
       console.warn('Tratando de votar en encuestra donde no puede enviar!')
       return
     }
+
+    const nuevas = seleccion.filter((optionId) => !encuesta.votosEmitidos?.includes(optionId))
+    track({
+      event: 'encuesta_respuesta_enviada',
+      tipo: aportando && nuevas.length > 0 ? 'ambos' : aportando ? 'aporte' : 'opcion',
+      opciones: nuevas.length,
+    })
 
     // Si hay un aporte textual...
     if (aportando) {

@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { rival } from "@/lib/go/motor";
 import { sonarJugada } from "@/lib/go/sonido-jugada";
 import {
@@ -94,6 +95,13 @@ export function useDesafioGo(desafio: Desafio): ResultadoDesafioGo {
           : desafio.tipo === "exploracion"
             ? false
             : jugadaJugador !== null;
+
+  // Veredicto terminal. "exploracion" nunca se da por hecha y "retirar" solo termina al acertar.
+  useEffect(() => {
+    if (estado !== "correcto" && estado !== "incorrecto") return;
+    if (desafio.tipo === "exploracion" || (desafio.tipo === "retirar" && estado === "incorrecto")) return;
+    track({ event: "go_dojo_ejercicio", desafio_id: desafio.id, tipo: desafio.tipo ?? "jugada", correcto: estado === "correcto" });
+  }, [estado]);
 
   const jugar = useCallback(
     (r: number, c: number) => {

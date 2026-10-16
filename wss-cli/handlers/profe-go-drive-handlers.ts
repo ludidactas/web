@@ -26,7 +26,7 @@ export default function profeGoDriveHandlers(socket: Socket | null) {
       for (const p of pendientes) {
         try {
           const info = p.info ?? INFO_FALLBACK
-          const png = await imagenPartida(p.tablero, p.tamaño, p.removidas, info)
+          const png = await imagenPartida(p.tablero, p.tamaño, p.removidas, info, p.creadaEn)
           await guardarPartidaEnDrive(sala.id, nombreSala, p.id, nombreImagenPartida(info, p.creadaEn), png)
           subidas.push(p.id)
         } catch {

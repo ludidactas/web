@@ -24,7 +24,7 @@ import {
   type PartidaLocal,
 } from '@/lib/go-local/partida-local'
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
-import { ETIQUETA_MODO } from '@/lib/go/info-export'
+import { ETIQUETA_MODO, fechaCorta } from '@/lib/go/info-export'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
@@ -79,10 +79,6 @@ function medirTransicion(antes: PartidaLocal, despues: PartidaLocal) {
   if (antes.fase !== 'terminada' && despues.fase === 'terminada')
     track({ event: 'go_partida_terminada', origen: 'tablero', modo, tamano: tamaño })
 }
-/** "16/10/26" */
-const fechaCorta = (fecha: Date) =>
-  fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-
 /** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
 type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
 

@@ -533,7 +533,7 @@ function PartidaEnCurso({
   async function descargarImagen() {
     try {
       const info = infoExport(partida)
-      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info)
+      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info, partida.creadaEn)
       descargarBlob(blob, nombreImagenPartida(info, partida.creadaEn))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
@@ -543,7 +543,13 @@ function PartidaEnCurso({
   async function copiarImagen() {
     try {
       // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
-      const imagen = imagenPartida(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
+      const imagen = imagenPartida(
+        partida.tablero,
+        partida.tamaño,
+        partida.removidas,
+        infoExport(partida),
+        partida.creadaEn
+      )
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
     } catch {
       toast.error('No se pudo copiar la imagen. Probá con otro navegador.')

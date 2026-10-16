@@ -33,6 +33,10 @@ export function tituloImagen(info: InfoExport): string {
   return info.ganador === null ? 'Empate' : `Ganó ${info[info.ganador]}`
 }
 
-export function subtituloImagen(info: InfoExport): string {
-  return `${info.negro} vs ${info.blanco} · ${ETIQUETA_MODO[info.modo]}`
+/** "16/10/26" */
+export const fechaCorta = (fecha: Date) => format(fecha, 'dd/MM/yy')
+
+/** Modo y día en que se jugó (`creadaEn` en ISO), y al final los jugadores: si no entra, se recorta por ahí. */
+export function subtituloImagen(info: InfoExport, creadaEn: string): string {
+  return `${ETIQUETA_MODO[info.modo]} el ${fechaCorta(new Date(creadaEn))} · ${info.negro} vs ${info.blanco}`
 }

@@ -52,8 +52,10 @@ describe('textos de la imagen', () => {
     expect(tituloImagen(empate)).toBe('Empate')
   })
 
-  test('subtítulo: los dos jugadores y el modo', () => {
+  test('subtítulo: modo, día y los dos jugadores', () => {
     const info = infoExport({ ...partida({ ganadorUserId: null, resultado: null }), modo: 'atari' })
-    expect(subtituloImagen(info)).toBe('Jugador Negro vs Jugador Blanco · Atari Go')
+    expect(subtituloImagen(info, '2026-10-16T15:00:00.000Z')).toBe(
+      'Atari Go el 16/10/26 · Jugador Negro vs Jugador Blanco'
+    )
   })
 })

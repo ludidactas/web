@@ -14,13 +14,14 @@ export function imagenPartida(
   tablero: Tablero,
   tamaño: number,
   removidas: boolean[][] | null | undefined,
-  info: InfoExport
+  info: InfoExport,
+  creadaEn: string
 ): Promise<Blob> {
   return generarImagenResultado({
     tablero: (px, margen) => tableroASvg(tablero, tamaño, removidas, px, margen),
     familia: body.style.fontFamily,
     titulo: tituloImagen(info),
-    subtitulo: subtituloImagen(info),
+    subtitulo: subtituloImagen(info, creadaEn),
     marcador: info.puntos && { etiqueta: 'Puntos:', bajoBlanco: info.puntos.blanco, bajoNegro: info.puntos.negro },
   })
 }

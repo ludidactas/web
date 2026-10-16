@@ -5,19 +5,23 @@ mock.module('next/font/local', () => ({
   default: () => ({ style: { fontFamily: 'Chelsea Market' } }),
 }))
 
-const { tableroASvg } = await import('./exportar-png')
+const { tableroASvg } = await import('./tablero-svg')
 
 describe('tableroASvg', () => {
-  test('incluye el namespace y las dimensiones del tablero', () => {
-    const svg = tableroASvg(tableroVacio(9), 9)
+  test('incluye el namespace y, por defecto, el lado del tablero como dimensiones', () => {
+    const svg = tableroASvg(tableroVacio(9), 9, null)
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"')
-    // ladoDe(9) = 384 + 2 × 16 (margen para la sombra del tablero) = 416
-    expect(svg).toContain('width="416"')
-    expect(svg).toContain('height="416"')
+    // ladoDe(9) = 32 × 2 + 8 × 40 = 384
+    expect(svg).toContain('width="384"')
+    expect(svg).toContain('height="384"')
+  })
+
+  test('las dimensiones se pueden pedir en otro tamaño', () => {
+    expect(tableroASvg(tableroVacio(9), 9, null, 960)).toContain('width="960" height="960"')
   })
 
   test('el <svg> raíz tiene una sola width/height y no queda width="100%"', () => {
-    const svg = tableroASvg(tableroVacio(9), 9)
+    const svg = tableroASvg(tableroVacio(9), 9, null)
     const apertura = svg.slice(0, svg.indexOf('>'))
     expect(apertura.match(/width="/g)).toHaveLength(1)
     expect(apertura.match(/height="/g)).toHaveLength(1)
@@ -30,9 +34,8 @@ describe('tableroASvg', () => {
     tablero[0][0] = NEGRO
     tablero[8][8] = BLANCO
 
-    const svg = tableroASvg(tablero, 9)
-    const circleMatches = svg.match(/<circle/g)
+    const svg = tableroASvg(tablero, 9, null)
     // 5 hoshi + 2 piedras
-    expect(circleMatches).toHaveLength(7)
+    expect(svg.match(/<circle/g)).toHaveLength(7)
   })
 })

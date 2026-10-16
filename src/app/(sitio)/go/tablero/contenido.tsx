@@ -21,8 +21,9 @@ import {
   type PartidaLocal,
 } from '@/lib/go-local/partida-local'
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
+import { ETIQUETA_MODO } from '@/lib/go/info-export'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
-import { generarImagenResultado } from '@/lib/go-local/imagen-resultado'
+import { generarImagenResultado, svgDelTableroVivo } from '@/lib/go-local/imagen-resultado'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { cn } from '@/lib/utils'
@@ -197,17 +198,15 @@ export default function ContenidoTablero() {
   const compartir = async () => {
     const tablero = areaJuego.current?.querySelector<SVGSVGElement>('svg.touch-none')
     if (!tablero || partida.fase !== 'terminada') return
-    const { etiqueta, bajoBlanco, bajoNegro } = valoresMarcador(partida, puntaje)
+    const marcador = valoresMarcador(partida, puntaje)
     try {
       // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
       const imagen = generarImagenResultado({
-        tablero,
-        tamañoTablero: partida.tamaño,
+        tablero: (px) => svgDelTableroVivo(tablero, partida.tamaño, px),
+        familia: getComputedStyle(tablero).fontFamily,
         titulo: tituloResultado(partida),
-        modo: ETIQUETA_MODO[partida.modo],
-        etiquetaMarcador: etiqueta,
-        bajoBlanco,
-        bajoNegro,
+        subtitulo: ETIQUETA_MODO[partida.modo],
+        marcador,
       })
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
       setCopiado(true)
@@ -334,8 +333,6 @@ export default function ContenidoTablero() {
     </div>
   )
 }
-
-const ETIQUETA_MODO: Record<ModoPartida, string> = { partida: 'Partida por territorio', atari: 'Atari Go' }
 
 /** El modo de la partida, en letra mínima, debajo del título de estado. */
 function EtiquetaModo({ modo }: { modo: ModoPartida }) {

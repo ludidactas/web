@@ -3,7 +3,7 @@
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { tableroAPng } from '@/lib/go/exportar-png'
+import { imagenPartida } from '@/lib/go/imagen-partida'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
@@ -512,7 +512,7 @@ function PartidaEnCurso({
   async function descargarImagen() {
     try {
       const info = infoExport(partida)
-      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, info)
+      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -528,8 +528,9 @@ function PartidaEnCurso({
 
   async function copiarImagen() {
     try {
-      const blob = await tableroAPng(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
+      const imagen = imagenPartida(partida.tablero, partida.tamaño, partida.removidas, infoExport(partida))
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
     } catch {
       toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
     }

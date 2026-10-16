@@ -70,6 +70,18 @@ export const canvasAPng = (canvas: HTMLCanvasElement) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('No se pudo generar la imagen'))), 'image/png')
   )
 
+/** Dispara la descarga de `blob` como archivo `nombre`. */
+export function descargarBlob(blob: Blob, nombre: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nombre
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 /** `texto` recortado con "…" para que entre en `ancho` con la fuente actual del contexto. */
 export function ajustarTexto(ctx: CanvasRenderingContext2D, texto: string, ancho: number): string {
   if (ctx.measureText(texto).width <= ancho) return texto

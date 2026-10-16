@@ -16,16 +16,22 @@ function estadoPiedra(removidas: boolean[][] | null | undefined) {
   }
 }
 
-/** El tablero como `<svg>` independiente (con `xmlns`), sin DOM: sirve para partidas que no están en pantalla. */
+/**
+ * El tablero como `<svg>` independiente (con `xmlns`), sin DOM: sirve para partidas que no están en
+ * pantalla. Mide `px` de lado más `margen` por cada borde, para que asome la sombra del tablero.
+ */
 export function tableroASvg(
   tablero: Tablero,
   tamaño: number,
   removidas: boolean[][] | null | undefined,
-  px = ladoDe(tamaño)
+  px = ladoDe(tamaño),
+  margen = 0
 ): string {
+  const glowMargen = (margen * ladoDe(tamaño)) / px
+  const total = px + 2 * margen
   return renderToStaticMarkup(
-    <TableroGoBase tablero={tablero} tamaño={tamaño} estadoPiedra={estadoPiedra(removidas)} />
+    <TableroGoBase tablero={tablero} tamaño={tamaño} glowMargen={glowMargen} estadoPiedra={estadoPiedra(removidas)} />
   )
-    .replace('width="100%" height="100%"', `width="${px}" height="${px}"`)
+    .replace('width="100%" height="100%"', `width="${total}" height="${total}"`)
     .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
 }

@@ -20,6 +20,13 @@ describe('tableroASvg', () => {
     expect(tableroASvg(tableroVacio(9), 9, null, 960)).toContain('width="960" height="960"')
   })
 
+  test('el margen de sombra se suma por cada borde y amplía el viewBox en proporción', () => {
+    const svg = tableroASvg(tableroVacio(9), 9, null, 768, 32)
+    expect(svg).toContain('width="832" height="832"')
+    // 32 px de margen sobre un tablero de 768 px de 384 unidades = 16 unidades
+    expect(svg).toContain('viewBox="-16 -16 416 416"')
+  })
+
   test('el <svg> raíz tiene una sola width/height y no queda width="100%"', () => {
     const svg = tableroASvg(tableroVacio(9), 9, null)
     const apertura = svg.slice(0, svg.indexOf('>'))

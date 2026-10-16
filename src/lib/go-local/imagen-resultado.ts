@@ -25,8 +25,11 @@ export interface Marcador {
 }
 
 export interface DatosImagenResultado {
-  /** El `<svg>` del tablero recortado al tablero, con `xmlns` y de `px` de lado (ver `svgDelTableroVivo` y `tableroASvg`). */
-  tablero: (px: number) => string
+  /**
+   * El `<svg>` del tablero con `xmlns`, de `px` de lado más `margen` transparente por cada borde, donde
+   * asoma la sombra del tablero (ver `svgDelTableroVivo` y `tableroASvg`).
+   */
+  tablero: (px: number, margen: number) => string
   /** Tipografía del texto de la imagen. */
   familia: string
   /** "Ganó Negro" o "Empate". */
@@ -39,15 +42,17 @@ export interface DatosImagenResultado {
 
 const PADDING = 24
 const TABLERO = 320
+// La sombra "flotante" del tablero (dy 3, desvío 4) asoma hasta este margen; entra en el padding.
+const SOMBRA = 16
 const ANCHO = TABLERO + PADDING * 2
 const RADIO = 6
 const ALTO_TITULO = 24
 const ALTO_MODO = 12
 const GAP_TITULO = 2
 const GAP_ENCABEZADO = 16
-const GAP_MARCADOR = 14
+const GAP_MARCADOR = 22
 const ALTO_MARCADOR = 20
-const GAP_FIRMA = 16
+const GAP_FIRMA = 22
 // La firma de Ludidactas va más chica que en el QR para que el tablero sea el protagonista.
 const ESCALA_FIRMA = 0.7
 const ALTO_FIRMA = FIRMA_ALTO * ESCALA_FIRMA
@@ -69,12 +74,12 @@ const COLOR_MARCADOR = '#475569' // slate-600
 const RADIO_PIEDRA_MARCADOR = 8
 
 /**
- * Copia el `<svg>` del tablero en pantalla como un SVG independiente de `px` de lado, recortado al
- * tablero (sin el margen de resplandor). Los estilos que le llegan por clases de CSS (ej. el anillo
+ * Copia el `<svg>` del tablero en pantalla como un SVG independiente de `px` de lado, con `margen` de
+ * sombra alrededor (sin el resplandor de turno de la partida en vivo). Los estilos que le llegan por clases de CSS (ej. el anillo
  * de la última jugada) no viajan dentro de un SVG suelto, así que se escriben como atributos a
  * partir de los calculados.
  */
-export function svgDelTableroVivo(vivo: SVGSVGElement, tamaño: number, px: number): string {
+export function svgDelTableroVivo(vivo: SVGSVGElement, tamaño: number, px: number, margen: number): string {
   const clon = vivo.cloneNode(true) as SVGSVGElement
   const lado = CELDA_PX * (tamaño - 1) + MARGEN_PX * 2
 
@@ -89,9 +94,10 @@ export function svgDelTableroVivo(vivo: SVGSVGElement, tamaño: number, px: numb
   clon.removeAttribute('class')
   clon.removeAttribute('style')
   clon.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-  clon.setAttribute('viewBox', `0 0 ${lado} ${lado}`)
-  clon.setAttribute('width', String(px))
-  clon.setAttribute('height', String(px))
+  const sombra = (margen * lado) / px
+  clon.setAttribute('viewBox', `${-sombra} ${-sombra} ${lado + 2 * sombra} ${lado + 2 * sombra}`)
+  clon.setAttribute('width', String(px + 2 * margen))
+  clon.setAttribute('height', String(px + 2 * margen))
   return new XMLSerializer().serializeToString(clon)
 }
 
@@ -152,7 +158,7 @@ function dibujarMarcador(ctx: CanvasRenderingContext2D, familia: string, m: Marc
 /** Compone la imagen del resultado y la devuelve como PNG. */
 export async function generarImagenResultado(d: DatosImagenResultado): Promise<Blob> {
   const { familia, marcador } = d
-  const [firma, tablero] = await Promise.all([cargarFirma(), svgAImagen(d.tablero(TABLERO * EXPORT_SCALE))])
+  const [firma, tablero] = await Promise.all([cargarFirma(), svgAImagen(d.tablero(TABLERO * EXPORT_SCALE, SOMBRA * EXPORT_SCALE))])
   await document.fonts.load(`bold 20px ${familia}`).catch(() => {})
 
   const altoTotal = alto(marcador !== null)
@@ -180,7 +186,7 @@ export async function generarImagenResultado(d: DatosImagenResultado): Promise<B
   ctx.fillText(ajustarTexto(ctx, d.subtitulo, TABLERO), PADDING, PADDING + ALTO_TITULO + GAP_TITULO + ALTO_MODO / 2)
 
   const tableroY = PADDING + ALTO_TITULO + GAP_TITULO + ALTO_MODO + GAP_ENCABEZADO
-  ctx.drawImage(tablero, PADDING, tableroY, TABLERO, TABLERO)
+  ctx.drawImage(tablero, PADDING - SOMBRA, tableroY - SOMBRA, TABLERO + 2 * SOMBRA, TABLERO + 2 * SOMBRA)
 
   let firmaY = tableroY + TABLERO
   if (marcador) {

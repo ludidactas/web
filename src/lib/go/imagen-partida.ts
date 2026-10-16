@@ -17,7 +17,7 @@ export function imagenPartida(
   info: InfoExport
 ): Promise<Blob> {
   return generarImagenResultado({
-    tablero: (px) => tableroASvg(tablero, tamaño, removidas, px),
+    tablero: (px, margen) => tableroASvg(tablero, tamaño, removidas, px, margen),
     familia: body.style.fontFamily,
     titulo: tituloImagen(info),
     subtitulo: subtituloImagen(info),

@@ -217,7 +217,7 @@ export default function ContenidoTablero() {
     try {
       // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
       const imagen = generarImagenResultado({
-        tablero: (px) => svgDelTableroVivo(tablero, partida.tamaño, px),
+        tablero: (px, margen) => svgDelTableroVivo(tablero, partida.tamaño, px, margen),
         familia: getComputedStyle(tablero).fontFamily,
         titulo: tituloResultado(partida),
         subtitulo: ETIQUETA_MODO[partida.modo],

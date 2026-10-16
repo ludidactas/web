@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { track } from '@/lib/analytics'
 import { conectarConDrive } from '@/lib/google/conexion'
 import { DriveNoConectado } from '@/lib/google/comun'
 import {
@@ -30,6 +31,7 @@ import {
 import { aSlug, cn } from '@/lib/utils'
 
 type Vista = 'menu' | 'exportar' | 'importar'
+type OrigenImportacion = 'archivo' | 'url' | 'ejemplo' | 'drive'
 
 const TITULOS: Record<Vista, string> = {
   menu: 'Colecciones',
@@ -133,6 +135,7 @@ export function ImportarExportar({
 
     // Descargamos
     descargarColeccion(nombreFinal, encuestas)
+    track({ event: 'encuesta_coleccion_exportada', destino: 'archivo', preguntas: encuestas.length })
 
     // Notificamos
     const unaSola = encuestas.length === 1
@@ -143,7 +146,7 @@ export function ImportarExportar({
   }
 
   /** Crea cada pregunta de forma independiente: una inválida no frena al resto. */
-  const importarPreguntas = async (preguntas: unknown[]) => {
+  const importarPreguntas = async (preguntas: unknown[], origen: OrigenImportacion) => {
     if (preguntas.length === 0) {
       toast.info('La colección no tiene preguntas')
       return
@@ -179,9 +182,12 @@ export function ImportarExportar({
         await crear(parseada.data)
         creadas++
       } catch (error) {
-        errores.push(`"${parseada.data.pregunta}": ${typeof error === 'string' ? error : 'no se pudo crear'}`)
+        errores.push(`"${parseada.data.pregunta}": ${error instanceof Error ? error.message : 'no se pudo crear'}`)
       }
     }
+
+    if (creadas > 0)
+      track({ event: 'encuesta_coleccion_importada', origen, creadas, omitidas, con_errores: errores.length > 0 })
 
     // Mostramos resultados en un solo toast
     const partes: string[] = []
@@ -204,7 +210,7 @@ export function ImportarExportar({
   }
 
   /** Parsea texto YAML e importa sus preguntas, volviendo al menú al final */
-  const procesarTexto = async (texto: string) => {
+  const procesarTexto = async (texto: string, origen: OrigenImportacion) => {
     let sobre
     try {
       sobre = parsearColeccion(texto)
@@ -214,7 +220,7 @@ export function ImportarExportar({
     }
     if (sobre.nombre) setNombre(sobre.nombre)
     setVista('menu')
-    await importarPreguntas(sobre.preguntas)
+    await importarPreguntas(sobre.preguntas, origen)
   }
 
   /** Función para consumir un archivo de texto subido por el usuario. */
@@ -222,11 +228,11 @@ export function ImportarExportar({
     const archivo = evento.target.files?.[0]
     evento.target.value = '' // permite re-elegir el mismo archivo
     if (!archivo) return
-    iniciarImportacion(async () => procesarTexto(await archivo.text()))
+    iniciarImportacion(async () => procesarTexto(await archivo.text(), 'archivo'))
   }
 
   /** Descarga desde una URL/preset y delega a procesarTexto; aísla los errores de red. */
-  const importarDesdeArchivoRemoto = (archivo: string) =>
+  const importarDesdeArchivoRemoto = (archivo: string, origen: 'url' | 'ejemplo') =>
     iniciarImportacion(async () => {
       let texto: string
       try {
@@ -235,15 +241,15 @@ export function ImportarExportar({
         toast.error(error instanceof Error ? error.message : 'No se pudo descargar la colección')
         return
       }
-      await procesarTexto(texto)
+      await procesarTexto(texto, origen)
     })
 
   const importarDesdeDrive = (coleccion: ColeccionDrive) =>
-    iniciarImportacion(async () => procesarTexto(coleccion.contenido))
+    iniciarImportacion(async () => procesarTexto(coleccion.contenido, 'drive'))
 
   /** Función para consumir un archivo de texto provisto por URL */
   const importarUrl = () => {
-    if (url.trim()) importarDesdeArchivoRemoto(url.trim())
+    if (url.trim()) importarDesdeArchivoRemoto(url.trim(), 'url')
   }
 
   /** Guarda las preguntas de la sala como una colección en el Drive del profe. */
@@ -259,6 +265,7 @@ export function ImportarExportar({
           serializarColeccion(nombreFinal, encuestas)
         )
 
+        track({ event: 'encuesta_coleccion_exportada', destino: 'drive', preguntas: encuestas.length })
         setMisColecciones(null) // refresca la lista para que el aviso de sobrescritura quede al día
         toast.success(`"${nombreFinal}" guardada en tu Google Drive`)
         setNombre('')
@@ -483,7 +490,7 @@ export function ImportarExportar({
                       <button
                         key={preset.archivo}
                         className="flex flex-col items-start rounded-lg border border-ld-violeta/30 bg-[#f2ebff] px-4 py-2 text-left hover:border-ld-violeta disabled:opacity-50"
-                        onClick={() => importarDesdeArchivoRemoto(preset.archivo)}
+                        onClick={() => importarDesdeArchivoRemoto(preset.archivo, 'ejemplo')}
                         disabled={importando}
                       >
                         <span className="font-semibold text-ld-violeta">{preset.nombre}</span>

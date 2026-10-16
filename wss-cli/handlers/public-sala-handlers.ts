@@ -2,9 +2,7 @@ import { Socket } from 'socket.io-client'
 
 export default function publicSalaHandlers(socket: Socket | null) {
   return {
-    montar: () => {
-      if (!socket) return
-    },
+    montar: () => () => {},
 
     acciones: {
       consultarNombreDisponible: (nombre: string) => {
@@ -20,10 +18,6 @@ export default function publicSalaHandlers(socket: Socket | null) {
           })
         })
       },
-    },
-
-    desmontar: () => {
-      if (!socket) return
     },
   }
 }

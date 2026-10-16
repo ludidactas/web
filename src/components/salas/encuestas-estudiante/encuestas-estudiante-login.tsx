@@ -4,6 +4,7 @@ import { LdSvg } from '@/components/custom/ld-svg'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { oscilar } from '@/lib/animaciones'
+import { track } from '@/lib/analytics'
 import LoginEst from '@/svg/dist/ui/loginEst2.svg'
 import { animate, spring, stagger } from 'animejs'
 import Image from 'next/image'
@@ -64,6 +65,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
     // Esto triggerea el ingreso (que se renderice el `EncuestaEstudianteProvider`)
     setIngresado(true)
+    track({ event: 'sala_acceso_estudiante', metodo_login: configSala?.metodo_login })
     localStorage.setItem(`encuestas-ingresado-${idSala}`, `1`)
   }
 

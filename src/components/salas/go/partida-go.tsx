@@ -1,9 +1,19 @@
 'use client'
 
 import { useOutlineFilter } from '@/components/fx/filtros'
-import { CELDA_PX, coordenadaEnPixeles, BLANCO_MUERTA, RELLENO, TableroGoBase, type EstadoPiedra } from '@/lib/go/tablero-go-base'
+import {
+  CELDA_PX,
+  coordenadaEnPixeles,
+  BLANCO_MUERTA,
+  RELLENO,
+  TableroGoBase,
+  type EstadoPiedra,
+} from '@/lib/go/tablero-go-base'
 import { BLANCO, calcularTerritorio, DAME, grupoEn, NEGRO, VACIO, type Color, type Tablero } from '@/lib/go/motor'
 import { useMemo, useState } from 'react'
+
+/** Opacidad de las piedras marcadas como muertas durante el conteo. */
+const OPACIDAD_MUERTA = 0.35
 
 interface Punto {
   fila: number
@@ -83,6 +93,8 @@ export function PartidaGo({
   // grupoEn solo devuelve puntos de un grupo ya ocupado (ver su chequeo de VACIO), así que si hay
   // algún punto acá su color nunca es VACIO.
   const colorGrupoHover = grupoHover.length > 0 ? (tablero[grupoHover[0][0]][grupoHover[0][1]] as Color) : null
+  // Un grupo ya marcado como muerto sigue atenuado bajo el cursor (también su resalte), para no confundirse con uno sin marcar.
+  const grupoHoverMuerto = grupoHover.length > 0 && (removidas?.[grupoHover[0][0]]?.[grupoHover[0][1]] ?? false)
   // El contorno es el opuesto al color del grupo (grupo negro -> contorno blanco, y viceversa).
   const filterUrlHover = colorGrupoHover === NEGRO ? contornoBlanco.filterUrl : contornoNegro.filterUrl
 
@@ -102,9 +114,8 @@ export function PartidaGo({
   function estadoPiedra(y: number, x: number, valor: Color): EstadoPiedra {
     const muerta = removidas?.[y]?.[x] ?? false
     const esVivo = vivo?.[y]?.[x] ?? false
-    const hovereada = grupoHover.some(([gx, gy]) => gx === x && gy === y)
     return {
-      opacidad: esVivo ? 0.85 : muerta ? (hovereada ? 0.7 : 0.35) : 1,
+      opacidad: esVivo ? 0.85 : muerta ? OPACIDAD_MUERTA : 1,
       vivo: esVivo,
       fill: muerta && valor === BLANCO ? BLANCO_MUERTA : undefined,
       titulo: esVivo ? 'Grupo incondicionalmente vivo' : muerta ? 'Marcada como muerta' : undefined,
@@ -164,7 +175,7 @@ export function PartidaGo({
 
           {/* Resalte del grupo bajo el cursor durante el conteo — contorno del color opuesto al grupo. */}
           {grupoHover.length > 0 && colorGrupoHover && (
-            <g filter={filterUrlHover}>
+            <g filter={filterUrlHover} opacity={grupoHoverMuerto ? OPACIDAD_MUERTA : 1}>
               {grupoHover.map(([fila, columna]) => (
                 <circle
                   key={`hover-${fila},${columna}`}

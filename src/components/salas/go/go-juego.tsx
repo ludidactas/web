@@ -3,17 +3,22 @@
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { imagenPartida } from '@/lib/go/imagen-partida'
+import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { BotonesImagen } from './botones-imagen'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
-import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { PartidaGo } from './partida-go'
+import { ReglasGo } from './reglas-go'
+import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { useSonidoJugada } from './use-sonido-jugada'
 
 /**
@@ -362,6 +367,8 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         </span>
       </div>
 
+      <ReglasGo />
+
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
 
       {partida.estado === 'jugando' && (
@@ -523,6 +530,32 @@ function PartidaEnCurso({
       .finally(() => setConfirmando(false))
   }
 
+  async function descargarImagen() {
+    try {
+      const info = infoExport(partida)
+      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info, partida.creadaEn)
+      descargarBlob(blob, nombreImagenPartida(info, partida.creadaEn))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
+    }
+  }
+
+  async function copiarImagen() {
+    try {
+      // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
+      const imagen = imagenPartida(
+        partida.tablero,
+        partida.tamaño,
+        partida.removidas,
+        infoExport(partida),
+        partida.creadaEn
+      )
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
+    } catch {
+      toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
+    }
+  }
+
   // Previsualización en vivo: cómo quedaría el puntaje (con komi) si se confirma el conteo tal como
   // está marcado ahora mismo. Usa la misma función que el resultado final del servidor, así que
   // nunca puede mostrar un número distinto al que se confirma al terminar la partida.
@@ -562,6 +595,7 @@ function PartidaEnCurso({
         <span className="font-bold  p-2 rounded-xl">
           Contrincante: <span className="font-bold">{contrincante.nombre}</span>
         </span>
+        <ReglasGo />
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
@@ -645,13 +679,16 @@ function PartidaEnCurso({
           </button>
         )}
         {partida.estado === 'terminada' ? (
-          <button
-            className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded"
-            onClick={() => storeGo.getState().reset()}
-          >
-            <Icon icon={'akar-icons:arrow-back'} />
-            Volver a la sala
-          </button>
+          <>
+            <button
+              className="flex gap-1 items-center bg-indigo-500 text-white px-4 py-2 rounded"
+              onClick={() => storeGo.getState().reset()}
+            >
+              <Icon icon={'akar-icons:arrow-back'} />
+              Volver a la sala
+            </button>
+            <BotonesImagen onDescargar={descargarImagen} onCopiar={copiarImagen} />
+          </>
         ) : (
           <>
             <button

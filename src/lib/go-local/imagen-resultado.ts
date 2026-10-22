@@ -1,50 +1,69 @@
-import { cargarFirma, dibujarFirma, EXPORT_SCALE, FIRMA_ALTO, trazarRectRedondeado } from '@/lib/imagen-compartible'
+import {
+  ajustarTexto,
+  canvasAPng,
+  cargarFirma,
+  dibujarFirma,
+  EXPORT_SCALE,
+  FIRMA_ALTO,
+  svgAImagen,
+  trazarRectRedondeado,
+} from '@/lib/imagen-compartible'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
 import { CELDA_PX, MARGEN_PX, TONOS_PIEDRA } from '@/lib/go/tablero-go-base'
 
 /**
- * Imagen PNG del resultado de una partida local, para compartir: título y modo alineados al borde
- * izquierdo del tablero, el tablero tal como se ve en pantalla, el marcador (capturas o puntos) y la
- * firma de Ludidactas al pie. Mismo estilo que la imagen del QR de sala.
+ * Imagen PNG del resultado de una partida, para compartir: título y subtítulo alineados al borde
+ * izquierdo del tablero, el tablero, el marcador (capturas o puntos) y la firma de Ludidactas al pie.
+ * Mismo estilo que la imagen del QR de sala.
  */
 
-export interface DatosImagenResultado {
-  /** El `<svg>` del tablero en pantalla: se copia tal cual, con sus piedras, marcas y la última jugada. */
-  tablero: SVGSVGElement
-  tamañoTablero: number
-  /** "Ganó Negro" o "Empate". */
-  titulo: string
-  /** Modo de la partida, bajo el título (ej. "Atari Go"). */
-  modo: string
-  /** Rótulo del marcador ("Puntos:" o "Capturas:") y su valor bajo cada color de piedra, en el orden en que se muestran. */
-  etiquetaMarcador: string
+/** Rótulo del marcador ("Puntos:" o "Capturas:") y su valor bajo cada color de piedra, en el orden en que se muestran. */
+export interface Marcador {
+  etiqueta: string
   bajoBlanco: number
   bajoNegro: number
 }
 
+export interface DatosImagenResultado {
+  /**
+   * El `<svg>` del tablero con `xmlns`, de `px` de lado más `margen` transparente por cada borde, donde
+   * asoma la sombra del tablero (ver `svgDelTableroVivo` y `tableroASvg`).
+   */
+  tablero: (px: number, margen: number) => string
+  /** Tipografía del texto de la imagen. */
+  familia: string
+  /** "Ganó Negro" o "Empate". */
+  titulo: string
+  /** Bajo el título (ej. el modo de la partida). */
+  subtitulo: string
+  /** Sin marcador la imagen no reserva su fila. */
+  marcador: Marcador | null
+}
+
 const PADDING = 24
 const TABLERO = 320
+// La sombra "flotante" del tablero (dy 3, desvío 4) asoma hasta este margen; entra en el padding.
+const SOMBRA = 16
 const ANCHO = TABLERO + PADDING * 2
 const RADIO = 6
 const ALTO_TITULO = 24
 const ALTO_MODO = 12
 const GAP_TITULO = 2
 const GAP_ENCABEZADO = 16
-const GAP_MARCADOR = 14
+const GAP_MARCADOR = 22
 const ALTO_MARCADOR = 20
-const GAP_FIRMA = 16
+const GAP_FIRMA = 22
 // La firma de Ludidactas va más chica que en el QR para que el tablero sea el protagonista.
 const ESCALA_FIRMA = 0.7
 const ALTO_FIRMA = FIRMA_ALTO * ESCALA_FIRMA
-const ALTO =
+const alto = (conMarcador: boolean) =>
   PADDING +
   ALTO_TITULO +
   GAP_TITULO +
   ALTO_MODO +
   GAP_ENCABEZADO +
   TABLERO +
-  GAP_MARCADOR +
-  ALTO_MARCADOR +
+  (conMarcador ? GAP_MARCADOR + ALTO_MARCADOR : 0) +
   GAP_FIRMA +
   ALTO_FIRMA +
   PADDING
@@ -55,11 +74,12 @@ const COLOR_MARCADOR = '#475569' // slate-600
 const RADIO_PIEDRA_MARCADOR = 8
 
 /**
- * Copia el `<svg>` del tablero como una imagen independiente, recortada al tablero (sin el margen de
- * resplandor). Los estilos que le llegan por clases de CSS (ej. el anillo de la última jugada) no
- * viajan dentro de un SVG suelto, así que se escriben como atributos a partir de los calculados.
+ * Copia el `<svg>` del tablero en pantalla como un SVG independiente de `px` de lado, con `margen` de
+ * sombra alrededor (sin el resplandor de turno de la partida en vivo). Los estilos que le llegan por clases de CSS (ej. el anillo
+ * de la última jugada) no viajan dentro de un SVG suelto, así que se escriben como atributos a
+ * partir de los calculados.
  */
-async function tableroComoImagen(vivo: SVGSVGElement, tamaño: number, px: number): Promise<HTMLImageElement> {
+export function svgDelTableroVivo(vivo: SVGSVGElement, tamaño: number, px: number, margen: number): string {
   const clon = vivo.cloneNode(true) as SVGSVGElement
   const lado = CELDA_PX * (tamaño - 1) + MARGEN_PX * 2
 
@@ -74,23 +94,11 @@ async function tableroComoImagen(vivo: SVGSVGElement, tamaño: number, px: numbe
   clon.removeAttribute('class')
   clon.removeAttribute('style')
   clon.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-  clon.setAttribute('viewBox', `0 0 ${lado} ${lado}`)
-  clon.setAttribute('width', String(px))
-  clon.setAttribute('height', String(px))
-
-  const url = URL.createObjectURL(
-    new Blob([new XMLSerializer().serializeToString(clon)], { type: 'image/svg+xml;charset=utf-8' })
-  )
-  try {
-    return await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = () => reject(new Error('No se pudo dibujar el tablero'))
-      img.src = url
-    })
-  } finally {
-    URL.revokeObjectURL(url)
-  }
+  const sombra = (margen * lado) / px
+  clon.setAttribute('viewBox', `${-sombra} ${-sombra} ${lado + 2 * sombra} ${lado + 2 * sombra}`)
+  clon.setAttribute('width', String(px + 2 * margen))
+  clon.setAttribute('height', String(px + 2 * margen))
+  return new XMLSerializer().serializeToString(clon)
 }
 
 /** Piedra del marcador, con el mismo gradiente que `PiedraIcono`. */
@@ -118,7 +126,7 @@ function dibujarPiedra(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
 }
 
 /** Marcador "Rótulo: ⚪ n ⚫ n", centrado horizontalmente con su centro vertical en `cy`. */
-function dibujarMarcador(ctx: CanvasRenderingContext2D, familia: string, d: DatosImagenResultado, cy: number) {
+function dibujarMarcador(ctx: CanvasRenderingContext2D, familia: string, m: Marcador, cy: number) {
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   ctx.font = `600 14px ${familia}`
@@ -129,15 +137,15 @@ function dibujarMarcador(ctx: CanvasRenderingContext2D, familia: string, d: Dato
   const GAP_PARES = 12
   const par = (valor: number) => RADIO_PIEDRA_MARCADOR * 2 + GAP_PIEDRA + ctx.measureText(String(valor)).width
   const ancho =
-    ctx.measureText(d.etiquetaMarcador).width + GAP_ETIQUETA + par(d.bajoBlanco) + GAP_PARES + par(d.bajoNegro)
+    ctx.measureText(m.etiqueta).width + GAP_ETIQUETA + par(m.bajoBlanco) + GAP_PARES + par(m.bajoNegro)
 
   let x = (ANCHO - ancho) / 2
-  ctx.fillText(d.etiquetaMarcador, x, cy)
-  x += ctx.measureText(d.etiquetaMarcador).width + GAP_ETIQUETA
+  ctx.fillText(m.etiqueta, x, cy)
+  x += ctx.measureText(m.etiqueta).width + GAP_ETIQUETA
 
   for (const [color, valor] of [
-    [BLANCO, d.bajoBlanco],
-    [NEGRO, d.bajoNegro],
+    [BLANCO, m.bajoBlanco],
+    [NEGRO, m.bajoNegro],
   ] as const) {
     dibujarPiedra(ctx, x + RADIO_PIEDRA_MARCADOR, cy, RADIO_PIEDRA_MARCADOR, color)
     x += RADIO_PIEDRA_MARCADOR * 2 + GAP_PIEDRA
@@ -149,47 +157,46 @@ function dibujarMarcador(ctx: CanvasRenderingContext2D, familia: string, d: Dato
 
 /** Compone la imagen del resultado y la devuelve como PNG. */
 export async function generarImagenResultado(d: DatosImagenResultado): Promise<Blob> {
-  // La tipografía es la misma de la pantalla (la hereda el `<svg>` del tablero).
-  const familia = getComputedStyle(d.tablero).fontFamily
-  const [firma, tablero] = await Promise.all([
-    cargarFirma(),
-    tableroComoImagen(d.tablero, d.tamañoTablero, TABLERO * EXPORT_SCALE),
-  ])
+  const { familia, marcador } = d
+  const [firma, tablero] = await Promise.all([cargarFirma(), svgAImagen(d.tablero(TABLERO * EXPORT_SCALE, SOMBRA * EXPORT_SCALE))])
   await document.fonts.load(`bold 20px ${familia}`).catch(() => {})
 
+  const altoTotal = alto(marcador !== null)
   const lienzo = document.createElement('canvas')
   lienzo.width = ANCHO * EXPORT_SCALE
-  lienzo.height = ALTO * EXPORT_SCALE
+  lienzo.height = altoTotal * EXPORT_SCALE
   const ctx = lienzo.getContext('2d')
   if (!ctx) throw new Error('No se pudo crear la imagen')
   ctx.scale(EXPORT_SCALE, EXPORT_SCALE)
 
   ctx.save()
-  trazarRectRedondeado(ctx, 0, 0, ANCHO, ALTO, RADIO)
+  trazarRectRedondeado(ctx, 0, 0, ANCHO, altoTotal, RADIO)
   ctx.clip()
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, ANCHO, ALTO)
+  ctx.fillRect(0, 0, ANCHO, altoTotal)
 
-  // Título y modo: alineados al borde izquierdo del tablero.
+  // Título y subtítulo: alineados al borde izquierdo del tablero.
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   ctx.font = `bold 20px ${familia}`
   ctx.fillStyle = COLOR_TITULO
-  ctx.fillText(d.titulo, PADDING, PADDING + ALTO_TITULO / 2)
+  ctx.fillText(ajustarTexto(ctx, d.titulo, TABLERO), PADDING, PADDING + ALTO_TITULO / 2)
   ctx.font = `10px ${familia}`
   ctx.fillStyle = COLOR_MODO
-  ctx.fillText(d.modo, PADDING, PADDING + ALTO_TITULO + GAP_TITULO + ALTO_MODO / 2)
+  ctx.fillText(ajustarTexto(ctx, d.subtitulo, TABLERO), PADDING, PADDING + ALTO_TITULO + GAP_TITULO + ALTO_MODO / 2)
 
   const tableroY = PADDING + ALTO_TITULO + GAP_TITULO + ALTO_MODO + GAP_ENCABEZADO
-  ctx.drawImage(tablero, PADDING, tableroY, TABLERO, TABLERO)
+  ctx.drawImage(tablero, PADDING - SOMBRA, tableroY - SOMBRA, TABLERO + 2 * SOMBRA, TABLERO + 2 * SOMBRA)
 
-  const marcadorY = tableroY + TABLERO + GAP_MARCADOR
-  dibujarMarcador(ctx, familia, d, marcadorY + ALTO_MARCADOR / 2)
+  let firmaY = tableroY + TABLERO
+  if (marcador) {
+    const marcadorY = firmaY + GAP_MARCADOR
+    dibujarMarcador(ctx, familia, marcador, marcadorY + ALTO_MARCADOR / 2)
+    firmaY = marcadorY + ALTO_MARCADOR
+  }
 
-  dibujarFirma(ctx, firma, ANCHO, marcadorY + ALTO_MARCADOR + GAP_FIRMA, ESCALA_FIRMA)
+  dibujarFirma(ctx, firma, ANCHO, firmaY + GAP_FIRMA, ESCALA_FIRMA)
   ctx.restore()
 
-  return new Promise<Blob>((resolve, reject) =>
-    lienzo.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('No se pudo generar la imagen'))), 'image/png')
-  )
+  return canvasAPng(lienzo)
 }

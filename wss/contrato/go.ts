@@ -1,4 +1,6 @@
+import { z } from 'zod'
 import { comandoAck, devuelve, sinPayload } from './definir'
+import type { PartidaDrivePendiente } from '../go/db'
 import { invitacionSchema, jugadaSchema, partidaIdSchema, type ContrincanteGo, type Partida } from '../validators/go'
 
 /** Comandos de Go de una conexión: estudiante y profe comparten la mecánica, cambia la identidad. */
@@ -17,6 +19,11 @@ export const comandosGo = {
   'go:marcar_muerta': comandoAck(jugadaSchema, devuelve<Partida>()),
   'go:confirmar_conteo': comandoAck(partidaIdSchema, devuelve<Partida>()),
   'go:abandonar': comandoAck(partidaIdSchema, devuelve<Partida>()),
+}
+
+export const comandosGoDriveProfe = {
+  'go:partidas_drive_pendientes': comandoAck(sinPayload, devuelve<PartidaDrivePendiente[]>()),
+  'go:descartar_partidas_drive': comandoAck(z.object({ ids: z.array(z.string()) }), devuelve<void>()),
 }
 
 export interface EventosGo {

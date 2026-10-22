@@ -114,6 +114,13 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
             condicion={config?.condicion_asistencia ?? null}
             onChange={(condicion_asistencia) => actualizarConfig({ condicion_asistencia })}
           />
+
+          <SwitchCard
+            title="Almacenar en mi Drive los resultados de las partidas de Go"
+            description="Al finalizar cada partida de Go de tus estudiantes, se almacenerá una imagen del tablero con la información del resultado"
+            checked={config?.guardar_partidas_drive ?? false}
+            onCheckedChange={() => actualizarConfig({ guardar_partidas_drive: !config?.guardar_partidas_drive })}
+          />
         </div>
       </DialogContent>
     </Dialog>

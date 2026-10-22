@@ -7,6 +7,7 @@ import { CirclePlus, Infinity, Send } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { track } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { extractZodErrorMessages } from '@/wss/utils'
@@ -80,6 +81,12 @@ export function AgregarPregunta() {
     if (!success) return
     crear(encuesta)
       .then(() => {
+        track({
+          event: 'encuesta_pregunta_creada',
+          opciones: encuesta.opciones.length,
+          admite_aportes: !!encuesta.admiteAportes,
+          admite_multiples_votos: !!encuesta.admiteMultiplesVotos,
+        })
         toast.success(`Encuesta creada!`)
         setPregunta('')
         setDescripcion('')

@@ -4,7 +4,15 @@ import { toast } from 'sonner'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
 import { cn } from '@/lib/utils'
-import { cargarFirma, dibujarFirma, EXPORT_SCALE, FIRMA_ALTO, trazarRectRedondeado } from '@/lib/imagen-compartible'
+import {
+  ajustarTexto,
+  canvasAPng,
+  cargarFirma,
+  dibujarFirma,
+  EXPORT_SCALE,
+  FIRMA_ALTO,
+  trazarRectRedondeado,
+} from '@/lib/imagen-compartible'
 import {
   Dialog,
   DialogClose,
@@ -69,10 +77,7 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
     const maxAnchoTitulo = QR_EXPORT_WIDTH - QR_EXPORT_PADDING * 2
     const etiqueta = 'Sala '
     const anchoEtiqueta = ctx.measureText(etiqueta).width
-    let nombreSala = titulo
-    while (ctx.measureText(nombreSala).width > maxAnchoTitulo - anchoEtiqueta && nombreSala.length > 1) {
-      nombreSala = nombreSala.slice(0, -2) + '…'
-    }
+    const nombreSala = ajustarTexto(ctx, titulo, maxAnchoTitulo - anchoEtiqueta)
     let x = (QR_EXPORT_WIDTH - anchoEtiqueta - ctx.measureText(nombreSala).width) / 2
     const tituloY = QR_EXPORT_PADDING + QR_EXPORT_TITLE_HEIGHT / 2
     ctx.fillStyle = '#6F41CB'
@@ -90,20 +95,19 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
 
     ctx.restore()
 
-    canvasFinal.toBlob((blob) => {
-      if (!blob) {
-        toast.error('No se pudo generar la imagen del QR')
-        return
-      }
+    const blob = await canvasAPng(canvasFinal).catch(() => null)
+    if (!blob) {
+      toast.error('No se pudo generar la imagen del QR')
+      return
+    }
 
-      navigator.clipboard
-        .write([new ClipboardItem({ 'image/png': blob })])
-        .then(() => {
-          setCopiado(true)
-          setTimeout(() => setCopiado(false), 2000)
-        })
-        .catch(() => toast.error('No se pudo copiar el QR. Probá con otro navegador.'))
-    }, 'image/png')
+    navigator.clipboard
+      .write([new ClipboardItem({ 'image/png': blob })])
+      .then(() => {
+        setCopiado(true)
+        setTimeout(() => setCopiado(false), 2000)
+      })
+      .catch(() => toast.error('No se pudo copiar el QR. Probá con otro navegador.'))
   }
 
   return (

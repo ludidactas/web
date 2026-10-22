@@ -4,10 +4,10 @@ import { nombreImagenPartida, type InfoExport } from '@/lib/go/info-export'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { guardarPartidaEnDrive } from '@/lib/google/recursos-partidas'
-import { tableroAPng } from '@/lib/go/exportar-png'
+import { imagenPartida } from '@/lib/go/imagen-partida'
 import { comandos, escuchar } from '../contrato-cli'
 
-const INFO_FALLBACK: InfoExport = { negro: 'Negro', blanco: 'Blanco', ganador: null, puntos: null }
+const INFO_FALLBACK: InfoExport = { modo: 'partida', negro: 'Negro', blanco: 'Blanco', ganador: null, puntos: null }
 
 export default function profeGoDriveHandlers(socket: Socket | null) {
   const cmd = comandos<typeof comandosGoDriveProfe>(socket, { timeoutMs: 10_000 })
@@ -26,7 +26,7 @@ export default function profeGoDriveHandlers(socket: Socket | null) {
       for (const p of pendientes) {
         try {
           const info = p.info ?? INFO_FALLBACK
-          const png = await tableroAPng(p.tablero, p.tamaño, p.removidas, info)
+          const png = await imagenPartida(p.tablero, p.tamaño, p.removidas, info, p.creadaEn)
           await guardarPartidaEnDrive(sala.id, nombreSala, p.id, nombreImagenPartida(info, p.creadaEn), png)
           subidas.push(p.id)
         } catch {

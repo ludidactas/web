@@ -53,10 +53,23 @@ export function LlamadaDojo({ className }: { className?: string }) {
 export function LlamadaTablero({ className }: { className?: string }) {
   return (
     <LlamadaGo
-      texto="Si tenés alguien con quien jugar, podés usar nuestro tablero para jugar por territorio y atari Go. Al terminar podés guardar el resultado y compartirlo como imágen."
+      texto="Si tenés alguien con quien jugar compartiendo tu dispositivo, podés usar nuestro tablero para jugar por territorio y atari Go. Al terminar podés guardar el resultado y compartirlo como imágen."
       href="/go/tablero"
       icono="tabler:go-game"
       etiqueta="Ir al tablero"
+      className={className}
+    />
+  )
+}
+
+/** Invitación a usar las salas, para quienes quieran jugar online. */
+export function LlamadaSalaOnline({ className }: { className?: string }) {
+  return (
+    <LlamadaGo
+      texto="Si querés jugar online, podés crear una sala y compartir el link. Todas las personas con el link pueden entrar a la sala a jugar partidas y observar las que haya en curso."
+      href="/salas"
+      icono="akar-icons:people-group"
+      etiqueta="Ir a salas"
       className={className}
     />
   )

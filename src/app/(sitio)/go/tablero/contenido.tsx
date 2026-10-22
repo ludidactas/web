@@ -1,7 +1,8 @@
 'use client'
 
+import { BotonesImagen } from '@/components/salas/go/botones-imagen'
 import { ElegirModoInvitacion } from '@/components/salas/go/elegir-modo-invitacion'
-import { LlamadaDojo } from '@/components/salas/go/llamadas-go'
+import { LlamadaDojo, LlamadaSalaOnline } from '@/components/salas/go/llamadas-go'
 import { PartidaGo } from '@/components/salas/go/partida-go'
 import {
   Dialog,
@@ -12,6 +13,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { track } from '@/lib/analytics'
+import { generarImagenResultado, svgDelTableroVivo } from '@/lib/go-local/imagen-resultado'
 import {
   alternarConformidadLocal,
   jugarLocal,
@@ -21,10 +24,11 @@ import {
   type PartidaLocal,
 } from '@/lib/go-local/partida-local'
 import { storeTableroLocal } from '@/lib/go-local/store-tablero'
+import { ETIQUETA_MODO, fechaCorta } from '@/lib/go/info-export'
 import { BLANCO, NEGRO, type Color } from '@/lib/go/motor'
-import { generarImagenResultado } from '@/lib/go-local/imagen-resultado'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
 import { PiedraIcono } from '@/lib/go/tablero-go-base'
+import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { TAMAÑOS_TABLERO, type ModoPartida, type TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -42,8 +46,8 @@ const NOMBRE = { [NEGRO]: 'Negro', [BLANCO]: 'Blanco' } as const
 
 type Punto = { fila: number; columna: number }
 
-/** Estado del botón "Copiar tablero", que copia la imagen del resultado. */
-type CompartirImagen = { copiado: boolean; onCompartir: () => void }
+/** Acciones sobre la imagen del resultado: descargarla o copiarla (`copiado` confirma la copia). */
+type CompartirImagen = { copiado: boolean; onCopiar: () => void; onDescargar: () => void }
 
 /** "Ganó Negro", "Ganó Blanco" o "Empate", según el resultado de una partida terminada. */
 const tituloResultado = (partida: PartidaLocal) =>
@@ -66,6 +70,14 @@ function confirmarJugada(pendiente: Punto | null, aplicar: Aplicar): boolean {
   if (!pendiente) return false
   if (aplicar((p) => jugarLocal(p, pendiente.fila, pendiente.columna))) sonarJugada()
   return true
+}
+/** Mide el inicio (primera acción sobre una partida intacta) y el fin de una partida local. */
+function medirTransicion(antes: PartidaLocal, despues: PartidaLocal) {
+  const { modo, tamaño } = despues
+  if (antes.fase === 'jugando' && antes.historial.length === 0 && antes.pases === 0)
+    track({ event: 'go_partida_iniciada', origen: 'tablero', modo, tamano: tamaño })
+  if (antes.fase !== 'terminada' && despues.fase === 'terminada')
+    track({ event: 'go_partida_terminada', origen: 'tablero', modo, tamano: tamaño })
 }
 /** Aplica una transición de la partida; devuelve `false` (y avisa el motivo) si era ilegal. */
 type Aplicar = (transicion: (p: PartidaLocal) => PartidaLocal) => boolean
@@ -144,16 +156,18 @@ export default function ContenidoTablero() {
       partida.modo === 'atari'
         ? null
         : partida.fase === 'contando'
-          ? puntajeLocal(partida)
-          : partida.fase === 'terminada'
-            ? partida.resultado
-            : null,
+        ? puntajeLocal(partida)
+        : partida.fase === 'terminada'
+        ? partida.resultado
+        : null,
     [partida]
   )
 
   const aplicar: Aplicar = (transicion) => {
     try {
-      setPartida(transicion(partida))
+      const siguiente = transicion(partida)
+      setPartida(siguiente)
+      medirTransicion(partida, siguiente)
       setPendiente(null)
       return true
     } catch (e) {
@@ -193,22 +207,23 @@ export default function ContenidoTablero() {
   }, [])
 
   const [copiado, setCopiado] = useState(false)
-  /** Copia al portapapeles la imagen del resultado: el tablero tal como se ve, con el marcador y la firma. */
-  const compartir = async () => {
+  /** Imagen del resultado: el tablero tal como se ve, con el marcador y la firma. `null` si la partida no terminó. */
+  const imagenDelResultado = () => {
     const tablero = areaJuego.current?.querySelector<SVGSVGElement>('svg.touch-none')
-    if (!tablero || partida.fase !== 'terminada') return
-    const { etiqueta, bajoBlanco, bajoNegro } = valoresMarcador(partida, puntaje)
+    if (!tablero || partida.fase !== 'terminada') return null
+    return generarImagenResultado({
+      tablero: (px, margen) => svgDelTableroVivo(tablero, partida.tamaño, px, margen),
+      familia: getComputedStyle(tablero).fontFamily,
+      titulo: tituloResultado(partida),
+      subtitulo: `${ETIQUETA_MODO[partida.modo]} el ${fechaCorta(new Date())}`,
+      marcador: valoresMarcador(partida, puntaje),
+    })
+  }
+  const copiar = async () => {
+    // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
+    const imagen = imagenDelResultado()
+    if (!imagen) return
     try {
-      // El blob se pasa como promesa: Safari exige armar el ClipboardItem dentro del click.
-      const imagen = generarImagenResultado({
-        tablero,
-        tamañoTablero: partida.tamaño,
-        titulo: tituloResultado(partida),
-        modo: ETIQUETA_MODO[partida.modo],
-        etiquetaMarcador: etiqueta,
-        bajoBlanco,
-        bajoNegro,
-      })
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2000)
@@ -216,7 +231,17 @@ export default function ContenidoTablero() {
       toast.error('No se pudo copiar la imagen. Probá con otro navegador.')
     }
   }
-  const compartirImagen: CompartirImagen = { copiado, onCompartir: compartir }
+  const descargar = async () => {
+    const imagen = imagenDelResultado()
+    if (!imagen) return
+    try {
+      const fecha = new Date().toLocaleDateString('sv-SE')
+      descargarBlob(await imagen, `Go ${ETIQUETA_MODO[partida.modo]} - ${tituloResultado(partida)} - ${fecha}.png`)
+    } catch {
+      toast.error('No se pudo descargar la imagen')
+    }
+  }
+  const compartirImagen: CompartirImagen = { copiado, onCopiar: copiar, onDescargar: descargar }
 
   const elegirTamaño = (t: TamañoTablero) => {
     setTamaño(t)
@@ -331,11 +356,10 @@ export default function ContenidoTablero() {
       {/* Debajo del área de juego: en celular vertical, ésta mide una pantalla, así que la llamada queda fuera de vista
           con el tablero centrado y se llega a ella scrolleando. */}
       <LlamadaDojo className="mt-10 max-md:portrait:mt-0" />
+      <LlamadaSalaOnline className="mt-2 max-md:portrait:mt-0" />
     </div>
   )
 }
-
-const ETIQUETA_MODO: Record<ModoPartida, string> = { partida: 'Partida por territorio', atari: 'Atari Go' }
 
 /** El modo de la partida, en letra mínima, debajo del título de estado. */
 function EtiquetaModo({ modo }: { modo: ModoPartida }) {
@@ -490,26 +514,9 @@ function Acciones({
       <BotonConformidad color={color} partida={partida} aplicar={aplicar} />
     )
 
-  if (partida.fase === 'terminada') return <BotonCompartir {...compartir} />
+  if (partida.fase === 'terminada') return <BotonesImagen {...compartir} />
 
   return null
-}
-
-/** Copia la imagen del resultado; mientras confirma la copia, avisa "Imagen copiada". */
-function BotonCompartir({ copiado, onCompartir }: CompartirImagen) {
-  return (
-    <button
-      type="button"
-      onClick={onCompartir}
-      className={cn(
-        'flex items-center gap-1 px-4 py-2 rounded-full text-white transition-colors active:scale-95',
-        copiado ? 'bg-emerald-500' : 'bg-ld-azul hover:bg-ld-azul/80'
-      )}
-    >
-      <Icon icon={copiado ? 'lucide:check' : 'lucide:copy'} width={16} height={16} />
-      {copiado ? 'Imagen copiada' : 'Copiar tablero'}
-    </button>
-  )
 }
 
 /** Conformidad de `color` con el conteo: un toque la da y otro la retira. La partida termina con las dos. */

@@ -46,6 +46,22 @@ export async function getIdsEncuestas(salaId: string): Promise<string[]> {
   return redis.smembers(k.pollsIndex(salaId))
 }
 
+/** Devuelve las encuestas de la sala. Una ilegible se omite (con warning) para que no tire abajo la lista. */
+export async function getEncuestas(salaId: string): Promise<Encuesta[]> {
+  const ids = await getIdsEncuestas(salaId)
+  const polls = await Promise.all(
+    ids.map(async (pollId) => {
+      try {
+        return await getEncuesta(salaId, pollId)
+      } catch (err) {
+        console.warn(`⚠️  Sala ${salaId}: encuesta '${pollId}' ilegible, se omite:`, err)
+        return null
+      }
+    })
+  )
+  return polls.filter((p): p is Encuesta => p !== null)
+}
+
 /** Agrega una encuesta al índice de la sala. */
 export async function registarEncuestas(salaId: string, pollId: string): Promise<void> {
   await redis.sadd(k.pollsIndex(salaId), pollId)

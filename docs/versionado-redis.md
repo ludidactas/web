@@ -59,6 +59,11 @@ de strings (`partidaActiva`, votos, lista de invitados, dojo) no tienen shape qu
 ## Lecturas estrictas
 
 Leer valida con el schema actual y lanza si el documento no lo cumple, en vez de devolver un `as T`.
+Dos lecturas toleran el documento ilegible, con un warning, para que uno solo no tire abajo la lista: las
+encuestas de una sala (`getEncuestas`) y la planilla de estudiantes (`getEstudiantes`). El estudiante
+omitido no figura en la planilla ni en la evaluación de asistencia (queda ausente) hasta que se
+reconecta y `guardarEstudiante` lo reescribe.
+
 Antes de agregar un campo obligatorio, o de adoptar un documento nuevo, conviene correr el schema contra
 los documentos existentes de un redis real: las partidas de Go anteriores a los modos no traían `modo`
 y se resolvió con `.default('partida')` en el schema, sin migración.

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'bun:test'
 import redis from '../../redis'
 import { borrarSala } from '../../salas/db'
 import type { Encuesta } from '../../validators/polls'
-import { getEncuesta, guardarEncuesta } from '../db'
+import { getEncuesta, getEncuestas, guardarEncuesta, registarEncuestas } from '../db'
 
 const SALA = `test-versionado-${crypto.randomUUID()}`
 
@@ -37,5 +37,13 @@ describe('encuestas en redis', () => {
     await redis.set(`sala:${SALA}:polls:e1`, JSON.stringify(vieja))
     const leida = await getEncuesta(SALA, 'e1')
     expect(leida).toMatchObject({ isFocused: false, admiteAportes: false, maxMultiplesVotos: null })
+  })
+
+  it('getEncuestas omite la encuesta ilegible y devuelve las demás', async () => {
+    await guardarEncuesta(SALA, encuesta)
+    await registarEncuestas(SALA, 'e1')
+    await redis.set(`sala:${SALA}:polls:e2`, JSON.stringify({ id: 'e2', pregunta: '', opciones: [] }))
+    await registarEncuestas(SALA, 'e2')
+    expect((await getEncuestas(SALA)).map((p) => p.id)).toEqual(['e1'])
   })
 })

@@ -1,9 +1,9 @@
-import type { InfoExport } from '@/lib/go/info-export'
 import redis from '../redis'
-import { Partida, partidaSchema } from '../validators/go'
+import { Partida, partidaDrivePendienteSchema, partidaSchema, type PartidaDrivePendiente } from '../validators/go'
 import { versionado } from '../versionado'
 
 const partidaCodec = versionado({ schema: partidaSchema })
+const partidaDriveCodec = versionado({ schema: partidaDrivePendienteSchema })
 
 /** Persistencia en Redis de una partida de Go — claves bajo `sala:<id>:go:...` (ver `k` abajo). */
 const k = {
@@ -62,23 +62,19 @@ export async function incrementarStats(salaId: string, userId: string, gano: boo
 
 // -- Partidas pendientes de subir a Drive (hash) --
 
-type PartidaDrivePendiente = Pick<Partida, 'id' | 'tablero' | 'tamaño' | 'removidas' | 'creadaEn'> & {
-  info?: InfoExport
-}
-
 export type { PartidaDrivePendiente }
 
 const partidasDrivePendientes = (salaId: string) => `sala:${salaId}:partidas_drive_pendientes`
 
 /** Encola una partida terminada para que el FE del profe la suba a Drive al abrir la sala. */
 export async function encolarPartidaDrive(salaId: string, p: PartidaDrivePendiente): Promise<void> {
-  await redis.hset(partidasDrivePendientes(salaId), p.id, JSON.stringify(p))
+  await redis.hset(partidasDrivePendientes(salaId), p.id, partidaDriveCodec.serializar(p))
 }
 
 /** Devuelve las partidas pendientes de subir a Drive, sin borrarlas. */
 export async function getPartidasDrivePendientes(salaId: string): Promise<PartidaDrivePendiente[]> {
   const raw = (await redis.hgetall(partidasDrivePendientes(salaId))) ?? {}
-  return Object.values(raw).map((str) => JSON.parse(str) as PartidaDrivePendiente)
+  return Object.values(raw).map((str) => partidaDriveCodec.parsear(str))
 }
 
 /** Descarta las partidas ya subidas: solo se llama cuando el FE confirmó que quedaron escritas en Drive. */

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'bun:test'
+import { afterEach, describe, expect, it, spyOn } from 'bun:test'
 import redis from '../../redis'
 import { MetodosLogin } from '../../validators/auth'
 import {
@@ -69,6 +69,25 @@ describe('entidades de la sala en redis', () => {
 
     await redis.hset(`sala:${ID}:estudiantes`, 'Ana', JSON.stringify(sesion))
     expect(await getEstudiantes(ID)).toEqual({ Ana: sesion })
+  })
+
+  it('estudiantes: un documento ilegible se omite y no tira la planilla', async () => {
+    const ana = WssEstudianteSessionSchema.parse({
+      rol: 'estudiante',
+      idSala: ID,
+      metodo: Metodo.Nombre,
+      nombre: 'Ana',
+    })
+    await guardarEstudiante(ID, ana)
+    await redis.hset(`sala:${ID}:estudiantes`, 'roto', JSON.stringify({ metodo: 'dni', dni: 'no-es-un-dni' }))
+    await redis.hset(`sala:${ID}:estudiantes`, 'basura', 'no es json')
+    const warn = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      expect(await getEstudiantes(ID)).toEqual({ Ana: ana })
+      expect(warn).toHaveBeenCalledTimes(2)
+    } finally {
+      warn.mockRestore()
+    }
   })
 
   it('eventos de asistencia: cada elemento de la lista lleva su versión', async () => {

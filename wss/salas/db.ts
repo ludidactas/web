@@ -83,11 +83,19 @@ export async function eliminarSalaDeProfe(email: string, salaId: string): Promis
 /**
  * Devuelve la planilla de la sala: mapa `userId → sesión`. Es el registro durable de quiénes
  * pasaron por la sala. La presencia NO se guarda acá; se deduce de los sockets vivos al listar.
+ * Un estudiante cuyo documento no cumple el schema se omite (con warning) para que no tire abajo la planilla.
  */
 export async function getEstudiantes(salaId: string): Promise<Record<string, WssEstudianteSession>> {
   const raw = (await redis.hgetall(`sala:${salaId}:estudiantes`)) ?? {}
   return Object.fromEntries(
-    Object.entries(raw).map(([userId, str]) => [userId, estudianteCodec.parsear(str)])
+    Object.entries(raw).flatMap(([userId, str]) => {
+      try {
+        return [[userId, estudianteCodec.parsear(str)]]
+      } catch (err) {
+        console.warn(`⚠️  Sala ${salaId}: estudiante '${userId}' ilegible en la planilla, se omite:`, err)
+        return []
+      }
+    })
   )
 }
 

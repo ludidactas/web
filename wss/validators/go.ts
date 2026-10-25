@@ -1,4 +1,5 @@
 import z from 'zod'
+import type { InfoExport } from '@/lib/go/info-export'
 import { BLANCO, NEGRO, VACIO, type Color, type Tablero } from '@/lib/go/motor'
 
 /**
@@ -71,24 +72,27 @@ export interface Partida {
 const jugadorPartidaSchema = z.object({ userId: z.string(), nombre: z.string() })
 const colorSchema = z.enum([NEGRO, BLANCO])
 const matrizBoolSchema = z.array(z.array(z.boolean()))
+const tamañoSchema = z.union([z.literal(9), z.literal(13), z.literal(19)])
+const tableroSchema = z.array(z.array(z.enum([VACIO, NEGRO, BLANCO])))
+const removidasSchema = matrizBoolSchema.nullable()
 
 /** Schema de lo que se persiste en Redis (`Partida`). */
 export const partidaSchema: z.ZodType<Partida, z.ZodTypeDef, unknown> = z.object({
   id: z.string(),
   salaId: z.string(),
-  tamaño: z.union([z.literal(9), z.literal(13), z.literal(19)]),
+  tamaño: tamañoSchema,
   // Las partidas anteriores a los modos no lo traen.
   modo: z.enum(MODOS_PARTIDA).default('partida'),
   negro: jugadorPartidaSchema,
   blanco: jugadorPartidaSchema,
-  tablero: z.array(z.array(z.enum([VACIO, NEGRO, BLANCO]))),
+  tablero: tableroSchema,
   turno: colorSchema,
   capturasNegras: z.number(),
   capturasBlancas: z.number(),
   pases: z.number(),
   historial: z.array(z.string()),
   ultimaJugada: z.object({ fila: z.number(), columna: z.number() }).nullable(),
-  removidas: matrizBoolSchema.nullable(),
+  removidas: removidasSchema,
   vivo: matrizBoolSchema.nullable(),
   confirmaron: z.object({ negro: z.boolean(), blanco: z.boolean() }),
   estado: z.enum(['pendiente', 'jugando', 'contando', 'terminada']),
@@ -98,6 +102,29 @@ export const partidaSchema: z.ZodType<Partida, z.ZodTypeDef, unknown> = z.object
   motivoFin: z.enum(['conteo', 'abandono', 'captura']).nullable(),
   ganadorUserId: z.string().nullable(),
   creadaEn: z.string(),
+})
+
+/** Partida terminada en cola para que el FE del profe la suba a Drive. */
+export type PartidaDrivePendiente = Pick<Partida, 'id' | 'tablero' | 'tamaño' | 'removidas' | 'creadaEn'> & {
+  info?: InfoExport
+}
+
+/** Schema de lo que se persiste en Redis (`PartidaDrivePendiente`). */
+export const partidaDrivePendienteSchema: z.ZodType<PartidaDrivePendiente, z.ZodTypeDef, unknown> = z.object({
+  id: z.string(),
+  tablero: tableroSchema,
+  tamaño: tamañoSchema,
+  removidas: removidasSchema,
+  creadaEn: z.string(),
+  info: z
+    .object({
+      modo: z.enum(MODOS_PARTIDA).default('partida'),
+      negro: z.string(),
+      blanco: z.string(),
+      ganador: z.enum(['negro', 'blanco']).nullable(),
+      puntos: z.object({ negro: z.number(), blanco: z.number() }).nullable(),
+    })
+    .optional(),
 })
 
 export const invitacionSchema = z.object({

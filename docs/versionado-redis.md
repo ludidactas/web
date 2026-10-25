@@ -53,7 +53,7 @@ de strings (`partidaActiva`, votos, lista de invitados, dojo) no tienen shape qu
 |---|---|
 | Sala (hash `salas`) | `salaCodec`, `wss/salas/db.ts` |
 | Estudiante de la planilla, evento y pendiente de asistencia, registro de clase | `wss/salas/db.ts` |
-| Partida de Go | `wss/go/db.ts` (`partidaSchema` en `wss/validators/go.ts`) |
+| Partida de Go y partida pendiente de Drive | `wss/go/db.ts` (`partidaSchema`, `partidaDrivePendienteSchema` en `wss/validators/go.ts`) |
 | Encuesta | `wss/polls/db.ts` |
 
 ## Lecturas estrictas

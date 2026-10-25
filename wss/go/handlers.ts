@@ -1,11 +1,12 @@
 import { rooms } from '../rooms'
 import { Socket } from 'socket.io'
-import { comandosGo } from '../contrato/go'
+import { comandosGo, comandosGoDriveProfe } from '../contrato/go'
 import { alDesconectar, registrar } from '../contrato/registrar'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo } from './app'
 import { Partida } from '../validators/go'
+import * as db from './db'
 
 /**
  * Registra los comandos de Go de una conexión bajo una identidad (`userId`/`nombre`) dada. La
@@ -70,6 +71,11 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   alDesconectar(socket, async () => {
     const sala = await Salas.get(idSala)
     if (!(await sala.profeConectado(socket.id))) await avisarContrincantesActualizados(idSala)
+  })
+
+  registrar(socket, comandosGoDriveProfe, {
+    'go:partidas_drive_pendientes': async () => db.getPartidasDrivePendientes(idSala),
+    'go:descartar_partidas_drive': async ({ ids }) => db.descartarPartidasDrivePendientes(idSala, ids),
   })
 
   await registrarComandosGo(socket, idSala, userId, nombre)

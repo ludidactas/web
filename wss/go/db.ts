@@ -1,5 +1,8 @@
 import redis from '../redis'
-import { Partida } from '../validators/go'
+import { Partida, partidaSchema } from '../validators/go'
+import { versionado } from '../versionado'
+
+const partidaCodec = versionado({ schema: partidaSchema })
 
 /** Persistencia en Redis de una partida de Go — claves bajo `sala:<id>:go:...` (ver `k` abajo). */
 const k = {
@@ -17,12 +20,12 @@ const k = {
 /** Devuelve la partida, o `null` si no existe. */
 export async function getPartida(salaId: string, partidaId: string): Promise<Partida | null> {
   const str = await redis.get(k.partida(salaId, partidaId))
-  return str ? (JSON.parse(str) as Partida) : null
+  return str ? partidaCodec.parsear(str) : null
 }
 
 /** Persiste el JSON completo de la partida. */
 export async function guardarPartida(partida: Partida): Promise<void> {
-  await redis.set(k.partida(partida.salaId, partida.id), JSON.stringify(partida))
+  await redis.set(k.partida(partida.salaId, partida.id), partidaCodec.serializar(partida))
 }
 
 /** Devuelve los IDs de todas las partidas de la sala. */

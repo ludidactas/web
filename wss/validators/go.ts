@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { Color, Tablero } from '@/lib/go/motor'
+import { BLANCO, NEGRO, VACIO, type Color, type Tablero } from '@/lib/go/motor'
 
 /**
  * Zod schemas + tipos de una partida de Go — el contrato entre servidor y cliente (`Partida` es lo
@@ -67,6 +67,38 @@ export interface Partida {
   ganadorUserId: string | null
   creadaEn: string
 }
+
+const jugadorPartidaSchema = z.object({ userId: z.string(), nombre: z.string() })
+const colorSchema = z.enum([NEGRO, BLANCO])
+const matrizBoolSchema = z.array(z.array(z.boolean()))
+
+/** Schema de lo que se persiste en Redis (`Partida`). */
+export const partidaSchema: z.ZodType<Partida, z.ZodTypeDef, unknown> = z.object({
+  id: z.string(),
+  salaId: z.string(),
+  tamaño: z.union([z.literal(9), z.literal(13), z.literal(19)]),
+  // Las partidas anteriores a los modos no lo traen.
+  modo: z.enum(MODOS_PARTIDA).default('partida'),
+  negro: jugadorPartidaSchema,
+  blanco: jugadorPartidaSchema,
+  tablero: z.array(z.array(z.enum([VACIO, NEGRO, BLANCO]))),
+  turno: colorSchema,
+  capturasNegras: z.number(),
+  capturasBlancas: z.number(),
+  pases: z.number(),
+  historial: z.array(z.string()),
+  ultimaJugada: z.object({ fila: z.number(), columna: z.number() }).nullable(),
+  removidas: matrizBoolSchema.nullable(),
+  vivo: matrizBoolSchema.nullable(),
+  confirmaron: z.object({ negro: z.boolean(), blanco: z.boolean() }),
+  estado: z.enum(['pendiente', 'jugando', 'contando', 'terminada']),
+  resultado: z
+    .object({ negro: z.number(), blanco: z.number(), ganador: z.enum(['negro', 'blanco', 'empate']) })
+    .nullable(),
+  motivoFin: z.enum(['conteo', 'abandono', 'captura']).nullable(),
+  ganadorUserId: z.string().nullable(),
+  creadaEn: z.string(),
+})
 
 export const invitacionSchema = z.object({
   contrincanteId: z.string().min(1),

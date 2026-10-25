@@ -1,6 +1,9 @@
 import { mapValues } from 'remeda'
 import redis from '../redis'
-import { Encuesta } from '../validators/polls'
+import { Encuesta, encuestaSchema } from '../validators/polls'
+import { versionado } from '../versionado'
+
+const encuestaCodec = versionado({ schema: encuestaSchema })
 
 const k = {
   /** STRING — JSON de las propiedades estáticas de la encuesta (título, opciones, estado). */
@@ -25,12 +28,12 @@ const k = {
 /** Devuelve la encuesta, o `null` si no existe. */
 export async function getEncuesta(salaId: string, pollId: string): Promise<Encuesta | null> {
   const str = await redis.get(k.poll(salaId, pollId))
-  return str ? (JSON.parse(str) as Encuesta) : null
+  return str ? encuestaCodec.parsear(str) : null
 }
 
 /** Persiste el JSON de la encuesta. */
 export async function guardarEncuesta(salaId: string, poll: Encuesta): Promise<void> {
-  await redis.set(k.poll(salaId, poll.id), JSON.stringify(poll))
+  await redis.set(k.poll(salaId, poll.id), encuestaCodec.serializar(poll))
 }
 
 /** Borra la clave JSON de la encuesta (no toca índice ni votos). */

@@ -1,26 +1,36 @@
 import redis from '../redis'
 import {
   asistenciaDeClaseSchema,
+  eventoAsistenciaSchema,
   registroDeClaseSchema,
   type AsistenciaDeClase,
+  type EventoAsistencia,
   type RegistroDeClase,
 } from '../validators/asistencia'
 import { salaData, type SalaData } from '../validators/salas'
-import { WssEstudianteSession } from '../validators/session'
+import { WssEstudianteSession, WssEstudianteSessionSchema } from '../validators/session'
+import { versionado } from '../versionado'
 
 export type { SalaData }
 
 // -- Salas --
 
+// Codecs de los documentos JSON de redis. Para evolucionar un shape ver `docs/versionado-redis.md`.
+export const salaCodec = versionado({ schema: salaData })
+const estudianteCodec = versionado({ schema: WssEstudianteSessionSchema })
+const eventoAsistenciaCodec = versionado({ schema: eventoAsistenciaSchema })
+const asistenciaDeClaseCodec = versionado({ schema: asistenciaDeClaseSchema })
+const registroDeClaseCodec = versionado({ schema: registroDeClaseSchema })
+
 /** Devuelve la data de la sala, o `null` si no existe. */
 export async function getSala(salaId: string): Promise<SalaData | null> {
   const str = await redis.hget('salas', salaId)
-  return str ? salaData.parse(JSON.parse(str)) : null
+  return str ? salaCodec.parsear(str) : null
 }
 
 /** Persiste la data de la sala. */
 export async function guardarSala(sala: SalaData): Promise<void> {
-  await redis.hset('salas', sala.id, JSON.stringify(sala))
+  await redis.hset('salas', sala.id, salaCodec.serializar(sala))
 }
 
 /** Verifica si una sala existe. */
@@ -73,17 +83,25 @@ export async function eliminarSalaDeProfe(email: string, salaId: string): Promis
 /**
  * Devuelve la planilla de la sala: mapa `userId → sesión`. Es el registro durable de quiénes
  * pasaron por la sala. La presencia NO se guarda acá; se deduce de los sockets vivos al listar.
+ * Un estudiante cuyo documento no cumple el schema se omite (con warning) para que no tire abajo la planilla.
  */
 export async function getEstudiantes(salaId: string): Promise<Record<string, WssEstudianteSession>> {
   const raw = (await redis.hgetall(`sala:${salaId}:estudiantes`)) ?? {}
   return Object.fromEntries(
-    Object.entries(raw).map(([userId, str]) => [userId, JSON.parse(str) as WssEstudianteSession])
+    Object.entries(raw).flatMap(([userId, str]) => {
+      try {
+        return [[userId, estudianteCodec.parsear(str)]]
+      } catch (err) {
+        console.warn(`⚠️  Sala ${salaId}: estudiante '${userId}' ilegible en la planilla, se omite:`, err)
+        return []
+      }
+    })
   )
 }
 
 /** Agrega/actualiza al estudiante en la planilla, persistiendo su sesión (idempotente por `userId`). */
 export async function guardarEstudiante(salaId: string, session: WssEstudianteSession): Promise<void> {
-  await redis.hset(`sala:${salaId}:estudiantes`, session.userId, JSON.stringify(session))
+  await redis.hset(`sala:${salaId}:estudiantes`, session.userId, estudianteCodec.serializar(session))
 }
 
 // -- Asistencia (log de conexión/desconexión) --
@@ -94,8 +112,7 @@ export async function guardarEstudiante(salaId: string, session: WssEstudianteSe
 // Esta planilla de asistencia de momento solo se está almacenando y solo más adelante
 // vamos a renderizarla o exportarla de alguna forma a través del FE.
 
-/** Un evento crudo de presencia. `ts` es epoch ms. */
-export type EventoAsistencia = { userId: string; evento: 'conexion' | 'desconexion'; ts: number }
+export type { EventoAsistencia }
 
 /** Un intervalo durante el cual el estudiante estuvo conectado. `fin: null` = intervalo aún abierto. */
 export type IntervaloDeConexion = { inicio: number; fin: number | null }
@@ -111,13 +128,13 @@ export async function registrarEventoAsistencia(
   ts: number
 ): Promise<void> {
   const evt: EventoAsistencia = { userId, evento, ts }
-  await redis.rpush(`sala:${salaId}:asistencia`, JSON.stringify(evt))
+  await redis.rpush(`sala:${salaId}:asistencia`, eventoAsistenciaCodec.serializar(evt))
 }
 
 /** Devuelve todos los eventos de asistencia de la sala, en orden de inserción. */
 export async function getEventosAsistencia(salaId: string): Promise<EventoAsistencia[]> {
   const raw = await redis.lrange(`sala:${salaId}:asistencia`, 0, -1)
-  return raw.map((s) => JSON.parse(s) as EventoAsistencia)
+  return raw.map((s) => eventoAsistenciaCodec.parsear(s))
 }
 
 /** Borra el log de asistencia de la sala (la clase ya quedó resumida en un pendiente). */
@@ -129,7 +146,7 @@ export async function borrarLogDeAsistencia(salaId: string): Promise<void> {
 
 /** Encola una clase evaluada al final de la cola de pendientes de subir a Drive. */
 export async function encolarAsistencia(salaId: string, asistencia: AsistenciaDeClase): Promise<void> {
-  await redis.rpush(`sala:${salaId}:asistencia_pendiente`, JSON.stringify(asistencia))
+  await redis.rpush(`sala:${salaId}:asistencia_pendiente`, asistenciaDeClaseCodec.serializar(asistencia))
 }
 
 /**
@@ -141,7 +158,7 @@ export async function encolarAsistencia(salaId: string, asistencia: AsistenciaDe
  */
 export async function getAsistenciasPendientes(salaId: string): Promise<AsistenciaDeClase[]> {
   const raw = await redis.lrange(`sala:${salaId}:asistencia_pendiente`, 0, -1)
-  return raw.map((s) => asistenciaDeClaseSchema.parse(JSON.parse(s)))
+  return raw.map((s) => asistenciaDeClaseCodec.parsear(s))
 }
 
 /** Descarta las asistencias pendientes: se llama recién cuando el FE confirma que quedaron escritas en Drive. */
@@ -152,12 +169,12 @@ export async function borrarAsistenciasPendientes(salaId: string): Promise<void>
 // -- Registro de la clase abierta (para el seguimiento de apertura/cierre en `wss/asistencia/seguimiento.ts`) --
 
 export async function guardarRegistroDeClase(salaId: string, registro: RegistroDeClase): Promise<void> {
-  await redis.set(`sala:${salaId}:registro_clase`, JSON.stringify(registro))
+  await redis.set(`sala:${salaId}:registro_clase`, registroDeClaseCodec.serializar(registro))
 }
 
 export async function getRegistroDeClase(salaId: string): Promise<RegistroDeClase | null> {
   const raw = await redis.get(`sala:${salaId}:registro_clase`)
-  return raw ? registroDeClaseSchema.parse(JSON.parse(raw)) : null
+  return raw ? registroDeClaseCodec.parsear(raw) : null
 }
 
 export async function borrarRegistroDeClase(salaId: string): Promise<void> {

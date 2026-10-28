@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { titulo } from '@/components/fonts'
 import ShapeDividerWaves from '../custom/shape-divider'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import logoSketchy from '@/img/logo_sketchy.gif'
 import lemaSketchy from '@/img/lema_sketchy.gif'
+import Personajito from '@/svg/components/personajito'
 
 export default function Footer() {
   return (
@@ -16,10 +16,12 @@ export default function Footer() {
       />
       <div className="flex flex-col items-center text-center bg-indigo-300/50">
         <div className="text-[0.8em] lg:text-[15px] flex flex-col items-center text-center gap-4 pt-10">
-          <div className="flex flex-col items-center gap-2">
-            <Image className="w-[50px] lg:w-[100px] h-auto" src={logoSketchy} alt="" />
-            <Image className="w-[200px] lg:w-[300px] h-auto" src={lemaSketchy} alt="Ludidactas" />
-            <p className={`font-medium pt-1 ${titulo.className} text-[1em] m-0`}>Educación emergente </p>
+          <div className="flex md:w-[48em] items-center justify-center gap-4">
+            <Personajito className="w-16 md:w-24" paso={1800} amplitud={18} mancha="000000" />
+            <div className="font-medium text-left text-[7px] sm:text-[12px] md:text-[14px] lg:text-[18px] pt-1 dark:text-slate-50 w-[60%]">
+              <Image className="w-[300px] md:w-[800px] h-auto" src={lemaSketchy} alt="Ludidactas" />
+              <p className={`${titulo.className} m-0 leading-none text-nowrap md:text-[1em]`}>Educación emergente </p>
+            </div>
           </div>
 
           <Link
@@ -28,7 +30,7 @@ export default function Footer() {
             target="_blank"
           >
             <div className="flex flex-col items-center">
-              <Icon className='w-6 h-6 md:w-10 md:h-10' icon={'mdi:instagram'}/>
+              <Icon className='w-6 h-6 md:w-10 md:h-10' icon={'mdi:instagram'} />
               <p className="m-0 text-xl md:text-2xl">@ludidactas</p>
             </div>
           </Link>

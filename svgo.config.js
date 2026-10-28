@@ -15,6 +15,10 @@ export default {
         overrides: {
           cleanupIds: false,
           collapseGroups: false,
+          // Los exports de Affinity traen matrices con coordenadas enormes: convertidas a
+          // rotate(ángulo, cx, cy) el centro queda lejísimo y el redondeo del ángulo corre
+          // los elementos (p. ej. los ojos de Personajito2). Las dejamos como matrices
+          convertTransform: { matrixToTransform: false },
         },
       },
     },

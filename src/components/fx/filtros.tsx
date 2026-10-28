@@ -111,6 +111,15 @@ export function FiltrosSvg() {
             <feDisplacementMap in="SourceGraphic" in2="noise" scale="20" xChannelSelector="R" yChannelSelector="G" />
           </filter>
 
+          {/* Línea "hervida": el ruido cambia de semilla de golpe cada ~120ms, así el trazo
+              tiembla como si se redibujara a mano en cada cuadro */}
+          <filter id="sketchy" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="1" result="noise">
+              <animate attributeName="seed" values="1;2;3" dur="0.36s" calcMode="discrete" repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+
           {/* Color se controla con la prop CSS `color` del elemento que aplica el filtro.
               Región holgada (ver comentario en useOutlineFilter) para que no se recorte en elementos chicos. */}
           <filter id="outlined" x="-40%" y="-40%" width="180%" height="180%">
@@ -166,6 +175,7 @@ export function FiltrosSvg() {
         .warpy { filter: url(#warpy); }
         .hover-outlined { filter: url(#outlined); }
         .glitch { filter: url(#glitch); }
+        .sketchy { filter: url(#sketchy); }
         .hover-glitch:hover { filter: url(#glitch); }
       `}</style>
     </>

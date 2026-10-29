@@ -208,6 +208,11 @@ export async function estudianteGo(idSala: string, userId: string) {
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
 
+      partida.estado = EstadoPartida.Terminada
+      partida.motivoFin = 'abandono'
+      partida.ganadorUserId = null
+      await db.guardarPartida(partida)
+
       await db.limpiarPartidaActiva(idSala, partida.negro.userId)
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 

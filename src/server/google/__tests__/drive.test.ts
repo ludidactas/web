@@ -149,3 +149,25 @@ describe('guardarColeccion', () => {
     ).rejects.toThrow('Término no admitido')
   })
 })
+
+describe('guardarColeccion — carpetas existentes', () => {
+  it('no vuelve a crear la jerarquía de carpetas si ya existe', async () => {
+    const list = mock().mockImplementation(({ q }: { q: string }) =>
+      Promise.resolve({
+        data: {
+          files: q.includes("mimeType='application/vnd.google-apps.folder'") ? [{ id: 'carpeta', name: 'c' }] : [],
+          nextPageToken: null,
+        },
+      })
+    )
+    const api = mockApi({ list })
+
+    await guardarColeccion(api, { salaId: 'sala-1', nombreSala: 'Mi sala' }, 'Repaso', 'pregunta: uno')
+    await guardarColeccion(api, { salaId: 'sala-1', nombreSala: 'Mi sala' }, 'Otra', 'pregunta: dos')
+
+    expect(api.files.create).toHaveBeenCalledTimes(2)
+    for (const [{ requestBody }] of (api.files.create as ReturnType<typeof mock>).mock.calls) {
+      expect(requestBody.mimeType).not.toBe('application/vnd.google-apps.folder')
+    }
+  })
+})

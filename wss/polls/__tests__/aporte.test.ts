@@ -6,7 +6,7 @@ import * as db from '../db'
 
 const idSala = `test-aporte-${crypto.randomUUID()}`
 
-async function crearPollConAportes(): Promise<Encuesta> {
+async function crearPollConAportes(admiteMultiplesVotos = true): Promise<Encuesta> {
   const poll: Encuesta = {
     id: Date.now().toString() + Math.random().toString(36).slice(2),
     pregunta: '¿Cuál?',
@@ -20,7 +20,7 @@ async function crearPollConAportes(): Promise<Encuesta> {
     isFocused: false,
     isRevealed: false,
     admiteAportes: true,
-    admiteMultiplesVotos: true,
+    admiteMultiplesVotos,
     maxMultiplesVotos: null,
   }
   await db.guardarEncuesta(idSala, poll)
@@ -66,5 +66,55 @@ describe('votar — carrera de aportes', () => {
     expect(res.opciones.length).toBe(3)
     const votos = await db.getVotos(idSala, poll.id)
     expect(votos['2']).toBe(1)
+  })
+})
+
+describe('votar — aporte en voto único', () => {
+  it('el mismo usuario aporta dos veces: la primera pasa y la segunda tira Ya votaste', async () => {
+    const poll = await crearPollConAportes(false)
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-uno' })
+
+    await expect(
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-dos' })
+    ).rejects.toThrow('Ya votaste en esta encuesta')
+
+    const encuesta = (await db.getEncuesta(idSala, poll.id))!
+    expect(encuesta.opciones.length).toBe(3)
+  })
+
+  it('dos aportes en paralelo del mismo usuario: exactamente una promesa cumple y gana UNA opción', async () => {
+    const poll = await crearPollConAportes(false)
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    const res = await Promise.allSettled([
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-uno' }),
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-dos' }),
+    ])
+
+    const cumplidas = res.filter((r) => r.status === 'fulfilled')
+    expect(cumplidas.length).toBe(1)
+    const encuesta = (await db.getEncuesta(idSala, poll.id))!
+    expect(encuesta.opciones.length).toBe(3)
+  })
+
+  it('después de un aporte en voto único, el usuario figura en getVotantes', async () => {
+    const poll = await crearPollConAportes(false)
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-uno' })
+
+    const votantes = await db.getVotantes(idSala, poll.id)
+    expect(votantes).toContain('user-1')
+  })
+
+  it('otro usuario distinto puede aportar su opción', async () => {
+    const poll = await crearPollConAportes(false)
+
+    await (await estudianteSala(idSala, 'user-1')).votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-uno' })
+    const res = await (await estudianteSala(idSala, 'user-2')).votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-dos' })
+
+    expect(res.opciones.length).toBe(4)
   })
 })

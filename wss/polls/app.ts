@@ -181,10 +181,6 @@ export async function profeSala(salaId: string) {
 export async function estudianteSala(idSala: string, userId: string) {
   // Acciones de estudiante:
 
-  async function assertElEstudianteNoVotoTodavia(poll: Encuesta, user: string) {
-    if (await db.yaVoto(idSala, poll.id, user)) throw new Error('Ya votaste en esta encuesta')
-  }
-
   async function votar(voto: VotarEncuesta) {
     const { pollId, tipo } = voto
 
@@ -193,8 +189,6 @@ export async function estudianteSala(idSala: string, userId: string) {
     const poll = (await db.getEncuesta(idSala, pollId))!
 
     enforce(poll.isOpen, 'La encuesta ya cerró!')
-
-    if (!poll.admiteMultiplesVotos) await assertElEstudianteNoVotoTodavia(poll, userId)
 
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
       const votosDelEstudiante = await db.contarVotosUsuario(idSala, pollId, userId)
@@ -214,6 +208,12 @@ export async function estudianteSala(idSala: string, userId: string) {
           'Esa opción ya existe'
         )
 
+        // En voto único el corte tiene que ocurrir antes de mutar, igual que en la rama opción.
+        if (!poll.admiteMultiplesVotos) {
+          const agregado = await db.addVotante(idSala, pollId, userId)
+          if (agregado === 0) throw new Error('Ya votaste en esta encuesta')
+        }
+
         // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
         const nuevoId = pollActual.opciones.length.toString()
         pollActual.opciones.push({ id: nuevoId, texto: voto.aporte })
@@ -222,8 +222,8 @@ export async function estudianteSala(idSala: string, userId: string) {
         await db.guardarEncuesta(idSala, pollActual)
 
         // Voto inicial
-        await db.incrementarVoto(idSala, pollId, nuevoId)
         await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
+        await db.incrementarVoto(idSala, pollId, nuevoId)
         await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
       })
     }
@@ -231,14 +231,21 @@ export async function estudianteSala(idSala: string, userId: string) {
     if (tipo === 'opcion') {
       if (!poll.opciones.find((opc) => opc.id === voto.optionId)) throw new Error('Opción no encontrada')
 
-      // Incremento atómico
-      await db.incrementarVoto(idSala, pollId, voto.optionId)
-      await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
-      await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
+      // En voto único, el corte tiene que ocurrir antes de incrementar.
+      if (!poll.admiteMultiplesVotos) {
+        const agregado = await db.addVotante(idSala, pollId, userId)
+        if (agregado === 0) throw new Error('Ya votaste en esta encuesta')
+      }
+
+      const agregado = await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
+      if (agregado === 1) {
+        await db.incrementarVoto(idSala, pollId, voto.optionId)
+        await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
+      }
     }
 
     // Registramos al estudiante como votante
-    await db.addVotante(idSala, pollId, userId)
+    if (poll.admiteMultiplesVotos) await db.addVotante(idSala, pollId, userId)
 
     const pollFinal = tipo === 'aporte' ? (await db.getEncuesta(idSala, pollId))! : poll
     return await pollConVotos(idSala, pollId, pollFinal)

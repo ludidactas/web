@@ -10,6 +10,7 @@ import {
 } from '../validators/polls'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
+import { conLock } from '../go/lock'
 
 /**
  * `updatePoll` es lectura-modificación-escritura, no atómica. Si dos llegan casi juntas para la
@@ -204,24 +205,27 @@ export async function estudianteSala(idSala: string, userId: string) {
     }
 
     if (tipo === 'aporte') {
-      enforce(poll.admiteAportes, 'Esta encuesta no admite aportes')
-      enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
-      enforce(
-        !poll.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
-        'Esa opción ya existe'
-      )
+      await conLock(`${idSala}:${pollId}`, async () => {
+        const pollActual = (await db.getEncuesta(idSala, pollId))!
+        enforce(pollActual.admiteAportes, 'Esta encuesta no admite aportes')
+        enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
+        enforce(
+          !pollActual.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
+          'Esa opción ya existe'
+        )
 
-      // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
-      const nuevoId = poll.opciones.length.toString()
-      poll.opciones.push({ id: nuevoId, texto: voto.aporte })
+        // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
+        const nuevoId = pollActual.opciones.length.toString()
+        pollActual.opciones.push({ id: nuevoId, texto: voto.aporte })
 
-      console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
-      await db.guardarEncuesta(idSala, poll)
+        console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
+        await db.guardarEncuesta(idSala, pollActual)
 
-      // Voto inicial
-      await db.incrementarVoto(idSala, pollId, nuevoId)
-      await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
-      await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+        // Voto inicial
+        await db.incrementarVoto(idSala, pollId, nuevoId)
+        await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
+        await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+      })
     }
 
     if (tipo === 'opcion') {
@@ -236,7 +240,8 @@ export async function estudianteSala(idSala: string, userId: string) {
     // Registramos al estudiante como votante
     await db.addVotante(idSala, pollId, userId)
 
-    return await pollConVotos(idSala, pollId, poll)
+    const pollFinal = tipo === 'aporte' ? (await db.getEncuesta(idSala, pollId))! : poll
+    return await pollConVotos(idSala, pollId, pollFinal)
   }
 
   async function listar() {

@@ -127,7 +127,7 @@ const voteBase = pollIdSchema
 
 export const voteValidator = z.discriminatedUnion('tipo', [
   voteBase.extend({ tipo: z.literal('opcion'), optionId: z.string().min(1) }),
-  voteBase.extend({ tipo: z.literal('aporte'), aporte: z.string().min(1) }),
+  voteBase.extend({ tipo: z.literal('aporte'), aporte: textoOpcion }),
 ])
 
 export const nuevaEncuesta = crearEncuesta.transform((data) => ({

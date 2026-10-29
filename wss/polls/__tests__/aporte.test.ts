@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test'
-import { estudianteSala } from '../app'
+import { estudianteSala, profeSala } from '../app'
 import { borrarSala } from '../../salas/db'
 import type { Encuesta } from '../../validators/polls'
 import * as db from '../db'
@@ -116,5 +116,20 @@ describe('votar — aporte en voto único', () => {
     const res = await (await estudianteSala(idSala, 'user-2')).votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-dos' })
 
     expect(res.opciones.length).toBe(4)
+  })
+})
+
+describe('votar — carrera de aporte contra poll:close', () => {
+  it('un aporte concurrente con el cierre no reabre la encuesta', async () => {
+    const poll = await crearPollConAportes()
+    const [estu, profe] = await Promise.all([estudianteSala(idSala, 'user-cierre'), profeSala(idSala)])
+
+    await Promise.allSettled([
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-en-vuelo' }),
+      profe.updatePoll(poll.id, { isOpen: false }),
+    ])
+
+    const encuesta = (await db.getEncuesta(idSala, poll.id))!
+    expect(encuesta.isOpen).toBe(false)
   })
 })

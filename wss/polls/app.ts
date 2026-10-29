@@ -12,22 +12,6 @@ import { normalizarTexto } from '../utils'
 import * as db from './db'
 import { conLock } from '../go/lock'
 
-/**
- * `updatePoll` es lectura-modificación-escritura, no atómica. Si dos llegan casi juntas para la
- * misma pregunta (ej: el botón "avanzar" dispara publicar+abrir+enfocar de una), pueden pisarse los
- * cambios entre sí. Serializamos por pregunta (a nivel módulo, no por conexión) para que cada
- * `updatePoll` vea el resultado del anterior antes de leer.
- */
-const colasPorEncuesta = new Map<string, Promise<unknown>>()
-
-function serializadoPorEncuesta<T>(salaId: string, pollId: string, tarea: () => Promise<T>): Promise<T> {
-  const clave = `${salaId}:${pollId}`
-  const anterior = colasPorEncuesta.get(clave) ?? Promise.resolve()
-  const actual = anterior.catch(() => {}).then(tarea)
-  colasPorEncuesta.set(clave, actual)
-  return actual
-}
-
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {
   // Acciones de profe:
@@ -81,7 +65,7 @@ export async function profeSala(salaId: string) {
   }
 
   async function updatePoll(pollId: string, update: Partial<Encuesta>) {
-    return serializadoPorEncuesta(salaId, pollId, async () => {
+    return conLock(`${salaId}:${pollId}`, async () => {
       await assertPollExists(salaId, pollId)
 
       const poll = (await db.getEncuesta(salaId, pollId))!

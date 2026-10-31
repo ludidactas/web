@@ -14,7 +14,7 @@ import {
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
-import { conLock } from './lock'
+import { conLock } from '../lock'
 import * as motor from '@/lib/go/motor'
 import { getSala } from '../salas/db'
 import { infoExport } from '@/lib/go/info-export'
@@ -207,6 +207,11 @@ export async function estudianteGo(idSala: string, userId: string) {
       const partida = await assertPartidaExiste(idSala, partidaId)
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
+
+      partida.estado = EstadoPartida.Terminada
+      partida.motivoFin = 'abandono'
+      partida.ganadorUserId = null
+      await db.guardarPartida(partida)
 
       await db.limpiarPartidaActiva(idSala, partida.negro.userId)
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)

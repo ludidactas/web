@@ -8,7 +8,11 @@ test('formato de los rooms', () => {
   expect(rooms.estudiantes('s1')).toBe('sala:s1:estudiantes')
   expect(rooms.publico('s1')).toBe('sala:s1:publico')
   expect(rooms.overlay('s1')).toBe('sala:s1:overlay')
-  expect(rooms.usuario('s1', 'ana')).toBe('sala:s1:ana')
+  expect(rooms.usuario('s1', 'ana')).toBe('sala:s1:u:ana')
   expect(rooms.cuentaProfe('a@b.com')).toBe('profe:a@b.com')
   expect(rooms.partidaGo('s1', 'p1')).toBe('sala:s1:go:p1')
+})
+
+test('el room de usuario no colisiona con el del profe', () => {
+  expect(rooms.usuario('s1', 'profe')).not.toBe(rooms.profe('s1'))
 })

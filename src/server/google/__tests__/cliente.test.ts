@@ -80,8 +80,15 @@ describe('clienteDrive', () => {
   })
 
   it('lanza si falta AUTH_SECRET', async () => {
+    const nexthauthSecret = process.env.NEXTAUTH_SECRET
     delete process.env.AUTH_SECRET
-    expect(clienteDrive(requestFake())).rejects.toThrow('Falta AUTH_SECRET')
+    delete process.env.NEXTAUTH_SECRET
+    try {
+      await expect(clienteDrive(requestFake())).rejects.toThrow('Falta AUTH_SECRET')
+    } finally {
+      if (nexthauthSecret === undefined) delete process.env.NEXTAUTH_SECRET
+      else process.env.NEXTAUTH_SECRET = nexthauthSecret
+    }
   })
 
   it('usa secureCookie para URLs https', async () => {

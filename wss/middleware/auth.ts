@@ -75,7 +75,7 @@ export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstud
       // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login.
       const nombreNormalizado = normalizarTexto(session.userId)
       if (nombreNormalizado === normalizarTexto(sala.profe.email))
-        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre \"${session.userId}\" ya está en uso en la sala.`)
+        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
       const enUso = (await sala.listarEstudiantes()).some(
         (s) => normalizarTexto(s.userId) === nombreNormalizado && s.clientId !== session.clientId
       )

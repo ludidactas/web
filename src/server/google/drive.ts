@@ -84,7 +84,7 @@ function propiedadesCarpeta(salaId: string, recurso: RecursoCarpeta) {
 }
 
 /**
- * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombre}/{nombre}`
+ * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombreSala}/{nombre}`
  * de `salaId` en el Drive del usuario autenticado. La jerarquía completa se busca/crea
  * de a un nivel por `appProperties`, no por nombre, para tolerar que el usuario la
  * renombre a mano sin romper las búsquedas futuras.

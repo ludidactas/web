@@ -35,6 +35,7 @@ yarn-error.log*
 .env*
 # defaults de dev sin secretos: sí se versiona
 !.env.development
+!.env.test
 
 # vercel
 .vercel

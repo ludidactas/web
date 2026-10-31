@@ -1,21 +1,7 @@
 import { expect, test } from 'bun:test'
-
-// `auth.ts` hace `process.exit(1)` al importarse sin estas variables: las seteamos antes del import
-// (dinámico, porque el estático se eleva) y las borramos después para no filtrarlas al resto de la suite.
-const _nexthauthSecret = process.env.NEXTAUTH_SECRET
-const _pollsAdmins = process.env.POLLS_ADMINS
-process.env.NEXTAUTH_SECRET = 'test-secret'
-process.env.POLLS_ADMINS = 'test@example.com'
-
-const { verificarYAutorizarAccesoEstudianteASala } = await import('../auth')
-const { MetodosLogin } = await import('../../validators/auth')
-const { ErrorSesion, TipoErrorSesion } = await import('../../validators/errors')
-
-if (_nexthauthSecret === undefined) delete process.env.NEXTAUTH_SECRET
-else process.env.NEXTAUTH_SECRET = _nexthauthSecret
-if (_pollsAdmins === undefined) delete process.env.POLLS_ADMINS
-else process.env.POLLS_ADMINS = _pollsAdmins
-
+import { verificarYAutorizarAccesoEstudianteASala } from '../auth'
+import { MetodosLogin } from '../../validators/auth'
+import { ErrorSesion, TipoErrorSesion } from '../../validators/errors'
 import type { Sala } from '../../salas/app'
 import type { WssEstudianteSession } from '../../validators/session'
 

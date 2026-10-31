@@ -10,7 +10,7 @@ import {
 } from '../validators/polls'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
-import { conLock } from '../go/lock'
+import { conLock } from '../lock'
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {

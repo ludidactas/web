@@ -14,7 +14,7 @@ import {
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
-import { conLock } from './lock'
+import { conLock } from '../lock'
 import * as motor from '@/lib/go/motor'
 import { getSala } from '../salas/db'
 import { infoExport } from '@/lib/go/info-export'

@@ -31,13 +31,15 @@ afterAll(async () => {
 })
 
 describe('db — estudiantes', () => {
-  it('guardarEstudiante/getEstudiantes preserva la sesión', async () => {
-    await db.guardarEstudiante(salaId, estudiante(salaId, 'Juan'))
-    await db.guardarEstudiante(salaId, estudiante(salaId, 'María'))
+  it('guardarEstudiante/getEstudiantes preserva la sesión (clave = id opaco)', async () => {
+    const juan = estudiante(salaId, 'Juan')
+    const maria = estudiante(salaId, 'María')
+    await db.guardarEstudiante(salaId, juan)
+    await db.guardarEstudiante(salaId, maria)
 
     const estudiantes = await db.getEstudiantes(salaId)
-    expect(Object.keys(estudiantes).sort()).toEqual(['Juan', 'María'])
-    expect(estudiantes['Juan'].nombre).toBe('Juan')
+    expect(Object.keys(estudiantes).sort()).toEqual([juan.userId, maria.userId].sort())
+    expect(estudiantes[juan.userId].nombre).toBe('Juan')
   })
 })
 
@@ -65,7 +67,7 @@ describe('db — asistencias pendientes', () => {
     const asistencia = {
       inicio: T0,
       fin: T0 + 60 * MIN,
-      estudiantes: [{ userId: 'Juan', nombre: 'Juan', presente: true }],
+      estudiantes: [{ userId: 'handle-ana', identidad: 'Ana', nombre: 'Ana', presente: true }],
     }
     await db.encolarAsistencia(salaId, asistencia)
 

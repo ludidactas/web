@@ -45,7 +45,8 @@ export type CondicionAsistencia = z.infer<typeof condicionAsistenciaSchema>
 
 /**
  * La asistencia de una clase: la ventana temporal (`inicio`/`fin`, epoch ms) y el estado de cada
- * estudiante que pasó por la sala.
+ * estudiante que pasó por la sala. `userId` es el id opaco por sala; `identidad` es la identidad
+ * real (dni/nombre/email), que solo va a la planilla del profe (la columna ID de Sheets).
  */
 export const asistenciaDeClaseSchema = z.object({
   inicio: z.number(),
@@ -53,6 +54,7 @@ export const asistenciaDeClaseSchema = z.object({
   estudiantes: z.array(
     z.object({
       userId: z.string(),
+      identidad: z.string(),
       nombre: z.string(),
       presente: z.boolean(),
     })

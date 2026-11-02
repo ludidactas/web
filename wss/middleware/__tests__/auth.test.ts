@@ -42,7 +42,8 @@ function sesionDni(userId = '12345678'): WssEstudianteSession {
     clientId: 'c1',
     metodo: MetodosLogin.DNI,
     dni: userId,
-    userId,
+    // El userId ya es el id opaco por sala: la autorización no lo usa.
+    userId: 'handle-opaco',
   } as WssEstudianteSession
 }
 
@@ -60,9 +61,9 @@ test('un nombre normal distinto al email del profe pasa sin error', async () => 
   await expect(verificarYAutorizarAccesoEstudianteASala(session, sala)).resolves.toBeUndefined()
 })
 
-test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso', async () => {
+test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso (compara por nombre, no por userId)', async () => {
   const sala = fakeSala({
-    listarEstudiantes: async () => [{ userId: 'Ana', clientId: 'c2' } as never],
+    listarEstudiantes: async () => [{ userId: 'handle-opaco-ana', nombre: 'Ana', clientId: 'c2' } as never],
   })
   const session = sesionNombre('Ana', 'c1')
 
@@ -80,6 +81,27 @@ test('el metodo DNI no cambió', async () => {
   const sala = fakeSala({}, MetodosLogin.DNI)
 
   await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni(), sala)).resolves.toBeUndefined()
+})
+
+test('con solo_invitados, la autorización va contra el dni real (no contra el userId opaco)', async () => {
+  const sala = fakeSala(
+    {
+      config: async () =>
+        ({
+          nombre: 'Sala test',
+          metodo_login: MetodosLogin.DNI,
+          solo_invitados: true,
+          nombre_profe: 'Profe',
+          link: 'x',
+          overlay: {},
+        }) as never,
+      listaPermitidos: () => ({ incluye: async (dni: string) => dni === '12345678' }) as never,
+    },
+    MetodosLogin.DNI
+  )
+
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni('12345678'), sala)).resolves.toBeUndefined()
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni('99999999'), sala)).rejects.toThrow(ErrorSesion)
 })
 
 test('el metodo Google no cambió', async () => {

@@ -7,7 +7,7 @@ import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
 import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { CONFIG_DEFAULTS } from '../validators/overlay'
-import { WssEstudianteSession, WssServerSession } from '../validators/session'
+import { identidadRealEstudiante, WssEstudianteSession, WssServerSession } from '../validators/session'
 import { ListaPermitidos } from '../invitados/app'
 
 import * as db from './db'
@@ -124,11 +124,13 @@ export namespace Salas {
       // (que a su vez se basa en el campo de identidad del metodo_login de la sala, que para DNI es el dni y para Google es el email)
       const permitidos = await ListaPermitidos.para(salaId).obtener()
 
-      // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
+      // Seleccionamos los sockets de estudiantes cuya identidad real no esté en la lista de permitidos
+      // (que se basa en el campo de identidad del metodo_login: dni para DNI, email para Google).
       const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       const noPermitidos = sockets.filter(
         (s: RemoteSocketConSesion) =>
-          s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.userId)
+          s.data.session.rol === RolSala.Estudiante &&
+          !permitidos.includes(identidadRealEstudiante(s.data.session))
       )
 
       if (noPermitidos.length === 0) return

@@ -14,17 +14,11 @@ import * as db from './db'
  * identidad es lo único que distingue quién juega: estudiante y profe comparten exactamente la misma
  * mecánica (invitar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
  */
-async function registrarComandosGo(
-  socket: Socket,
-  idSala: string,
-  userId: string,
-  nombre: string,
-  identidades: 'opacas' | 'reales'
-) {
-  const go = await estudianteGo(idSala, userId, identidades)
+async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
+  const go = await estudianteGo(idSala, userId)
 
-  // El id opaco con el que el cliente se reconoce a sí mismo en partidas y contrincantes.
-  socket.emit('go:identidad', { id: idOpaco(idSala, userId) })
+  // El id con el que el cliente se reconoce a sí mismo en partidas y contrincantes.
+  socket.emit('go:identidad', { id: userId })
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
   function seguir<T extends PartidaPublica | null>(partida: T): T {
@@ -64,19 +58,21 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
     if (!(await sala.sigueConectado(userId, socket.id))) await avisarContrincantesActualizados(idSala)
   })
 
-  await registrarComandosGo(socket, idSala, userId, nombre, 'opacas')
+  await registrarComandosGo(socket, idSala, userId, nombre)
 
   return () => avisarContrincantesActualizados(idSala)
 }
 
 /**
  * Handlers de Go del profe: puede invitar y jugar contra los estudiantes de su sala bajo su propia
- * identidad (el email, igual que en el resto de la sesión de profe). También es un contrincante
- * disponible para ellos, así que al conectar/desconectar avisamos a la sala igual que con un
- * estudiante (ver `handlersGoEstudiante`, que también describe el init que devuelve).
+ * identidad. Su handle en Go es su id opaco por sala (los estudiantes no pueden ver su email, que es
+ * su `userId` de sesión). También es un contrincante disponible para ellos, así que al
+ * conectar/desconectar avisamos a la sala igual que con un estudiante (ver `handlersGoEstudiante`,
+ * que también describe el init que devuelve).
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const { userId, nombre } = socket.data.session
+  const userIdGo = idOpaco(idSala, userId)
 
   alDesconectar(socket, async () => {
     const sala = await Salas.get(idSala)
@@ -88,7 +84,7 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
     'go:descartar_partidas_drive': async ({ ids }) => db.descartarPartidasDrivePendientes(idSala, ids),
   })
 
-  await registrarComandosGo(socket, idSala, userId, nombre, 'reales')
+  await registrarComandosGo(socket, idSala, userIdGo, nombre)
 
   return () => avisarContrincantesActualizados(idSala)
 }

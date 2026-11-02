@@ -242,11 +242,12 @@ describe('evaluarClase', () => {
   }
 
   function planilla(...nombres: string[]) {
-    return Object.fromEntries(nombres.map((n) => [n, estudiante(n)]))
+    return Object.fromEntries(nombres.map((n) => [estudiante(n).userId, estudiante(n)]))
   }
 
-  function evento(userId: string, tipo: 'conexion' | 'desconexion', offsetMs: number): EventoAsistencia {
-    return { userId, evento: tipo, ts: T0 + offsetMs }
+  function evento(nombre: string, tipo: 'conexion' | 'desconexion', offsetMs: number): EventoAsistencia {
+    // El log de asistencia registra el userId (el id opaco por sala de la sesión), igual que la planilla.
+    return { userId: estudiante(nombre).userId, evento: tipo, ts: T0 + offsetMs }
   }
 
   it('devuelve null si la clase duró menos del mínimo', () => {
@@ -275,8 +276,8 @@ describe('evaluarClase', () => {
       inicio: T0,
       fin: T0 + 60 * MIN,
       estudiantes: [
-        { userId: 'Juan', nombre: 'Juan', presente: true },
-        { userId: 'María', nombre: 'María', presente: false },
+        { userId: estudiante('Juan').userId, identidad: 'Juan', nombre: 'Juan', presente: true },
+        { userId: estudiante('María').userId, identidad: 'María', nombre: 'María', presente: false },
       ],
     })
   })
@@ -285,7 +286,12 @@ describe('evaluarClase', () => {
     const eventos = [evento('Juan', 'conexion', 0), evento('Juan', 'desconexion', 50 * MIN)]
     const asistencia = evaluarClase(eventos, planilla('Juan', 'Fantasma'), condicion, ventanaHasta(T0 + 60 * MIN))
 
-    expect(asistencia?.estudiantes).toContainEqual({ userId: 'Fantasma', nombre: 'Fantasma', presente: false })
+    expect(asistencia?.estudiantes).toContainEqual({
+      userId: estudiante('Fantasma').userId,
+      identidad: 'Fantasma',
+      nombre: 'Fantasma',
+      presente: false,
+    })
   })
 
   it('sin estudiantes devuelve la clase con la lista vacía', () => {

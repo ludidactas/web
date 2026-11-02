@@ -57,11 +57,15 @@ const parsearSesion = <S extends z.ZodTypeAny>(
     agente: socket.handshake.headers['user-agent'],
   })
 
-/** Attachea la sesión al socket y la emite de inmediato al cliente. */
+/** Attachea la sesión al socket y la emite de inmediato al cliente, sin el campo de identidad real
+ * (el dni queda en el server: lista de permitidos y planilla del profe). */
 const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
   socket.data.session = sessionData
   console.log(`🤝 Abriendo sesión para ${sessionData.userId}`)
-  socket.emit('session:opened', sessionData)
+
+  const emision = { ...sessionData } as Record<string, unknown>
+  delete emision.dni
+  socket.emit('session:opened', emision)
 }
 
 /**

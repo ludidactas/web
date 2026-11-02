@@ -13,6 +13,7 @@ import { Sala, Salas } from './app'
 import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
 import type { PlanillaCompleta } from '../validators/salas'
 import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
+import { identidadRealEstudiante } from '../validators/session'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
 
 /** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
@@ -71,7 +72,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
 
     return {
       ...estudiante,
-      nombreProvisto: nombresProvistos[estudiante.userId],
+      nombreProvisto: nombresProvistos[identidadRealEstudiante(estudiante)],
       respuestas,
     }
   })
@@ -230,7 +231,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
 /** Registra los comandos del estudiante y devuelve su init (registro en la planilla, aviso al profe). */
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   // Rooms -- la última de estas tres es su 'personal room' para mensajes dirigidos a este cliente en particular (ej: kickeo, cambios que lo afectan, etc.)
-  // A esta altura el `userId` ya está resuelto dependiendo el metodo_login de la sala (nombre/DNI/email).
+  // A esta altura el `userId` ya es el id opaco por sala del método de login (nombre/DNI/email).
   socket.join([rooms.sala(idSala), rooms.estudiantes(idSala), rooms.usuario(idSala, socket.data.session.userId)])
 
   const user = socket.data.session.nombre
@@ -273,11 +274,11 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     // provisto (si el profe le puso uno) para que el FE muestre el aviso y el toast de bienvenida.
     const config = await sala.config()
     if (config.metodo_login === MetodosLogin.DNI) {
-      const { userId } = socket.data.session
-      const esInvitado = await sala.listaPermitidos().incluye(userId)
+      const identidad = identidadRealEstudiante(socket.data.session)
+      const esInvitado = await sala.listaPermitidos().incluye(identidad)
       if (esInvitado) {
         const nombres = await sala.listaPermitidos().nombres()
-        socket.emit('sala:invitado', { nombreProvisto: nombres[userId] })
+        socket.emit('sala:invitado', { nombreProvisto: nombres[identidad] })
       }
     }
   }

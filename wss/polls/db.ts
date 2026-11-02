@@ -119,9 +119,9 @@ export async function getVotosUsuario(salaId: string, pollId: string, userId: st
   return redis.smembers(k.votosUsuario(salaId, pollId, userId))
 }
 
-/** Registra que un usuario votó una opción. Devuelve 1 si la opción se agregó, 0 si ya estaba. */
-export async function addVotoUsuario(salaId: string, pollId: string, userId: string, optionId: string): Promise<number> {
-  return redis.sadd(k.votosUsuario(salaId, pollId, userId), optionId)
+/** Registra que un usuario votó una opción. Devuelve `true` si la opción se agregó, `false` si ya estaba. */
+export async function addVotoUsuario(salaId: string, pollId: string, userId: string, optionId: string): Promise<boolean> {
+  return (await redis.sadd(k.votosUsuario(salaId, pollId, userId), optionId)) === 1
 }
 
 /** Borra el set de opciones votadas por un usuario. */
@@ -141,9 +141,9 @@ export async function getVotantes(salaId: string, pollId: string): Promise<strin
   return redis.smembers(k.votantes(salaId, pollId))
 }
 
-/** Registra a un usuario como votante de la encuesta. Devuelve 1 si se agregó, 0 si ya era votante. */
-export async function addVotante(salaId: string, pollId: string, userId: string): Promise<number> {
-  return redis.sadd(k.votantes(salaId, pollId), userId)
+/** Registra a un usuario como votante de la encuesta. Devuelve `true` si se agregó, `false` si ya era votante. */
+export async function addVotante(salaId: string, pollId: string, userId: string): Promise<boolean> {
+  return (await redis.sadd(k.votantes(salaId, pollId), userId)) === 1
 }
 
 /** Borra el set de votantes de una encuesta. */

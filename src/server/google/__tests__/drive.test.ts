@@ -1,7 +1,7 @@
 import type { drive_v3 } from '@googleapis/drive'
 import { describe, expect, it, mock } from 'bun:test'
 
-import { guardarColeccion, leerColecciones } from '../drive'
+import { guardarColeccion, guardarImagenPartida, leerColecciones } from '../drive'
 
 function mockApi(overrides: {
   list?: ReturnType<typeof mock>
@@ -169,5 +169,75 @@ describe('guardarColeccion — carpetas existentes', () => {
     for (const [{ requestBody }] of (api.files.create as ReturnType<typeof mock>).mock.calls) {
       expect(requestBody.mimeType).not.toBe('application/vnd.google-apps.folder')
     }
+  })
+})
+
+/** Las carpetas que se crearon, en orden: `name`, `appProperties` y `parents` de cada una. */
+function carpetasCreadas(create: ReturnType<typeof mock>) {
+  return create.mock.calls
+    .map(([{ requestBody }]) => requestBody)
+    .filter((body) => body.mimeType === 'application/vnd.google-apps.folder')
+    .map(({ name, appProperties, parents }) => ({ name, appProperties, parents }))
+}
+
+function createConIds() {
+  let n = 0
+  return mock(() => Promise.resolve({ data: { id: `id-${++n}`, name: 'n' } }))
+}
+
+describe('jerarquía de carpetas en Drive', () => {
+  const sala = { salaId: 'sala-1', nombreSala: 'Mi Sala' }
+
+  it('colecciones: crea Ludidactas / Sala - {nombreSala} / Colecciones con sus appProperties', async () => {
+    const create = createConIds()
+    await guardarColeccion(mockApi({ create }), sala, 'Mi Col', 'yaml')
+
+    expect(carpetasCreadas(create)).toEqual([
+      { name: 'Ludidactas', appProperties: { ludidactas: 'raiz' }, parents: undefined },
+      { name: 'Sala - Mi Sala', appProperties: { ludidactasSala: 'sala-1', recurso: 'sala' }, parents: ['id-1'] },
+      { name: 'Colecciones', appProperties: { ludidactasSala: 'sala-1', recurso: 'colecciones' }, parents: ['id-2'] },
+    ])
+  })
+
+  it('partidas: crea Ludidactas / Sala - {nombreSala} / Partidas Go y guarda el PNG adentro', async () => {
+    const create = createConIds()
+    await guardarImagenPartida(mockApi({ create }), sala, 'partida-1', 'partida.png', Buffer.from('png'))
+
+    expect(carpetasCreadas(create)).toEqual([
+      { name: 'Ludidactas', appProperties: { ludidactas: 'raiz' }, parents: undefined },
+      { name: 'Sala - Mi Sala', appProperties: { ludidactasSala: 'sala-1', recurso: 'sala' }, parents: ['id-1'] },
+      { name: 'Partidas Go', appProperties: { ludidactasSala: 'sala-1', recurso: 'partidas' }, parents: ['id-2'] },
+    ])
+    const [{ requestBody }] = create.mock.calls[3]
+    expect(requestBody).toMatchObject({
+      name: 'partida.png',
+      mimeType: 'image/png',
+      appProperties: { ludidactasSala: 'sala-1', recurso: 'partida', partida: 'partida-1' },
+      parents: ['id-3'],
+    })
+  })
+
+  it('partidas: si el PNG de esa partida ya existe no crea nada', async () => {
+    const create = createConIds()
+    const list = mock().mockResolvedValue({ data: { files: [{ id: 'png-id', name: 'partida.png' }], nextPageToken: null } })
+    await guardarImagenPartida(mockApi({ list, create }), sala, 'partida-1', 'partida.png', Buffer.from('png'))
+
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('partidas: con las carpetas ya creadas solo crea el PNG', async () => {
+    const create = createConIds()
+    const list = mock().mockImplementation(({ q }: { q: string }) =>
+      Promise.resolve({
+        data: {
+          files: q.includes("mimeType='application/vnd.google-apps.folder'") ? [{ id: 'carpeta', name: 'c' }] : [],
+          nextPageToken: null,
+        },
+      })
+    )
+    await guardarImagenPartida(mockApi({ list, create }), sala, 'partida-1', 'partida.png', Buffer.from('png'))
+
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(create.mock.calls[0][0].requestBody).toMatchObject({ name: 'partida.png', parents: ['carpeta'] })
   })
 })

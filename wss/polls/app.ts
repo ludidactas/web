@@ -200,7 +200,7 @@ export async function estudianteSala(idSala: string, userId: string) {
         // En voto único el corte tiene que ocurrir antes de mutar, igual que en la rama opción.
         if (!pollActual.admiteMultiplesVotos) {
           const agregado = await db.addVotante(idSala, pollId, userId)
-          if (agregado === 0) throw new Error('Ya votaste en esta encuesta')
+          if (!agregado) throw new Error('Ya votaste en esta encuesta')
         }
 
         // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
@@ -224,11 +224,11 @@ export async function estudianteSala(idSala: string, userId: string) {
       // En voto único, el corte tiene que ocurrir antes de incrementar.
       if (!poll.admiteMultiplesVotos) {
         const agregado = await db.addVotante(idSala, pollId, userId)
-        if (agregado === 0) throw new Error('Ya votaste en esta encuesta')
+        if (!agregado) throw new Error('Ya votaste en esta encuesta')
       }
 
       const agregado = await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
-      if (agregado === 1) {
+      if (agregado) {
         await db.incrementarVoto(idSala, pollId, voto.optionId)
         await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
       }

@@ -182,9 +182,11 @@ export async function estudianteSala(idSala: string, userId: string) {
       )
     }
 
+    let pollFinal = poll
     if (tipo === 'aporte') {
-      await conLock(`${idSala}:${pollId}`, async () => {
+      pollFinal = await conLock(`${idSala}:${pollId}`, async () => {
         const pollActual = (await db.getEncuesta(idSala, pollId))!
+        enforce(pollActual.isOpen, 'La encuesta ya cerró!')
         enforce(pollActual.admiteAportes, 'Esta encuesta no admite aportes')
         enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
         enforce(
@@ -193,7 +195,7 @@ export async function estudianteSala(idSala: string, userId: string) {
         )
 
         // En voto único el corte tiene que ocurrir antes de mutar, igual que en la rama opción.
-        if (!poll.admiteMultiplesVotos) {
+        if (!pollActual.admiteMultiplesVotos) {
           const agregado = await db.addVotante(idSala, pollId, userId)
           if (agregado === 0) throw new Error('Ya votaste en esta encuesta')
         }
@@ -209,6 +211,7 @@ export async function estudianteSala(idSala: string, userId: string) {
         await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
         await db.incrementarVoto(idSala, pollId, nuevoId)
         await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+        return pollActual
       })
     }
 
@@ -231,7 +234,6 @@ export async function estudianteSala(idSala: string, userId: string) {
     // Registramos al estudiante como votante
     if (poll.admiteMultiplesVotos) await db.addVotante(idSala, pollId, userId)
 
-    const pollFinal = tipo === 'aporte' ? (await db.getEncuesta(idSala, pollId))! : poll
     return await pollConVotos(idSala, pollId, pollFinal)
   }
 

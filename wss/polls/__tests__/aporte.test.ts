@@ -132,4 +132,19 @@ describe('votar — carrera de aporte contra poll:close', () => {
     const encuesta = (await db.getEncuesta(idSala, poll.id))!
     expect(encuesta.isOpen).toBe(false)
   })
+
+  it('un aporte en fila detrás del cierre se rechaza y no agrega la opción', async () => {
+    const poll = await crearPollConAportes()
+    const [estu, profe] = await Promise.all([estudianteSala(idSala, 'user-cierre'), profeSala(idSala)])
+
+    const [, aporte] = await Promise.allSettled([
+      profe.updatePoll(poll.id, { isOpen: false }),
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-tardio' }),
+    ])
+
+    expect(aporte.status).toBe('rejected')
+    expect((aporte as PromiseRejectedResult).reason.message).toBe('La encuesta ya cerró!')
+    const encuesta = (await db.getEncuesta(idSala, poll.id))!
+    expect(encuesta.opciones.length).toBe(2)
+  })
 })

@@ -20,7 +20,7 @@ export async function limpiarListaPermitidosDe(salaId: string): Promise<void> {
 }
 
 export async function quitarPermitidosDe(list: string[], salaId: string): Promise<void> {
-  console.log(`➖ Removiendo ${list.length} DNI(s) de lista de sala ${salaId}:`, list)
+  console.log(`➖ Removiendo ${list.length} DNI(s) de lista de sala ${salaId}`)
   await redis.srem(`sala:${salaId}:allowed_list`, ...list)
 }
 

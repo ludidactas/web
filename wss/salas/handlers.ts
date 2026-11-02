@@ -84,7 +84,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   socket.data.salaActiva = sala.id
   socket.join([rooms.sala(sala.id), rooms.profe(sala.id), rooms.usuario(sala.id, socket.data.session.userId)])
-  console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
+  console.log(`🔓 Profe abrió sala ${sala.id}`)
 
   registrar(socket, comandosSalaActivaProfe, {
     'sala:actualizar_config': async (config) => {
@@ -185,7 +185,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
         Object.entries(nombresPermitidos).map(([dni, nombre]) => sala.listaPermitidos().setNombre(dni, nombre))
       )
 
-      console.log(`✅ Sala creada por ${email}: ${sala.id}`)
+      console.log(`✅ Sala creada: ${sala.id}`)
       await emitirLista()
       return { idSala: sala.id }
     },
@@ -213,7 +213,7 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   })
 
   socket.on('disconnect', (reason) => {
-    console.log(`❌ Profe ${email} desconectado: ${reason}`)
+    console.log(`❌ Profe desconectado: ${reason}`)
 
     const salaId = socket.data.salaActiva
     if (!salaId) return
@@ -234,13 +234,12 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   // A esta altura el `userId` ya es el id opaco por sala del método de login (nombre/DNI/email).
   socket.join([rooms.sala(idSala), rooms.estudiantes(idSala), rooms.usuario(idSala, socket.data.session.userId)])
 
-  const user = socket.data.session.nombre
   // La sala se resuelve en segundo plano: registrar los comandos no espera I/O.
   const salaPendiente = Salas.get(idSala)
   salaPendiente.catch(() => {})
 
   alDesconectar(socket, async (reason) => {
-    console.log(`❌ Estudiante ${user} desconectado: ${reason}`)
+    console.log(`❌ Estudiante desconectado: ${reason}`)
     const sala = await salaPendiente
     const { userId } = socket.data.session
 
@@ -264,7 +263,7 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
   // Init: lo corre `server.ts` cuando ya están registrados los comandos de todos los grupos.
   return async () => {
     const sala = await salaPendiente
-    console.log(`🧑‍🎓 Estudiante conectado: ${user} (sala ${idSala} de ${sala.profe.email}, socket ${socket.id})`)
+    console.log(`🧑‍🎓 Estudiante conectado (sala ${idSala}, socket ${socket.id})`)
 
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
     await sala.registrarIngreso(socket.data.session)

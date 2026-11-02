@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, spyOn, test } from 'bun:test'
 import { Server } from 'socket.io'
 import { io as ioClient, Socket as SocketCli } from 'socket.io-client'
 import { z } from 'zod'
@@ -11,6 +11,7 @@ const contrato = {
   'cosa:sumar': comandoAck(z.object({ a: z.number(), b: z.number().default(10) }), devuelve<number>()),
   'cosa:ping': comandoAck(sinPayload, devuelve<string>()),
   'cosa:falla': comandoAck(sinPayload, devuelve<void>()),
+  'cosa:falla_con_payload': comandoAck(z.object({ dni: z.string(), email: z.string() }), devuelve<void>()),
 }
 
 interface Eventos {
@@ -33,6 +34,9 @@ beforeAll(async () => {
       'cosa:ping': async () => 'pong',
       'cosa:falla': async () => {
         throw new Error('boom')
+      },
+      'cosa:falla_con_payload': async () => {
+        throw new Error('boom con payload')
       },
     })
   })
@@ -61,6 +65,23 @@ describe('registrar + comandos/escuchar', () => {
 
   test('pedir rechaza con el mensaje del error del handler', async () => {
     await expect(c().pedir('cosa:falla')).rejects.toThrow('boom')
+  })
+
+  test('un error de handler se loguea sin el payload (sin DNI/email)', async () => {
+    const err = spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      await expect(c().pedir('cosa:falla_con_payload', { dni: '20333444555', email: 'ana@colegio.edu' })).rejects.toThrow(
+        'boom con payload'
+      )
+
+      expect(err).toHaveBeenCalledTimes(1)
+      const texto = JSON.stringify(err.mock.calls)
+      expect(texto).toContain('cosa:falla_con_payload')
+      expect(texto).not.toContain('20333444555')
+      expect(texto).not.toContain('ana@colegio.edu')
+    } finally {
+      err.mockRestore()
+    }
   })
 
   test('pedir rechaza con los mensajes de zod, legibles', async () => {

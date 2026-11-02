@@ -61,7 +61,8 @@ const parsearSesion = <S extends z.ZodTypeAny>(
  * (el dni queda en el server: lista de permitidos y planilla del profe). */
 const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
   socket.data.session = sessionData
-  console.log(`🤝 Abriendo sesión para ${sessionData.userId}`)
+  // Sin identidad: el userId de un estudiante es su id opaco, pero el de profe/admin es su email.
+  console.log(`🤝 Sesión abierta (${'metodo' in sessionData ? `estudiante-${sessionData.metodo}` : sessionData.rol})`)
 
   const emision = { ...sessionData } as Record<string, unknown>
   delete emision.dni
@@ -106,7 +107,7 @@ const login = async (socket: SocketConSesion) => {
     // Verificamos la sesión contra la config de la sala (dni en lista, nombre libre, etc.)
     await verificarYAutorizarAccesoEstudianteASala(session, sala)
 
-    console.log(`👤 Iniciando sesión en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
+    console.log(`👤 Iniciando sesión en la sala ${auth.idSala}...`)
     abrirSesion(socket, session)
   }
 
@@ -116,7 +117,7 @@ const login = async (socket: SocketConSesion) => {
     const payload = decodearTokenNextAuth(auth.token)
     const session = parsearSesion(socket, WssProfeSessionSchema, { rol: RolSala.Profe, ...payload })
 
-    console.log(`🪪  Profe autenticado desde IP ${socketIp(socket)}...`)
+    console.log(`🪪  Profe autenticado...`)
     abrirSesion(socket, session)
   }
 
@@ -128,13 +129,13 @@ const login = async (socket: SocketConSesion) => {
 
     const session = parsearSesion(socket, WssAdminSessionSchema, { rol: RolSala.Admin, ...payload })
 
-    console.log(`🪪  Admin autenticado desde IP ${socketIp(socket)}...`)
+    console.log(`🪪  Admin autenticado...`)
     abrirSesion(socket, session)
   }
 
   // Publico y test no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
   else {
-    console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
+    console.log(`👀 Cliente público conectado...`)
   }
 }
 
@@ -151,7 +152,8 @@ export const conSession = async (socket: Socket, next: (err?: ExtendedError) => 
 
     next()
   } catch (err) {
-    console.log(`@conSession Error: `, err.message, 'con socketdata al momento: ', socket.data)
+    // Sin el mensaje: el de ErrorSesion puede llevar el DNI/email del login rechazado.
+    console.error(`@conSession Error: `, err instanceof ErrorSesion ? err.tipo : 'SessionError')
     err.data = {
       type: err instanceof ErrorSesion ? err.tipo : 'SessionError',
       message: err.message ?? 'Error de sesión',

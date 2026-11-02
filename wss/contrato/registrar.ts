@@ -33,8 +33,9 @@ export function registrar<C extends Contrato>(socket: Socket, contrato: C, handl
         const data = await handler(def.input.parse(payload))
         ack?.({ ok: true, data })
       } catch (err: unknown) {
-        console.error(`🚨 registrar: handler '${evento}' con payload:`, payload, 'emitió error:', err)
         const message = mensajeDe(err)
+        // Sin payload crudo: puede contener datos personales (DNI, nombres, texto del cliente).
+        console.error(`🚨 registrar: handler '${evento}' emitió error: ${message}`)
         if (ack) ack({ ok: false, error: message })
         else socket.emit('wss:error', { message })
       } finally {

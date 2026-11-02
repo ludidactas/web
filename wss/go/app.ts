@@ -216,9 +216,7 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.setPartidaActiva(idSala, userId, id)
       await db.setPartidaActiva(idSala, contrincante.userId, id)
 
-      console.log(
-        `🎲 Invitación de Go (${modo}) creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`
-      )
+      console.log(`🎲 Invitación de Go (${modo}) creada, partida ${id}`)
 
       io.to(rooms.usuario(idSala, contrincante.roomId ?? contrincante.userId)).emit(
         'go:invitacion',

@@ -92,7 +92,7 @@ export async function getEstudiantes(salaId: string): Promise<Record<string, Wss
       try {
         return [[userId, estudianteCodec.parsear(str)]]
       } catch (err) {
-        console.warn(`⚠️  Sala ${salaId}: estudiante '${userId}' ilegible en la planilla, se omite:`, err)
+        console.warn(`⚠️  Sala ${salaId}: un estudiante ilegible en la planilla, se omite:`, err)
         return []
       }
     })

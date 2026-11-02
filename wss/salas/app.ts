@@ -262,7 +262,7 @@ export namespace Salas {
     await db.guardarSala(salaData)
     await db.agregarSalaAProfe(email, id)
 
-    console.log(`🏠 Sala ${id} creada para profe ${email}`)
+    console.log(`🏠 Sala ${id} creada`)
     return await get(id)
   }
 
@@ -278,7 +278,7 @@ export namespace Salas {
     })
     await db.borrarSala(salaId)
     await db.eliminarSalaDeProfe(email, salaId)
-    console.log(`🗑️  Sala ${salaId} eliminada por ${email}`)
+    console.log(`🗑️  Sala ${salaId} eliminada`)
   }
 
   /** Funciones de relaciones: */

@@ -27,6 +27,17 @@ function sheetVacio() {
 }
 
 describe('escribirAsistencia — planilla nueva', () => {
+  it('un idSala malicioso se rechaza antes de tocar Google', async () => {
+    const create = mock(async () => ({ data: { spreadsheetId: 'spreadsheet-1' } }))
+    sheetsApi = { spreadsheets: { create, get: mock(async () => sheetVacio()), values: {} } }
+    driveApi = { files: { list: mock(async () => ({ data: { files: [] } })), update: mock(async () => ({})) } }
+
+    await expect(
+      escribirAsistencia(new Request('http://x'), "abc12345' OR 1=1", 'Mi Sala', [])
+    ).rejects.toThrow('idSala inválido')
+    expect(create).not.toHaveBeenCalled()
+  })
+
   it('escribe la matriz correcta (header, P/A y porcentaje)', async () => {
     const updates: any[] = []
     sheetsApi = {
@@ -62,7 +73,7 @@ describe('escribirAsistencia — planilla nueva', () => {
       },
     ]
 
-    await escribirAsistencia(new Request('http://x'), 'sala-1', 'Mi Sala', asistencias)
+    await escribirAsistencia(new Request('http://x'), 'abc12345', 'Mi Sala', asistencias)
 
     const label = labelLocal(inicio, fin)
     expect(updates).toHaveLength(1)
@@ -133,7 +144,7 @@ describe('escribirAsistencia — merge con planilla existente', () => {
       },
     ]
 
-    await escribirAsistencia(new Request('http://x'), 'sala-1', 'Mi Sala', asistencias)
+    await escribirAsistencia(new Request('http://x'), 'abc12345', 'Mi Sala', asistencias)
 
     expect(updates[0].requestBody.values).toEqual([
       ['ID', 'Nombre', labelVieja, labelNueva, '% Asistencia'],

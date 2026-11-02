@@ -14,6 +14,10 @@ function labelDeClase(inicio: number, fin: number): string {
   return `${fecha} ${horaInicio}–${horaFin}`
 }
 
+/** Ids de sala aceptados: los viejos de 8 hex y los nuevos de 128 bits (32 hex, fix 7). El id entra
+ * en la query de Drive (`appProperties ... value='${salaId}'`), así que se valida antes de armarla. */
+const FORMATO_ID_SALA = /^(?:[0-9a-f]{8}|[0-9a-f]{32})$/
+
 async function buscarSpreadsheet(driveApi: drive_v3.Drive, salaId: string): Promise<string | null> {
   const q = `appProperties has { key='ludidactasSala' and value='${salaId}' } and appProperties has { key='recurso' and value='asistencia' } and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
   const { data } = await driveApi.files.list({ q, fields: 'files(id)', pageSize: 1 })
@@ -66,6 +70,8 @@ export async function escribirAsistencia(
   nombreSala: string,
   asistencias: AsistenciaDeClase[]
 ) {
+  if (!FORMATO_ID_SALA.test(salaId)) throw new Error(`idSala inválido: ${salaId}`)
+
   const { sheets: sheetsApi, drive: driveApi } = await clientesGoogle(request)
 
   let spreadsheetId = await buscarSpreadsheet(driveApi, salaId)

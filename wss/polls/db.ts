@@ -21,6 +21,9 @@ const k = {
   /** SET — IDs de los usuarios que votaron una opción específica. */
   votantesOpcion: (salaId: string, pollId: string, optionId: string) =>
     `sala:${salaId}:poll:${pollId}:opcion:${optionId}:votantes`,
+  /** SET — IDs de las opciones que un usuario agregó como aporte. */
+  aportesUsuario: (salaId: string, pollId: string, userId: string) =>
+    `sala:${salaId}:poll:${pollId}:aportes:${userId}`,
 }
 
 // -- Encuestas --
@@ -171,4 +174,24 @@ export async function addVotanteOpcion(
 /** Borra el set de votantes de una opción específica. */
 export async function borrarVotantesOpcion(salaId: string, pollId: string, optionId: string): Promise<void> {
   await redis.del(k.votantesOpcion(salaId, pollId, optionId))
+}
+
+/** Devuelve cuántas opciones aportó un usuario en la encuesta. */
+export async function contarAportesUsuario(salaId: string, pollId: string, userId: string): Promise<number> {
+  return redis.scard(k.aportesUsuario(salaId, pollId, userId))
+}
+
+/** Registra que un usuario agregó una opción como aporte. */
+export async function addAporteUsuario(
+  salaId: string,
+  pollId: string,
+  userId: string,
+  optionId: string
+): Promise<void> {
+  await redis.sadd(k.aportesUsuario(salaId, pollId, userId), optionId)
+}
+
+/** Borra el registro de aportes de un usuario en la encuesta. */
+export async function borrarAportesUsuario(salaId: string, pollId: string, userId: string): Promise<void> {
+  await redis.del(k.aportesUsuario(salaId, pollId, userId))
 }

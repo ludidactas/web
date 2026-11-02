@@ -289,7 +289,7 @@ function DisplayEncuesta({ encuesta }: { encuesta: EncuestaHidratadaEstudiante }
                 enviarVoto()
               }
             }}
-            disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen}
+            disabled={!encuesta.admiteAportes || yaVotado || !encuesta.isOpen || !encuesta.puedoAportar}
           />
         )}
       </ol>

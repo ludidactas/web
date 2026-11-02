@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 
 const oauth2Spy = mock()
 const setCredentialsMock = mock()
+const authMock = mock()
 
 mock.module('@googleapis/drive', () => ({
   auth: {
@@ -18,6 +19,7 @@ mock.module('next-auth/jwt', () => ({
 }))
 
 mock.module('@/app/auth', () => ({
+  auth: authMock,
   desconectarDrive: mock(),
 }))
 
@@ -25,7 +27,7 @@ import { drive } from '@googleapis/drive'
 import { desconectarDrive } from '@/app/auth'
 import { getToken } from 'next-auth/jwt'
 
-import { clienteDrive, responderError } from '../cliente'
+import { clienteDrive, responderError, sinIntegracionGoogle } from '../cliente'
 
 const ENV_BASE = {
   AUTH_GOOGLE_ID: 'test-id',
@@ -145,5 +147,22 @@ describe('responderError', () => {
     const response = await responderError('algo raro')
     expect(response.status).toBe(502)
     expect(await response.json()).toEqual({ error: 'Error desconocido' })
+  })
+})
+
+describe('sinIntegracionGoogle', () => {
+  it('sin sesión devuelve 401', async () => {
+    authMock.mockResolvedValue(null)
+
+    const res = await sinIntegracionGoogle()
+
+    expect(res?.status).toBe(401)
+    expect(await res?.json()).toEqual({ error: 'No autenticado' })
+  })
+
+  it('con sesión y entitlement habilitado deja pasar', async () => {
+    authMock.mockResolvedValue({ user: { email: 'profe@example.com' } })
+
+    expect(await sinIntegracionGoogle()).toBeNull()
   })
 })

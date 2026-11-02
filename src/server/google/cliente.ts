@@ -113,13 +113,15 @@ export async function responderError(e: unknown, contexto?: Record<string, unkno
 }
 
 /**
- * Gate de entitlement de las rutas de Google: `null` si el usuario de la sesión puede usar
- * la integración, o la respuesta 403 a devolver si no. No valida que el `salaId` de la ruta
- * le pertenezca al usuario de la sesión: cualquier profe autenticado con la integración
- * habilitada puede operar bajo cualquier `salaId`, en su propio Drive.
+ * Gate de acceso de las rutas de Google: `null` si el usuario de la sesión puede usar la
+ * integración, o la respuesta a devolver (401 sin sesión, 403 sin entitlement). No valida que
+ * el `salaId` de la ruta le pertenezca al usuario de la sesión: cualquier profe autenticado con
+ * la integración habilitada puede operar bajo cualquier `salaId`, en su propio Drive.
  */
 export async function sinIntegracionGoogle() {
   const session = await sesionActual()
-  if (await tieneIntegracionGoogle(session?.user?.email)) return null
+  const email = session?.user?.email
+  if (!email) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+  if (await tieneIntegracionGoogle(email)) return null
   return NextResponse.json({ error: 'La integración con Google no está habilitada' }, { status: 403 })
 }

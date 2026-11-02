@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { auth } from '@/app/auth'
 import { responderError, sinIntegracionGoogle } from '@/server/google/cliente'
 import { escribirAsistencia } from '@/server/google/sheets-asistencia'
+import { esSalaIdValido } from '@/server/google/sala-id'
 import { asistenciaDeClaseSchema } from '@/wss/validators/asistencia'
 
 type Parametros = { params: Promise<{ salaId: string }> }
@@ -16,6 +17,10 @@ const bodySchema = z.object({
 
 export async function POST(request: Request, { params }: Parametros) {
   const { salaId } = await params
+
+  if (!esSalaIdValido(salaId)) {
+    return NextResponse.json({ error: 'Sala inválida' }, { status: 400 })
+  }
 
   // `null` cubre el body que no es JSON válido, que si no reventaría en un 500.
   const body = bodySchema.safeParse(await request.json().catch(() => null))

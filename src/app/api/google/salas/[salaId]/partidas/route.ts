@@ -3,11 +3,16 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { clienteDrive, responderError, sinIntegracionGoogle } from '@/server/google/cliente'
 import { esPng, guardarImagenPartida, MAX_IMAGEN_PARTIDA_BYTES } from '@/server/google/drive'
+import { esSalaIdValido } from '@/server/google/sala-id'
 
 type Parametros = { params: Promise<{ salaId: string }> }
 
 export async function POST(request: Request, { params }: Parametros) {
   const { salaId } = await params
+
+  if (!esSalaIdValido(salaId)) {
+    return NextResponse.json({ error: 'Sala inválida' }, { status: 400 })
+  }
 
   let form: FormData
   try {

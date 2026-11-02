@@ -2,6 +2,7 @@ import type { drive_v3 } from '@googleapis/drive'
 import type { sheets_v4 } from '@googleapis/sheets'
 
 import { clientesGoogle } from '@/server/google/cliente'
+import { esSalaIdValido } from '@/server/google/sala-id'
 import type { AsistenciaDeClase } from '@/wss/validators/asistencia'
 
 function labelDeClase(inicio: number, fin: number): string {
@@ -13,10 +14,6 @@ function labelDeClase(inicio: number, fin: number): string {
   const horaFin = `${pad(ff.getHours())}:${pad(ff.getMinutes())}`
   return `${fecha} ${horaInicio}–${horaFin}`
 }
-
-/** Ids de sala aceptados: los viejos de 8 hex y los nuevos de 128 bits (32 hex, fix 7). El id entra
- * en la query de Drive (`appProperties ... value='${salaId}'`), así que se valida antes de armarla. */
-const FORMATO_ID_SALA = /^(?:[0-9a-f]{8}|[0-9a-f]{32})$/
 
 async function buscarSpreadsheet(driveApi: drive_v3.Drive, salaId: string): Promise<string | null> {
   const q = `appProperties has { key='ludidactasSala' and value='${salaId}' } and appProperties has { key='recurso' and value='asistencia' } and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
@@ -70,7 +67,7 @@ export async function escribirAsistencia(
   nombreSala: string,
   asistencias: AsistenciaDeClase[]
 ) {
-  if (!FORMATO_ID_SALA.test(salaId)) throw new Error(`idSala inválido: ${salaId}`)
+  if (!esSalaIdValido(salaId)) throw new Error(`idSala inválido: ${salaId}`)
 
   const { sheets: sheetsApi, drive: driveApi } = await clientesGoogle(request)
 

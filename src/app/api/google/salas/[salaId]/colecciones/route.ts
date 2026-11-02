@@ -3,12 +3,17 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/app/auth'
 import { clienteDrive, responderError, sinIntegracionGoogle } from '@/server/google/cliente'
 import { guardarColeccion, leerColecciones } from '@/server/google/drive'
+import { esSalaIdValido } from '@/server/google/sala-id'
 
 type Parametros = { params: Promise<{ salaId: string }> }
 
 /** Lista las colecciones de preguntas que el profe ya guardó en Drive para `salaId`. */
 export async function GET(request: Request, { params }: Parametros) {
   const { salaId } = await params
+
+  if (!esSalaIdValido(salaId)) {
+    return NextResponse.json({ error: 'Sala inválida' }, { status: 400 })
+  }
 
   const vedado = await sinIntegracionGoogle()
   if (vedado) return vedado
@@ -24,6 +29,11 @@ export async function GET(request: Request, { params }: Parametros) {
 /** Crea (o sobrescribe, si ya existe una con el mismo nombre) una colección de preguntas en el Drive del profe. */
 export async function POST(request: Request, { params }: Parametros) {
   const { salaId } = await params
+
+  if (!esSalaIdValido(salaId)) {
+    return NextResponse.json({ error: 'Sala inválida' }, { status: 400 })
+  }
+
   const { nombreSala, nombre, contenido } = (await request.json()) as {
     nombreSala?: string
     nombre?: string

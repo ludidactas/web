@@ -24,23 +24,20 @@ function formData(imagen: Blob) {
 }
 
 function request(imagen: Blob) {
-  return new Request('http://localhost/api/google/salas/sala-1/partidas', {
+  return new Request('http://localhost/api/google/salas/a1b2c3d4/partidas', {
     method: 'POST',
     body: formData(imagen),
   })
 }
 
-function params() {
-  return { params: Promise.resolve({ salaId: 'sala-1' }) }
-}
+const params = (salaId = 'a1b2c3d4') => ({ params: Promise.resolve({ salaId }) })
 
 beforeEach(() => {
   sinIntegracionGoogle.mockClear()
   sinIntegracionGoogle.mockResolvedValue(NextResponse.json({ error: 'vedado' }, { status: 403 }))
 })
 
-describe('POST partidas — validación de la imagen', () => {
-  it('rechaza una imagen que supera el tope sin llegar a Google', async () => {
+describe('POST partidas — validación de la imagen', () => {  it('rechaza una imagen que supera el tope sin llegar a Google', async () => {
     const grande = new Blob([new Uint8Array(5 * 1024 * 1024 + 1)])
 
     const res = await POST(request(grande), params())
@@ -65,5 +62,15 @@ describe('POST partidas — validación de la imagen', () => {
 
     expect(res.status).toBe(403)
     expect(sinIntegracionGoogle).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('POST partidas — salaId inválido', () => {
+  it('rechaza un salaId fuera del formato emitido antes de tocar Google', async () => {
+    const res = await POST(request(new Blob([FIRMA_PNG])), params("a1b2c3d4' OR 1=1"))
+
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Sala inválida' })
+    expect(sinIntegracionGoogle).not.toHaveBeenCalled()
   })
 })

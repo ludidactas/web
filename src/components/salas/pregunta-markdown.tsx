@@ -17,8 +17,16 @@ const components: Components = {
   p: ({ node: _node, ...props }) => <span {...props} className="block" />,
   img: ({ node: _node, alt, ...props }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img {...props} alt={alt ?? ''} loading="lazy" className="block mx-auto max-w-full max-h-64 rounded-lg my-2" />
+    // Sin referrer: la URL de la sala (con idSala) no viaja al host de la imagen que pegó el profe.
+    <img
+      {...props}
+      alt={alt ?? ''}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      className="block mx-auto max-w-full max-h-64 rounded-lg my-2"
+    />
   ),
+  a: ({ node: _node, ...props }) => <a {...props} rel="noreferrer" />,
   pre: ({ node: _node, ...props }) => (
     <pre
       {...props}

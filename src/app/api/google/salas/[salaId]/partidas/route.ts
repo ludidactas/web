@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/app/auth'
 import { clienteDrive, responderError, sinIntegracionGoogle } from '@/server/google/cliente'
-import { guardarImagenPartida } from '@/server/google/drive'
+import { esPng, guardarImagenPartida, MAX_IMAGEN_PARTIDA_BYTES } from '@/server/google/drive'
 
 type Parametros = { params: Promise<{ salaId: string }> }
 
@@ -33,13 +33,20 @@ export async function POST(request: Request, { params }: Parametros) {
   if (!(imagen instanceof Blob)) {
     return NextResponse.json({ error: 'Falta la imagen' }, { status: 400 })
   }
+  if (imagen.size > MAX_IMAGEN_PARTIDA_BYTES) {
+    return NextResponse.json({ error: 'La imagen es demasiado grande' }, { status: 400 })
+  }
+
+  const png = Buffer.from(await imagen.arrayBuffer())
+  if (!esPng(png)) {
+    return NextResponse.json({ error: 'La imagen tiene que ser PNG' }, { status: 400 })
+  }
 
   const vedado = await sinIntegracionGoogle()
   if (vedado) return vedado
 
   try {
     const api = await clienteDrive(request)
-    const png = Buffer.from(await imagen.arrayBuffer())
     await guardarImagenPartida(api, { salaId, nombreSala }, partidaId, nombre, png)
     return new NextResponse(null, { status: 204 })
   } catch (e) {

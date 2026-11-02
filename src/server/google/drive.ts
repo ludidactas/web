@@ -124,6 +124,17 @@ function propiedadesPartida(salaId: string, partidaId: string) {
   return { ludidactasSala: salaId, recurso: 'partida', partida: partidaId }
 }
 
+/** Tope del upload de la imagen de una partida (un tablero renderizado no llega ni cerca). */
+export const MAX_IMAGEN_PARTIDA_BYTES = 5 * 1024 * 1024
+
+/** Firma de los primeros 8 bytes de un PNG. */
+const FIRMA_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+/** True si `buffer` arranca con la firma PNG (el archivo se guarda en Drive como `image/png`). */
+export function esPng(buffer: Buffer): boolean {
+  return buffer.length >= 8 && buffer.subarray(0, 8).equals(FIRMA_PNG)
+}
+
 export async function guardarImagenPartida(
   api: drive_v3.Drive,
   sala: SalaDrive,

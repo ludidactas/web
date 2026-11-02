@@ -8,7 +8,7 @@ import {
   type RegistroDeClase,
 } from '../validators/asistencia'
 import { salaData, type SalaData } from '../validators/salas'
-import { WssEstudianteSession, WssEstudianteSessionSchema } from '../validators/session'
+import { identidadRealEstudiante, WssEstudianteSession, WssEstudianteSessionSchema } from '../validators/session'
 import { versionado } from '../versionado'
 
 export type { SalaData }
@@ -110,9 +110,15 @@ export async function getEstudiantes(salaId: string): Promise<Record<string, Wss
   )
 }
 
-/** Agrega/actualiza al estudiante en la planilla, persistiendo su sesión (idempotente por `userId`). */
+/**
+ * Agrega/actualiza al estudiante en la planilla, persistiendo su sesión (idempotente por `userId`).
+ * Borra la entrada previa bajo la identidad real (dni/nombre/email): las sesiones viejas vivían
+ * bajo esa clave y el `userId` ahora es el id opaco por sala.
+ */
 export async function guardarEstudiante(salaId: string, session: WssEstudianteSession): Promise<void> {
   await redis.hset(`sala:${salaId}:estudiantes`, session.userId, estudianteCodec.serializar(session))
+  const identidad = identidadRealEstudiante(session)
+  if (identidad !== session.userId) await redis.hdel(`sala:${salaId}:estudiantes`, identidad)
 }
 
 // -- Asistencia (log de conexión/desconexión) --

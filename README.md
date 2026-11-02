@@ -110,7 +110,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 
 | Variable                                                          | Quién la lee                                                                       | Cuándo         | Para qué                                                                                                                                                                               |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JWT_SECRET`                                                      | Next (`src/server/token_wss.ts`, firma) y wss (`wss/middleware/auth.ts`, verifica) | runtime        | Secret compartido del JWT de corta vida que autentica al socket contra el wss. Tiene que ser **el mismo valor exacto** en ambos lados.                                                 |
+| `WSS_TOKEN_SECRET`                                                | Next (`src/server/token_wss.ts`, firma) y wss (`wss/middleware/auth.ts`, verifica) | runtime        | Secret del JWT de corta vida que autentica el socket contra el wss. Valor distinto del secreto de sesión (`NEXTAUTH_SECRET`/`AUTH_SECRET`). Obligatoria: sin valor, el wss no arranca y el token no se firma. |
 | `NEXTAUTH_SECRET` / `AUTH_SECRET`                                 | Next, internamente (Auth.js)                                                       | runtime        | Firma la cookie de sesión del navegador. `AUTH_SECRET` es el nombre nuevo de Auth.js v5; si no está seteado, cae a `NEXTAUTH_SECRET`. No lo usa el wss.                                |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`                           | Next (`src/server/google/cliente.ts`, provider de login y cliente de Drive)        | runtime        | Credenciales de la app OAuth de Google.                                                                                                                                                |
 | `POLLS_ADMINS`                                                    | wss (`wss/middleware/auth.ts`)                                                     | runtime        | Emails con rol admin en el wss, separados por coma.                                                                                                                                    |
@@ -123,7 +123,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita la variable obligatoria del wss de la tabla de arriba (`WSS_TOKEN_SECRET`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`
@@ -134,7 +134,7 @@ El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup 
 
 ## Pendiente
 
-- `JWT_SECRET` está bien separado de `NEXTAUTH_SECRET`/`AUTH_SECRET` en el código (cada uno con su propia variable, ver tabla de arriba), pero en local (`.env.local`) los dos todavía tienen cargado **el mismo valor de string**, porque nunca se regeneró `JWT_SECRET` de forma independiente — falta confirmar si eso también pasa en staging/producción. Hay que generar un `JWT_SECRET` propio y distinto (`openssl rand -base64 32`) por ambiente y actualizarlo a la vez en Vercel (Next, firma) y en la Application de Coolify correspondiente (wss, verifica) — son un par, tienen que cambiar juntos.
+- `WSS_TOKEN_SECRET` firma y verifica el token del WSS, con un valor distinto del secreto de sesión (`NEXTAUTH_SECRET`/`AUTH_SECRET`). Hay que generarlo (`openssl rand -base64 32`) por ambiente y setearlo a la vez en Vercel (Next, firma) y en la Application de Coolify correspondiente (wss, verifica): es un par, cambian juntos.
 
 ## Deploy y ambientes
 
@@ -158,7 +158,7 @@ Ambas Applications tienen auto-deploy activado (`Deploy on push` vía webhook): 
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita la variable obligatoria del wss de la tabla de arriba (`WSS_TOKEN_SECRET`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`

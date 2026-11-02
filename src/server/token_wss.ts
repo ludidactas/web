@@ -17,7 +17,7 @@ export async function tokenWss() {
       name: session.user.name,
       image: session.user.image,
     },
-    process.env.JWT_SECRET!,
+    process.env.WSS_TOKEN_SECRET!,
     {
       algorithm: 'HS256',
       expiresIn: '24h',

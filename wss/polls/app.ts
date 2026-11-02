@@ -90,29 +90,31 @@ export async function profeSala(salaId: string) {
   }
 
   async function deletePoll({ pollId }: { pollId: string }) {
-    await assertPollExists(salaId, pollId)
+    return conLock(`${salaId}:${pollId}`, async () => {
+      await assertPollExists(salaId, pollId)
 
-    // Borramos del índice y su clave
-    await db.desregistrarEncuesta(salaId, pollId)
-    await db.borrarEncuesta(salaId, pollId)
+      // Borramos del índice y su clave
+      await db.desregistrarEncuesta(salaId, pollId)
+      await db.borrarEncuesta(salaId, pollId)
 
-    // Borramos los votos por usuario y el hash global
-    const votantes = await db.getVotantes(salaId, pollId)
-    if (votantes.length > 0) {
-      await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
-    }
-    await db.borrarVotantes(salaId, pollId)
+      // Borramos los votos por usuario y el hash global
+      const votantes = await db.getVotantes(salaId, pollId)
+      if (votantes.length > 0) {
+        await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
+      }
+      await db.borrarVotantes(salaId, pollId)
 
-    const votos = await db.getVotos(salaId, pollId)
-    await Promise.all(Object.keys(votos).map((optionId) => db.borrarVotantesOpcion(salaId, pollId, optionId)))
+      const votos = await db.getVotos(salaId, pollId)
+      await Promise.all(Object.keys(votos).map((optionId) => db.borrarVotantesOpcion(salaId, pollId, optionId)))
 
-    await db.limpiarVotos(salaId, pollId)
+      await db.limpiarVotos(salaId, pollId)
 
-    // Si estaba enfocada, desenfocamos
-    const enfocada = await db.getEnfocada(salaId)
-    if (enfocada === pollId) await db.limpiarEnfocada(salaId)
+      // Si estaba enfocada, desenfocamos
+      const enfocada = await db.getEnfocada(salaId)
+      if (enfocada === pollId) await db.limpiarEnfocada(salaId)
 
-    console.log(`🗑️  Encuesta borrada: ${pollId}`)
+      console.log(`🗑️  Encuesta borrada: ${pollId}`)
+    })
   }
 
   async function focusPoll(pollId: string) {
@@ -185,7 +187,8 @@ export async function estudianteSala(idSala: string, userId: string) {
     let pollFinal = poll
     if (tipo === 'aporte') {
       pollFinal = await conLock(`${idSala}:${pollId}`, async () => {
-        const pollActual = (await db.getEncuesta(idSala, pollId))!
+        const pollActual = await db.getEncuesta(idSala, pollId)
+        if (!pollActual) throw new Error(`La encuesta ${pollId} no existe!`)
         enforce(pollActual.isOpen, 'La encuesta ya cerró!')
         enforce(pollActual.admiteAportes, 'Esta encuesta no admite aportes')
         enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')

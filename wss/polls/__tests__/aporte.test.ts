@@ -148,3 +148,19 @@ describe('votar — carrera de aporte contra poll:close', () => {
     expect(encuesta.opciones.length).toBe(2)
   })
 })
+
+describe('votar — carrera de aporte contra deletePoll', () => {
+  it('un aporte en fila detrás del borrado se rechaza y no recrea la encuesta', async () => {
+    const poll = await crearPollConAportes()
+    const [estu, profe] = await Promise.all([estudianteSala(idSala, 'user-borrado'), profeSala(idSala)])
+
+    const [, aporte] = await Promise.allSettled([
+      profe.deletePoll({ pollId: poll.id }),
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-huerfano' }),
+    ])
+
+    expect(aporte.status).toBe('rejected')
+    expect((aporte as PromiseRejectedResult).reason.message).toBe(`La encuesta ${poll.id} no existe!`)
+    expect(await db.getEncuesta(idSala, poll.id)).toBeNull()
+  })
+})

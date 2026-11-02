@@ -10,14 +10,17 @@ import {
   JugadorPartida,
   Partida,
   PartidaIdPayload,
+  PartidaPublica,
   Resultado,
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
 import { conLock } from '../lock'
+import { idOpaco } from '../id-opaco'
 import * as motor from '@/lib/go/motor'
 import { getSala } from '../salas/db'
 import { infoExport } from '@/lib/go/info-export'
+import { RolSala } from '../validators/auth'
 
 /**
  * Lógica de servidor de una partida de Go: comandos (invitar/aceptar/jugar/pasar/marcarMuerta/
@@ -48,10 +51,22 @@ function contrincanteDe(partida: Partida, userId: string): JugadorPartida {
   return partida.negro.userId === userId ? partida.blanco : partida.negro
 }
 
-/** Envía el estado completo de la partida a los sockets unidos a su sala (los dos jugadores). */
+/** Vista de una partida para los sockets de la sala: ids opacos por sala en vez de `userId` reales.
+ * La partida en Redis conserva los `userId`; esta conversión se aplica solo al emitir/responder. */
+export function partidaPublica(partida: Partida): PartidaPublica {
+  const { negro, blanco, ganadorUserId, ...resto } = partida
+  return {
+    ...resto,
+    negro: { id: idOpaco(partida.salaId, negro.userId), nombre: negro.nombre },
+    blanco: { id: idOpaco(partida.salaId, blanco.userId), nombre: blanco.nombre },
+    ganadorId: ganadorUserId ? idOpaco(partida.salaId, ganadorUserId) : null,
+  }
+}
+
+/** Envía la partida (con ids opacos) a los sockets unidos a su sala (los dos jugadores y quien observa). */
 export async function broadcastPartida(partida: Partida) {
   const sockets = await io.to(rooms.partidaGo(partida.salaId, partida.id)).fetchSockets()
-  await Promise.all(sockets.map((s) => s.emit('go:partida', partida)))
+  await Promise.all(sockets.map((s) => s.emit('go:partida', partidaPublica(partida))))
 }
 
 /** Estudiantes de la sala más el profe (si está conectado): todas las personas que puede invitar a
@@ -70,12 +85,17 @@ async function personasDeSala(idSala: string) {
 }
 
 /** Con qué compañeros de `personas` (ya resuelta) puede jugar `userId`: si están o no disponibles
- * para invitar (ya en una partida) y, en ese caso, contra quién (ej: en la lista de participantes). */
-async function contrincantesDesde(
+ * para invitar (ya en una partida) y, en ese caso, contra quién (ej: en la lista de participantes).
+ * El resultado va tal cual a los sockets. `identidades` decide el `id` que ve quien lo recibe:
+ * `opacas` para estudiantes (nunca el `userId` real, que puede ser un DNI o el email del profe) y
+ * `reales` para el profe, dueño de los datos de su sala, que lo cruza contra su planilla. */
+export async function contrincantesDesde(
   personas: Awaited<ReturnType<typeof personasDeSala>>,
   idSala: string,
-  userId: string
+  userId: string,
+  identidades: 'opacas' | 'reales'
 ): Promise<ContrincanteGo[]> {
+  const idPara = (u: string) => (identidades === 'reales' ? u : idOpaco(idSala, u))
   const conectados = personas.filter((e) => e.conectado && e.userId !== userId)
 
   return Promise.all(
@@ -83,13 +103,19 @@ async function contrincantesDesde(
       const partidaId = await db.getPartidaActiva(idSala, e.userId)
       const partida = partidaId ? await db.getPartida(idSala, partidaId) : null
       const contrincante = partida ? contrincanteDe(partida, e.userId) : null
-      return { userId: e.userId, nombre: e.nombre, enPartida: partidaId !== null, partidaId, contrincante }
+      return {
+        id: idPara(e.userId),
+        nombre: e.nombre,
+        enPartida: partidaId !== null,
+        partidaId,
+        contrincante: contrincante ? { id: idPara(contrincante.userId), nombre: contrincante.nombre } : null,
+      }
     })
   )
 }
 
-async function calcularContrincantesDisponibles(idSala: string, userId: string) {
-  return contrincantesDesde(await personasDeSala(idSala), idSala, userId)
+async function calcularContrincantesDisponibles(idSala: string, userId: string, identidades: 'opacas' | 'reales') {
+  return contrincantesDesde(await personasDeSala(idSala), idSala, userId, identidades)
 }
 
 /**
@@ -108,24 +134,37 @@ export async function avisarContrincantesActualizados(idSala: string) {
   const personas = await personasDeSala(idSala)
   await Promise.all(
     sockets.map(async (s) => {
-      const contrincantes = await contrincantesDesde(personas, idSala, s.data.session.userId)
+      const esProfe = s.data.session.rol === RolSala.Profe
+      const contrincantes = await contrincantesDesde(
+        personas,
+        idSala,
+        s.data.session.userId,
+        esProfe ? 'reales' : 'opacas'
+      )
       s.emit('go:contrincantes_actualizados', contrincantes)
     })
   )
 }
 
-/** Crea un closure para operar las partidas de Go de un estudiante dentro de una sala. */
-export async function estudianteGo(idSala: string, userId: string) {
+/** Crea un closure para operar las partidas de Go de una identidad dentro de una sala. `identidades`
+ * es qué ve ese usuario como `id` en las listas de contrincantes (y qué manda al invitar): `opacas`
+ * para estudiantes, `reales` para el profe. */
+export async function estudianteGo(
+  idSala: string,
+  userId: string,
+  identidades: 'opacas' | 'reales' = 'opacas'
+) {
   async function miPartida() {
     const partidaId = await db.getPartidaActiva(idSala, userId)
     if (!partidaId) return null
-    return await db.getPartida(idSala, partidaId)
+    const partida = await db.getPartida(idSala, partidaId)
+    return partida ? partidaPublica(partida) : null
   }
 
   /** A diferencia del resto de las operaciones, no requiere ser jugador de la partida: cualquier
-   * estudiante de la sala puede pedir observarla. */
+   * estudiante de la sala puede pedir observarla. Devuelve la vista pública (ids opacos). */
   async function observar({ partidaId }: PartidaIdPayload) {
-    return assertPartidaExiste(idSala, partidaId)
+    return partidaPublica(await assertPartidaExiste(idSala, partidaId))
   }
 
   // `invitar`/`aceptar`/`rechazar` leen y escriben el puntero de "partida activa" de dos usuarios
@@ -137,15 +176,19 @@ export async function estudianteGo(idSala: string, userId: string) {
 
   async function invitar({ contrincanteId, tamaño, modo }: Invitacion, nombre: string) {
     return conLockInvitaciones(async () => {
-      if (contrincanteId === userId) throw new Error('No podés invitarte a vos mismo')
+      const idPara = (u: string) => (identidades === 'reales' ? u : idOpaco(idSala, u))
+      if (contrincanteId === idPara(userId)) throw new Error('No podés invitarte a vos mismo')
 
       const existente = await miPartida()
       if (existente && existente.estado !== EstadoPartida.Terminada) throw new Error('Ya tenés una partida en curso')
 
       const personas = await personasDeSala(idSala)
-      const contrincante = personas.find((e) => e.userId === contrincanteId)
+      // El FE manda el `id` tal como lo recibió en su lista (opaco para estudiantes, real para el profe);
+      // el `userId` real se resuelve acá, contra la sala.
+      const contrincante = personas.find((e) => idPara(e.userId) === contrincanteId)
       if (!contrincante || !contrincante.conectado) throw new Error('Ese contrincante no está disponible')
-      if (await db.getPartidaActiva(idSala, contrincanteId)) throw new Error('Ese contrincante ya está en una partida')
+      if (await db.getPartidaActiva(idSala, contrincante.userId))
+        throw new Error('Ese contrincante ya está en una partida')
 
       const id = randomUUID().split('-')[0]
       const partida: Partida = {
@@ -154,7 +197,7 @@ export async function estudianteGo(idSala: string, userId: string) {
         tamaño,
         modo,
         negro: { userId, nombre },
-        blanco: { userId: contrincanteId, nombre: contrincante.nombre },
+        blanco: { userId: contrincante.userId, nombre: contrincante.nombre },
         tablero: modo === 'atari' ? motor.tableroAtari(tamaño) : motor.tableroVacio(tamaño),
         turno: motor.NEGRO,
         capturasNegras: 0,
@@ -175,16 +218,16 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.guardarPartida(partida)
       await db.registrarPartida(idSala, id)
       await db.setPartidaActiva(idSala, userId, id)
-      await db.setPartidaActiva(idSala, contrincanteId, id)
+      await db.setPartidaActiva(idSala, contrincante.userId, id)
 
       console.log(
         `🎲 Invitación de Go (${modo}) creada: ${nombre} (negro) vs ${contrincante.nombre} (blanco), partida ${id}`
       )
 
-      io.to(rooms.usuario(idSala, contrincanteId)).emit('go:invitacion', partida)
+      io.to(rooms.usuario(idSala, contrincante.userId)).emit('go:invitacion', partidaPublica(partida))
       await avisarContrincantesActualizados(idSala)
 
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -198,7 +241,7 @@ export async function estudianteGo(idSala: string, userId: string) {
       partida.estado = EstadoPartida.Jugando
       await db.guardarPartida(partida)
       await broadcastPartida(partida)
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -243,12 +286,12 @@ export async function estudianteGo(idSala: string, userId: string) {
       // Atari Go: la primera captura termina la partida y le da la victoria a quien la hizo.
       if (partida.modo === 'atari' && capturas > 0) {
         await finalizar(partida, userId, 'captura')
-        return partida
+        return partidaPublica(partida)
       }
 
       await db.guardarPartida(partida)
       await broadcastPartida(partida)
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -274,7 +317,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       await db.guardarPartida(partida)
       await broadcastPartida(partida)
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -299,7 +342,7 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       await db.guardarPartida(partida)
       await broadcastPartida(partida)
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -334,7 +377,7 @@ export async function estudianteGo(idSala: string, userId: string) {
         await broadcastPartida(partida)
       }
 
-      return partida
+      return partidaPublica(partida)
     })
   }
 
@@ -346,14 +389,14 @@ export async function estudianteGo(idSala: string, userId: string) {
 
       const otro = contrincanteDe(partida, userId)
       await finalizar(partida, otro.userId, 'abandono')
-      return partida
+      return partidaPublica(partida)
     })
   }
 
   return {
     miPartida,
     observar,
-    contrincantesDisponibles: () => calcularContrincantesDisponibles(idSala, userId),
+    contrincantesDisponibles: () => calcularContrincantesDisponibles(idSala, userId, identidades),
     invitar,
     aceptar,
     rechazar,

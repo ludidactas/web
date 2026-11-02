@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { sonarJugada } from '@/lib/go/sonido-jugada'
-import { Partida } from '@/wss/validators/go'
+import { PartidaPublica } from '@/wss/validators/go'
 
 /**
  * Suena cada vez que una jugada se confirma en el server, propia o del contrincante (o que entra una
@@ -8,7 +8,7 @@ import { Partida } from '@/wss/validators/go'
  * partida, así que la respuesta del comando y el broadcast (mismo estado) suenan una sola vez; cargar
  * o cambiar de partida no suena.
  */
-export function useSonidoJugada(partida: Partida | null) {
+export function useSonidoJugada(partida: PartidaPublica | null) {
   const previa = useRef<{ id: string; jugadas: number } | null>(null)
 
   useEffect(() => {

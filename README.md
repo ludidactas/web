@@ -116,6 +116,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 | `POLLS_ADMINS`                                                    | wss (`wss/middleware/auth.ts`)                                                     | runtime        | Emails con rol admin en el wss, separados por coma.                                                                                                                                    |
 | `NEXT_PUBLIC_HOST`                                                | wss (`wss/salas/app.ts`), pese al nombre                                           | runtime        | Host que se antepone al armar el `link` de una sala nueva (queda guardado en Redis al crearla, no se recalcula después).                                                               |
 | `NEXT_PUBLIC_ENCUESTA_HOST`                                       | Next, client-side (`wss-cli/utils-socket-wss.ts`)                                  | **build-time** | Host del wss al que se conecta el cliente de socket.io desde el browser.                                                                                                               |
+| `SECRETO_ID_OPACO`                                                | wss (`wss/id-opaco.ts`)                                                            | runtime        | Clave HMAC de los ids opacos por sala que los eventos de Go emiten a los clientes (nunca el `userId` real, que puede ser un DNI o el email del profe). Obligatoria: sin valor, el wss no arranca. Mismo valor en todos los nodos del cluster. |
 | `IDP_HOST`                                                        | Next + `scripts/idp-dev.ts`                                                        | runtime        | Ver sección **Autenticación** más arriba (login por LAN).                                                                                                                              |
 | `APP_HOST`                                                        | `scripts/check-idp-login.ts`                                                       | runtime        | Solo para el chequeo manual de login, no para correr la app.                                                                                                                           |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_USERNAME` / `REDIS_PASSWORD` | wss (`wss/redis.ts`)                                                               | runtime        | Conexión a Redis. Host/puerto por default apuntan a `127.0.0.1:6379` (sin auth) si no están seteadas — para local alcanza con tener un Redis corriendo ahí, no hace falta setear nada. |
@@ -123,7 +124,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita las variables obligatorias del wss de la tabla de arriba (`SECRETO_ID_OPACO`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`
@@ -158,7 +159,7 @@ Ambas Applications tienen auto-deploy activado (`Deploy on push` vía webhook): 
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita las variables obligatorias del wss de la tabla de arriba (`SECRETO_ID_OPACO`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`

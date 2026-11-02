@@ -1,4 +1,4 @@
-import { ContrincanteGo, Partida } from '@/wss/validators/go'
+import { ContrincanteGo, PartidaPublica } from '@/wss/validators/go'
 import { create } from 'zustand'
 
 /** Estado cliente (zustand) de Go — lo pueblan `estudiante-go-handlers.ts`/`profe-go-handlers.ts`
@@ -7,33 +7,39 @@ interface GoState {
   /** `false` hasta que llega la respuesta del primer `go:mi_partida`. Mientras tanto no sabemos si
    * ya hay una partida en curso, así que la UI debe mostrar un loading en vez de asumir que no hay. */
   inicializado: boolean
+  /** Mi id opaco en la sala, recibido por `go:identidad`: con esto me reconozco en las partidas. */
+  miId: string | null
   /** Mi partida activa (pendiente o en curso), o `null` si no tengo ninguna. */
-  partida: Partida | null
+  partida: PartidaPublica | null
   /** Invitaciones entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
-  invitaciones: Partida[]
+  invitaciones: PartidaPublica[]
   /** Compañeros conectados, con si están o no disponibles para invitar (ya en una partida) y, en ese
    * caso, contra quién. */
   contrincantes: ContrincanteGo[]
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
-  observando: Partida | null
+  observando: PartidaPublica | null
   marcarInicializado: () => void
-  set: (partida: Partida | null) => void
-  agregarInvitacion: (partida: Partida) => void
+  setMiId: (id: string) => void
+  set: (partida: PartidaPublica | null) => void
+  agregarInvitacion: (partida: PartidaPublica) => void
   quitarInvitacion: (partidaId: string) => void
   setContrincantes: (contrincantes: GoState['contrincantes']) => void
-  setObservando: (partida: Partida | null) => void
+  setObservando: (partida: PartidaPublica | null) => void
   reset: () => void
   resetConexion: () => void
 }
 
 export const storeGo = create<GoState>()((set) => ({
   inicializado: false,
+  miId: null,
   partida: null,
   invitaciones: [],
   contrincantes: [],
   observando: null,
 
   marcarInicializado: () => set({ inicializado: true }),
+
+  setMiId: (id) => set({ miId: id }),
 
   set: (partida) =>
     set((state) => ({
@@ -66,5 +72,5 @@ export const storeGo = create<GoState>()((set) => ({
   // se cierra la conexión): ahí sí hay que volver todo a estado inicial, invitaciones e `inicializado`
   // incluidos, para no filtrarle a la próxima persona el tablero/rival/invitaciones de la anterior.
   resetConexion: () =>
-    set({ inicializado: false, partida: null, invitaciones: [], contrincantes: [], observando: null }),
+    set({ inicializado: false, miId: null, partida: null, invitaciones: [], contrincantes: [], observando: null }),
 }))

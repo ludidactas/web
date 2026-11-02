@@ -5,7 +5,8 @@ import { alDesconectar, registrar } from '../contrato/registrar'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo } from './app'
-import { Partida } from '../validators/go'
+import { idOpaco } from '../id-opaco'
+import { PartidaPublica } from '../validators/go'
 import * as db from './db'
 
 /**
@@ -13,11 +14,20 @@ import * as db from './db'
  * identidad es lo único que distingue quién juega: estudiante y profe comparten exactamente la misma
  * mecánica (invitar, jugar, observar), por eso `estudianteGo` no le pide más que un userId.
  */
-async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
-  const go = await estudianteGo(idSala, userId)
+async function registrarComandosGo(
+  socket: Socket,
+  idSala: string,
+  userId: string,
+  nombre: string,
+  identidades: 'opacas' | 'reales'
+) {
+  const go = await estudianteGo(idSala, userId, identidades)
+
+  // El id opaco con el que el cliente se reconoce a sí mismo en partidas y contrincantes.
+  socket.emit('go:identidad', { id: idOpaco(idSala, userId) })
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
-  function seguir<T extends Partida | null>(partida: T): T {
+  function seguir<T extends PartidaPublica | null>(partida: T): T {
     if (partida) socket.join(rooms.partidaGo(idSala, partida.id))
     return partida
   }
@@ -54,7 +64,7 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
     if (!(await sala.sigueConectado(userId, socket.id))) await avisarContrincantesActualizados(idSala)
   })
 
-  await registrarComandosGo(socket, idSala, userId, nombre)
+  await registrarComandosGo(socket, idSala, userId, nombre, 'opacas')
 
   return () => avisarContrincantesActualizados(idSala)
 }
@@ -78,7 +88,7 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
     'go:descartar_partidas_drive': async ({ ids }) => db.descartarPartidasDrivePendientes(idSala, ids),
   })
 
-  await registrarComandosGo(socket, idSala, userId, nombre)
+  await registrarComandosGo(socket, idSala, userId, nombre, 'reales')
 
   return () => avisarContrincantesActualizados(idSala)
 }

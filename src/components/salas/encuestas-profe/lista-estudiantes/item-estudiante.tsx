@@ -63,7 +63,7 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
               <TooltipTrigger asChild>
                 <button
                   className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
-                  disabled={!!partidaPropia || !!contrincantes.find((c) => c.userId === e.userId)?.enPartida}
+                  disabled={!!partidaPropia || !!contrincantes.find((c) => c.id === e.userId)?.enPartida}
                 >
                   <Icon icon="lucide:play" width={18} height={18} />
                 </button>
@@ -97,7 +97,7 @@ function TooltipPartidaEstudiante({
   conectado,
 }: PropsWithChildren & { userId: string; conectado: boolean }) {
   const { contrincantes } = storeGo()
-  const info = contrincantes.find((c) => c.userId === userId)
+  const info = contrincantes.find((c) => c.id === userId)
 
   return (
     <Tooltip>

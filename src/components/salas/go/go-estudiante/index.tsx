@@ -5,6 +5,7 @@ import HeaderSala from '../../header-sala'
 import LdGo from '@/components/custom/ld-go'
 import { BtnAuth } from '@/components/ui/btn-auth'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
+import { storeGo } from '@/wss-cli/stores/go-store'
 import GoEstudiante from './go-estudiante'
 import { BannerSalaEstudiante } from '../../banner-sala-estudiante'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -18,7 +19,11 @@ import { Icon } from '@iconify/react/dist/iconify.js'
  * Esta página solo se monta una vez que ya está `ingresado`.
  */
 export default function GoEstudiantePage({ idSala }: { idSala: string }) {
-  const { dni, nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
+  const { nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
+
+  // El server emite `go:identidad` con el id opaco de esta sala; con eso comparamos "soy negro/blanco"
+  // contra `partida.negro/blanco.id` (el dni/nombre no viajan en los eventos de Go).
+  const miId = storeGo((s) => s.miId) ?? ''
 
   const btnLogoutAnonimo = (
     <BtnAuth
@@ -30,10 +35,6 @@ export default function GoEstudiantePage({ idSala }: { idSala: string }) {
      <Icon className='w-8 h-8' icon={"hugeicons:logout-01"}/>
     </BtnAuth>
   )
-
-  // El server resuelve el userId como el dni (salas por DNI) o el nombre (salas por Nombre); lo
-  // replicamos acá para poder comparar "soy negro/blanco" contra `partida.negro/blanco.userId`.
-  const userId = dni || nombre || ''
 
   return (
     <div className="min-h-screen w-full mx-auto flex flex-col gap-4 sm:gap-8 items-center">
@@ -49,7 +50,7 @@ export default function GoEstudiantePage({ idSala }: { idSala: string }) {
             // aviso={<AvisoInvitado />}
           />
 
-          <GoEstudiante userId={userId} />
+          <GoEstudiante miId={miId} />
         </div>
       </div>
     </div>

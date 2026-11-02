@@ -1,6 +1,6 @@
 import { track } from '@/lib/analytics'
 import { comandosGo, EventosGo } from '@/wss/contrato/go'
-import { ModoPartida, Partida, TamañoTablero } from '@/wss/validators/go'
+import { ModoPartida, PartidaPublica, TamañoTablero } from '@/wss/validators/go'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { comandos, escuchar } from '../contrato-cli'
@@ -16,7 +16,7 @@ export default function goHandlers(socket: Socket | null) {
   /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket.
    * Una respuesta `terminada` es de quien cerró la partida (los comandos sobre una terminada fallan), así que
    * el fin se mide una sola vez por partida. */
-  async function guardandoPartida(pedido: Promise<Partida>): Promise<Partida> {
+  async function guardandoPartida(pedido: Promise<PartidaPublica>): Promise<PartidaPublica> {
     const partida = await pedido
     store.set(partida)
     if (partida.estado === 'terminada')
@@ -55,6 +55,9 @@ export default function goHandlers(socket: Socket | null) {
       if (!socket) return () => {}
 
       const dejarDeEscuchar = escuchar<EventosGo>(socket, {
+        // El id opaco con el que me reconozco a mí mismo en las partidas (nunca el userId real).
+        'go:identidad': ({ id }) => store.setMiId(id),
+
         // Una partida en la que estoy: la que observo va a `observando`; si no, es la mía.
         'go:partida': (partida) => {
           if (storeGo.getState().observando?.id === partida.id) store.setObservando(partida)

@@ -4,8 +4,8 @@ import { Boton } from '@/components/custom/ld-boton-svg'
 import { LdSvg } from '@/components/custom/ld-svg'
 import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { imagenPartida } from '@/lib/go/imagen-partida'
-import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
+import { imagenPartida, ImagenPersonal } from '@/lib/go/imagen-partida'
+import { infoExport, nombreImagenPartida, TEXTO_MOTIVO_FIN } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, Color, NEGRO } from '@/lib/go/motor'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { descargarBlob } from '@/lib/imagen-compartible'
@@ -18,6 +18,7 @@ import NegroGana from '@/svg/dist/ilustraciones/NegroGana.svg'
 import NegroPierde from '@/svg/dist/ilustraciones/NegroPierde.svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { toast } from 'sonner'
 import { BotonesImagen } from './botones-imagen'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
@@ -475,8 +476,9 @@ function DetalleFin({ partida }: { partida: Pick<Partida, 'resultado' | 'motivoF
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
         </p>
       )}
-      {partida.motivoFin === 'abandono' && <p className="text-slate-500 text-xs">Terminó por abandono</p>}
-      {partida.motivoFin === 'captura' && <p className="text-slate-500 text-xs">Hizo la primera captura</p>}
+      {partida.motivoFin && partida.motivoFin !== 'conteo' && (
+        <p className="text-slate-500 text-xs">{TEXTO_MOTIVO_FIN[partida.motivoFin]}</p>
+      )}
     </>
   )
 }
@@ -593,10 +595,30 @@ function PartidaEnCurso({
       .finally(() => setConfirmando(false))
   }
 
+  // Con empate no hay ilustración que elegir: la imagen sale sin encabezado personal.
+  const personal: ImagenPersonal | undefined =
+    partida.ganadorUserId === null
+      ? undefined
+      : {
+          ilustracion: (px) => {
+            const Ilustracion = ilustracionResultado(miColor, partida.ganadorUserId === userId)
+            return renderToStaticMarkup(<Ilustracion width={px} height={px} />)
+          },
+          capturasNegras: partida.capturasNegras,
+          capturasBlancas: partida.capturasBlancas,
+        }
+
   async function descargarImagen() {
     try {
       const info = infoExport(partida)
-      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info, partida.creadaEn)
+      const blob = await imagenPartida(
+        partida.tablero,
+        partida.tamaño,
+        partida.removidas,
+        info,
+        partida.creadaEn,
+        personal
+      )
       descargarBlob(blob, nombreImagenPartida(info, partida.creadaEn))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
@@ -611,7 +633,8 @@ function PartidaEnCurso({
         partida.tamaño,
         partida.removidas,
         infoExport(partida),
-        partida.creadaEn
+        partida.creadaEn,
+        personal
       )
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
     } catch {

@@ -1,16 +1,21 @@
 'use client'
 
 import { Boton } from '@/components/custom/ld-boton-svg'
+import { LdSvg } from '@/components/custom/ld-svg'
 import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { imagenPartida } from '@/lib/go/imagen-partida'
 import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
-import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
+import { BLANCO, calcularPuntaje, Color, NEGRO } from '@/lib/go/motor'
 import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import BlancoGana from '@/svg/dist/ilustraciones/BlancoGana.svg'
+import BlancoPierde from '@/svg/dist/ilustraciones/BlancoPierde.svg'
+import NegroGana from '@/svg/dist/ilustraciones/NegroGana.svg'
+import NegroPierde from '@/svg/dist/ilustraciones/NegroPierde.svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -456,6 +461,15 @@ function BannerResultado({
         )}
         <Icon className="w-8 h-8" icon={'noto:party-popper'} />
       </div>
+      <DetalleFin partida={partida} />
+    </div>
+  )
+}
+
+/** Puntaje final (si hubo conteo) y motivo de fin cuando no fue por conteo. */
+function DetalleFin({ partida }: { partida: Pick<Partida, 'resultado' | 'motivoFin'> }) {
+  return (
+    <>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
@@ -463,7 +477,7 @@ function BannerResultado({
       )}
       {partida.motivoFin === 'abandono' && <p className="text-slate-500 text-xs">Terminó por abandono</p>}
       {partida.motivoFin === 'captura' && <p className="text-slate-500 text-xs">Hizo la primera captura</p>}
-    </div>
+    </>
   )
 }
 
@@ -483,6 +497,55 @@ function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: nu
         <PiedraIcono color={NEGRO} className="h-4 w-4" /> {capturasBlancas}
       </span>
     </div>
+  )
+}
+
+const ILUSTRACION_RESULTADO = {
+  [NEGRO]: { gana: NegroGana, pierde: NegroPierde },
+  [BLANCO]: { gana: BlancoGana, pierde: BlancoPierde },
+}
+
+const ilustracionResultado = (miColor: Color, gane: boolean) => ILUSTRACION_RESULTADO[miColor][gane ? 'gana' : 'pierde']
+
+/** Ventana que aparece al terminar mi partida, con la ilustración de mi color ganando o perdiendo.
+ * Con empate no aparece: el `BannerResultado` ya lo cuenta. */
+function DialogResultado({
+  partida,
+  miColor,
+  gane,
+  container,
+}: {
+  partida: Partida
+  miColor: Color
+  gane: boolean
+  container: HTMLElement | null
+}) {
+  const [cerrado, setCerrado] = useState(false)
+  const abierto = partida.estado === 'terminada' && partida.ganadorUserId !== null && !cerrado
+
+  return (
+    <Dialog open={abierto} onOpenChange={(open) => !open && setCerrado(true)}>
+      <DialogContent
+        container={container}
+        overlayClassName="rounded-xl"
+        className="flex flex-col items-center gap-2 rounded-xl max-w-sm"
+      >
+        <LdSvg
+          className="w-56 h-auto drop-shadow-xl"
+          SvgComponent={ilustracionResultado(miColor, gane)}
+        />
+        <DialogHeader>
+          <DialogTitle className={cn('text-center text-3xl', gane ? 'text-emerald-600' : 'text-slate-600')}>
+            {gane ? '¡Ganaste!' : 'Perdiste'}
+          </DialogTitle>
+        </DialogHeader>
+        <DetalleFin partida={partida} />
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        <DialogClose asChild>
+          <button className="bg-indigo-500 text-white px-6 py-2 mt-2 rounded-full hover:scale-105">Seguir</button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -599,6 +662,13 @@ function PartidaEnCurso({
       </div>
 
       {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
+
+      <DialogResultado
+        partida={partida}
+        miColor={miColor}
+        gane={partida.ganadorUserId === userId}
+        container={contenedorJuego}
+      />
 
       {partida.estado === 'jugando' && (
         <p

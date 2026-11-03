@@ -1,6 +1,9 @@
 import { mapValues } from 'remeda'
 import redis from '../redis'
-import { Encuesta } from '../validators/polls'
+import { Encuesta, encuestaSchema } from '../validators/polls'
+import { versionado } from '../versionado'
+
+const encuestaCodec = versionado({ schema: encuestaSchema })
 
 const k = {
   /** STRING — JSON de las propiedades estáticas de la encuesta (título, opciones, estado). */
@@ -25,12 +28,12 @@ const k = {
 /** Devuelve la encuesta, o `null` si no existe. */
 export async function getEncuesta(salaId: string, pollId: string): Promise<Encuesta | null> {
   const str = await redis.get(k.poll(salaId, pollId))
-  return str ? (JSON.parse(str) as Encuesta) : null
+  return str ? encuestaCodec.parsear(str) : null
 }
 
 /** Persiste el JSON de la encuesta. */
 export async function guardarEncuesta(salaId: string, poll: Encuesta): Promise<void> {
-  await redis.set(k.poll(salaId, poll.id), JSON.stringify(poll))
+  await redis.set(k.poll(salaId, poll.id), encuestaCodec.serializar(poll))
 }
 
 /** Borra la clave JSON de la encuesta (no toca índice ni votos). */
@@ -41,6 +44,22 @@ export async function borrarEncuesta(salaId: string, pollId: string): Promise<vo
 /** Devuelve los IDs de todas las encuestas de la sala. */
 export async function getIdsEncuestas(salaId: string): Promise<string[]> {
   return redis.smembers(k.pollsIndex(salaId))
+}
+
+/** Devuelve las encuestas de la sala. Una ilegible se omite (con warning) para que no tire abajo la lista. */
+export async function getEncuestas(salaId: string): Promise<Encuesta[]> {
+  const ids = await getIdsEncuestas(salaId)
+  const polls = await Promise.all(
+    ids.map(async (pollId) => {
+      try {
+        return await getEncuesta(salaId, pollId)
+      } catch (err) {
+        console.warn(`⚠️  Sala ${salaId}: encuesta '${pollId}' ilegible, se omite:`, err)
+        return null
+      }
+    })
+  )
+  return polls.filter((p): p is Encuesta => p !== null)
 }
 
 /** Agrega una encuesta al índice de la sala. */

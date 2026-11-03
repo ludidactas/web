@@ -32,17 +32,8 @@ export async function profeSala(salaId: string) {
   // Acciones de profe:
 
   async function listarEncuestas() {
-    const pollIds = await db.getIdsEncuestas(salaId)
-    const polls = (
-      await Promise.all(
-        pollIds.map(async (pollId) => {
-          const poll = await db.getEncuesta(salaId, pollId)
-          if (poll) return await hidratarParaProfe(salaId, poll)
-          return null
-        })
-      )
-    ).filter((p): p is EncuestaHidratadaProfe => p !== null)
-    return polls
+    const polls = await db.getEncuestas(salaId)
+    return await Promise.all(polls.map((poll) => hidratarParaProfe(salaId, poll)))
   }
 
   async function crearPoll(datos: NuevaEncuesta) {
@@ -331,10 +322,7 @@ export async function hidratarParaEstudiante(
 export async function hidratadas(salaId: string, userId: string) {
   const sala = await Salas.get(salaId)
 
-  const pollIds = await db.getIdsEncuestas(sala.id)
-  const polls = (await Promise.all(pollIds.map((pollId) => db.getEncuesta(sala.id, pollId)))).filter(
-    (p): p is Encuesta => p !== null
-  )
+  const polls = await db.getEncuestas(sala.id)
 
   return await Promise.all(
     polls.filter((e) => e.isPublished).map((poll) => hidratarParaEstudiante(sala.id, poll, userId))

@@ -73,3 +73,12 @@ export const registroDeClaseSchema = z.object({
 })
 
 export type RegistroDeClase = z.infer<typeof registroDeClaseSchema>
+
+/** Un evento crudo de presencia del log de asistencia de la sala. `ts` es epoch ms. */
+export const eventoAsistenciaSchema = z.object({
+  userId: z.string(),
+  evento: z.enum(['conexion', 'desconexion']),
+  ts: z.number(),
+})
+
+export type EventoAsistencia = z.infer<typeof eventoAsistenciaSchema>

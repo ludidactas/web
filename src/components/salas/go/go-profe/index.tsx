@@ -1,6 +1,7 @@
 'use client'
 
 import LdGo from '@/components/custom/ld-go'
+import { useIsMobile } from '@/components/hooks/use-mobile'
 import { Grid3x3, Search } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { Outlined } from '@/components/fx/filtros'
@@ -35,6 +36,9 @@ export default function GoProfePage() {
   const { estado, WssDebugPanel, error } = useConexionProfe()
   const { config: configSala } = storeConfig()
   const { idSala } = useParams<{ idSala: string }>()
+  // Una sola copia de `GoProfe` en la página: duplicada, cada SVG del juego repite sus ids y el
+  // navegador resuelve gradientes y filtros contra la copia oculta, que no se pinta.
+  const esMobile = useIsMobile()
 
   if (statusesDeCarga.includes(estado)) {
     return <LoadingSala overlay mensaje="Conectando..." />
@@ -82,7 +86,7 @@ export default function GoProfePage() {
                 </h1>
 
                 <div className="w-full pt-4">
-                  <GoProfe />
+                  {esMobile && <GoProfe />}
                 </div>
               </div>
             </TabsContent>
@@ -110,7 +114,7 @@ export default function GoProfePage() {
               </h1>
             </div>
             <div className="px-10 pb-10">
-              <GoProfe />
+              {!esMobile && <GoProfe />}
             </div>
           </div>
         )}

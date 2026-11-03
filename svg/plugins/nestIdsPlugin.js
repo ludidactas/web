@@ -9,10 +9,30 @@ const nestIdsPlugin = {
   fn: () => {
     // Track the current ID path as we traverse the tree
     const idPath = []
+    // id original -> id anidado, para actualizar las referencias (url(#...), href="#...")
+    const renombrados = new Map()
+    const nodos = []
 
     return {
+      root: {
+        // Las referencias pueden aparecer antes o después de la definición, así que
+        // las reescribimos al final, cuando ya conocemos todos los renombres
+        exit: () => {
+          const actualizar = (id) => renombrados.get(id) ?? id
+          nodos.forEach((node) => {
+            Object.entries(node.attributes).forEach(([attr, valor]) => {
+              if ((attr === 'href' || attr === 'xlink:href') && valor.startsWith('#')) {
+                node.attributes[attr] = `#${actualizar(valor.slice(1))}`
+              } else if (valor.includes('url(#')) {
+                node.attributes[attr] = valor.replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${actualizar(id)})`)
+              }
+            })
+          })
+        },
+      },
       element: {
         enter: (node) => {
+          nodos.push(node)
           // Check if the node has an ID attribute
           const idAttr = node.attributes.id
 
@@ -26,6 +46,7 @@ const nestIdsPlugin = {
               const nestedId = [...idPath, originalId].join('.')
               // Update the node's ID attribute
               node.attributes.id = nestedId
+              renombrados.set(originalId, nestedId)
             }
 
             // Add this ID to the path for child elements

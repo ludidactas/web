@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
                       // disable a default plugin
                       cleanupIds: false,
                       collapseGroups: false,
+                      // Ver comentario en svgo.config.js
+                      convertTransform: { matrixToTransform: false },
                     },
                   },
                 },

@@ -11,6 +11,7 @@ function partida(overrides: {
     blanco: { userId: 'blanco-id', nombre: 'Jugador Blanco' },
     ganadorUserId: overrides.ganadorUserId,
     resultado: overrides.resultado,
+    motivoFin: overrides.resultado ? ('conteo' as const) : ('abandono' as const),
   }
 }
 
@@ -28,6 +29,7 @@ describe('infoExport', () => {
       blanco: 'Jugador Blanco',
       ganador: 'negro',
       puntos: { negro: 12, blanco: 8 },
+      motivoFin: 'conteo',
     })
   })
 

@@ -7,7 +7,7 @@ import { guardarPartidaEnDrive } from '@/lib/google/recursos-partidas'
 import { imagenPartida } from '@/lib/go/imagen-partida'
 import { comandos, escuchar } from '../contrato-cli'
 
-const INFO_FALLBACK: InfoExport = { modo: 'partida', negro: 'Negro', blanco: 'Blanco', ganador: null, puntos: null }
+const INFO_FALLBACK: InfoExport = { modo: 'partida', negro: 'Negro', blanco: 'Blanco', ganador: null, puntos: null, motivoFin: null }
 
 export default function profeGoDriveHandlers(socket: Socket | null) {
   const cmd = comandos<typeof comandosGoDriveProfe>(socket, { timeoutMs: 10_000 })

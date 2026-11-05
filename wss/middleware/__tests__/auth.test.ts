@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test'
-import { verificarYAutorizarAccesoEstudianteASala } from '../auth'
+import jwt from 'jsonwebtoken'
+import { decodearTokenNextAuth, verificarYAutorizarAccesoEstudianteASala } from '../auth'
 import { MetodosLogin } from '../../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../../validators/errors'
 import type { Sala } from '../../salas/app'
@@ -80,6 +81,18 @@ test('el metodo DNI no cambió', async () => {
   const sala = fakeSala({}, MetodosLogin.DNI)
 
   await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni(), sala)).resolves.toBeUndefined()
+})
+
+test('el token del WSS se firma y verifica con WSS_TOKEN_SECRET; un secreto ajeno es rechazado', () => {
+  const firmar = (secret: string) =>
+    jwt.sign({ email: 'profe@colegio.edu' }, secret, {
+      algorithm: 'HS256',
+      audience: 'wss-client',
+      subject: 'profe@colegio.edu',
+    })
+
+  expect(decodearTokenNextAuth(firmar(process.env.WSS_TOKEN_SECRET!))?.email).toBe('profe@colegio.edu')
+  expect(() => decodearTokenNextAuth(firmar('otro-secreto'))).toThrow()
 })
 
 test('el metodo Google no cambió', async () => {

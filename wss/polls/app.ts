@@ -12,6 +12,9 @@ import { normalizarTexto } from '../utils'
 import * as db from './db'
 import { conLock } from '../lock'
 
+/** Tope de opciones que un estudiante puede aportar cuando la encuesta es de voto múltiple sin máximo. */
+const MAX_APORTES_POR_ESTUDIANTE = 10
+
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {
   // Acciones de profe:
@@ -97,10 +100,15 @@ export async function profeSala(salaId: string) {
       await db.desregistrarEncuesta(salaId, pollId)
       await db.borrarEncuesta(salaId, pollId)
 
-      // Borramos los votos por usuario y el hash global
+      // Borramos los votos por usuario, los aportes y el hash global
       const votantes = await db.getVotantes(salaId, pollId)
       if (votantes.length > 0) {
-        await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
+        await Promise.all(
+          votantes.map(async (uid) => {
+            await db.borrarVotosUsuario(salaId, pollId, uid)
+            await db.borrarAportesUsuario(salaId, pollId, uid)
+          })
+        )
       }
       await db.borrarVotantes(salaId, pollId)
 
@@ -174,6 +182,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     const poll = (await db.getEncuesta(idSala, pollId))!
 
+    enforce(poll.isPublished, 'La encuesta no está publicada')
     enforce(poll.isOpen, 'La encuesta ya cerró!')
 
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
@@ -196,6 +205,14 @@ export async function estudianteSala(idSala: string, userId: string) {
           !pollActual.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
           'Esa opción ya existe'
         )
+        // El máximo de votos de arriba no aplica sin `maxMultiplesVotos`; los aportes tienen su propio tope.
+        if (pollActual.admiteMultiplesVotos && !pollActual.maxMultiplesVotos) {
+          const aportes = await db.contarAportesUsuario(idSala, pollId, userId)
+          enforce(
+            aportes < MAX_APORTES_POR_ESTUDIANTE,
+            `Alcanzaste el máximo de ${MAX_APORTES_POR_ESTUDIANTE} aportes en esta encuesta`
+          )
+        }
 
         // En voto único el corte tiene que ocurrir antes de mutar, igual que en la rama opción.
         if (!pollActual.admiteMultiplesVotos) {
@@ -214,6 +231,7 @@ export async function estudianteSala(idSala: string, userId: string) {
         await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
         await db.incrementarVoto(idSala, pollId, nuevoId)
         await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+        await db.addAporteUsuario(idSala, pollId, userId, nuevoId)
         return pollActual
       })
     }
@@ -252,11 +270,12 @@ export async function estudianteSala(idSala: string, userId: string) {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
+  const visible = poll.isPublished ? poll : { ...poll, pregunta: '', descripcion: undefined, opciones: [] }
   await sala.broadcastPorRol('poll:updated', {
     profe: () => hidratarParaProfe(sala.id, poll),
-    estudiante: (userId) => hidratarParaEstudiante(sala.id, poll, userId),
+    estudiante: (userId) => hidratarParaEstudiante(sala.id, visible, userId),
     // Público/overlay: con conteo de votos
-    publico: () => pollConVotos(sala.id, poll.id, poll),
+    publico: () => pollConVotos(sala.id, visible.id, visible),
   })
 }
 
@@ -312,9 +331,16 @@ export async function hidratarParaEstudiante(
     else if (pollActual.maxMultiplesVotos) puedoVotar = votosEmitidos.length < pollActual.maxMultiplesVotos
   }
 
+  // Un aporte es un voto más: `puedoVotar` ya cubre el máximo configurado; acá se suma el tope propio de los aportes.
+  let puedoAportar = pollActual.admiteAportes && puedoVotar
+  if (puedoAportar && pollActual.admiteMultiplesVotos && !pollActual.maxMultiplesVotos) {
+    puedoAportar = (await db.contarAportesUsuario(idSala, poll.id, idVotante)) < MAX_APORTES_POR_ESTUDIANTE
+  }
+
   return {
     ...pollActual,
     puedoVotar,
+    puedoAportar,
     votosEmitidos,
   }
 }

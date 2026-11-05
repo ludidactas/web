@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test'
-import { estudianteSala } from '../app'
+import { broadcastPoll, estudianteSala } from '../app'
 import { borrarSala } from '../../salas/db'
 import type { Encuesta } from '../../validators/polls'
 import * as db from '../db'
@@ -90,5 +90,56 @@ describe('votar — votos inflados', () => {
     await expect(
       estu.votar({ pollId: poll.id, tipo: 'opcion', optionId: '0' })
     ).rejects.toThrow(/Ya emitiste el máximo de 2 votos permitidos/)
+  })
+
+  it('votar una encuesta no publicada (borrador) es rechazado', async () => {
+    const poll = await crearPoll({ isPublished: false })
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    await expect(estu.votar({ pollId: poll.id, tipo: 'opcion', optionId: '0' })).rejects.toThrow(
+      'La encuesta no está publicada'
+    )
+  })
+})
+
+describe('broadcastPoll — borradores', () => {
+  it('un borrador les llega a estudiante y público sin contenido; el profe lo recibe completo', async () => {
+    const poll = basePoll({ isPublished: false, descripcion: 'secreta' })
+    const porRol: Record<string, unknown> = {}
+    const sala = {
+      id: idSala,
+      broadcastPorRol: async (_evento: string, builders: { profe: () => unknown; estudiante: (u: string) => unknown; publico: () => unknown }) => {
+        porRol.profe = await builders.profe()
+        porRol.estudiante = await builders.estudiante('user-1')
+        porRol.publico = await builders.publico()
+      },
+    } as never
+
+    await broadcastPoll(sala, poll)
+
+    expect(porRol.profe).toMatchObject({ pregunta: poll.pregunta, descripcion: 'secreta' })
+    for (const rol of ['estudiante', 'publico']) {
+      expect(porRol[rol]).toMatchObject({ id: poll.id, isPublished: false, pregunta: '', opciones: [] })
+      expect((porRol[rol] as { descripcion?: string }).descripcion).toBeUndefined()
+    }
+  })
+
+  it('una publicada sale para los tres roles', async () => {
+    const poll = await crearPoll()
+    const porRol: Record<string, unknown> = {}
+    const sala = {
+      id: idSala,
+      broadcastPorRol: (_evento: string, builders: { profe: () => unknown; estudiante: (u: string) => unknown; publico: () => unknown }) => {
+        porRol.profe = builders.profe()
+        porRol.estudiante = builders.estudiante('user-1')
+        porRol.publico = builders.publico()
+      },
+    } as never
+
+    await broadcastPoll(sala, poll)
+
+    expect(porRol.profe).not.toBeUndefined()
+    expect(porRol.estudiante).not.toBeUndefined()
+    expect(porRol.publico).not.toBeUndefined()
   })
 })

@@ -10,22 +10,7 @@ import {
 } from '../validators/polls'
 import { normalizarTexto } from '../utils'
 import * as db from './db'
-
-/**
- * `updatePoll` es lectura-modificación-escritura, no atómica. Si dos llegan casi juntas para la
- * misma pregunta (ej: el botón "avanzar" dispara publicar+abrir+enfocar de una), pueden pisarse los
- * cambios entre sí. Serializamos por pregunta (a nivel módulo, no por conexión) para que cada
- * `updatePoll` vea el resultado del anterior antes de leer.
- */
-const colasPorEncuesta = new Map<string, Promise<unknown>>()
-
-function serializadoPorEncuesta<T>(salaId: string, pollId: string, tarea: () => Promise<T>): Promise<T> {
-  const clave = `${salaId}:${pollId}`
-  const anterior = colasPorEncuesta.get(clave) ?? Promise.resolve()
-  const actual = anterior.catch(() => {}).then(tarea)
-  colasPorEncuesta.set(clave, actual)
-  return actual
-}
+import { conLock } from '../lock'
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {
@@ -80,7 +65,7 @@ export async function profeSala(salaId: string) {
   }
 
   async function updatePoll(pollId: string, update: Partial<Encuesta>) {
-    return serializadoPorEncuesta(salaId, pollId, async () => {
+    return conLock(`${salaId}:${pollId}`, async () => {
       await assertPollExists(salaId, pollId)
 
       const poll = (await db.getEncuesta(salaId, pollId))!
@@ -105,29 +90,31 @@ export async function profeSala(salaId: string) {
   }
 
   async function deletePoll({ pollId }: { pollId: string }) {
-    await assertPollExists(salaId, pollId)
+    return conLock(`${salaId}:${pollId}`, async () => {
+      await assertPollExists(salaId, pollId)
 
-    // Borramos del índice y su clave
-    await db.desregistrarEncuesta(salaId, pollId)
-    await db.borrarEncuesta(salaId, pollId)
+      // Borramos del índice y su clave
+      await db.desregistrarEncuesta(salaId, pollId)
+      await db.borrarEncuesta(salaId, pollId)
 
-    // Borramos los votos por usuario y el hash global
-    const votantes = await db.getVotantes(salaId, pollId)
-    if (votantes.length > 0) {
-      await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
-    }
-    await db.borrarVotantes(salaId, pollId)
+      // Borramos los votos por usuario y el hash global
+      const votantes = await db.getVotantes(salaId, pollId)
+      if (votantes.length > 0) {
+        await Promise.all(votantes.map((uid) => db.borrarVotosUsuario(salaId, pollId, uid)))
+      }
+      await db.borrarVotantes(salaId, pollId)
 
-    const votos = await db.getVotos(salaId, pollId)
-    await Promise.all(Object.keys(votos).map((optionId) => db.borrarVotantesOpcion(salaId, pollId, optionId)))
+      const votos = await db.getVotos(salaId, pollId)
+      await Promise.all(Object.keys(votos).map((optionId) => db.borrarVotantesOpcion(salaId, pollId, optionId)))
 
-    await db.limpiarVotos(salaId, pollId)
+      await db.limpiarVotos(salaId, pollId)
 
-    // Si estaba enfocada, desenfocamos
-    const enfocada = await db.getEnfocada(salaId)
-    if (enfocada === pollId) await db.limpiarEnfocada(salaId)
+      // Si estaba enfocada, desenfocamos
+      const enfocada = await db.getEnfocada(salaId)
+      if (enfocada === pollId) await db.limpiarEnfocada(salaId)
 
-    console.log(`🗑️  Encuesta borrada: ${pollId}`)
+      console.log(`🗑️  Encuesta borrada: ${pollId}`)
+    })
   }
 
   async function focusPoll(pollId: string) {
@@ -180,10 +167,6 @@ export async function profeSala(salaId: string) {
 export async function estudianteSala(idSala: string, userId: string) {
   // Acciones de estudiante:
 
-  async function assertElEstudianteNoVotoTodavia(poll: Encuesta, user: string) {
-    if (await db.yaVoto(idSala, poll.id, user)) throw new Error('Ya votaste en esta encuesta')
-  }
-
   async function votar(voto: VotarEncuesta) {
     const { pollId, tipo } = voto
 
@@ -193,8 +176,6 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     enforce(poll.isOpen, 'La encuesta ya cerró!')
 
-    if (!poll.admiteMultiplesVotos) await assertElEstudianteNoVotoTodavia(poll, userId)
-
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
       const votosDelEstudiante = await db.contarVotosUsuario(idSala, pollId, userId)
       enforce(
@@ -203,40 +184,60 @@ export async function estudianteSala(idSala: string, userId: string) {
       )
     }
 
+    let pollFinal = poll
     if (tipo === 'aporte') {
-      enforce(poll.admiteAportes, 'Esta encuesta no admite aportes')
-      enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
-      enforce(
-        !poll.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
-        'Esa opción ya existe'
-      )
+      pollFinal = await conLock(`${idSala}:${pollId}`, async () => {
+        const pollActual = await db.getEncuesta(idSala, pollId)
+        if (!pollActual) throw new Error(`La encuesta ${pollId} no existe!`)
+        enforce(pollActual.isOpen, 'La encuesta ya cerró!')
+        enforce(pollActual.admiteAportes, 'Esta encuesta no admite aportes')
+        enforce(!isEmpty(voto.aporte), 'El aporte no puede estar vacío')
+        enforce(
+          !pollActual.opciones.find((opc) => normalizarTexto(opc.texto) === normalizarTexto(voto.aporte)),
+          'Esa opción ya existe'
+        )
 
-      // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
-      const nuevoId = poll.opciones.length.toString()
-      poll.opciones.push({ id: nuevoId, texto: voto.aporte })
+        // En voto único el corte tiene que ocurrir antes de mutar, igual que en la rama opción.
+        if (!pollActual.admiteMultiplesVotos) {
+          const agregado = await db.addVotante(idSala, pollId, userId)
+          if (!agregado) throw new Error('Ya votaste en esta encuesta')
+        }
 
-      console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
-      await db.guardarEncuesta(idSala, poll)
+        // Agregamos la nueva opción al JSON de la encuesta (solo texto, sin votos)
+        const nuevoId = pollActual.opciones.length.toString()
+        pollActual.opciones.push({ id: nuevoId, texto: voto.aporte })
 
-      // Voto inicial
-      await db.incrementarVoto(idSala, pollId, nuevoId)
-      await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
-      await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+        console.log(`Grabando voto a opción ${nuevoId} de la encuesta ${pollId} para el usuario ${userId}`)
+        await db.guardarEncuesta(idSala, pollActual)
+
+        // Voto inicial
+        await db.addVotoUsuario(idSala, pollId, userId, nuevoId)
+        await db.incrementarVoto(idSala, pollId, nuevoId)
+        await db.addVotanteOpcion(idSala, pollId, nuevoId, userId)
+        return pollActual
+      })
     }
 
     if (tipo === 'opcion') {
       if (!poll.opciones.find((opc) => opc.id === voto.optionId)) throw new Error('Opción no encontrada')
 
-      // Incremento atómico
-      await db.incrementarVoto(idSala, pollId, voto.optionId)
-      await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
-      await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
+      // En voto único, el corte tiene que ocurrir antes de incrementar.
+      if (!poll.admiteMultiplesVotos) {
+        const agregado = await db.addVotante(idSala, pollId, userId)
+        if (!agregado) throw new Error('Ya votaste en esta encuesta')
+      }
+
+      const agregado = await db.addVotoUsuario(idSala, pollId, userId, voto.optionId)
+      if (agregado) {
+        await db.incrementarVoto(idSala, pollId, voto.optionId)
+        await db.addVotanteOpcion(idSala, pollId, voto.optionId, userId)
+      }
     }
 
     // Registramos al estudiante como votante
-    await db.addVotante(idSala, pollId, userId)
+    if (poll.admiteMultiplesVotos) await db.addVotante(idSala, pollId, userId)
 
-    return await pollConVotos(idSala, pollId, poll)
+    return await pollConVotos(idSala, pollId, pollFinal)
   }
 
   async function listar() {

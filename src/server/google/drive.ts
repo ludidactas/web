@@ -77,17 +77,24 @@ async function buscarOCrear(api: drive_v3.Drive, datos: ArchivoNuevo) {
   return data as ArchivoDrive
 }
 
-function propiedadesCarpeta(salaId: string, recurso: 'sala' | 'colecciones' | 'partidas') {
+type RecursoCarpeta = 'sala' | 'colecciones' | 'partidas'
+
+function propiedadesCarpeta(salaId: string, recurso: RecursoCarpeta) {
   return { ludidactasSala: salaId, recurso }
 }
 
 /**
- * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombre}/Colecciones`
+ * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombreSala}/{nombre}`
  * de `salaId` en el Drive del usuario autenticado. La jerarquía completa se busca/crea
  * de a un nivel por `appProperties`, no por nombre, para tolerar que el usuario la
  * renombre a mano sin romper las búsquedas futuras.
  */
-async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
+async function carpetaDeSala(
+  api: drive_v3.Drive,
+  sala: SalaDrive,
+  recurso: Exclude<RecursoCarpeta, 'sala'>,
+  nombre: string
+) {
   const raiz = await buscarOCrear(api, {
     name: 'Ludidactas',
     mimeType: MIME_CARPETA,
@@ -102,37 +109,15 @@ async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
   })
 
   return buscarOCrear(api, {
-    name: 'Colecciones',
+    name: nombre,
     mimeType: MIME_CARPETA,
-    appProperties: propiedadesCarpeta(sala.salaId, 'colecciones'),
+    appProperties: propiedadesCarpeta(sala.salaId, recurso),
     parents: [carpetaSala.id],
   })
 }
 
 function propiedadesDeSala(salaId: string) {
   return { ludidactasSala: salaId, recurso: 'coleccion' }
-}
-
-async function carpetaDePartidas(api: drive_v3.Drive, sala: SalaDrive) {
-  const raiz = await buscarOCrear(api, {
-    name: 'Ludidactas',
-    mimeType: MIME_CARPETA,
-    appProperties: { ludidactas: 'raiz' },
-  })
-
-  const carpetaSala = await buscarOCrear(api, {
-    name: `Sala - ${sala.nombreSala}`,
-    mimeType: MIME_CARPETA,
-    appProperties: propiedadesCarpeta(sala.salaId, 'sala'),
-    parents: [raiz.id],
-  })
-
-  return buscarOCrear(api, {
-    name: 'Partidas Go',
-    mimeType: MIME_CARPETA,
-    appProperties: propiedadesCarpeta(sala.salaId, 'partidas'),
-    parents: [carpetaSala.id],
-  })
 }
 
 function propiedadesPartida(salaId: string, partidaId: string) {
@@ -150,7 +135,7 @@ export async function guardarImagenPartida(
   const existente = await buscarArchivo(api, propiedades, MIME_PNG)
   if (existente) return
 
-  const carpeta = await carpetaDePartidas(api, sala)
+  const carpeta = await carpetaDeSala(api, sala, 'partidas', 'Partidas Go')
 
   await api.files.create({
     requestBody: {
@@ -199,7 +184,7 @@ export async function guardarColeccion(api: drive_v3.Drive, sala: SalaDrive, nom
     return
   }
 
-  const colecciones = await carpetaDeColecciones(api, sala)
+  const colecciones = await carpetaDeSala(api, sala, 'colecciones', 'Colecciones')
 
   await api.files.create({
     requestBody: {

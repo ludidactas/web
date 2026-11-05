@@ -28,9 +28,8 @@ export type DataConSesion = {
 export type SocketConSesion = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, DataConSesion>
 
 /**
- * Equivalente a {@link SocketConSesion} pero para sockets remotos, devueltos por `fetchSockets()`.
- * El adapter (Redis) sincroniza `socket.data` entre nodos, así que `.session` sigue disponible
- * aunque el socket viva en otro nodo del cluster. Es un snapshot de solo lectura.
+ * Equivalente a {@link SocketConSesion} pero para los sockets que devuelve `fetchSockets()`.
+ * Es un snapshot de solo lectura.
  */
 export type RemoteSocketConSesion = RemoteSocket<DefaultEventsMap, DataConSesion>
 

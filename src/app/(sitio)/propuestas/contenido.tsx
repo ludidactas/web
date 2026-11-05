@@ -8,7 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import ShapeDividerWaves from '../custom/shape-divider'
 import { Icon } from '@iconify/react/dist/iconify.js'
-import { useState } from 'react'
+import { FC, SVGProps, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Title } from '@/components/custom/ld-title'
 import { BotonLink } from '@/components/custom/ld-boton-svg'
@@ -42,7 +42,7 @@ interface LineasProps {
   descripcion: string
   lista: string[]
   btn: JSX.Element
-  imagen: React.ReactNode
+  imagen: FC<SVGProps<SVGElement>>
 }
 
 const styletitle = ' drop-shadow-[2px_2px_2px_rgba(0,0,0)] w-80 md:w-[900px] justify-center'

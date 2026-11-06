@@ -259,7 +259,12 @@ export async function estudianteGo(idSala: string, userId: string) {
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
       const otro = contrincanteDe(partida, userId)
-      io.to(rooms.usuario(idSala, otro.userId)).emit('go:invitacion_rechazada', { partidaId })
+      // El profe se une con el email de su sesión: su room se resuelve por persona, como en `invitar`.
+      const personas = await personasDeSala(idSala)
+      const destinatario = personas.find((e) => e.userId === otro.userId)
+      io.to(rooms.usuario(idSala, destinatario?.roomId ?? otro.userId)).emit('go:invitacion_rechazada', {
+        partidaId,
+      })
       await avisarContrincantesActualizados(idSala)
     })
   }

@@ -55,6 +55,17 @@ export async function borrarSala(salaId: string): Promise<void> {
   } while (cursor !== '0')
 }
 
+/** Anota `ahora` (epoch ms) como la última vez que la sala tuvo uso. */
+export async function marcarActividad(salaId: string, ahora = Date.now()): Promise<void> {
+  await redis.set(`sala:${salaId}:ultima_actividad`, String(ahora))
+}
+
+/** Última actividad de la sala (epoch ms), o `null` si nunca se marcó. */
+export async function getUltimaActividad(salaId: string): Promise<number | null> {
+  const raw = await redis.get(`sala:${salaId}:ultima_actividad`)
+  return raw ? Number(raw) : null
+}
+
 // -- Relaciones profe-sala (1 profe → N salas) --
 
 // El índice directo es un Set por profe (`profe:<email>:salas`), que admite varias salas.

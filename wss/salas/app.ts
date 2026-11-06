@@ -154,6 +154,7 @@ export namespace Salas {
     async function registrarIngreso(session: WssEstudianteSession) {
       await db.guardarEstudiante(salaId, session)
       await db.registrarEventoAsistencia(salaId, session.userId, 'conexion', Date.now())
+      await db.marcarActividad(salaId)
     }
 
     /** Anota la desconexión del estudiante en el log de asistencia. */
@@ -257,6 +258,7 @@ export namespace Salas {
 
     await db.guardarSala(salaData)
     await db.agregarSalaAProfe(email, id)
+    await db.marcarActividad(id)
 
     console.log(`🏠 Sala ${id} creada para profe ${email}`)
     return await get(id)

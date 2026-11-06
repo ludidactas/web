@@ -82,7 +82,7 @@ async function personasDeSala(idSala: string) {
 
   if (await sala.profeConectado()) {
     personas.push({
-      userId: idOpaco(idSala, sala.profe.email),
+      userId: await idOpaco(idSala, sala.profe.email),
       nombre: sala.profe.nombre ?? sala.profe.email,
       conectado: true,
       roomId: sala.profe.email,
@@ -141,7 +141,9 @@ export async function avisarContrincantesActualizados(idSala: string) {
     sockets.map(async (s) => {
       // El handle del destinatario: el del profe es su id opaco por sala (su sesión es el email real).
       const miHandle =
-        s.data.session.rol === RolSala.Profe ? idOpaco(idSala, s.data.session.userId) : s.data.session.userId
+        s.data.session.rol === RolSala.Profe
+          ? await idOpaco(idSala, s.data.session.userId)
+          : s.data.session.userId
       const contrincantes = await contrincantesDesde(personas, idSala, miHandle)
       s.emit('go:contrincantes_actualizados', contrincantes)
     })

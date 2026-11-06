@@ -3,7 +3,7 @@ import { isDefined } from 'remeda'
 import { Sala } from '../salas/app'
 import { MetodosLogin } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { identidadRealEstudiante, WssEstudianteSession } from '../validators/session'
+import { identidadRealEstudiante, WssEstudianteIdentidad } from '../validators/session'
 import { normalizarTexto } from '../utils'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
@@ -56,7 +56,7 @@ export const registradoComoAdmin = (email: string) => {
  * El `metodo` de la sesión coincide con `config.metodo_login` (lo inyectó el login); la autorización
  * va contra la identidad real (`identidadRealEstudiante`), no contra el `userId` (id opaco por sala).
  */
-export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstudianteSession, sala: Sala) {
+export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstudianteIdentidad, sala: Sala) {
   const config = await sala.config()
   switch (session.metodo) {
     // Si es por DNI o Google, verificamos que la identidad esté en la lista de permitidos si la sala es excluyente

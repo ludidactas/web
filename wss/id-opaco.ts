@@ -1,17 +1,16 @@
-import { createHmac } from 'crypto'
-
-// Sin la clave el wss no arranca: los ids opacos son la identidad que ve la sala, no pueden caer a un valor de default.
-const secreto = process.env.SECRETO_ID_OPACO
-if (!secreto) {
-  console.error('Error: SECRETO_ID_OPACO no está seteada.')
-  process.exit(1)
-}
+import { randomBytes } from 'crypto'
+import redis from './redis'
 
 /**
- * Id opaco por sala de un usuario: HMAC de `salaId:userId`, así el mismo `userId` (DNI o email) da
- * ids distintos en salas distintas. Los eventos de la sala hacia los clientes llevan este id, nunca
- * el `userId` real; el server resuelve la vuelta (payloads entrantes con id opaco) recalculando el
- * id de cada persona de la sala en `wss/go/app.ts`.
+ * Id de una persona en una sala: al azar y estable dentro de la sala, para que reconexiones de la
+ * misma identidad reciban el mismo id sin guardar la identidad real en los eventos que ven los
+ * clientes. El mismo id se usa en votos, partidas y planilla; en otra sala la misma identidad recibe
+ * otro.
  */
-export const idOpaco = (salaId: string, userId: string): string =>
-  createHmac('sha256', secreto).update(`${salaId}:${userId}`).digest('hex').slice(0, 16)
+export async function idOpaco(salaId: string, identidad: string): Promise<string> {
+  const clave = `sala:${salaId}:ids`
+  await redis.hsetnx(clave, identidad, randomBytes(8).toString('hex'))
+  const id = await redis.hget(clave, identidad)
+  if (!id) throw new Error(`No se pudo resolver el id de la persona en la sala ${salaId}`)
+  return id
+}

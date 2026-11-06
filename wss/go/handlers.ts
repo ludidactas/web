@@ -72,7 +72,7 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const { userId, nombre } = socket.data.session
-  const userIdGo = idOpaco(idSala, userId)
+  const userIdGo = await idOpaco(idSala, userId)
 
   alDesconectar(socket, async () => {
     const sala = await Salas.get(idSala)

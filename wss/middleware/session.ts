@@ -44,18 +44,6 @@ const parsearAuth = <S extends z.ZodTypeAny>(schema: S, raw: unknown): z.infer<S
   return data
 }
 
-/** Parsea un payload contra un schema de sesión, agregándole los campos del server (ip, agente). */
-const parsearSesion = <S extends z.ZodTypeAny>(
-  socket: Socket,
-  schema: S,
-  payload: Record<string, unknown>
-): z.infer<S> =>
-  parsearAuth(schema, {
-    ...payload,
-    userIp: socketIp(socket),
-    agente: socket.handshake.headers['user-agent'],
-  })
-
 /** Attachea la sesión al socket y la emite de inmediato al cliente. */
 const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
   socket.data.session = sessionData
@@ -92,7 +80,7 @@ const login = async (socket: SocketConSesion) => {
       datosGoogle = decodearTokenNextAuth(auth.token)
     }
 
-    const session = parsearSesion(socket, SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
+    const session = parsearAuth(SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
       ...auth,
       ...datosGoogle,
       metodo: config.metodo_login,
@@ -109,7 +97,7 @@ const login = async (socket: SocketConSesion) => {
   // `sala:abrir` (y ahí se valida propiedad). El token solo dice quién es.
   else if (auth.rol === RolSala.Profe) {
     const payload = decodearTokenNextAuth(auth.token)
-    const session = parsearSesion(socket, WssProfeSessionSchema, { rol: RolSala.Profe, ...payload })
+    const session = parsearAuth(WssProfeSessionSchema, { rol: RolSala.Profe, ...payload })
 
     console.log(`🪪  Profe autenticado desde IP ${socketIp(socket)}...`)
     abrirSesion(socket, session)
@@ -121,7 +109,7 @@ const login = async (socket: SocketConSesion) => {
     if (!registradoComoAdmin(payload.email))
       throw new ErrorSesion(TipoErrorSesion.AuthInvalido, 'No estás autorizado como admin.')
 
-    const session = parsearSesion(socket, WssAdminSessionSchema, { rol: RolSala.Admin, ...payload })
+    const session = parsearAuth(WssAdminSessionSchema, { rol: RolSala.Admin, ...payload })
 
     console.log(`🪪  Admin autenticado desde IP ${socketIp(socket)}...`)
     abrirSesion(socket, session)

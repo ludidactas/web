@@ -144,7 +144,7 @@ export function exportarPlanillaCompleta(planilla: PlanillaCompleta, config: Con
   ]
 
   const filas = planilla.filas.map((fila) => ({
-    id: fila.dni || fila.email || fila.userId,
+    id: fila.dni || fila.email || fila.nombre,
     nombre: fila.nombre || 'Sin nombre',
     nombreProvisto: fila.nombreProvisto || '',
     ...fila.respuestas,

@@ -47,7 +47,7 @@ export const configActualizable = configSala
 /** `configActualizable` con todos los campos opcionales: lo que el profe puede mandar para cambiar la config. */
 export const configActualizableParcial = configActualizable.partial()
 
-export const crearSalaSchema = z.object({ config: configCreacionSala.default({}) }).default({})
+export const crearSalaSchema = z.object({ config: configCreacionSala.prefault({}) }).prefault({})
 
 export const idSalaSchema = z.object({ idSala: z.string().min(1) })
 

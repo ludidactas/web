@@ -1,4 +1,4 @@
-import type { ZodType, ZodTypeDef } from 'zod'
+import type { ZodType } from 'zod'
 
 /** Lleva un documento de la versión `i` a la `i + 1`. Pura: recibe y devuelve JSON ya parseado. */
 export type Migracion = (doc: Record<string, unknown>) => Record<string, unknown>
@@ -22,7 +22,7 @@ export interface Versionado<T> {
  * ver `docs/versionado-redis.md`.
  */
 export function versionado<T>(opciones: {
-  schema: ZodType<T, ZodTypeDef, unknown>
+  schema: ZodType<T, unknown>
   migraciones?: Migracion[]
 }): Versionado<T> {
   const { schema, migraciones = [] } = opciones

@@ -39,7 +39,7 @@ const parsearAuth = <S extends z.ZodTypeAny>(schema: S, raw: unknown): z.infer<S
   if (!success)
     throw new ErrorSesion(
       TipoErrorSesion.AuthInvalido,
-      `Auth inválido: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+      `Auth inválido: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
     )
   return data
 }

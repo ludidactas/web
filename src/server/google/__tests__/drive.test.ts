@@ -208,7 +208,7 @@ describe('jerarquía de carpetas en Drive', () => {
       { name: 'Sala - Mi Sala', appProperties: { ludidactasSala: 'sala-1', recurso: 'sala' }, parents: ['id-1'] },
       { name: 'Partidas Go', appProperties: { ludidactasSala: 'sala-1', recurso: 'partidas' }, parents: ['id-2'] },
     ])
-    const [{ requestBody }] = create.mock.calls[3]
+    const [{ requestBody }] = (create as any).mock.calls[3]
     expect(requestBody).toMatchObject({
       name: 'partida.png',
       mimeType: 'image/png',
@@ -238,6 +238,6 @@ describe('jerarquía de carpetas en Drive', () => {
     await guardarImagenPartida(mockApi({ list, create }), sala, 'partida-1', 'partida.png', Buffer.from('png'))
 
     expect(create).toHaveBeenCalledTimes(1)
-    expect(create.mock.calls[0][0].requestBody).toMatchObject({ name: 'partida.png', parents: ['carpeta'] })
+    expect((create as any).mock.calls[0][0].requestBody).toMatchObject({ name: 'partida.png', parents: ['carpeta'] })
   })
 })

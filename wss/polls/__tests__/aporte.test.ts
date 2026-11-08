@@ -166,33 +166,33 @@ describe('votar — carrera de aporte contra deletePoll', () => {
 })
 
 describe('votar — tope de aportes en voto múltiple sin máximo', () => {
-  it('acepta 10 aportes del mismo estudiante y rechaza el 11', async () => {
+  it('acepta 50 aportes del mismo estudiante y rechaza el 51', async () => {
     const poll = await crearPollConAportes()
     const estu = await estudianteSala(idSala, 'user-1')
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
       await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
     }
 
     await expect(
-      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-10' })
-    ).rejects.toThrow('Alcanzaste el máximo de 10 aportes en esta encuesta')
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-50' })
+    ).rejects.toThrow('Alcanzaste el máximo de 50 aportes en esta encuesta')
 
     const encuesta = (await db.getEncuesta(idSala, poll.id))!
-    expect(encuesta.opciones.length).toBe(12)
+    expect(encuesta.opciones.length).toBe(52)
   })
 
   it('votar opciones existentes no consume el tope de aportes', async () => {
     const poll = await crearPollConAportes()
     const estu = await estudianteSala(idSala, 'user-1')
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 49; i++) {
       await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
     }
     await estu.votar({ pollId: poll.id, tipo: 'opcion', optionId: '0' })
 
     await expect(
-      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-9' })
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-49' })
     ).resolves.toBeDefined()
   })
 
@@ -201,12 +201,12 @@ describe('votar — tope de aportes en voto múltiple sin máximo', () => {
     const estu = await estudianteSala(idSala, 'user-1')
     const hidratar = async () => hidratarParaEstudiante(idSala, (await db.getEncuesta(idSala, poll.id))!, 'user-1')
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 49; i++) {
       await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
     }
     expect((await hidratar()).puedoAportar).toBe(true)
 
-    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-9' })
+    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-49' })
 
     const encuesta = await hidratar()
     expect(encuesta.puedoAportar).toBe(false)

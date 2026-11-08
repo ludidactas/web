@@ -13,7 +13,7 @@ import * as db from './db'
 import { conLock } from '../lock'
 
 /** Tope de opciones que un estudiante puede aportar cuando la encuesta es de voto múltiple sin máximo. */
-const MAX_APORTES_POR_ESTUDIANTE = 10
+const MAX_APORTES_POR_ESTUDIANTE = 50
 
 /** Crea un closure para operar los componentes de una sala */
 export async function profeSala(salaId: string) {

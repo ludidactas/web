@@ -90,6 +90,7 @@ const encuestaConVotantes = encuestaBase.extend({
 
 export const encuestaHidratadaEstudiante = encuestaConVotos.extend({
   puedoVotar: z.boolean().optional(),
+  puedoAportar: z.boolean().optional(),
   votosEmitidos: z.array(z.string()).optional(),
 })
 

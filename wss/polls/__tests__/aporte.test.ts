@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test'
-import { estudianteSala, profeSala } from '../app'
+import { estudianteSala, hidratarParaEstudiante, profeSala } from '../app'
 import { borrarSala } from '../../salas/db'
 import type { Encuesta } from '../../validators/polls'
 import * as db from '../db'
@@ -162,5 +162,68 @@ describe('votar — carrera de aporte contra deletePoll', () => {
     expect(aporte.status).toBe('rejected')
     expect((aporte as PromiseRejectedResult).reason.message).toBe(`La encuesta ${poll.id} no existe!`)
     expect(await db.getEncuesta(idSala, poll.id)).toBeNull()
+  })
+})
+
+describe('votar — tope de aportes en voto múltiple sin máximo', () => {
+  it('acepta 50 aportes del mismo estudiante y rechaza el 51', async () => {
+    const poll = await crearPollConAportes()
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    for (let i = 0; i < 50; i++) {
+      await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
+    }
+
+    await expect(
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-50' })
+    ).rejects.toThrow('Alcanzaste el máximo de 50 aportes en esta encuesta')
+
+    const encuesta = (await db.getEncuesta(idSala, poll.id))!
+    expect(encuesta.opciones.length).toBe(52)
+  })
+
+  it('votar opciones existentes no consume el tope de aportes', async () => {
+    const poll = await crearPollConAportes()
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    for (let i = 0; i < 49; i++) {
+      await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
+    }
+    await estu.votar({ pollId: poll.id, tipo: 'opcion', optionId: '0' })
+
+    await expect(
+      estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-49' })
+    ).resolves.toBeDefined()
+  })
+
+  it('la hidratada del estudiante deja de permitir aportes al llegar al tope', async () => {
+    const poll = await crearPollConAportes()
+    const estu = await estudianteSala(idSala, 'user-1')
+    const hidratar = async () => hidratarParaEstudiante(idSala, (await db.getEncuesta(idSala, poll.id))!, 'user-1')
+
+    for (let i = 0; i < 49; i++) {
+      await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: `aporte-${i}` })
+    }
+    expect((await hidratar()).puedoAportar).toBe(true)
+
+    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-49' })
+
+    const encuesta = await hidratar()
+    expect(encuesta.puedoAportar).toBe(false)
+    expect(encuesta.puedoVotar).toBe(true)
+  })
+})
+
+describe('deletePoll — limpia el registro de aportes', () => {
+  it('borra los aportes por usuario junto con el resto de los votos de la encuesta', async () => {
+    const poll = await crearPollConAportes()
+    const estu = await estudianteSala(idSala, 'user-1')
+
+    await estu.votar({ pollId: poll.id, tipo: 'aporte', aporte: 'aporte-uno' })
+    expect(await db.contarAportesUsuario(idSala, poll.id, 'user-1')).toBe(1)
+
+    await (await profeSala(idSala)).deletePoll({ pollId: poll.id })
+
+    expect(await db.contarAportesUsuario(idSala, poll.id, 'user-1')).toBe(0)
   })
 })

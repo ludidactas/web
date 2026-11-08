@@ -159,7 +159,7 @@ export interface ContrincanteGo {
 }
 
 /** Vista de `Partida` para los sockets de la sala: los jugadores van por su id opaco por sala, sin
- * identidad real. La partida persistida en Redis sigue con los `userId` reales. */
+ * identidad real. */
 export interface PartidaPublica extends Omit<Partida, 'negro' | 'blanco' | 'ganadorUserId'> {
   negro: { id: string; nombre: string }
   blanco: { id: string; nombre: string }

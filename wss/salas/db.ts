@@ -22,7 +22,7 @@ const eventoAsistenciaCodec = versionado({ schema: eventoAsistenciaSchema })
 const asistenciaDeClaseCodec = versionado({
   schema: asistenciaDeClaseSchema,
   migraciones: [
-    // Los documentos previos al id opaco guardaban el `userId` real y no tenían `identidad`.
+    // En un documento sin `identidad`, el `userId` es la identidad real (dni, nombre o email): se copia ahí.
     (doc) => ({
       ...doc,
       estudiantes: Array.isArray(doc.estudiantes)

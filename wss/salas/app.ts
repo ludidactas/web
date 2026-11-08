@@ -74,7 +74,7 @@ export namespace Salas {
         return porRol.publico()
       })
 
-    /** `userIds` de los estudiantes con un socket vivo ahora mismo (cluster-wide). */
+    /** `userIds` de los estudiantes con un socket vivo ahora mismo. */
     async function userIdsConectados() {
       const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return new Set(sockets.map((s) => s.data.session.userId))
@@ -83,16 +83,14 @@ export namespace Salas {
     /**
      * Indica si al `userId` le queda algún socket vivo, excluyendo `excluirSocketId`. Se usa al
      * desconectar para no marcar al estudiante como desconectado si sigue presente en otra pestaña/
-     * clientId. Excluimos por id porque el socket que se desconecta puede seguir apareciendo en
-     * `fetchSockets` por un instante (propagación del adapter).
+     * clientId.
      */
     async function sigueConectado(userId: string, excluirSocketId?: string) {
       const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       return sockets.some((s) => s.data.session.userId === userId && s.id !== excluirSocketId)
     }
 
-    /** Si al profe le queda algún socket vivo, excluyendo `excluirSocketId` (ver `sigueConectado`: el
-     * mismo motivo, para no confundir la propagación del adapter con que el profe sigue conectado). */
+    /** Si al profe le queda algún socket vivo, excluyendo `excluirSocketId`. */
     async function profeConectado(excluirSocketId?: string) {
       const sockets = await io.in(rooms.profe(salaId)).fetchSockets()
       return sockets.some((s) => s.id !== excluirSocketId)

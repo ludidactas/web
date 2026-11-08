@@ -5,6 +5,7 @@ mock.module('../wss/io', () => ({
 }))
 
 import * as db from '../wss/salas/db'
+import { DURACION_MINIMA_CLASE_MS } from '../wss/asistencia/evaluacion'
 import { FormaEvaluacionAsistencia, type CondicionAsistencia } from '../wss/validators/asistencia'
 import { MetodosLogin, RolSala } from '../wss/validators/auth'
 import { WssEstudianteSessionSchema } from '../wss/validators/session'
@@ -143,10 +144,10 @@ describe('asistencia — pipeline completo contra Redis', () => {
     }
     await db.guardarSala(salaCon(salaId, condicion))
 
-    await correrClase(15, async () => {
+    await correrClase((DURACION_MINIMA_CLASE_MS - 1) / MIN, async () => {
       await db.guardarEstudiante(salaId, estudiante(salaId, 'Juan'))
       await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
-      await db.registrarEventoAsistencia(salaId, 'Juan', 'desconexion', T0 + 15 * MIN)
+      await db.registrarEventoAsistencia(salaId, 'Juan', 'desconexion', T0 + DURACION_MINIMA_CLASE_MS - 1)
     })
 
     expect(await db.getAsistenciasPendientes(salaId)).toEqual([])

@@ -182,6 +182,7 @@ export async function estudianteSala(idSala: string, userId: string) {
 
     const poll = (await db.getEncuesta(idSala, pollId))!
 
+    enforce(poll.isPublished, 'La encuesta no está publicada')
     enforce(poll.isOpen, 'La encuesta ya cerró!')
 
     if (poll.admiteMultiplesVotos && poll.maxMultiplesVotos) {
@@ -269,11 +270,12 @@ export async function estudianteSala(idSala: string, userId: string) {
 
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
+  const visible = poll.isPublished ? poll : { ...poll, pregunta: '', descripcion: undefined, opciones: [] }
   await sala.broadcastPorRol('poll:updated', {
     profe: () => hidratarParaProfe(sala.id, poll),
-    estudiante: (userId) => hidratarParaEstudiante(sala.id, poll, userId),
+    estudiante: (userId) => hidratarParaEstudiante(sala.id, visible, userId),
     // Público/overlay: con conteo de votos
-    publico: () => pollConVotos(sala.id, poll.id, poll),
+    publico: () => pollConVotos(sala.id, visible.id, visible),
   })
 }
 

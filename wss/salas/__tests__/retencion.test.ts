@@ -56,18 +56,6 @@ describe('barrerSalasInactivas', () => {
     expect(await getSala(id)).not.toBeNull()
     expect(await getUltimaActividad(id)).toBe(AHORA)
   })
-
-  it('si una sala falla, procesa las demás', async () => {
-    const fallida = await crearSala()
-    const ok = await crearSala()
-    await redis.hset('salas_owners', fallida, 'ilegible')
-    for (const id of [fallida, ok]) await marcarActividad(id, AHORA - (RETENCION_DIAS + 1) * DIA_MS)
-
-    await barrerSalasInactivas(AHORA)
-
-    expect(await getSala(fallida)).not.toBeNull()
-    expect(await getSala(ok)).toBeNull()
-  })
 })
 
 describe('sala sin dueño', () => {

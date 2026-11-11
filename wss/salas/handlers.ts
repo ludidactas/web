@@ -37,8 +37,9 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
  * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
  *
- * La planilla nunca se purga: guarda a todos los que pasaron por la sala (conectados o no), así que
- * no hace falta un "Limpiar" para conservar a los invitados. Si se pasa `minutos`, restringe las filas
+ * La planilla guarda a todos los que pasaron por la sala (conectados o no) hasta que la sala se borra
+ * o vence por retención (`wss/salas/retencion.ts`), así que no hace falta un "Limpiar" para conservar
+ * a los invitados. Si se pasa `minutos`, restringe las filas
  * a los estudiantes que estuvieron conectados en algún momento de la ventana
  * `[ahora - minutos, ahora]` (según el log de asistencia), para acotar la exportación a la clase actual.
  */
@@ -83,6 +84,7 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
 async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   socket.data.salaActiva = sala.id
   socket.join([rooms.sala(sala.id), rooms.profe(sala.id), rooms.usuario(sala.id, socket.data.session.userId)])
+  await db.marcarActividad(sala.id)
   console.log(`🔓 Profe ${socket.data.session.email} abrió sala ${sala.id}`)
 
   registrar(socket, comandosSalaActivaProfe, {

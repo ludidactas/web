@@ -98,7 +98,7 @@ Cuando se encare, la propuesta es:
 
 - Agregar las variables locales necesarias:
 
-  - NEXTAUTH_SECRET= $(`openssl rand -base64 32`)
+  - WSS_TOKEN_SECRET= $(`openssl rand -base64 32`) (`.env.development` trae un valor de desarrollo, así que con `wss:dev` y `dev` no hace falta setearla)
   - POLLS_ADMINS= $un_mail
 
 - Correr el proyecto next en otra terminal con `bun/npm dev`
@@ -132,9 +132,16 @@ En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta l
 
 El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup (correr Next en otra terminal) es igual.
 
-## Pendiente
+## Datos personales y retención
 
-- `WSS_TOKEN_SECRET` firma y verifica el token del WSS, con un valor distinto del secreto de sesión (`NEXTAUTH_SECRET`/`AUTH_SECRET`). Hay que generarlo (`openssl rand -base64 32`) por ambiente y setearlo a la vez en Vercel (Next, firma) y en la Application de Coolify correspondiente (wss, verifica): es un par, cambian juntos.
+- **Sesiones:** el wss no guarda IP ni User-Agent. El `userId` de un usuario público es `publico-<aleatorio>`.
+- **DNI en el navegador del estudiante:** `wss-cli/dni-guardado.ts` lo guarda en `localStorage` con vencimiento a 24 h desde que se guarda (leerlo no lo renueva) y borra los vencidos al entrar a una sala.
+- **Salas:** `wss/salas/retencion.ts` corre un barrido diario (bullmq) que borra con `Salas.eliminar`, planilla de asistencia incluida, las salas con más de 365 días sin uso. Cuenta como uso crear la sala, que un estudiante ingrese y que el profe la abra. A las salas sin fecha de actividad el primer barrido les pone la fecha de ese día, así que desplegar no borra nada.
+- **Límites aceptados:**
+  - Una sala usada solo por encuestas o votos, sin ingresos nuevos ni que el profe la reabra, vence a los 365 días.
+  - Si el profe abre la sala entre que el barrido lee su actividad y la borra, la sala se borra igual; la ventana es de milisegundos.
+  - Cada instancia del wss corre su propio Worker contra el mismo Redis; un wss de desarrollo conectado a un Redis compartido también barre.
+  - Los DNI guardados antes del vencimiento a 24 h se descartan y el estudiante los escribe de nuevo una vez.
 
 ## Deploy y ambientes
 

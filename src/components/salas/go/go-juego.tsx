@@ -18,6 +18,7 @@ import NegroGana from '@/svg/dist/ilustraciones/NegroGana.svg'
 import NegroPierde from '@/svg/dist/ilustraciones/NegroPierde.svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { toast } from 'sonner'
 import { BotonesImagen } from './botones-imagen'
@@ -510,7 +511,11 @@ const ILUSTRACION_RESULTADO = {
 const ilustracionResultado = (miColor: Color, gane: boolean) => ILUSTRACION_RESULTADO[miColor][gane ? 'gana' : 'pierde']
 
 /** Ventana que aparece al terminar mi partida, con la ilustración de mi color ganando o perdiendo.
- * Con empate no aparece: el `BannerResultado` ya lo cuenta. */
+ * Con empate no aparece: el `BannerResultado` ya lo cuenta.
+ *
+ * No modal, así el resto de la página sigue clickeable mientras está abierta; se cierra solo con
+ * "Seguir" (ni click afuera ni Escape). Radix no dibuja overlay en modo no modal: el fondo oscuro
+ * sobre el área del juego lo portalea este componente al `container`. */
 function DialogResultado({
   partida,
   miColor,
@@ -526,10 +531,14 @@ function DialogResultado({
   const abierto = partida.estado === 'terminada' && partida.ganadorUserId !== null && !cerrado
 
   return (
-    <Dialog open={abierto} onOpenChange={(open) => !open && setCerrado(true)}>
+    <Dialog open={abierto} onOpenChange={(open) => !open && setCerrado(true)} modal={false}>
+      {abierto &&
+        container &&
+        createPortal(<div className="fixed inset-0 z-50 bg-black/80 rounded-xl animate-in fade-in-0" />, container)}
       <DialogContent
         container={container}
-        overlayClassName="rounded-xl"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
         className="flex flex-col items-center gap-2 rounded-xl max-w-sm"
       >
         <LdSvg

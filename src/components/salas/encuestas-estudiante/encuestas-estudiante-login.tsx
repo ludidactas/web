@@ -16,6 +16,7 @@ import DibuEstudiante from '/svg/dist/ilustraciones/ups.svg'
 import logoSketchy from '@/img/logo_sketchy.gif'
 import lemaSketchy from '@/img/lema_sketchy.gif'
 
+import { borrarDni, guardarDni } from '@/wss-cli/dni-guardado'
 import { StatusDeConexion } from '@/wss-cli/conexion-wss'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { useConexionPublico } from '@/wss-cli/providers/wss-public-context'
@@ -57,10 +58,10 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
     if (valueDNI) {
       setDNI(valueDNI)
-      localStorage.setItem(`encuestas-dni-${idSala}`, valueDNI)
+      guardarDni(idSala, valueDNI)
     } else {
       setDNI(undefined)
-      localStorage.removeItem(`encuestas-dni-${idSala}`)
+      borrarDni(idSala)
     }
 
     // Esto triggerea el ingreso (que se renderice el `EncuestaEstudianteProvider`)

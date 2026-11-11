@@ -77,11 +77,11 @@ export interface NodoSecuencia {
 }
 
 // z.lazy() porque ambos schemas se referencian entre sí — las anotaciones explícitas
-// z.ZodType<Output, ZodTypeDef, unknown> evitan el ciclo en la inferencia de tipos
+// z.ZodType<Output, unknown> evitan el ciclo en la inferencia de tipos
 // (el parámetro `unknown` de entrada evita que el `.default([])` de `marcas` vuelva
 // el tipo de *entrada* más laxo que `RamaSecuencia`/`NodoSecuencia`, que describen
 // la *salida* ya parseada).
-export const RamaSecuenciaSchema: z.ZodType<RamaSecuencia, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const RamaSecuenciaSchema: z.ZodType<RamaSecuencia, unknown> = z.lazy(() =>
   z.object({
     en: PuntoSchema,
     correcto: z.boolean(),
@@ -92,7 +92,7 @@ export const RamaSecuenciaSchema: z.ZodType<RamaSecuencia, z.ZodTypeDef, unknown
   })
 )
 
-export const NodoSecuenciaSchema: z.ZodType<NodoSecuencia, z.ZodTypeDef, unknown> = z.lazy(() =>
+export const NodoSecuenciaSchema: z.ZodType<NodoSecuencia, unknown> = z.lazy(() =>
   z.object({
     ramas: z.array(RamaSecuenciaSchema).min(1),
   })

@@ -77,7 +77,7 @@ const tableroSchema = z.array(z.array(z.enum([VACIO, NEGRO, BLANCO])))
 const removidasSchema = matrizBoolSchema.nullable()
 
 /** Schema de lo que se persiste en Redis (`Partida`). */
-export const partidaSchema: z.ZodType<Partida, z.ZodTypeDef, unknown> = z.object({
+export const partidaSchema: z.ZodType<Partida, unknown> = z.object({
   id: z.string(),
   salaId: z.string(),
   tamaño: tamañoSchema,
@@ -110,7 +110,7 @@ export type PartidaDrivePendiente = Pick<Partida, 'id' | 'tablero' | 'tamaño' |
 }
 
 /** Schema de lo que se persiste en Redis (`PartidaDrivePendiente`). */
-export const partidaDrivePendienteSchema: z.ZodType<PartidaDrivePendiente, z.ZodTypeDef, unknown> = z.object({
+export const partidaDrivePendienteSchema: z.ZodType<PartidaDrivePendiente, unknown> = z.object({
   id: z.string(),
   tablero: tableroSchema,
   tamaño: tamañoSchema,

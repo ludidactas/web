@@ -65,7 +65,7 @@ describe('registrar + comandos/escuchar', () => {
 
   test('pedir rechaza con los mensajes de zod, legibles', async () => {
     // @ts-expect-error `a` es obligatorio
-    await expect(c().pedir('cosa:sumar', {})).rejects.toThrow('Required')
+    await expect(c().pedir('cosa:sumar', {})).rejects.toThrow('Invalid input: expected number, received undefined')
   })
 
   test('enviar ejecuta el handler y escuchar recibe lo que el server emite', async () => {

@@ -23,4 +23,6 @@ ENV NODE_ENV=production
 ARG PORT=3005
 EXPOSE ${PORT}
 
+USER bun
+
 CMD ["bun", "run", "wss/server.ts"]

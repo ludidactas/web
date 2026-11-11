@@ -89,13 +89,13 @@ export const materiaMetaSchema = z
       // Checkeamos si todas existen en `unidades`
       return Array.from(nivelUnidades).every((unidad) => unidad in data.unidades!)
     },
-    (data) => ({
-      // @ts-expect-error - Propiedad custom
-      message: `Hay unidades en 'niveles' de ${data.titulo} que no aparecen en 'unidades': ${data._faltantes?.join(
-        ', '
-      )}`,
+    {
+      error: (iss) => {
+        const data = iss.input as { titulo: string; _faltantes?: string[] }
+        return `Hay unidades en 'niveles' de ${data.titulo} que no aparecen en 'unidades': ${data._faltantes?.join(', ')}`
+      },
       path: ['niveles'], // This will show the error on the niveles field
-    })
+    }
   )
   // Checkea que ninguna unidad colisione con un nombre de nivel
   .refine(
@@ -106,11 +106,13 @@ export const materiaMetaSchema = z
       if (colisiones.length > 0) data._colisiones = colisiones
       return colisiones.length == 0
     },
-    (data) => ({
-      // @ts-expect-error - Propiedad custom
-      message: `Hay unidades en ${data.titulo} nombradas como niveles: ${data._colisiones?.join(', ')}`,
+    {
+      error: (iss) => {
+        const data = iss.input as { titulo: string; _colisiones?: string[] }
+        return `Hay unidades en ${data.titulo} nombradas como niveles: ${data._colisiones?.join(', ')}`
+      },
       path: ['unidades'],
-    })
+    }
   )
 
 export type MetaMateria = z.infer<typeof materiaMetaSchema>

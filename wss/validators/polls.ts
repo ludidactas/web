@@ -47,8 +47,8 @@ const textoDescripcion = z
   .string()
   .trim()
   .max(4000, 'La descripción no puede superar los 4000 caracteres')
-  .optional()
   .transform((valor) => valor || undefined)
+  .optional()
 
 const opcionSchema = z.object({
   id: z.string(),
@@ -76,7 +76,7 @@ const encuestaBase = z.object({
   maxMultiplesVotos: z.number().nullable().default(null),
 })
 
-export const encuestaSchema: z.ZodType<_Encuesta, z.ZodTypeDef, unknown> = encuestaBase
+export const encuestaSchema: z.ZodType<_Encuesta, unknown> = encuestaBase
 
 /** Encuesta con votos, es decir hidratada para el público general */
 const encuestaConVotos = encuestaBase.extend({
@@ -90,6 +90,7 @@ const encuestaConVotantes = encuestaBase.extend({
 
 export const encuestaHidratadaEstudiante = encuestaConVotos.extend({
   puedoVotar: z.boolean().optional(),
+  puedoAportar: z.boolean().optional(),
   votosEmitidos: z.array(z.string()).optional(),
 })
 
@@ -127,7 +128,7 @@ const voteBase = pollIdSchema
 
 export const voteValidator = z.discriminatedUnion('tipo', [
   voteBase.extend({ tipo: z.literal('opcion'), optionId: z.string().min(1) }),
-  voteBase.extend({ tipo: z.literal('aporte'), aporte: z.string().min(1) }),
+  voteBase.extend({ tipo: z.literal('aporte'), aporte: textoOpcion }),
 ])
 
 export const nuevaEncuesta = crearEncuesta.transform((data) => ({

@@ -1,4 +1,5 @@
 import { createServer } from 'http'
+import { avisarTelegram } from './alertas'
 import { io } from './io'
 import { registro } from './metrics'
 
@@ -54,15 +55,20 @@ export const mount = (port: number) => {
   process.on('SIGINT', cerrarServer)
   process.on('SIGTERM', cerrarServer)
 
-  // Última línea de error handling
-  process.on('uncaughtException', (error) => {
+  // Última línea de error handling. Se espera el aviso a Telegram (a diferencia del resto de los
+  // `avisarTelegram`, que son fire-and-forget) porque el proceso muere en la línea siguiente — si no
+  // se espera, el `fetch` nunca llega a salir y el watchdog externo (la alerta de Grafana por falta de
+  // scrape) queda como único aviso, con varios minutos más de demora.
+  process.on('uncaughtException', async (error) => {
     console.error('❌ Error inesperado:', error)
+    await avisarTelegram('crash', `Excepción no capturada, el proceso se reinicia: ${error.message}`)
     process.exit(1)
   })
 
   // Promises sin catch
-  process.on('unhandledRejection', (reason, promise) => {
+  process.on('unhandledRejection', async (reason, promise) => {
     console.error('❌ Rejeccion inesperada en:', promise, 'reason:', reason)
+    await avisarTelegram('crash', `Promise rejection sin catch, el proceso se reinicia: ${String(reason)}`)
     process.exit(1)
   })
 }

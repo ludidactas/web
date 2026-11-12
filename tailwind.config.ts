@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import tailwindcssAnimate from 'tailwindcss-animate'
 
 // Paleta de marca LD (ver identidad visual). Estos son los únicos hex "crudos"
 // permitidos: todo el resto del código debe referenciar las clases ld-violeta/ld-azul.
@@ -148,6 +149,5 @@ export default {
       },
     },
   },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  plugins: [require('tailwindcss-animate')],
+  plugins: [tailwindcssAnimate],
 } satisfies Config

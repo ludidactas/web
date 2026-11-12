@@ -98,7 +98,7 @@ Cuando se encare, la propuesta es:
 
 - Agregar las variables locales necesarias:
 
-  - NEXTAUTH_SECRET= $(`openssl rand -base64 32`)
+  - WSS_TOKEN_SECRET= $(`openssl rand -base64 32`) (`.env.development` trae un valor de desarrollo, así que con `wss:dev` y `dev` no hace falta setearla)
   - POLLS_ADMINS= $un_mail
 
 - Correr el proyecto next en otra terminal con `bun/npm dev`
@@ -110,7 +110,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 
 | Variable                                                          | Quién la lee                                                                       | Cuándo         | Para qué                                                                                                                                                                               |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JWT_SECRET`                                                      | Next (`src/server/token_wss.ts`, firma) y wss (`wss/middleware/auth.ts`, verifica) | runtime        | Secret compartido del JWT de corta vida que autentica al socket contra el wss. Tiene que ser **el mismo valor exacto** en ambos lados.                                                 |
+| `WSS_TOKEN_SECRET`                                                | Next (`src/server/token_wss.ts`, firma) y wss (`wss/middleware/auth.ts`, verifica) | runtime        | Secret del JWT de corta vida que autentica el socket contra el wss. Valor distinto del secreto de sesión (`NEXTAUTH_SECRET`/`AUTH_SECRET`). Obligatoria: sin valor, el wss no arranca y el token no se firma. |
 | `NEXTAUTH_SECRET` / `AUTH_SECRET`                                 | Next, internamente (Auth.js)                                                       | runtime        | Firma la cookie de sesión del navegador. `AUTH_SECRET` es el nombre nuevo de Auth.js v5; si no está seteado, cae a `NEXTAUTH_SECRET`. No lo usa el wss.                                |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`                           | Next (`src/server/google/cliente.ts`, provider de login y cliente de Drive)        | runtime        | Credenciales de la app OAuth de Google.                                                                                                                                                |
 | `POLLS_ADMINS`                                                    | wss (`wss/middleware/auth.ts`)                                                     | runtime        | Emails con rol admin en el wss, separados por coma.                                                                                                                                    |
@@ -123,7 +123,7 @@ Lista completa (más allá de las dos mínimas para levantar solo el wss, arriba
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita la variable obligatoria del wss de la tabla de arriba (`WSS_TOKEN_SECRET`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`
@@ -132,9 +132,16 @@ En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta l
 
 El server queda en `localhost:3005`, igual que `wss:dev` — el resto del setup (correr Next en otra terminal) es igual.
 
-## Pendiente
+## Datos personales y retención
 
-- `JWT_SECRET` está bien separado de `NEXTAUTH_SECRET`/`AUTH_SECRET` en el código (cada uno con su propia variable, ver tabla de arriba), pero en local (`.env.local`) los dos todavía tienen cargado **el mismo valor de string**, porque nunca se regeneró `JWT_SECRET` de forma independiente — falta confirmar si eso también pasa en staging/producción. Hay que generar un `JWT_SECRET` propio y distinto (`openssl rand -base64 32`) por ambiente y actualizarlo a la vez en Vercel (Next, firma) y en la Application de Coolify correspondiente (wss, verifica) — son un par, tienen que cambiar juntos.
+- **Sesiones:** el wss no guarda IP ni User-Agent. El `userId` de un usuario público es `publico-<aleatorio>`.
+- **DNI en el navegador del estudiante:** `wss-cli/dni-guardado.ts` lo guarda en `localStorage` con vencimiento a 24 h desde que se guarda (leerlo no lo renueva) y borra los vencidos al entrar a una sala.
+- **Salas:** `wss/salas/retencion.ts` corre un barrido diario (bullmq) que borra con `Salas.eliminar`, planilla de asistencia incluida, las salas con más de 365 días sin uso. Cuenta como uso crear la sala, que un estudiante ingrese y que el profe la abra. A las salas sin fecha de actividad el primer barrido les pone la fecha de ese día, así que desplegar no borra nada.
+- **Límites aceptados:**
+  - Una sala usada solo por encuestas o votos, sin ingresos nuevos ni que el profe la reabra, vence a los 365 días.
+  - Si el profe abre la sala entre que el barrido lee su actividad y la borra, la sala se borra igual; la ventana es de milisegundos.
+  - Cada instancia del wss corre su propio Worker contra el mismo Redis; un wss de desarrollo conectado a un Redis compartido también barre.
+  - Los DNI guardados antes del vencimiento a 24 h se descartan y el estudiante los escribe de nuevo una vez.
 
 ## Deploy y ambientes
 
@@ -158,7 +165,7 @@ Ambas Applications tienen auto-deploy activado (`Deploy on push` vía webhook): 
 
 ### WSS con Docker (alternativa a los dos pasos de arriba)
 
-En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
+En vez de correr Redis y el server de WSS a mano, `docker-compose.yml` levanta los dos juntos (usa las variables de `.env.local`, así que necesita la variable obligatoria del wss de la tabla de arriba (`WSS_TOKEN_SECRET`) más `NEXTAUTH_SECRET`/`POLLS_ADMINS` ya seteadas ahí):
 
 - Levantar todo: `docker compose up --build -d`
 - Ver logs: `docker compose logs -f wss`

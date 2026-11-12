@@ -13,6 +13,8 @@ img
 svg
 public
 *.tsbuildinfo
+**/*.test.ts
+**/*.test.tsx
 .DS_Store
 .env*
 !.env.development

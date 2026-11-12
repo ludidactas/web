@@ -13,7 +13,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -29,6 +29,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "**/*.mdx", "svgo.config.js"],
+  "include": ["next-env.d.ts", "**/*.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "**/*.mdx", "svgo.config.js", ".next/dev/types/**/*.ts"],
   "exclude": ["node_modules", "**/*.svg"]
 }

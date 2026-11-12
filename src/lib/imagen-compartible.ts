@@ -43,14 +43,52 @@ export function trazarRectRedondeado(
   ctx.closePath()
 }
 
-/** Carga una imagen; resuelve `undefined` (en vez de rechazar) si falla, para poder exportar igual sin ella. */
-export const cargarImagen = (src: string) =>
-  new Promise<HTMLImageElement | undefined>((resolve) => {
+const cargar = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
-    img.onerror = () => resolve(undefined)
+    img.onerror = () => reject(new Error(`No se pudo cargar la imagen: ${src}`))
     img.src = src
   })
+
+/** Carga una imagen; resuelve `undefined` (en vez de rechazar) si falla, para poder exportar igual sin ella. */
+export const cargarImagen = (src: string) => cargar(src).catch(() => undefined)
+
+/** Rasteriza un `<svg>` (como texto, con su `xmlns` y dimensiones) a una imagen lista para `drawImage`. */
+export async function svgAImagen(svg: string): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }))
+  try {
+    return await cargar(url)
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/** El contenido del canvas como PNG. */
+export const canvasAPng = (canvas: HTMLCanvasElement) =>
+  new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('No se pudo generar la imagen'))), 'image/png')
+  )
+
+/** Dispara la descarga de `blob` como archivo `nombre`. */
+export function descargarBlob(blob: Blob, nombre: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nombre
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+/** `texto` recortado con "…" para que entre en `ancho` con la fuente actual del contexto. */
+export function ajustarTexto(ctx: CanvasRenderingContext2D, texto: string, ancho: number): string {
+  if (ctx.measureText(texto).width <= ancho) return texto
+  let base = texto
+  while (base.length > 0 && ctx.measureText(base + '…').width > ancho) base = base.slice(0, -1)
+  return base + '…'
+}
 
 export interface Firma {
   logo?: HTMLImageElement

@@ -8,7 +8,7 @@ export const rooms = {
   publico: (idSala: string) => `sala:${idSala}:publico`,
   overlay: (idSala: string) => `sala:${idSala}:overlay`,
   /** Las conexiones de una persona en la sala (ej. varias pestañas del mismo estudiante). */
-  usuario: (idSala: string, userId: string) => `sala:${idSala}:${userId}`,
+  usuario: (idSala: string, userId: string) => `sala:${idSala}:u:${userId}`,
   /** Todas las conexiones de un profe, en cualquier sala. */
   cuentaProfe: (email: string) => `profe:${email}`,
   /** Los que siguen una partida de Go: sus jugadores y quienes la observan. */

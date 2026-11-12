@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { storeConfig } from '../stores/config-store'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { idAleatorio } from '../utils-id'
+import { leerDni, limpiarDnisVencidos } from '../dni-guardado'
 
 export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
   const store = storeEstudianteLogin()
@@ -30,7 +31,8 @@ export function useLoginSalaEstudiante({ idSala }: { idSala: string }) {
     if (storedName) {
       store.setNombre(storedName)
     }
-    const storedDni = localStorage.getItem(`encuestas-dni-${idSala}`)
+    limpiarDnisVencidos()
+    const storedDni = leerDni(idSala)
     if (storedDni) {
       store.setDNI(storedDni)
     }

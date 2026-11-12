@@ -11,6 +11,7 @@ import profeSalaActivaHandlers from '../handlers/profe-sala-activa-handlers'
 import profeEncuestasHandlers from '../handlers/profe-encuestas-handlers'
 import profeAsistenciaHandlers from '../handlers/profe-asistencia-handlers'
 import profeGoHandlers from '../handlers/profe-go-handlers'
+import profeGoDriveHandlers from '../handlers/profe-go-drive-handlers'
 import { useWss } from '../use-wss'
 import { montarTodos } from '../contrato-cli'
 import { StatusDeConexion } from '../conexion-wss'
@@ -34,6 +35,7 @@ const useHandlersConexionSalaProfe = (auth: Omit<PasaporteProfe, 'rol'>, abrirSa
       encuestas: profeEncuestasHandlers(socket),
       asistencia: profeAsistenciaHandlers(socket),
       go: profeGoHandlers(socket),
+      goDrive: profeGoDriveHandlers(socket),
     }),
     [socket]
   )

@@ -1,4 +1,5 @@
 import type { drive_v3 } from '@googleapis/drive'
+import { Readable } from 'node:stream'
 
 import type { ColeccionPreguntasEnDrive } from '@/lib/google/recursos-colecciones'
 import { aSlug } from '@/lib/utils'
@@ -6,6 +7,7 @@ import { aSlug } from '@/lib/utils'
 const MIME_CARPETA = 'application/vnd.google-apps.folder'
 const MIME_YAML = 'text/plain'
 const MEDIA_YAML = `${MIME_YAML}; charset=UTF-8`
+const MIME_PNG = 'image/png'
 
 type PropiedadesApp = Record<string, string>
 type ArchivoDrive = drive_v3.Schema$File & { id: string }
@@ -75,17 +77,24 @@ async function buscarOCrear(api: drive_v3.Drive, datos: ArchivoNuevo) {
   return data as ArchivoDrive
 }
 
-function propiedadesCarpeta(salaId: string, recurso: 'sala' | 'colecciones') {
+type RecursoCarpeta = 'sala' | 'colecciones' | 'partidas'
+
+function propiedadesCarpeta(salaId: string, recurso: RecursoCarpeta) {
   return { ludidactasSala: salaId, recurso }
 }
 
 /**
- * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombre}/Colecciones`
+ * Encuentra (creando lo que falte) la carpeta `Ludidactas/Sala - {nombreSala}/{nombre}`
  * de `salaId` en el Drive del usuario autenticado. La jerarquía completa se busca/crea
  * de a un nivel por `appProperties`, no por nombre, para tolerar que el usuario la
  * renombre a mano sin romper las búsquedas futuras.
  */
-async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
+async function carpetaDeSala(
+  api: drive_v3.Drive,
+  sala: SalaDrive,
+  recurso: Exclude<RecursoCarpeta, 'sala'>,
+  nombre: string
+) {
   const raiz = await buscarOCrear(api, {
     name: 'Ludidactas',
     mimeType: MIME_CARPETA,
@@ -100,15 +109,43 @@ async function carpetaDeColecciones(api: drive_v3.Drive, sala: SalaDrive) {
   })
 
   return buscarOCrear(api, {
-    name: 'Colecciones',
+    name: nombre,
     mimeType: MIME_CARPETA,
-    appProperties: propiedadesCarpeta(sala.salaId, 'colecciones'),
+    appProperties: propiedadesCarpeta(sala.salaId, recurso),
     parents: [carpetaSala.id],
   })
 }
 
 function propiedadesDeSala(salaId: string) {
   return { ludidactasSala: salaId, recurso: 'coleccion' }
+}
+
+function propiedadesPartida(salaId: string, partidaId: string) {
+  return { ludidactasSala: salaId, recurso: 'partida', partida: partidaId }
+}
+
+export async function guardarImagenPartida(
+  api: drive_v3.Drive,
+  sala: SalaDrive,
+  partidaId: string,
+  nombre: string,
+  png: Buffer
+) {
+  const propiedades = propiedadesPartida(sala.salaId, partidaId)
+  const existente = await buscarArchivo(api, propiedades, MIME_PNG)
+  if (existente) return
+
+  const carpeta = await carpetaDeSala(api, sala, 'partidas', 'Partidas Go')
+
+  await api.files.create({
+    requestBody: {
+      name: nombre,
+      mimeType: MIME_PNG,
+      appProperties: propiedades,
+      parents: [carpeta.id],
+    },
+    media: { mimeType: MIME_PNG, body: Readable.from(png) },
+  })
 }
 
 function propiedadesColeccion(salaId: string, nombre: string) {
@@ -147,7 +184,7 @@ export async function guardarColeccion(api: drive_v3.Drive, sala: SalaDrive, nom
     return
   }
 
-  const colecciones = await carpetaDeColecciones(api, sala)
+  const colecciones = await carpetaDeSala(api, sala, 'colecciones', 'Colecciones')
 
   await api.files.create({
     requestBody: {

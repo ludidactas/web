@@ -1,6 +1,10 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 
+// El `fetch` de happy-dom aplica la política de mismo origen y bloquea cualquier URL externa; los
+// tests que bajan contenido de la red (ej. los desafíos del dojo) necesitan el `fetch` nativo de Bun.
+const fetchNativo = globalThis.fetch
 GlobalRegistrator.register()
+globalThis.fetch = fetchNativo
 
 // happy-dom no implementa `SVGPoint.prototype.matrixTransform` (usado por
 // `usePuntoDesdeEventoSvg` en src/lib/go/tablero-go-base.tsx para la matemática de click del

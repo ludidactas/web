@@ -52,9 +52,7 @@ export async function registrarApertura(salaId: string): Promise<void> {
 
 /**
  * Indica si al profe le queda algún socket vivo en la sala, excluyendo `excluirSocketId`: así la
- * clase sigue abierta mientras el profe tenga otra pestaña conectada. Excluimos por id porque el
- * socket que se está desconectando puede seguir apareciendo en `fetchSockets` por un instante
- * (propagación del adapter).
+ * clase sigue abierta mientras el profe tenga otra pestaña conectada.
  */
 async function hayProfeConectado(salaId: string, excluirSocketId?: string) {
   const sockets = await io.in(rooms.profe(salaId)).fetchSockets()

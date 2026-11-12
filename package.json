@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "e2e": "bunx playwright test",
     "test:unit": "bun test wss",
@@ -23,7 +23,7 @@
     "wss:simular": "bun run wss/scripts/simular-estudiantes.ts",
     "images:optimize": "bun run scripts/optimize-images.ts",
     "test": "bun test src wss",
-    "test:integracion": "bun test integracion"
+    "test:integracion": "bun test --isolate integracion"
   },
   "dependencies": {
     "@googleapis/drive": "^21.0.0",
@@ -33,7 +33,8 @@
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^15.0.3",
-    "@next/third-parties": "^15.1.7",
+    "@next/third-parties": "^16.4.3",
+    "@prometheus-io/client": "^0.16.1",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.1.3",
@@ -71,7 +72,7 @@
     "katex": "^0.18.4",
     "lucide-react": "^0.468.0",
     "motion": "^12.23.24",
-    "next": "15.0.7",
+    "next": "16.4.3",
     "next-auth": "^5.0.0-beta.29",
     "next-themes": "^0.4.6",
     "nodemon": "^3.1.10",
@@ -88,7 +89,7 @@
     "remark-bracketed-spans": "^3.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-math": "^6.0.0",
-    "remark-mdx-frontmatter": "^5.0.0",
+    "remark-mdx-frontmatter": "^6.0.0",
     "remeda": "^2.17.4",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
@@ -99,11 +100,11 @@
     "vaul": "^1.1.1",
     "xlsx": "^0.18.5",
     "yaml": "^2.9.0",
-    "zod": "^3.24.1",
+    "zod": "^4.6.6",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.14.5",
+    "@happy-dom/global-registrator": "^21.0.4",
     "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
@@ -118,10 +119,10 @@
     "@types/sharp": "^0.32.0",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
-    "happy-dom": "^20.14.5",
+    "happy-dom": "^21.0.4",
     "oauth2-mock-server": "^9.1.0",
     "postcss": "^8",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

@@ -8,10 +8,10 @@ import { normalizarTexto } from '../utils'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
 // Si no está seteada, tiramos un error para que no arranque el server.
-const secret = process.env.NEXTAUTH_SECRET
+const secret = process.env.WSS_TOKEN_SECRET
 const ADMINS = process.env.POLLS_ADMINS?.split(',').map((email) => email.trim())
 if (!secret || !ADMINS) {
-  console.error('Error: NEXTAUTH_SECRET o POLLS_ADMINS no están seteadas.')
+  console.error('Error: WSS_TOKEN_SECRET o POLLS_ADMINS no están seteadas.')
   process.exit(1)
 }
 
@@ -74,6 +74,8 @@ export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstud
     case MetodosLogin.Nombre:
       // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login.
       const nombreNormalizado = normalizarTexto(session.userId)
+      if (nombreNormalizado === normalizarTexto(sala.profe.email))
+        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
       const enUso = (await sala.listarEstudiantes()).some(
         (s) => normalizarTexto(s.userId) === nombreNormalizado && s.clientId !== session.clientId
       )

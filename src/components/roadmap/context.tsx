@@ -5,7 +5,7 @@ const useRoadmapState = () => {
   const [clicked, setClicked] = useState<string | null>(null)
   const [focused, setFocused] = useState<string | null>(null)
   const lastFocused = usePrevious(focused)
-  const svgRef = useRef<SVGAElement>()
+  const svgRef = useRef<SVGElement>(null)
 
   return { clicked, setClicked, focused, setFocused, lastFocused, svgRef }
 }
@@ -16,7 +16,7 @@ const ContextoSvgRoadmap = createContext<ReturnType<typeof useRoadmapState>>({
   focused: null,
   setFocused: () => {},
   lastFocused: null,
-  svgRef: { current: undefined },
+  svgRef: { current: null },
 })
 
 /**

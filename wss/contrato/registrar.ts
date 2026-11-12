@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io'
 import { z } from 'zod'
+import { ackDuracion, eventosRecibidos } from '../metrics'
 import { extractZodErrorMessages } from '../utils'
 import type { Ack, Contrato, HandlersDe } from './definir'
 
@@ -25,6 +26,9 @@ export function registrar<C extends Contrato>(socket: Socket, contrato: C, handl
       // Un `undefined` viaja como `null`: se normaliza para `sinPayload` y los opcionales.
       const payload = args[0] === ack ? undefined : (args[0] ?? undefined)
 
+      eventosRecibidos.inc({ evento })
+      const finAck = ack ? ackDuracion.startTimer({ evento }) : null
+
       try {
         const data = await handler(def.input.parse(payload))
         ack?.({ ok: true, data })
@@ -33,6 +37,8 @@ export function registrar<C extends Contrato>(socket: Socket, contrato: C, handl
         const message = mensajeDe(err)
         if (ack) ack({ ok: false, error: message })
         else socket.emit('wss:error', { message })
+      } finally {
+        finAck?.()
       }
     })
   }

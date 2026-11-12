@@ -32,6 +32,7 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombr
   link: z.string(),
   overlay: estadisticaSvgConfigValidator.catch(CONFIG_DEFAULTS),
   condicion_asistencia: condicionAsistenciaSchema.nullable().optional().catch(null),
+  guardar_partidas_drive: z.boolean().optional().catch(false),
 })
 
 /**
@@ -40,13 +41,13 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombr
  * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
  */
 export const configActualizable = configSala
-  .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true })
+  .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true, guardar_partidas_drive: true })
   .strict()
 
 /** `configActualizable` con todos los campos opcionales: lo que el profe puede mandar para cambiar la config. */
 export const configActualizableParcial = configActualizable.partial()
 
-export const crearSalaSchema = z.object({ config: configCreacionSala.default({}) }).default({})
+export const crearSalaSchema = z.object({ config: configCreacionSala.prefault({}) }).prefault({})
 
 export const idSalaSchema = z.object({ idSala: z.string().min(1) })
 

@@ -14,8 +14,10 @@ import {
 } from '../validators/go'
 import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
-import { conLock } from './lock'
+import { conLock } from '../lock'
 import * as motor from '@/lib/go/motor'
+import { getSala } from '../salas/db'
+import { infoExport } from '@/lib/go/info-export'
 
 /**
  * Lógica de servidor de una partida de Go: comandos (invitar/aceptar/jugar/pasar/marcarMuerta/
@@ -206,6 +208,11 @@ export async function estudianteGo(idSala: string, userId: string) {
       assertEsJugador(partida, userId)
       if (partida.estado !== EstadoPartida.Pendiente) throw new Error('Esa invitación ya no está pendiente')
 
+      partida.estado = EstadoPartida.Terminada
+      partida.motivoFin = 'abandono'
+      partida.ganadorUserId = null
+      await db.guardarPartida(partida)
+
       await db.limpiarPartidaActiva(idSala, partida.negro.userId)
       await db.limpiarPartidaActiva(idSala, partida.blanco.userId)
 
@@ -375,6 +382,18 @@ async function finalizar(
   await db.limpiarPartidaActiva(partida.salaId, partida.blanco.userId)
   await db.incrementarStats(partida.salaId, partida.negro.userId, ganadorUserId === partida.negro.userId)
   await db.incrementarStats(partida.salaId, partida.blanco.userId, ganadorUserId === partida.blanco.userId)
+
+  const sala = await getSala(partida.salaId)
+  if (sala?.config.guardar_partidas_drive) {
+    await db.encolarPartidaDrive(partida.salaId, {
+      id: partida.id,
+      tablero: partida.tablero,
+      tamaño: partida.tamaño,
+      removidas: partida.removidas,
+      creadaEn: partida.creadaEn,
+      info: infoExport(partida),
+    })
+  }
 
   console.log(`🏁 Partida de Go ${partida.id} terminada por ${motivoFin}. Ganador: ${ganadorUserId ?? 'empate'}`)
 

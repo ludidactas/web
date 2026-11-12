@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { auth } from '@/app/auth'
-import { tieneIntegracionGoogle } from '@/server/entitlements'
-import { responderError } from '@/server/google/cliente'
+import { responderError, sinIntegracionGoogle } from '@/server/google/cliente'
 import { escribirAsistencia } from '@/server/google/sheets-asistencia'
 import { asistenciaDeClaseSchema } from '@/wss/validators/asistencia'
 
@@ -15,12 +14,6 @@ const bodySchema = z.object({
   asistencias: z.array(asistenciaDeClaseSchema).min(1),
 })
 
-async function sinIntegracion() {
-  const session = await auth()
-  if (await tieneIntegracionGoogle(session?.user?.email)) return null
-  return NextResponse.json({ error: 'La integración con Google no está habilitada' }, { status: 403 })
-}
-
 export async function POST(request: Request, { params }: Parametros) {
   const { salaId } = await params
 
@@ -31,7 +24,7 @@ export async function POST(request: Request, { params }: Parametros) {
     return NextResponse.json({ error: 'Faltan datos de asistencia' }, { status: 400 })
   }
 
-  const vedado = await sinIntegracion()
+  const vedado = await sinIntegracionGoogle()
   if (vedado) return vedado
 
   try {

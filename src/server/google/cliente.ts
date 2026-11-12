@@ -5,7 +5,8 @@ import type { sheets_v4 } from '@googleapis/sheets'
 import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 
-import { desconectarDrive } from '@/app/auth'
+import { auth as sesionActual, desconectarDrive } from '@/app/auth'
+import { tieneIntegracionGoogle } from '@/server/entitlements'
 
 const opcionesRed = {
   timeout: 20_000,
@@ -109,4 +110,16 @@ export async function responderError(e: unknown, contexto?: Record<string, unkno
 
   console.error('Drive: error contra la API de Google', contexto, e)
   return NextResponse.json({ error: e instanceof Error ? e.message : 'Error desconocido' }, { status: 502 })
+}
+
+/**
+ * Gate de entitlement de las rutas de Google: `null` si el usuario de la sesión puede usar
+ * la integración, o la respuesta 403 a devolver si no. No valida que el `salaId` de la ruta
+ * le pertenezca al usuario de la sesión: cualquier profe autenticado con la integración
+ * habilitada puede operar bajo cualquier `salaId`, en su propio Drive.
+ */
+export async function sinIntegracionGoogle() {
+  const session = await sesionActual()
+  if (await tieneIntegracionGoogle(session?.user?.email)) return null
+  return NextResponse.json({ error: 'La integración con Google no está habilitada' }, { status: 403 })
 }

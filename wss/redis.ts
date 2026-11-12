@@ -1,4 +1,5 @@
 import Redis from 'ioredis'
+import { avisarTelegram } from './alertas'
 
 const opcionesBase = {
   host: process.env.REDIS_HOST || '127.0.0.1',
@@ -10,7 +11,10 @@ const opcionesBase = {
 // Se asume que hay un server redis corriendo
 const redis = new Redis(opcionesBase)
 
-redis.on('error', (err) => console.error('❌ Redis tiró error:', err))
+redis.on('error', (err) => {
+  console.error('❌ Redis tiró error:', err)
+  avisarTelegram('redis-error', `Redis tiró error: ${err.message}`)
+})
 
 /**
  * Conexión para bullmq (`wss/asistencia/seguimiento.ts`): exige `maxRetriesPerRequest: null`, así que
@@ -19,6 +23,9 @@ redis.on('error', (err) => console.error('❌ Redis tiró error:', err))
  */
 export const redisBullMQ = new Redis({ ...opcionesBase, maxRetriesPerRequest: null })
 
-redisBullMQ.on('error', (err) => console.error('❌ Redis (bullmq) tiró error:', err))
+redisBullMQ.on('error', (err) => {
+  console.error('❌ Redis (bullmq) tiró error:', err)
+  avisarTelegram('redis-bullmq-error', `Redis (bullmq) tiró error: ${err.message}`)
+})
 
 export default redis

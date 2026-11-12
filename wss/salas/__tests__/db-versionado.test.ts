@@ -135,4 +135,23 @@ describe('entidades de la sala en redis', () => {
     await guardarRegistroDeClase(ID, { inicio: 1, fin: null })
     expect(await getRegistroDeClase(ID)).toEqual({ inicio: 1, fin: null })
   })
+
+  it('una asistencia pendiente sin `identidad` se lee con el `userId` viejo como identidad', async () => {
+    await redis.rpush(
+      `sala:${ID}:asistencia_pendiente`,
+      JSON.stringify({
+        inicio: 1,
+        fin: 2,
+        estudiantes: [{ userId: '20333444555', nombre: 'Ana', presente: true }],
+      })
+    )
+
+    expect(await getAsistenciasPendientes(ID)).toEqual([
+      {
+        inicio: 1,
+        fin: 2,
+        estudiantes: [{ userId: '20333444555', identidad: '20333444555', nombre: 'Ana', presente: true }],
+      },
+    ])
+  })
 })

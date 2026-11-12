@@ -4,7 +4,7 @@ import type { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import type { Salas } from '../salas/app'
 import type { Encuesta } from '../validators/polls'
 import type { ConfigSala } from '../validators/salas'
-import type { Partida } from '../validators/go'
+import type { PartidaPublica } from '../validators/go'
 import type { ListenersDe } from './definir'
 import type { EventosServidorTodos } from './eventos'
 
@@ -14,7 +14,7 @@ test('los tipos de emisión del server se chequean en compilación', () => {
     const io = null as unknown as Server<DefaultEventsMap, ListenersDe<EventosServidorTodos>>
     const profe = null as unknown as SocketProfe
     const estudiante = null as unknown as SocketEstudiante
-    const partida = null as unknown as Partida
+    const partida = null as unknown as PartidaPublica
 
     io.to('sala').emit('go:partida', partida)
     profe.emit('sala:estudiantes', [])

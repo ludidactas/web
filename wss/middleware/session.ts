@@ -80,9 +80,12 @@ const login = async (socket: SocketConSesion) => {
       datosGoogle = decodearTokenNextAuth(auth.token)
     }
 
+    // Una cuenta de Google puede no traer nombre: el email hace de nombre para mostrarlo.
+    const identidadGoogle = datosGoogle && { ...datosGoogle, nombre: datosGoogle.nombre || datosGoogle.email }
+
     const session = parsearAuth(SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
       ...auth,
-      ...datosGoogle,
+      ...identidadGoogle,
       metodo: config.metodo_login,
     })
 

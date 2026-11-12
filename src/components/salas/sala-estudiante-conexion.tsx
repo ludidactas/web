@@ -1,6 +1,10 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { useTokenGoogle } from '@/wss-cli/use-token-google'
+import { storeConfig } from '@/wss-cli/stores/config-store'
+import { MetodosLogin } from '@/wss/validators/auth'
+import LoadingSala from './loading-sala'
 import { ConexionEstudianteProvider } from '@/wss-cli/providers/wss-estudiante-context'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
 import { ConexionPublicProvider } from '@/wss-cli/providers/wss-public-context'
@@ -15,6 +19,11 @@ import LoginSalaEstudiante from './encuestas-estudiante/encuestas-estudiante-log
  */
 export function SalaEstudianteConexion({ idSala, children }: { idSala: string; children: ReactNode }) {
   const { dni, nombre, clientId, ingresado } = useLoginSalaEstudiante({ idSala })
+  const { config } = storeConfig()
+
+  // En una sala `google` el pasaporte lleva el token que firma Next: de ahí el server saca el email verificado.
+  const esGoogle = config?.metodo_login === MetodosLogin.Google
+  const { token, status: statusToken } = useTokenGoogle({ idSala, activo: esGoogle && ingresado })
 
   if (!ingresado) {
     return (
@@ -24,5 +33,11 @@ export function SalaEstudianteConexion({ idSala, children }: { idSala: string; c
     )
   }
 
-  return <ConexionEstudianteProvider auth={{ idSala, nombre, dni, clientId }}>{children}</ConexionEstudianteProvider>
+  if (esGoogle && statusToken !== 'listo') return <LoadingSala overlay mensaje="Iniciando sesión..." />
+
+  return (
+    <ConexionEstudianteProvider auth={esGoogle ? { idSala, clientId, token } : { idSala, nombre, dni, clientId }}>
+      {children}
+    </ConexionEstudianteProvider>
+  )
 }

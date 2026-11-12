@@ -247,6 +247,10 @@ wss/contrato/salas.ts         comandos y eventos
   asistencia del anterior.
 - **El nombre de Google no viene del navegador del estudiante.** Viaja dentro del token que firma Next
   (`src/server/token_wss.ts`) y el server lo decodea; el FE no manda nombre propio en las salas `google`.
+- **El login de Google del estudiante pide solo identidad.** A diferencia del login del profe, no solicita
+  permisos sobre Drive (`src/server/login-estudiante.ts`). Con la sesión abierta, el estudiante confirma la
+  cuenta con la que entra ("Usar otra cuenta" cierra la sesión): el navegador puede tener abierta la cuenta
+  de otra persona, por ejemplo la del profe. Si la cuenta no tiene nombre, el email hace de nombre.
 - **Google da identidad verificada, no autorización.** El email verificado impide hacerse pasar por otra
   persona de la lista; no impide que alguien comparta su cuenta.
 - **El DNI no se verifica.** En una sala `dni` + `lista`, quien conozca el DNI de un invitado puede

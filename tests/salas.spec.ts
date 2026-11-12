@@ -14,7 +14,7 @@ test.describe('Sala de encuestas', () => {
 
   test('loguearse como profe y acceder a la sala como estudiante', async ({ setupSala }) => {
     // Armar la sala como profe
-    const { sala, idSala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
+    const { sala, idSala, estudiante } = await setupSala({ name: nombreProfe, email: `el.tes.tito.${Date.now()}@fake.com` })
 
     // La sala abre en la pestaña de Go: vamos a la de encuestas y verificamos que el profe la ve
     await sala.goto(`/salas/${idSala}/encuestas`)
@@ -28,33 +28,68 @@ test.describe('Sala de encuestas', () => {
     await expect(alumnoPage.getByRole('link', { name: 'Encuestas' })).toBeVisible()
   })
 
-  test.skip('crear una sala con DNI y acceder con varios', async ({ setupSala }) => {
-    const { sala, estudiante } = await setupSala(
-      { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { metodo_login: MetodosLogin.DNI }
-    )
+  test('crear una sala con DNI y acceder con varios', async ({ setupSala, browser }) => {
+    const profe = { name: nombreProfe, email: `el.tes.tito.dni.${Date.now()}@fake.com` }
+    const { sala, idSala, estudiante } = await setupSala(profe, { metodo_login: MetodosLogin.DNI })
 
-    const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
-    const alumnoPage2 = await estudiante({ nombre: 'Alumnini Pruebino', dni: '32987655' })
-    const alumnoPage3 = await estudiante({ nombre: 'Alumnini Pruebina', dni: '32987656' })
+    const companeros = [
+      { nombre: 'Alumnini Pruebini', dni: '32987654' },
+      { nombre: 'Alumnini Pruebino', dni: '32987655' },
+      { nombre: 'Alumnini Pruebina', dni: '32987656' },
+    ]
+    const paginas = []
+    for (const companero of companeros) paginas.push(await estudiante(companero))
 
-    await expect(alumnoPage1.getByText('Sala de Encuestas')).toBeVisible()
-    await expect(alumnoPage2.getByText('Sala de Encuestas')).toBeVisible()
-    await expect(alumnoPage3.getByText('Sala de Encuestas')).toBeVisible()
+    for (const pagina of paginas) {
+      await expect(pagina.getByRole('heading', { name: 'Partidas', exact: true })).toBeVisible()
+      await expect(pagina.getByRole('link', { name: 'Encuestas' })).toBeVisible()
+    }
 
-    expect(sala.getByText('Alumnini Pruebini')).toBeVisible()
-    expect(sala.getByText('Alumnini Pruebino')).toBeVisible()
-    expect(sala.getByText('Alumnini Pruebina')).toBeVisible()
+    await sala.goto(`/salas/${idSala}/encuestas`)
+    for (const { nombre } of companeros) await expect(sala.getByText(nombre, { exact: true })).toBeVisible()
+
+    // Un cuarto estudiante escucha lo que le llega por el websocket desde antes de conectarse
+    const recibido: string[] = []
+    const espia = await (await browser.newContext()).newPage()
+    espia.on('websocket', (ws) => {
+      if (ws.url().includes('/_next/')) return
+      ws.on('framereceived', ({ payload }) => recibido.push(payload.toString()))
+    })
+    await espia.goto(`/sala/${idSala}/go/`)
+    await espia.getByPlaceholder('Ingresá tu nombre').fill('Alumnini Espiardo')
+    await espia.getByPlaceholder('Ingresá tu DNI').fill('32987657')
+    await espia.getByRole('button', { name: 'Conectarse' }).click()
+
+    await expect(async () => {
+      const refrescar = espia.getByText('Refrescar')
+      if (await refrescar.isVisible().catch(() => false)) await refrescar.click()
+      await expect(espia.getByText(companeros[0].nombre, { exact: true })).toBeVisible({ timeout: 500 })
+    }).toPass({ timeout: 20_000 })
+
+    const frames = recibido.join('\n')
+    expect(frames).toContain(companeros[0].nombre)
+    for (const { dni } of companeros) expect(frames).not.toContain(dni)
+    expect(frames).not.toContain(profe.email)
   })
 
-  test.skip('crear una sala con DNI y lista de permitidos', async ({ setupSala }) => {
-    const { sala, estudiante } = await setupSala(
-      { name: nombreProfe, email: 'el.tes.tito@fake.com' },
+  test('crear una sala con DNI y lista de permitidos', async ({ setupSala }) => {
+    const { sala, idSala, estudiante } = await setupSala(
+      { name: nombreProfe, email: `el.tes.tito.lista.${Date.now()}@fake.com` },
       { metodo_login: MetodosLogin.DNI, solo_invitados: true }
     )
 
-    const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
+    const dniInvitado = '32987654'
+    await sala.goto(`/salas/${idSala}/encuestas`)
+    await sala.locator('button[title="Configurá el acceso a tu sala"]:visible').click()
+    await sala.getByPlaceholder('Ingresar DNI').fill(dniInvitado)
+    await sala.getByRole('button', { name: 'Agregar', exact: true }).click()
+    await expect(sala.getByText(dniInvitado, { exact: true })).toBeVisible()
 
-    await expect(alumnoPage1.getByText('Sala de Encuestas')).toBeVisible()
+    const invitado = await estudiante({ nombre: 'Alumnini Pruebini', dni: dniInvitado })
+    await expect(invitado.getByRole('heading', { name: 'Partidas', exact: true })).toBeVisible()
+
+    const ajeno = await estudiante({ nombre: 'Alumnini Pruebino', dni: '32987655' })
+    await expect(ajeno.getByText('no está en la lista de participantes permitidos')).toBeVisible()
+    await expect(ajeno.getByRole('heading', { name: 'Partidas', exact: true })).toBeHidden()
   })
 })

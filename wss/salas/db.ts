@@ -10,13 +10,14 @@ import {
 import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession, WssEstudianteSessionSchema } from '../validators/session'
 import { versionado } from '../versionado'
+import { migracionesSala } from './migraciones'
 
 export type { SalaData }
 
 // -- Salas --
 
 // Codecs de los documentos JSON de redis. Para evolucionar un shape ver `docs/versionado-redis.md`.
-export const salaCodec = versionado({ schema: salaData })
+export const salaCodec = versionado({ schema: salaData, migraciones: migracionesSala })
 const estudianteCodec = versionado({ schema: WssEstudianteSessionSchema })
 const eventoAsistenciaCodec = versionado({ schema: eventoAsistenciaSchema })
 const asistenciaDeClaseCodec = versionado({ schema: asistenciaDeClaseSchema })

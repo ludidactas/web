@@ -4,7 +4,8 @@ import { mergeDeep } from 'remeda'
 import { io } from '../io'
 import { rooms } from '../rooms'
 import { SocketProfe } from '../middleware/roles'
-import { MetodosLogin, RolSala } from '../validators/auth'
+import { AccesoSala, RolSala } from '../validators/auth'
+import { claveDeIdentidad, ETIQUETA_IDENTIDAD } from '../invitados/identidad'
 import { ConfigActualizableParcial, configSala, ConfigSala, SalaData } from '../validators/salas'
 import { CONFIG_DEFAULTS } from '../validators/overlay'
 import { WssEstudianteSession, WssServerSession } from '../validators/session'
@@ -42,6 +43,9 @@ export namespace Salas {
       if (!sala) throw new Error(`La sala ${salaId} no existe`)
       return sala
     }
+
+    // Inmutable desde la creación de la sala, así que se puede capturar.
+    const metodoLogin = (await getFromDb()).config.metodo_login
 
     /** Emite `evento` a cada conexión de la sala con el payload que `payloadDe` arma para su sesión. */
     async function emitirASala<K extends EventoComun>(
@@ -115,18 +119,19 @@ export namespace Salas {
     async function sanitizar() {
       const sala = await getFromDb()
 
-      // Solo aplica cuando la sala no autentica solo por nombre y restringe a la lista de invitados
-      if (sala.config.metodo_login === MetodosLogin.Nombre || !sala.config.solo_invitados) return
+      // Solo aplica cuando la sala admite únicamente a la lista
+      if (sala.config.acceso !== AccesoSala.Lista) return
 
-      // Pasado este punto estamos verificando si el userId de cada socket de estudiante está autorizado en la lista de permitidos
-      // (que a su vez se basa en el campo de identidad del metodo_login de la sala, que para DNI es el dni y para Google es el email)
-      const permitidos = await ListaPermitidos.para(salaId).obtener()
+      // El `userId` de cada estudiante es su identidad (nombre, DNI o email según el metodo_login), que se compara con la lista.
+      const lista = ListaPermitidos.para(salaId, metodoLogin)
+      const permitidos = new Set((await lista.obtener()).map((entrada) => claveDeIdentidad(metodoLogin, entrada)))
 
       // Seleccionamos los sockets de estudiantes cuyo userId no esté en la lista de permitidos.
       const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
       const noPermitidos = sockets.filter(
         (s: RemoteSocketConSesion) =>
-          s.data.session.rol === RolSala.Estudiante && !permitidos.includes(s.data.session.userId)
+          s.data.session.rol === RolSala.Estudiante &&
+          !permitidos.has(claveDeIdentidad(metodoLogin, s.data.session.userId))
       )
 
       if (noPermitidos.length === 0) return
@@ -139,9 +144,7 @@ export namespace Salas {
       // Los kickeamos
       noPermitidos.forEach((s) => {
         s.emit('sala:kick', {
-          motivo: `Tu ${
-            sala.config.metodo_login === MetodosLogin.DNI ? 'DNI' : 'email'
-          } ya no está en la lista de participantes permitidos.`,
+          motivo: `Tu ${ETIQUETA_IDENTIDAD[metodoLogin]} ya no está en la lista de participantes permitidos.`,
         })
         s.disconnect()
       })
@@ -219,7 +222,7 @@ export namespace Salas {
       actualizarConfig,
 
       /** Gestión de la lista de usuarios permitidos */
-      listaPermitidos: () => ListaPermitidos.para(salaId),
+      listaPermitidos: () => ListaPermitidos.para(salaId, metodoLogin),
 
       /** Devuelve solo la data serializable (sin funciones) */
       raw: getFromDb,
@@ -241,7 +244,7 @@ export namespace Salas {
     const id = randomUUID().split('-')[0]
     const email = socket.data.session.email
 
-    // Los defaults de creación (metodo_login, solo_invitados) los aplica `configCreacionSala` en el
+    // Los defaults de creación (metodo_login, acceso) los aplica `configCreacionSala` en el
     // caller; acá solo sumamos los campos que genera el server (incluida la config del overlay por defecto).
     const configCompleta: ConfigSala = {
       ...config,

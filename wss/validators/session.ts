@@ -32,7 +32,7 @@ export const WssEstudianteDniSessionSchema = PasaporteEstudianteBase.extend({
 // antes de parsear esta sesión. La identidad es el email.
 export const WssEstudianteGoogleSessionSchema = PasaporteEstudianteBase.extend({
   metodo: z.literal(MetodosLogin.Google),
-  email: z.string().email(),
+  email: z.email(),
   nombre: z.string().min(1),
   avatar: z.string().optional(),
 }).transform((data) => ({ ...data, userId: data.email }))
@@ -55,7 +55,7 @@ export const SESSION_ESTUDIANTE_POR_METODO_LOGIN = {
 export const WssProfeSessionSchema = z
   .object({
     rol: z.literal(RolSala.Profe),
-    email: z.string().email(),
+    email: z.email(),
     nombre: z.string().min(1),
     avatar: z.string().optional(),
   })
@@ -64,7 +64,7 @@ export const WssProfeSessionSchema = z
 export const WssAdminSessionSchema = z
   .object({
     rol: z.literal(RolSala.Admin),
-    email: z.string().email(),
+    email: z.email(),
     nombre: z.string().min(1),
     avatar: z.string().optional(),
   })

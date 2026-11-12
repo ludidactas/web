@@ -45,7 +45,8 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
       agregarPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_agregar', list),
       removerPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_remover', list),
       borrarListaPermitidos: () => cmd.enviar('sala:permitidos_limpiar'),
-      setNombrePermitido: (dni: string, nombre: string) => cmd.enviar('sala:permitidos_nombre', { dni, nombre }),
+      setNombrePermitido: (identidad: string, nombre: string) =>
+        cmd.enviar('sala:permitidos_nombre', { identidad, nombre }),
       // Comando con ack: el caller (botón de exportar) necesita los datos ya para armar el archivo.
       // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
       // atrás (para acotar la exportación a la clase actual).

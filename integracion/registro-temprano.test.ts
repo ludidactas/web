@@ -19,7 +19,7 @@ beforeAll(async () => {
   await guardarSala({
     id: ID_SALA,
     profe: { email: 'registro-temprano@test.com' },
-    config: { nombre: 'x', metodo_login: 'nombre', solo_invitados: false, nombre_profe: 'x', link: 'l', overlay: {} },
+    config: { nombre: 'x', metodo_login: 'nombre', acceso: 'libre', nombre_profe: 'x', link: 'l', overlay: {} },
   } as never)
 })
 

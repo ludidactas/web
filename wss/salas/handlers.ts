@@ -11,9 +11,15 @@ import { io } from '../io'
 import { rooms } from '../rooms'
 import { Sala, Salas } from './app'
 import { registrarApertura, registrarSalidaDelProfe } from '../asistencia/seguimiento'
-import type { PlanillaCompleta } from '../validators/salas'
-import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
+import type { EstudianteDeSala, FilaPlanillaCompleta, PlanillaCompleta } from '../validators/salas'
+import { AccesoSala, MetodosLogin } from '../validators/auth'
+import { claveDeIdentidad, prepararLista } from '../invitados/identidad'
 import { assertPuedeCrearSala } from '../suscripciones/planes'
+
+/** La lista solo existe en las salas `invitados` y `lista`. */
+async function asertUsaLista(sala: Sala) {
+  if ((await sala.config()).acceso === AccesoSala.Libre) throw new Error('Esta sala es libre: no usa lista.')
+}
 
 /** Emite `sala:abierta` con el estado completo de la sala (config, encuestas, estudiantes, permitidos). */
 async function emitirAbierta(socket: SocketProfe, sala: Sala) {
@@ -27,7 +33,7 @@ async function emitirAbierta(socket: SocketProfe, sala: Sala) {
   })
 }
 
-/** Re-emite la lista de invitados (DNIs + nombres provistos) al profe, tras cualquier cambio. */
+/** Re-emite la lista (identidades + nombres provistos) al profe, tras cualquier cambio. */
 async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
   socket.emit('sala:lista_permitidos', await sala.listaPermitidos().obtenerConNombres())
 }
@@ -35,7 +41,8 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
 /**
  * Arma la planilla completa de la sala a partir del estado durable del server: una fila por cada
  * estudiante que pasó por la planilla (conectado o no) y, por cada encuesta, el texto de las
- * opciones que votó. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
+ * opciones que votó. En una sala con lista suma una fila (`asistio: false`) por cada entrada de la lista
+ * que no pasó por la sala. El FE arma el archivo .xlsx a partir de esto (ver `sala:pedir_planilla_completa`).
  *
  * La planilla guarda a todos los que pasaron por la sala (conectados o no) hasta que la sala se borra
  * o vence por retención (`wss/salas/retencion.ts`), así que no hace falta un "Limpiar" para conservar
@@ -44,12 +51,18 @@ async function emitirPermitidos(socket: SocketProfe, sala: Sala) {
  * `[ahora - minutos, ahora]` (según el log de asistencia), para acotar la exportación a la clase actual.
  */
 async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<PlanillaCompleta> {
-  const [estudiantesTotales, nombresProvistos, encuestas, asistencia] = await Promise.all([
+  const config = await sala.config()
+  const [estudiantesTotales, lista, encuestas, asistencia] = await Promise.all([
     sala.listarEstudiantes(),
-    sala.listaPermitidos().nombres(),
+    sala.listaPermitidos().obtenerConNombres(),
     profeSala(sala.id).then((profe) => profe.listarEncuestas()),
     sala.intervalosDeConexion(),
   ])
+  const clave = (identidad: string) => claveDeIdentidad(config.metodo_login, identidad)
+  const usaLista = config.acceso !== AccesoSala.Libre
+  const nombreProvistoPorClave = new Map(
+    Object.entries(lista.nombres).map(([entrada, nombre]) => [clave(entrada), nombre])
+  )
 
   const estudiantes =
     minutos && minutos > 0
@@ -63,7 +76,8 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
 
   const preguntas = encuestas.map((encuesta) => ({ id: encuesta.id, pregunta: encuesta.pregunta }))
 
-  const filas = estudiantes.map((estudiante) => {
+  const filas: FilaPlanillaCompleta[] = estudiantes.map((estudianteRaw) => {
+    const estudiante: EstudianteDeSala = estudianteRaw
     const respuestas: Record<string, string> = {}
     for (const encuesta of encuestas) {
       const elegidas = encuesta.opciones.filter((opcion) => opcion.votantes.includes(estudiante.userId))
@@ -71,11 +85,31 @@ async function armarPlanillaCompleta(sala: Sala, minutos?: number): Promise<Plan
     }
 
     return {
-      ...estudiante,
-      nombreProvisto: nombresProvistos[estudiante.userId],
+      userId: estudiante.userId,
+      nombre: estudiante.nombre,
+      dni: estudiante.dni,
+      email: estudiante.email,
+      nombreProvisto: usaLista ? nombreProvistoPorClave.get(clave(estudiante.userId)) : undefined,
+      asistio: true,
       respuestas,
     }
   })
+
+  // Quienes figuran en la lista y no están en la planilla: no asistieron (o no en la ventana pedida).
+  if (usaLista) {
+    const presentes = new Set(estudiantes.map((estudiante) => clave(estudiante.userId)))
+    for (const entrada of lista.lista) {
+      if (presentes.has(clave(entrada))) continue
+      filas.push({
+        userId: entrada,
+        dni: config.metodo_login === MetodosLogin.DNI ? entrada : undefined,
+        email: config.metodo_login === MetodosLogin.Google ? entrada : undefined,
+        nombreProvisto: lista.nombres[entrada],
+        asistio: false,
+        respuestas: {},
+      })
+    }
+  }
 
   return { preguntas, filas }
 }
@@ -90,7 +124,6 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
   registrar(socket, comandosSalaActivaProfe, {
     'sala:actualizar_config': async (config) => {
       await sala.actualizarConfig(config)
-      await sala.sanitizar()
       await sala.broadcast('sala:config_actualizada', await sala.config())
     },
 
@@ -102,27 +135,29 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
     'sala:pedir_planilla_completa': async (minutos) => armarPlanillaCompleta(sala, minutos),
 
     'sala:permitidos_agregar': async (lista) => {
+      await asertUsaLista(sala)
       await sala.listaPermitidos().agregar(lista)
-      await sala.sanitizar()
       await emitirPermitidos(socket, sala)
     },
 
     'sala:permitidos_remover': async (lista) => {
+      await asertUsaLista(sala)
       await sala.listaPermitidos().remover(lista)
       await sala.sanitizar()
       await emitirPermitidos(socket, sala)
     },
 
     'sala:permitidos_limpiar': async () => {
+      await asertUsaLista(sala)
       await sala.listaPermitidos().limpiar()
+      await sala.sanitizar()
       await emitirPermitidos(socket, sala)
     },
 
-    // Independiente de `permitidos_agregar`: nombra o renombra un DNI ya cargado.
-    'sala:permitidos_nombre': async ({ dni, nombre }) => {
-      const nombreTrimmed = nombre.trim().slice(0, MAX_LEN_NOMBRE)
-      if (!nombreTrimmed) throw new Error('El nombre no puede estar vacío')
-      await sala.listaPermitidos().setNombre(dni, nombreTrimmed)
+    // Independiente de `permitidos_agregar`: nombra o renombra una entrada ya cargada.
+    'sala:permitidos_nombre': async ({ identidad, nombre }) => {
+      await asertUsaLista(sala)
+      await sala.listaPermitidos().setNombre(identidad, nombre)
       await emitirPermitidos(socket, sala)
     },
 
@@ -180,11 +215,16 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
     'sala:crear': async ({ config: { listaPermitidos, nombresPermitidos, ...config } }) => {
       await assertPuedeCrearSala(email)
 
+      // La lista se valida entera antes de crear la sala: una entrada inválida no deja una sala a medias.
+      const usaLista = config.acceso !== AccesoSala.Libre
+      if (!usaLista && (listaPermitidos.length > 0 || Object.keys(nombresPermitidos).length > 0))
+        throw new Error('Una sala libre no usa lista.')
+      const inicial = prepararLista(config.metodo_login, listaPermitidos, nombresPermitidos)
+
       const sala = await Salas.crear(socket, config)
-      if (listaPermitidos.length > 0) await sala.listaPermitidos().agregar(listaPermitidos)
-      await Promise.all(
-        Object.entries(nombresPermitidos).map(([dni, nombre]) => sala.listaPermitidos().setNombre(dni, nombre))
-      )
+      if (inicial.lista.length > 0) await sala.listaPermitidos().agregar(inicial.lista)
+      for (const [entrada, nombre] of Object.entries(inicial.nombres))
+        await sala.listaPermitidos().setNombre(entrada, nombre)
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
@@ -271,16 +311,14 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     await sala.registrarIngreso(socket.data.session)
     await io.to(rooms.profe(sala.id)).emit('sala:estudiante_conectado', socket.data.session)
 
-    // Si está en la lista de invitados (solo aplica a salas por DNI), le avisamos con su nombre
-    // provisto (si el profe le puso uno) para que el FE muestre el aviso y el toast de bienvenida.
+    // Si la sala usa lista y figura en ella, le avisamos con su nombre provisto (si el profe le puso
+    // uno) para que el FE muestre el aviso y el toast de bienvenida.
     const config = await sala.config()
-    if (config.metodo_login === MetodosLogin.DNI) {
+    if (config.acceso !== AccesoSala.Libre) {
       const { userId } = socket.data.session
-      const esInvitado = await sala.listaPermitidos().incluye(userId)
-      if (esInvitado) {
-        const nombres = await sala.listaPermitidos().nombres()
-        socket.emit('sala:invitado', { nombreProvisto: nombres[userId] })
-      }
+      const lista = sala.listaPermitidos()
+      if (await lista.incluye(userId))
+        socket.emit('sala:invitado', { nombreProvisto: await lista.nombreProvistoDe(userId) })
     }
   }
 }

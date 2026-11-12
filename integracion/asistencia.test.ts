@@ -7,7 +7,7 @@ mock.module('../wss/io', () => ({
 import * as db from '../wss/salas/db'
 import { DURACION_MINIMA_CLASE_MS } from '../wss/asistencia/evaluacion'
 import { FormaEvaluacionAsistencia, type CondicionAsistencia } from '../wss/validators/asistencia'
-import { MetodosLogin, RolSala } from '../wss/validators/auth'
+import { AccesoSala, MetodosLogin, RolSala } from '../wss/validators/auth'
 import { WssEstudianteSessionSchema } from '../wss/validators/session'
 import { CONFIG_DEFAULTS } from '../wss/validators/overlay'
 import type { SalaData } from '../wss/validators/salas'
@@ -24,7 +24,7 @@ function salaCon(salaId: string, condicion: CondicionAsistencia | null): SalaDat
       nombre_profe: 'Profe Test',
       link: 'http://localhost/sala',
       metodo_login: MetodosLogin.Nombre,
-      solo_invitados: false,
+      acceso: AccesoSala.Libre,
       condicion_asistencia: condicion,
       overlay: CONFIG_DEFAULTS,
     },

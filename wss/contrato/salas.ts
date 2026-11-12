@@ -34,7 +34,7 @@ export const comandosSalaActivaProfe = {
   'sala:permitidos_agregar': comando(z.array(z.string())),
   'sala:permitidos_remover': comando(z.array(z.string())),
   'sala:permitidos_limpiar': comando(sinPayload),
-  'sala:permitidos_nombre': comando(z.object({ dni: z.string(), nombre: z.string() })),
+  'sala:permitidos_nombre': comando(z.object({ identidad: z.string(), nombre: z.string() })),
   /** Asistencias de clases cerradas que todavía no se escribieron en Drive. */
   'sala:asistencias_pendientes': comandoAck(sinPayload, devuelve<AsistenciaDeClase[]>()),
   'sala:descartar_asistencias_pendientes': comandoAck(sinPayload, devuelve<void>()),

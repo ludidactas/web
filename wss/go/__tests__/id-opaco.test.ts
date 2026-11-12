@@ -43,17 +43,16 @@ describe('idOpaco', () => {
 })
 
 describe('partidaPublica', () => {
-  it('los eventos de partida no serializan los userId reales', () => {
-    const publica = partidaPublica(partida('20333444555', 'profe@escuela.com', '20333444555'))
+  it('emite los userId de la partida como ids públicos, con los nombres intactos', () => {
+    // Los userId de la partida ya son handles por sala (id opaco de estudiantes y del profe): la
+    // vista pública los pasa tal cual; la opacidad la garantiza la sesión (wss/validators/session.ts).
+    const publica = partidaPublica(partida('handle-negro', 'handle-blanco', 'handle-negro'))
 
-    expect(JSON.stringify(publica)).not.toContain('20333444555')
-    expect(JSON.stringify(publica)).not.toContain('profe@escuela.com')
+    expect(publica.negro).toEqual({ id: 'handle-negro', nombre: 'Ana' })
+    expect(publica.blanco).toEqual({ id: 'handle-blanco', nombre: 'Bruno' })
+    expect(publica.ganadorId).toBe('handle-negro')
+    expect(publica.tablero).toEqual(partida('handle-negro', 'handle-blanco').tablero)
     expect(JSON.stringify(publica)).not.toContain('userId')
-
-    expect(publica.negro).toEqual({ id: idOpaco(SALA, '20333444555'), nombre: 'Ana' })
-    expect(publica.blanco).toEqual({ id: idOpaco(SALA, 'profe@escuela.com'), nombre: 'Bruno' })
-    expect(publica.ganadorId).toBe(idOpaco(SALA, '20333444555'))
-    expect(publica.tablero).toEqual(partida('20333444555', 'profe@escuela.com').tablero)
   })
 
   it('sin ganador, `ganadorId` queda null', () => {
@@ -62,35 +61,18 @@ describe('partidaPublica', () => {
 })
 
 describe('contrincantesDesde', () => {
-  it('la lista que se emite a un estudiante no serializa el DNI de compañeros ni el email del profe', async () => {
+  it('emite el handle de cada persona como id, sin exponer otra identidad', async () => {
     const contrincantes = await contrincantesDesde(
       [
-        { userId: '20333444555', nombre: 'Ana', conectado: true },
-        { userId: 'profesor@escuela.com', nombre: 'Profe', conectado: true },
+        { userId: 'handle-ana', nombre: 'Ana', conectado: true },
+        { userId: 'handle-profe', nombre: 'Profe', conectado: true, roomId: 'profe@escuela.com' },
       ],
       SALA,
-      '20333444556',
-      'opacas'
+      'handle-yo'
     )
 
-    const json = JSON.stringify(contrincantes)
-    expect(json).not.toContain('20333444555')
-    expect(json).not.toContain('profesor@escuela.com')
-    expect(json).not.toContain('userId')
-
-    expect(contrincantes[0].id).toBe(idOpaco(SALA, '20333444555'))
-    expect(contrincantes[1].id).toBe(idOpaco(SALA, 'profesor@escuela.com'))
+    expect(contrincantes.map((c) => c.id)).toEqual(['handle-ana', 'handle-profe'])
     expect(contrincantes.map((c) => c.nombre)).toEqual(['Ana', 'Profe'])
-  })
-
-  it('el profe recibe los userId reales, con los que cruza su planilla', async () => {
-    const contrincantes = await contrincantesDesde(
-      [{ userId: '20333444555', nombre: 'Ana', conectado: true }],
-      SALA,
-      'profesor@escuela.com',
-      'reales'
-    )
-
-    expect(contrincantes[0].id).toBe('20333444555')
+    expect(JSON.stringify(contrincantes)).not.toContain('profe@escuela.com')
   })
 })

@@ -98,7 +98,7 @@ describe('escribirAsistencia — merge con planilla existente', () => {
                   {
                     rowData: [
                       row('ID', 'Nombre', labelVieja, '% Asistencia'),
-                      // Filas previas con la identidad real (como quedaron antes del fix): el merge sigue por identidad.
+                      // Filas existentes con la identidad real en la columna ID: el merge sigue por identidad.
                       row('20333444555', 'Juan', 'P', '100%'),
                       row('27888999000', 'Pedro', 'A', '0%'),
                     ],

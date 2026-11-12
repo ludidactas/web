@@ -16,7 +16,7 @@ import { guardarPartida, registrarPartida, setPartidaActiva } from '../db'
 
 const salaId = `test-rechazo-profe-${crypto.randomUUID()}`
 const profeEmail = `profe-${salaId}@test.com`
-const userIdProfe = idOpaco(salaId, profeEmail)
+let userIdProfe = ''
 const userIdEstudiante = `estudiante-${crypto.randomUUID()}`
 
 let httpServer: HttpServer
@@ -78,6 +78,7 @@ async function armarInvitacionDelProfe() {
 }
 
 beforeAll(async () => {
+  userIdProfe = await idOpaco(salaId, profeEmail)
   httpServer = createServer()
   io.attach(httpServer)
   io.on('connection', unirAlRoomDelProfe)

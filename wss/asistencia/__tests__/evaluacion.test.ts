@@ -238,6 +238,7 @@ describe('evaluarClase', () => {
       idSala: 'sala-test',
       metodo: MetodosLogin.Nombre,
       nombre,
+      userId: `handle-${nombre}`,
     })
   }
 

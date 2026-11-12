@@ -37,6 +37,7 @@ function estudiante(salaId: string, nombre: string) {
     idSala: salaId,
     metodo: MetodosLogin.Nombre,
     nombre,
+    userId: `handle-${nombre}`,
   })
 }
 

@@ -1,9 +1,23 @@
-import { describe, expect, it } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { idOpaco } from '../../id-opaco'
+import redis from '../../redis'
+import { borrarSala } from '../../salas/db'
 import { contrincantesDesde, partidaPublica } from '../app'
 import { EstadoPartida, type Partida } from '../../validators/go'
 
 const SALA = 'sala-test-opaco'
+let salaA = ''
+let salaB = ''
+
+beforeEach(() => {
+  salaA = `test-id-opaco-a-${crypto.randomUUID()}`
+  salaB = `test-id-opaco-b-${crypto.randomUUID()}`
+})
+
+afterEach(async () => {
+  await borrarSala(salaA)
+  await borrarSala(salaB)
+})
 
 function partida(negroUserId: string, blancoUserId: string, ganadorUserId: string | null = null): Partida {
   return {
@@ -35,10 +49,29 @@ function partida(negroUserId: string, blancoUserId: string, ganadorUserId: strin
 }
 
 describe('idOpaco', () => {
-  it('es determinístico y por sala: mismo usuario, distinta sala, distinto id', () => {
-    expect(idOpaco('sala-a', '20333444555')).toBe(idOpaco('sala-a', '20333444555'))
-    expect(idOpaco('sala-a', '20333444555')).not.toBe(idOpaco('sala-b', '20333444555'))
-    expect(idOpaco('sala-a', '20333444555')).not.toBe(idOpaco('sala-a', 'profe@escuela.com'))
+  const identidad = '20333444555'
+
+  it('la misma identidad y sala dan el mismo id, también en llamadas simultáneas', async () => {
+    const [uno, dos] = await Promise.all([idOpaco(salaA, identidad), idOpaco(salaA, identidad)])
+    const simultaneos = await Promise.all(Array.from({ length: 10 }, () => idOpaco(salaA, identidad)))
+
+    expect(new Set([uno, dos, ...simultaneos]).size).toBe(1)
+    expect(await redis.hlen(`sala:${salaA}:ids`)).toBe(1)
+  })
+
+  it('la misma identidad en otra sala da otro id', async () => {
+    expect(await idOpaco(salaA, identidad)).not.toBe(await idOpaco(salaB, identidad))
+  })
+
+  it('el id no contiene la identidad', async () => {
+    const id = await idOpaco(salaA, identidad)
+
+    expect(id).not.toContain(identidad)
+    expect(id).toMatch(/^[0-9a-f]{16}$/)
+  })
+
+  it('identidades distintas en la misma sala dan ids distintos', async () => {
+    expect(await idOpaco(salaA, identidad)).not.toBe(await idOpaco(salaA, 'profe@escuela.com'))
   })
 })
 

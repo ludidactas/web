@@ -2,9 +2,9 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import * as XLSX from 'xlsx'
 
-import { MetodosLogin } from '@/wss/validators/auth'
 import type { PlanillaCompleta } from '@/wss/validators/salas'
 import { ConfigSala } from '@/wss/validators/salas'
+import { armarTablaPlanilla } from '@/lib/planilla'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -128,27 +128,10 @@ export function exportarPlanillaConColumnas(
 
 /**
  * Arma y descarga la planilla completa (estado del servidor: incluye desconectados y respuestas por
- * pregunta). Decide las columnas según el método de login de la sala: en sala anónima el id YA es
- * el nombre (columna Nombre redundante); "Nombre provisto" solo aplica a sala por DNI, que es el
- * único método con lista de invitados precargada.
+ * pregunta). Las columnas dependen de la identidad y el acceso de la sala: ver `armarTablaPlanilla`.
  */
 export function exportarPlanillaCompleta(planilla: PlanillaCompleta, config: ConfigSala) {
-  const esSalaAnonima = config.metodo_login === MetodosLogin.Nombre
-  const esSalaDni = config.metodo_login === MetodosLogin.DNI
-
-  const columnas = [
-    { key: 'id', header: 'ID' },
-    ...(esSalaAnonima ? [] : [{ key: 'nombre', header: 'Nombre' }]),
-    ...(esSalaDni ? [{ key: 'nombreProvisto', header: 'Nombre provisto' }] : []),
-    ...planilla.preguntas.map((pregunta) => ({ key: pregunta.id, header: pregunta.pregunta })),
-  ]
-
-  const filas = planilla.filas.map((fila) => ({
-    id: fila.dni || fila.email || fila.userId,
-    nombre: fila.nombre || 'Sin nombre',
-    nombreProvisto: fila.nombreProvisto || '',
-    ...fila.respuestas,
-  }))
+  const { columnas, filas } = armarTablaPlanilla(planilla, config)
 
   const fecha = new Date().toISOString().split('T')[0]
   exportarPlanillaConColumnas(filas, columnas, `planilla_${aSlug(config.nombre ?? config.nombre_profe)}_${fecha}.xlsx`)

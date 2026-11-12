@@ -61,3 +61,17 @@ describe('ListaPermitidos con identidad dni', () => {
     expect(await lista.obtenerConNombres()).toEqual({ lista: [], nombres: {} })
   })
 })
+
+describe('agregarConNombres', () => {
+  it('agrega entradas y nombres en un solo paso, y no guarda nada si una entrada es inválida', async () => {
+    const lista = ListaPermitidos.para(ID, MetodosLogin.DNI)
+    await expect(lista.agregarConNombres([{ identidad: '123', nombre: 'Zoe' }, { identidad: 'x' }])).rejects.toThrow()
+    expect(await lista.obtener()).toEqual([])
+
+    await lista.agregarConNombres([{ identidad: '123', nombre: 'Zoe' }, { identidad: '456' }])
+    expect(await lista.obtenerConNombres()).toEqual({
+      lista: expect.arrayContaining(['123', '456']),
+      nombres: { '123': 'Zoe' },
+    })
+  })
+})

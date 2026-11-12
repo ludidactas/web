@@ -42,7 +42,8 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
 
     acciones: {
       actualizarConfig: (config: ConfigActualizableParcial) => cmd.enviar('sala:actualizar_config', config),
-      agregarPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_agregar', list),
+      agregarPermitidos: (entradas: { identidad: string; nombre?: string }[]) =>
+        cmd.enviar('sala:permitidos_agregar', entradas),
       removerPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_remover', list),
       borrarListaPermitidos: () => cmd.enviar('sala:permitidos_limpiar'),
       setNombrePermitido: (identidad: string, nombre: string) =>

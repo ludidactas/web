@@ -27,12 +27,32 @@ export namespace ListaPermitidos {
       )
     }
 
+    /** Agrega las entradas con su nombre provisto (si lo traen). Valida el lote entero antes de guardar nada. */
+    async function agregarConNombres(entradas: { identidad: string; nombre?: string }[]) {
+      const nombres = Object.fromEntries(entradas.flatMap((e) => (e.nombre ? [[e.identidad, e.nombre]] : [])))
+      const preparado = prepararLista(
+        metodo,
+        entradas.map((e) => e.identidad),
+        nombres
+      )
+      await agregar(preparado.lista)
+      for (const [entrada, nombre] of Object.entries(preparado.nombres)) await setNombre(entrada, nombre)
+    }
+
     async function remover(valores: string[]) {
       const objetivos = new Set(valores.map(clave))
       const aQuitar = (await db.obtenerPermitidosDe(salaId)).filter((entrada) => objetivos.has(clave(entrada)))
       if (aQuitar.length === 0) return
       await db.quitarPermitidosDe(aQuitar, salaId)
       await db.quitarNombresPermitidos(aQuitar, salaId)
+    }
+
+    async function setNombre(identidad: string, nombre: string) {
+      const entrada = await buscar(normalizarIdentidad(metodo, identidad))
+      if (!entrada) throw new Error(`"${identidad}" no está en la lista`)
+      const recortado = nombre.trim().slice(0, MAX_LEN_NOMBRE)
+      if (!recortado) throw new Error('El nombre no puede estar vacío')
+      await db.setNombrePermitido(salaId, entrada, recortado)
     }
 
     async function nombres() {
@@ -50,14 +70,9 @@ export namespace ListaPermitidos {
       /** Si `identidad` figura en la lista. */
       incluye: async (identidad: string) => (await buscar(identidad)) !== undefined,
 
+      agregarConNombres,
       /** Asigna el nombre que el profe le dio a una entrada de la lista. Lanza si la entrada no figura. */
-      setNombre: async (identidad: string, nombre: string) => {
-        const entrada = await buscar(normalizarIdentidad(metodo, identidad))
-        if (!entrada) throw new Error(`"${identidad}" no está en la lista`)
-        const recortado = nombre.trim().slice(0, MAX_LEN_NOMBRE)
-        if (!recortado) throw new Error('El nombre no puede estar vacío')
-        await db.setNombrePermitido(salaId, entrada, recortado)
-      },
+      setNombre,
       /** Mapa entrada → nombre provisto. */
       nombres,
       /** El nombre provisto de `identidad`, o `undefined` si no figura en la lista o no tiene. */

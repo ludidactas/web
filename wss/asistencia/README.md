@@ -6,7 +6,7 @@ nadie tenga que acordarse de tomar lista. Está repartida entre `wss/` (el serve
 
 ## Cómo lo vive el profe
 
-1. Prende el switch "Lista de asistencia" al crear la sala, o después desde su configuración
+1. Prende el switch "Asistencia automática en Drive" al crear la sala, o después desde su configuración
    (`SelectorCondicionDeAsistencia`), y elige la condición: acumular un mínimo de minutos en toda la
    clase (`total_minutos`), estar conectado los últimos N minutos (`ultimos_minutos`), o alcanza con
    haberse conectado en algún momento (`conectado`, sin umbral de minutos). El umbral en minutos va de

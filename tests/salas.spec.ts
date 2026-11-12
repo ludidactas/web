@@ -1,5 +1,5 @@
 import { expect, test } from './ld-test'
-import { MetodosLogin } from '@/wss/validators/auth'
+import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
 
 test.describe('Sala de encuestas', () => {
   test('se puede llegar a la sala desde la portada', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Sala de encuestas', () => {
   test.skip('crear una sala con DNI y lista de permitidos', async ({ setupSala }) => {
     const { sala, estudiante } = await setupSala(
       { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { metodo_login: MetodosLogin.DNI, solo_invitados: true }
+      { metodo_login: MetodosLogin.DNI, acceso: AccesoSala.Lista }
     )
 
     const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })

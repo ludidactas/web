@@ -1,5 +1,4 @@
-import { PropsWithChildren, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { PropsWithChildren } from 'react'
 import {
   Dialog,
   DialogClose,
@@ -18,25 +17,50 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer'
-import { useIsMobile } from '@/components/hooks/use-mobile'
 import { SwitchCard } from '@/components/ui/switch-card'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
-import { MetodosLogin } from '@/wss/validators/auth'
+import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
 import { cn } from '@/lib/utils'
-import { ListaInvitadosForm, ListaPermitidosForm } from './lista-invitados-form'
+import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '../opciones-sala'
+import { SeccionLista } from './seccion-lista'
 import { SelectorCondicionDeAsistencia } from './condicion-asistencia'
 
+/** La identidad y el acceso de la sala: se eligen al crearla y no se cambian. */
+function EleccionesFijas({ metodo, acceso }: { metodo: MetodosLogin; acceso: AccesoSala }) {
+  const filas = [
+    { etiqueta: 'Identidad', opcion: OPCIONES_IDENTIDAD[metodo] },
+    { etiqueta: 'Acceso', opcion: OPCIONES_ACCESO[acceso] },
+  ]
+  return (
+    <div className={cn('flex flex-col gap-2 rounded-lg border bg-slate-50 p-3')}>
+      {filas.map(({ etiqueta, opcion: { titulo, descripcion, icono: Icono } }) => (
+        <div key={etiqueta} className={cn('flex items-start gap-3')}>
+          <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-500 text-white')}>
+            <Icono className={cn('h-4 w-4')} aria-hidden />
+          </span>
+          <div className={cn('flex flex-col')}>
+            <span className={cn('text-sm font-semibold leading-tight')}>
+              {etiqueta}: {titulo}
+            </span>
+            <span className={cn('text-xs text-muted-foreground')}>{descripcion}</span>
+          </div>
+        </div>
+      ))}
+      <p className={cn('text-xs text-muted-foreground')}>
+        La identidad y el acceso se eligen al crear la sala y no se pueden cambiar.
+      </p>
+    </div>
+  )
+}
+
 export default function PanelConfigSala({ children }: PropsWithChildren) {
-  const isMobile = useIsMobile()
-  const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos, setNombrePermitido } =
-    useConexionProfe()
+  const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos } = useConexionProfe()
   const { config } = storeConfig()
   const { lista: listaPermitidos, nombres } = storePermitidos()
-  const [listaActiva, setListaActiva] = useState(listaPermitidos.length > 0 || !!config?.solo_invitados)
 
-  const pideDni = config?.metodo_login === MetodosLogin.DNI
+  const acceso = config?.acceso ?? AccesoSala.Libre
 
   return (
     <Dialog>
@@ -45,70 +69,20 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
         <DialogHeader>
           <DialogTitle className={cn('text-center leading-6')}>Configuración de la sala</DialogTitle>
         </DialogHeader>
-        <div className={cn('flex flex-col gap-2 w-full')}>
-          <AnimatePresence initial={false}>
-            {pideDni && (
-              <motion.div
-                key="lista-invitados-section"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                style={{ overflow: 'hidden', width: '100%' }}
-                className={cn('flex flex-col gap-2')}
-              >
-                <SwitchCard
-                  title="Lista de Invitadxs"
-                  description="Podés cargar tu propia lista de invitadxs"
-                  checked={listaActiva}
-                  onCheckedChange={() => setListaActiva((v) => !v)}
-                />
+        <div className={cn('flex flex-col gap-4 w-full')}>
+          {config && <EleccionesFijas metodo={config.metodo_login} acceso={acceso} />}
 
-                <AnimatePresence initial={false}>
-                  {listaActiva && (
-                    <motion.div
-                      key="lista-detalle"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      style={{ overflow: 'hidden', width: '100%' }}
-                      className={cn('flex flex-col gap-2 pt-2')}
-                    >
-                      <SwitchCard
-                        title="Permitir ingreso sólo a invitadxs"
-                        description="Sólo quienes están en tu lista de invitadxs pueden ingresar a la sala"
-                        checked={config?.solo_invitados}
-                        onCheckedChange={() => actualizarConfig({ solo_invitados: !config?.solo_invitados })}
-                      />
-
-                      <div className={cn('flex border rounded flex-col items-center gap-2 max-h-72 mt-2')}>
-                        <h1 className={cn('font-bold my-2')}>Lista de Invitadxs</h1>
-                        <div className={cn('flex flex-col sm:flex-row w-full')}>
-                          <ListaInvitadosForm
-                            onAgregar={(dni, nombre) => {
-                              agregarPermitidos([dni])
-                              if (nombre) setNombrePermitido(dni, nombre)
-                            }}
-                          />
-                          <ListaPermitidosForm
-                            lista={listaPermitidos}
-                            nombres={nombres}
-                            onRemover={(dni) => removerPermitidos([dni])}
-                            onBorrar={borrarListaPermitidos}
-                            onAgregarCSV={(nuevos) => {
-                              agregarPermitidos(nuevos.map((n) => n.dni))
-                              nuevos.forEach((n) => n.nombre && setNombrePermitido(n.dni, n.nombre))
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {config && acceso !== AccesoSala.Libre && (
+            <SeccionLista
+              metodo={config.metodo_login}
+              acceso={acceso}
+              lista={listaPermitidos}
+              nombres={nombres}
+              onAgregar={agregarPermitidos}
+              onRemover={(entrada) => removerPermitidos([entrada])}
+              onBorrar={borrarListaPermitidos}
+            />
+          )}
 
           <SelectorCondicionDeAsistencia
             condicion={config?.condicion_asistencia ?? null}

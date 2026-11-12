@@ -69,3 +69,14 @@ export function prepararLista(
 
   return { lista: [...porClave.values()], nombres: nombresPorEntrada }
 }
+
+/** El nombre provisto de `userId` en un mapa entrada → nombre (como el de `ListaPermitidosConNombres`), o `undefined`. */
+export function buscarNombreProvisto(
+  nombres: Record<string, string>,
+  metodo: MetodosLogin,
+  userId: string
+): string | undefined {
+  const objetivo = claveDeIdentidad(metodo, userId)
+  const entrada = Object.keys(nombres).find((e) => claveDeIdentidad(metodo, e) === objetivo)
+  return entrada === undefined ? undefined : nombres[entrada]
+}

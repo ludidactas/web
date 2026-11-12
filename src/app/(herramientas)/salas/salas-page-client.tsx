@@ -18,10 +18,13 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { SwitchCard } from '@/components/ui/switch-card'
-import { MetodosLogin } from '@/wss/validators/auth'
+import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
+import { claveDeIdentidad } from '@/wss/invitados/identidad'
+import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
+import { TarjetasEleccion } from '@/components/salas/tarjetas-eleccion'
 import type { CondicionAsistencia } from '@/wss/validators/asistencia'
-import { ListaInvitadosForm, ListaPermitidosForm } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import type { EntradaLista } from '@/components/salas/encuestas-profe/lista-invitados-form'
+import { SeccionLista } from '@/components/salas/encuestas-profe/seccion-lista'
 import { SelectorCondicionDeAsistencia } from '@/components/salas/encuestas-profe/condicion-asistencia'
 import {
   Dialog,
@@ -50,8 +53,7 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 type FormState = {
   nombre: string
   metodoLogin: MetodosLogin
-  listaActiva: boolean
-  soloInvitados: boolean
+  acceso: AccesoSala
   lista: string[]
   nombres: Record<string, string>
   condicionAsistencia: CondicionAsistencia | null
@@ -60,8 +62,7 @@ type FormState = {
 const FORM_INICIAL: FormState = {
   nombre: '',
   metodoLogin: MetodosLogin.Nombre,
-  listaActiva: false,
-  soloInvitados: false,
+  acceso: AccesoSala.Libre,
   lista: [],
   nombres: {},
   condicionAsistencia: null,
@@ -79,7 +80,7 @@ function FormCrearSala() {
   const [creando, startCreacion] = useTransition()
 
   const cargandoConexion = statusesDeCarga.includes(estado)
-  const pideDni = form.metodoLogin === MetodosLogin.DNI
+  const usaLista = form.acceso !== AccesoSala.Libre
   const nombreValido = form.nombre.trim().length > 0
   const razonDisabled = cargandoConexion
     ? 'Conectando...'
@@ -98,7 +99,7 @@ function FormCrearSala() {
           crearSala({
             config: {
               metodo_login: form.metodoLogin,
-              solo_invitados: form.soloInvitados,
+              acceso: form.acceso,
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
               nombresPermitidos: form.nombres,
@@ -107,7 +108,7 @@ function FormCrearSala() {
           }),
           delay(CARGA_MINIMA_MS),
         ])
-        track({ event: 'sala_creada', metodo_login: form.metodoLogin, solo_invitados: !!form.soloInvitados })
+        track({ event: 'sala_creada', metodo_login: form.metodoLogin, acceso: form.acceso })
         toast.success('Sala creada con éxito')
         router.push(`/salas/${idSala}/go`)
       } catch (e) {
@@ -116,17 +117,23 @@ function FormCrearSala() {
     })
   }
 
-  const agregarALista = (dni: string, nombre?: string) => {
-    if (form.lista.includes(dni)) return
-    setForm((f) => ({
-      ...f,
-      lista: [...f.lista, dni],
-      nombres: nombre ? { ...f.nombres, [dni]: nombre } : f.nombres,
-    }))
-  }
+  /** Las entradas ya vienen normalizadas (`entradaValida`); se unifican por clave y el nombre más nuevo gana. */
+  const agregarALista = (entradas: EntradaLista[]) =>
+    setForm((f) => {
+      const lista = [...f.lista]
+      const nombres = { ...f.nombres }
+      for (const { identidad, nombre } of entradas) {
+        const clave = claveDeIdentidad(f.metodoLogin, identidad)
+        const existente = lista.find((e) => claveDeIdentidad(f.metodoLogin, e) === clave)
+        const entrada = existente ?? identidad
+        if (!existente) lista.push(entrada)
+        if (nombre) nombres[entrada] = nombre
+      }
+      return { ...f, lista, nombres }
+    })
 
   return (
-    <div className={cn('flex flex-col justify-center gap-2 sm:my-4 w-full px-4 sm:px-20')}>
+    <div className={cn('flex flex-col justify-center gap-5 sm:my-4 w-full px-4 sm:px-20')}>
       <h2 className={cn('text-xl font-bold text-center leading-6 my-4')}>Configuración de la sala</h2>
       <div className={cn('flex items-center justify-between gap-4')}>
         <Input
@@ -138,74 +145,50 @@ function FormCrearSala() {
         />
       </div>
 
-      <SwitchCard
-        title="DNI obligatorio"
-        description="Los participantes tienen que ingresar DNI para participar"
-        checked={pideDni}
-        onCheckedChange={() =>
-          setForm((f) => ({
-            ...f,
-            metodoLogin: pideDni ? MetodosLogin.Nombre : MetodosLogin.DNI,
-            listaActiva: false,
-            soloInvitados: false,
-            lista: [],
-            nombres: {},
-          }))
+      <TarjetasEleccion
+        legend="¿Cómo se identifican las personas?"
+        valor={form.metodoLogin}
+        opciones={OPCIONES_IDENTIDAD}
+        onChange={(metodoLogin) => setForm((f) => ({ ...f, metodoLogin, lista: [], nombres: {} }))}
+      />
+
+      <TarjetasEleccion
+        legend="¿A quién admite la sala?"
+        valor={form.acceso}
+        opciones={OPCIONES_ACCESO}
+        onChange={(acceso) =>
+          setForm((f) => ({ ...f, acceso, ...(acceso === AccesoSala.Libre && { lista: [], nombres: {} }) }))
         }
       />
 
+      <p className={cn('text-xs text-muted-foreground text-center')}>
+        La identidad y el acceso no se pueden cambiar después de crear la sala.
+      </p>
+
       <AnimatePresence initial={false}>
-        {pideDni && (
+        {usaLista && (
           <motion.div
-            key="lista-invitados-section"
+            key="lista-section"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             style={{ overflow: 'hidden', width: '100%' }}
-            className={cn('flex flex-col gap-2')}
           >
-            <SwitchCard
-              title="Lista de Invitadxs"
-              description="Podés cargar tu propia lista de invitadxs"
-              checked={form.listaActiva}
-              onCheckedChange={() => setForm((f) => ({ ...f, listaActiva: !f.listaActiva }))}
+            <SeccionLista
+              metodo={form.metodoLogin}
+              acceso={form.acceso as Exclude<AccesoSala, AccesoSala.Libre>}
+              lista={form.lista}
+              nombres={form.nombres}
+              onAgregar={agregarALista}
+              onRemover={(entrada) =>
+                setForm((f) => {
+                  const { [entrada]: _quitado, ...nombres } = f.nombres
+                  return { ...f, lista: f.lista.filter((e) => e !== entrada), nombres }
+                })
+              }
+              onBorrar={() => setForm((f) => ({ ...f, lista: [], nombres: {} }))}
             />
-
-            <AnimatePresence initial={false}>
-              {form.listaActiva && (
-                <motion.div
-                  key="lista-detalle"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  style={{ overflow: 'hidden', width: '100%' }}
-                  className={cn('flex flex-col gap-2 pt-2')}
-                >
-                  <SwitchCard
-                    title="Permitir ingreso sólo a invitadxs"
-                    description="Sólo quienes están en tu lista de invitadxs pueden ingresar a la sala"
-                    checked={form.soloInvitados}
-                    onCheckedChange={() => setForm((f) => ({ ...f, soloInvitados: !f.soloInvitados }))}
-                  />
-
-                  <div className="flex border rounded flex-col items-center gap-2 max-h-72 mt-2">
-                    <h1 className="font-bold my-2">Lista de Invitadxs</h1>
-                    <div className="flex flex-col gap-2 sm:flex-row w-full p-2 ">
-                      <ListaInvitadosForm onAgregar={agregarALista} />
-                      <ListaPermitidosForm
-                        lista={form.lista}
-                        nombres={form.nombres}
-                        onRemover={(dni) => setForm((f) => ({ ...f, lista: f.lista.filter((d) => d !== dni) }))}
-                        onBorrar={() => setForm((f) => ({ ...f, lista: [], nombres: {} }))}
-                        onAgregarCSV={(nuevos) => nuevos.forEach(({ dni, nombre }) => agregarALista(dni, nombre))}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

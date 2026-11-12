@@ -134,9 +134,9 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
     // Datos crudos para exportar a Excel (el archivo se arma en el cliente); ver `armarPlanillaCompleta`.
     'sala:pedir_planilla_completa': async (minutos) => armarPlanillaCompleta(sala, minutos),
 
-    'sala:permitidos_agregar': async (lista) => {
+    'sala:permitidos_agregar': async (entradas) => {
       await asertUsaLista(sala)
-      await sala.listaPermitidos().agregar(lista)
+      await sala.listaPermitidos().agregarConNombres(entradas)
       await emitirPermitidos(socket, sala)
     },
 
@@ -222,9 +222,9 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
       const inicial = prepararLista(config.metodo_login, listaPermitidos, nombresPermitidos)
 
       const sala = await Salas.crear(socket, config)
-      if (inicial.lista.length > 0) await sala.listaPermitidos().agregar(inicial.lista)
-      for (const [entrada, nombre] of Object.entries(inicial.nombres))
-        await sala.listaPermitidos().setNombre(entrada, nombre)
+      await sala
+        .listaPermitidos()
+        .agregarConNombres(inicial.lista.map((identidad) => ({ identidad, nombre: inicial.nombres[identidad] })))
 
       console.log(`✅ Sala creada por ${email}: ${sala.id}`)
       await emitirLista()
@@ -269,6 +269,18 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
   return emitirLista
 }
 
+/**
+ * Si la sala usa lista y el estudiante figura en ella, le avisa (`sala:invitado`) con su nombre provisto, si
+ * el profe le puso uno, para que el FE muestre el aviso y el toast de bienvenida.
+ */
+async function avisarSiEsInvitado(socket: SocketEstudiante, sala: Sala, acceso: AccesoSala) {
+  if (acceso === AccesoSala.Libre) return
+  const { userId } = socket.data.session
+  const lista = sala.listaPermitidos()
+  if (await lista.incluye(userId))
+    socket.emit('sala:invitado', { nombreProvisto: await lista.nombreProvistoDe(userId) })
+}
+
 /** Registra los comandos del estudiante y devuelve su init (registro en la planilla, aviso al profe). */
 export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: string) => {
   // Rooms -- la última de estas tres es su 'personal room' para mensajes dirigidos a este cliente en particular (ej: kickeo, cambios que lo afectan, etc.)
@@ -295,10 +307,14 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
       await io.to(rooms.profe(sala.id)).emit('sala:estudiante_desconectado', { id: userId })
   })
 
-  // El cliente pide la config explícitamente después de montar sus listeners (evita race condition)
+  // El cliente pide la config explícitamente después de montar sus listeners (evita race condition).
+  // `sala:invitado` va en la misma respuesta: emitido al conectar, llegaría antes de que el cliente escuche.
   registrar(socket, comandosSalaConfig, {
     'sala:pedir_config': async () => {
-      socket.emit('sala:config_actualizada', await (await salaPendiente).config())
+      const sala = await salaPendiente
+      const config = await sala.config()
+      socket.emit('sala:config_actualizada', config)
+      await avisarSiEsInvitado(socket, sala, config.acceso)
     },
   })
 
@@ -310,16 +326,6 @@ export const handlersSalaEstudiante = async (socket: SocketEstudiante, idSala: s
     // ...lo registramos en la planilla de la sala (persistiendo su sesión) y notificamos al profe.
     await sala.registrarIngreso(socket.data.session)
     await io.to(rooms.profe(sala.id)).emit('sala:estudiante_conectado', socket.data.session)
-
-    // Si la sala usa lista y figura en ella, le avisamos con su nombre provisto (si el profe le puso
-    // uno) para que el FE muestre el aviso y el toast de bienvenida.
-    const config = await sala.config()
-    if (config.acceso !== AccesoSala.Libre) {
-      const { userId } = socket.data.session
-      const lista = sala.listaPermitidos()
-      if (await lista.incluye(userId))
-        socket.emit('sala:invitado', { nombreProvisto: await lista.nombreProvistoDe(userId) })
-    }
   }
 }
 

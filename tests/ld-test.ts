@@ -1,5 +1,6 @@
 import { ConfigCreacionSala, configCreacionSala, ConfigSala } from '@/wss/validators/salas'
 import { MetodosLogin } from '@/wss/validators/auth'
+import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
 import type { Browser, Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
 import { loginFake } from './auth'
@@ -59,12 +60,11 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   await profePage.getByRole('button', { name: 'Crear sala' }).click()
   await profePage.getByPlaceholder('Ingresa el nombre de la sala').fill(`Sala de prueba ${Date.now()}`)
 
-  if (config.metodo_login === MetodosLogin.DNI) {
-    await profePage.getByText('DNI obligatorio').click()
-    if (config.solo_invitados) {
-      await profePage.getByText('Lista de Invitadxs', { exact: true }).click()
-      await profePage.getByText('Permitir ingreso sólo a invitadxs').click()
-    }
+  if (config.metodo_login) {
+    await profePage.getByRole('radio', { name: new RegExp(OPCIONES_IDENTIDAD[config.metodo_login].titulo) }).click()
+  }
+  if (config.acceso) {
+    await profePage.getByRole('radio', { name: new RegExp(OPCIONES_ACCESO[config.acceso].titulo) }).click()
   }
 
   await profePage.getByRole('button', { name: 'Crear e ingresar', exact: true }).click()

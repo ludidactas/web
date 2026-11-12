@@ -182,7 +182,7 @@ Contrato completo en `wss/contrato/salas.ts`.
 `sala:renombrar`, `sala:eliminar` (ack), `sala:abrir`.
 
 **Sala abierta del profe**: `sala:actualizar_config`, `sala:listar_estudiantes`,
-`sala:pedir_planilla_completa` (ack), `sala:permitidos_agregar`, `sala:permitidos_remover`,
+`sala:pedir_planilla_completa` (ack), `sala:permitidos_agregar` (entradas con su nombre provisto opcional, en un solo comando), `sala:permitidos_remover`,
 `sala:permitidos_limpiar`, `sala:permitidos_nombre`, `sala:liberar_nombre`,
 `sala:asistencias_pendientes` (ack),
 `sala:descartar_asistencias_pendientes` (ack).
@@ -252,7 +252,8 @@ wss/contrato/salas.ts         comandos y eventos
 - **El DNI no se verifica.** En una sala `dni` + `lista`, quien conozca el DNI de un invitado puede
   ingresar como él. Es un límite aceptado: la identidad por DNI confía en quien lo escribe. Para una
   garantía más fuerte, la identidad es `google`.
-- **`sala:invitado` llega al conectarse.** Quien ya estaba conectado cuando el profe lo sumó a la lista
+- **`sala:invitado` llega al conectarse.** Viaja junto con la respuesta a `sala:pedir_config`, que el cliente pide
+  recién cuando ya montó sus listeners; emitido durante el login, llegaría antes de que alguien escuche. Quien ya estaba conectado cuando el profe lo sumó a la lista
   recibe el aviso al reconectarse; la planilla, en cambio, muestra su nombre provisto de inmediato porque
   lee la lista vigente al exportar.
 - **La planilla guarda sesiones, no un estado de presencia.** Un estudiante con el documento ilegible se

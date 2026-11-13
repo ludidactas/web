@@ -1,23 +1,29 @@
 'use client'
 
 import { Boton } from '@/components/custom/ld-boton-svg'
-import { Outlined } from '@/components/fx/filtros'
+import { LdSvg } from '@/components/custom/ld-svg'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { imagenPartida } from '@/lib/go/imagen-partida'
-import { infoExport, nombreImagenPartida } from '@/lib/go/info-export'
-import { BLANCO, calcularPuntaje, NEGRO } from '@/lib/go/motor'
-import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { imagenPartida, ImagenPersonal } from '@/lib/go/imagen-partida'
+import { infoExport, nombreImagenPartida, TEXTO_MOTIVO_FIN } from '@/lib/go/info-export'
+import { BLANCO, calcularPuntaje, Color, NEGRO } from '@/lib/go/motor'
+import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import BlancoGana from '@/svg/dist/ilustraciones/BlancoGana.svg'
+import BlancoPierde from '@/svg/dist/ilustraciones/BlancoPierde.svg'
+import NegroGana from '@/svg/dist/ilustraciones/NegroGana.svg'
+import NegroPierde from '@/svg/dist/ilustraciones/NegroPierde.svg'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { toast } from 'sonner'
 import { BotonesImagen } from './botones-imagen'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
 import { PartidaGo } from './partida-go'
-import { ReglasGo } from './reglas-go'
+import { HudPartida } from './hud-partida'
 import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { useSonidoJugada } from './use-sonido-jugada'
 
@@ -356,45 +362,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
 
   return (
     <div className="flex flex-col gap-4 items-center w-full px-2">
-      <div className="flex items-center gap-4 text-sm">
-        <span className="inline-flex items-center font-bold text-md gap-1" style={{ color: RELLENO[NEGRO] }}>
-          <PiedraIcono color={NEGRO} className="h-3 w-3" /> {partida.negro.nombre}
-        </span>
-        <span className="inline-flex text-white items-center drop-shadow-2xl gap-1">
-          <Outlined radius={1.1} outlineColor="zinc" className="inline-flex tracking-wider items-center gap-1">
-            <PiedraIcono color={BLANCO} className="h-3 w-3" /> {partida.blanco.nombre}
-          </Outlined>
-        </span>
-      </div>
-
-      <ReglasGo />
-
-      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
-
-      {partida.estado === 'jugando' && (
-        <p
-          className="flex items-center gap-1 text-md font-semibold"
-          style={{
-            color: RELLENO[partida.turno],
-          }}
-        >
-          {partida.turno === BLANCO ? (
-            <Outlined
-              radius={1.1}
-              outlineColor="black"
-              className="flex items-center gap-2 drop-shadow-2xl tracking-wider"
-            >
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              Juega blanco
-            </Outlined>
-          ) : (
-            <>
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              Juega negro
-            </>
-          )}
-        </p>
-      )}
+      <HudPartida partida={partida} final={partida.estado === 'terminada'} />
 
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
@@ -410,7 +378,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           deshabilitado
         />
 
-        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        {partida.estado !== 'terminada' && (
+          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        )}
       </div>
 
       <button
@@ -424,46 +394,19 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
   )
 }
 
-/** Encabezado de resultado ("Ganó X" / "Empate") una vez que la partida terminó. */
-function BannerResultado({
-  partida,
-}: {
-  partida: Pick<Partida, 'ganadorUserId' | 'negro' | 'blanco' | 'resultado' | 'motivoFin'>
-}) {
-  const colorGanador =
-    partida.ganadorUserId === null ? null : partida.ganadorUserId === partida.negro.userId ? NEGRO : BLANCO
-
-  const titulo = colorGanador === null ? 'Empate' : `Ganó ${colorGanador === NEGRO ? 'Negro' : 'Blanco'}`
-  const h2 = (
-    <h2
-      className="text-xl sm:text-2xl font-bold"
-      style={colorGanador !== null ? { color: RELLENO[colorGanador] } : undefined}
-    >
-      {titulo}
-    </h2>
-  )
-
+/** Puntaje final (si hubo conteo) y motivo de fin cuando no fue por conteo. */
+function DetalleFin({ partida }: { partida: Pick<Partida, 'resultado' | 'motivoFin'> }) {
   return (
-    <div className="flex flex-col gap-1 items-center text-center">
-      <div className="flex gap-2 items-center">
-        <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'} />
-        {colorGanador === BLANCO ? (
-          <Outlined radius={1.5} outlineColor="negro">
-            {h2}
-          </Outlined>
-        ) : (
-          h2
-        )}
-        <Icon className="w-8 h-8" icon={'noto:party-popper'} />
-      </div>
+    <>
       {partida.resultado && (
         <p className="text-slate-600 text-sm">
           Negro {partida.resultado.negro} — Blanco {partida.resultado.blanco}
         </p>
       )}
-      {partida.motivoFin === 'abandono' && <p className="text-slate-500 text-xs">Terminó por abandono</p>}
-      {partida.motivoFin === 'captura' && <p className="text-slate-500 text-xs">Hizo la primera captura</p>}
-    </div>
+      {partida.motivoFin && partida.motivoFin !== 'conteo' && (
+        <p className="text-slate-500 text-xs">{TEXTO_MOTIVO_FIN[partida.motivoFin]}</p>
+      )}
+    </>
   )
 }
 
@@ -486,6 +429,64 @@ function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: nu
   )
 }
 
+const ILUSTRACION_RESULTADO = {
+  [NEGRO]: { gana: NegroGana, pierde: NegroPierde },
+  [BLANCO]: { gana: BlancoGana, pierde: BlancoPierde },
+}
+
+const ilustracionResultado = (miColor: Color, gane: boolean) => ILUSTRACION_RESULTADO[miColor][gane ? 'gana' : 'pierde']
+
+/** Ventana que aparece al terminar mi partida, con la ilustración de mi color ganando o perdiendo.
+ * Con empate no aparece: el HUD final ya lo cuenta.
+ *
+ * No modal, así el resto de la página sigue clickeable mientras está abierta; se cierra solo con
+ * "Seguir" (ni click afuera ni Escape). Radix no dibuja overlay en modo no modal: el fondo oscuro
+ * sobre el área del juego lo portalea este componente al `container`. */
+function DialogResultado({
+  abierto,
+  onCerrar,
+  partida,
+  miColor,
+  gane,
+  container,
+}: {
+  abierto: boolean
+  onCerrar: () => void
+  partida: Partida
+  miColor: Color
+  gane: boolean
+  container: HTMLElement | null
+}) {
+  return (
+    <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()} modal={false}>
+      {abierto &&
+        container &&
+        createPortal(<div className="fixed inset-0 z-50 bg-black/80 rounded-xl animate-in fade-in-0" />, container)}
+      <DialogContent
+        container={container}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        className="flex flex-col items-center gap-2 rounded-xl max-w-sm"
+      >
+        <LdSvg
+          className="w-56 h-auto drop-shadow-xl"
+          SvgComponent={ilustracionResultado(miColor, gane)}
+        />
+        <DialogHeader>
+          <DialogTitle className={cn('text-center text-3xl', gane ? 'text-emerald-600' : 'text-slate-600')}>
+            {gane ? '¡Ganaste!' : 'Perdiste'}
+          </DialogTitle>
+        </DialogHeader>
+        <DetalleFin partida={partida} />
+        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        <DialogClose asChild>
+          <button className="bg-indigo-500 text-white px-6 py-2 mt-2 rounded-full hover:scale-105">Seguir</button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function PartidaEnCurso({
   partida,
   userId,
@@ -501,8 +502,13 @@ function PartidaEnCurso({
 
   const soyNegro = partida.negro.userId === userId
   const miColor = soyNegro ? NEGRO : BLANCO
-  const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
+
+  // Al terminar con ganador aparece la ventana de resultado; el HUD pasa a su versión final recién
+  // cuando se cierra. Con empate no hay ventana y el HUD final aparece directo.
+  const [resultadoVisto, setResultadoVisto] = useState(false)
+  const hayGanador = partida.estado === 'terminada' && partida.ganadorUserId !== null
+  const hudFinal = partida.estado === 'terminada' && (!hayGanador || resultadoVisto)
 
   // Contenedor del área del juego: se lo pasamos como `container` a los dialogs de esta partida para
   // que el overlay quede acotado a esta zona en vez de tapar toda la pantalla (el div de abajo tiene
@@ -530,10 +536,30 @@ function PartidaEnCurso({
       .finally(() => setConfirmando(false))
   }
 
+  // Con empate no hay ilustración que elegir: la imagen sale sin encabezado personal.
+  const personal: ImagenPersonal | undefined =
+    partida.ganadorUserId === null
+      ? undefined
+      : {
+          ilustracion: (px) => {
+            const Ilustracion = ilustracionResultado(miColor, partida.ganadorUserId === userId)
+            return renderToStaticMarkup(<Ilustracion width={px} height={px} />)
+          },
+          capturasNegras: partida.capturasNegras,
+          capturasBlancas: partida.capturasBlancas,
+        }
+
   async function descargarImagen() {
     try {
       const info = infoExport(partida)
-      const blob = await imagenPartida(partida.tablero, partida.tamaño, partida.removidas, info, partida.creadaEn)
+      const blob = await imagenPartida(
+        partida.tablero,
+        partida.tamaño,
+        partida.removidas,
+        info,
+        partida.creadaEn,
+        personal
+      )
       descargarBlob(blob, nombreImagenPartida(info, partida.creadaEn))
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo descargar la imagen')
@@ -548,7 +574,8 @@ function PartidaEnCurso({
         partida.tamaño,
         partida.removidas,
         infoExport(partida),
-        partida.creadaEn
+        partida.creadaEn,
+        personal
       )
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': imagen })])
     } catch {
@@ -583,43 +610,18 @@ function PartidaEnCurso({
   return (
     <div
       ref={setContenedorJuego}
-      className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl"
+      className="relative [contain:layout] w-full flex flex-col gap-4 items-center p-2 rounded-2xl"
     >
-      <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span className="font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5">
-          {partida.modo === 'atari' && <span className="text-indigo-600">Atari Go ·</span>}
-          Tu color:
-          <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
-          <span className="font-bold ">{soyNegro ? 'Negro' : 'Blanco'}</span>
-        </span>
-        <span className="font-bold  p-2 rounded-xl">
-          Contrincante: <span className="font-bold">{contrincante.nombre}</span>
-        </span>
-        <ReglasGo />
-      </div>
+      <HudPartida partida={partida} miColor={miColor} final={hudFinal} />
 
-      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
-
-      {partida.estado === 'jugando' && (
-        <p
-          className={cn('flex items-center gap-1 text-md font-semibold', esMiTurno && 'animate-pulse')}
-          style={{
-            color: RELLENO[partida.turno],
-          }}
-        >
-          {partida.turno === BLANCO ? (
-            <Outlined radius={1.5} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wider">
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              {esMiTurno ? 'Tu turno' : 'Juega blanco '}
-            </Outlined>
-          ) : (
-            <>
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              {esMiTurno ? 'Tu turno' : 'Juega negro'}
-            </>
-          )}
-        </p>
-      )}
+      <DialogResultado
+        abierto={hayGanador && !resultadoVisto}
+        onCerrar={() => setResultadoVisto(true)}
+        partida={partida}
+        miColor={miColor}
+        gane={partida.ganadorUserId === userId}
+        container={contenedorJuego}
+      />
 
       {partida.estado === 'contando' && conteoEnVivo && (
         <div className="text-sm text-slate-600 text-center">
@@ -666,7 +668,9 @@ function PartidaEnCurso({
           </button>
         )}
 
-        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        {partida.estado !== 'terminada' && (
+          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        )}
       </div>
 
       <div className="w-full flex gap-12 items-center justify-center">

@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto'
 import { mergeDeep } from 'remeda'
 
 import { io } from '../io'
+import redis from '../redis'
 import { rooms } from '../rooms'
 import { SocketProfe } from '../middleware/roles'
 import { MetodosLogin, RolSala } from '../validators/auth'
@@ -261,6 +262,8 @@ export namespace Salas {
     await db.guardarSala(salaData)
     await db.agregarSalaAProfe(email, id)
     await db.marcarActividad(id)
+    // La sala nace con ids por sala: esta marca es la que usa `migrar-ids` para saltearla.
+    await redis.set(`sala:${id}:migrado_ids`, String(Date.now()))
 
     console.log(`🏠 Sala ${id} creada para profe ${email}`)
     return await get(id)

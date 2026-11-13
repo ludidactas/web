@@ -18,7 +18,7 @@ import { Icon } from '@iconify/react/dist/iconify.js'
  * Esta página solo se monta una vez que ya está `ingresado`.
  */
 export default function GoEstudiantePage({ idSala }: { idSala: string }) {
-  const { dni, nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
+  const { nombre, userId, setIngresado } = useLoginSalaEstudiante({ idSala })
 
   const btnLogoutAnonimo = (
     <BtnAuth
@@ -30,10 +30,6 @@ export default function GoEstudiantePage({ idSala }: { idSala: string }) {
      <Icon className='w-8 h-8' icon={"hugeicons:logout-01"}/>
     </BtnAuth>
   )
-
-  // El server resuelve el userId como el dni (salas por DNI) o el nombre (salas por Nombre); lo
-  // replicamos acá para poder comparar "soy negro/blanco" contra `partida.negro/blanco.userId`.
-  const userId = dni || nombre || ''
 
   return (
     <div className="min-h-screen w-full mx-auto flex flex-col gap-4 sm:gap-8 items-center">

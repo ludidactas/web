@@ -11,7 +11,7 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRef } from 'react'
-import { accionSignInEstudiante, accionSignOutEstudiante } from '@/server/login-estudiante'
+import { accionSignInEstudiante } from '@/server/login-estudiante'
 import { toast } from 'sonner'
 import LoadingSala from '../loading-sala'
 import DibuEstudiante from '/svg/dist/ilustraciones/ups.svg'
@@ -116,7 +116,7 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
 
   if (averiguandoEstado) return <LoadingSala overlay mensaje="Verificando estado..." />
 
-  if (estado !== StatusDeConexion.Conectado) return <LoadingSala overlay mensaje="Conectando con serivdor en vivo..." />
+  if (estado !== StatusDeConexion.Conectado) return <LoadingSala overlay mensaje="Conectando con servidor en vivo..." />
 
   if (!configSala) return <LoadingSala overlay mensaje="Solicitando configuración de sala..." />
 
@@ -153,9 +153,9 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         </p>
         {esGoogle ? (
           <IngresoGoogle
+            idSala={idSala}
             usuario={google.usuario}
             autenticado={google.status === 'authenticated'}
-            redirectTo={`/sala/${idSala}/`}
             onIngresar={handleIngresarConGoogle}
           />
         ) : (
@@ -209,28 +209,37 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
   )
 }
 
-/** Ingreso a una sala `google`: iniciar sesión con Google y confirmar la cuenta con la que se entra. */
+/**
+ * Ingreso a una sala `google`. Elegir cuenta lleva al selector del proveedor y, al volver con la sesión
+ * abierta, entra directo: haberla elegido ahí ya es la confirmación. La pantalla de confirmación aparece
+ * solo cuando ya había una sesión abierta (p. ej. la cuenta del profe en el mismo navegador).
+ */
 function IngresoGoogle({
+  idSala,
   usuario,
   autenticado,
-  redirectTo,
   onIngresar,
 }: {
+  idSala: string
   usuario?: { name?: string | null; email?: string | null; image?: string | null }
   autenticado: boolean
-  redirectTo: string
   onIngresar: () => void
 }) {
+  const elegirCuenta = async () => {
+    localStorage.setItem(`encuestas-ingresado-${idSala}`, '1')
+    await accionSignInEstudiante(`/sala/${idSala}/`)
+  }
+
   if (!autenticado)
     return (
       <>
         <p className="w-80">Ingresá con tu cuenta de Google. Solo usamos tu nombre y tu email.</p>
-        <form action={accionSignInEstudiante.bind(null, redirectTo)} className="pt-10">
-          <Button className="bg-ld-violeta-oscuro font-semibold w-full gap-2" type="submit">
+        <div className="pt-10">
+          <Button className="bg-ld-violeta-oscuro font-semibold w-full gap-2" type="button" onClick={elegirCuenta}>
             <Icon icon="simple-icons:google" className="h-4 w-4" aria-hidden />
             Ingresar con Google
           </Button>
-        </form>
+        </div>
       </>
     )
 
@@ -251,11 +260,13 @@ function IngresoGoogle({
         <Button className="bg-ld-violeta-oscuro font-semibold" type="button" onClick={onIngresar}>
           Ingresar a la sala
         </Button>
-        <form action={accionSignOutEstudiante.bind(null, redirectTo)}>
-          <button type="submit" className="text-sm text-muted-foreground underline underline-offset-2">
-            Usar otra cuenta
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={elegirCuenta}
+          className="text-sm text-muted-foreground underline underline-offset-2"
+        >
+          Usar otra cuenta
+        </button>
       </div>
     </>
   )

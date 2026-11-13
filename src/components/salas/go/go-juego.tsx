@@ -2,12 +2,11 @@
 
 import { Boton } from '@/components/custom/ld-boton-svg'
 import { LdSvg } from '@/components/custom/ld-svg'
-import { Outlined } from '@/components/fx/filtros'
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { imagenPartida, ImagenPersonal } from '@/lib/go/imagen-partida'
 import { infoExport, nombreImagenPartida, TEXTO_MOTIVO_FIN } from '@/lib/go/info-export'
 import { BLANCO, calcularPuntaje, Color, NEGRO } from '@/lib/go/motor'
-import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
+import { PiedraIcono } from '@/lib/go/tablero-go-base'
 import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
@@ -24,7 +23,7 @@ import { toast } from 'sonner'
 import { BotonesImagen } from './botones-imagen'
 import { ElegirModoInvitacion } from './elegir-modo-invitacion'
 import { PartidaGo } from './partida-go'
-import { ReglasGo } from './reglas-go'
+import { HudPartida } from './hud-partida'
 import { LlamadaDojo, LlamadaTablero } from './llamadas-go'
 import { useSonidoJugada } from './use-sonido-jugada'
 
@@ -363,45 +362,7 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
 
   return (
     <div className="flex flex-col gap-4 items-center w-full px-2">
-      <div className="flex items-center gap-4 text-sm">
-        <span className="inline-flex items-center font-bold text-md gap-1" style={{ color: RELLENO[NEGRO] }}>
-          <PiedraIcono color={NEGRO} className="h-3 w-3" /> {partida.negro.nombre}
-        </span>
-        <span className="inline-flex text-white items-center drop-shadow-2xl gap-1">
-          <Outlined radius={1.1} outlineColor="zinc" className="inline-flex tracking-wider items-center gap-1">
-            <PiedraIcono color={BLANCO} className="h-3 w-3" /> {partida.blanco.nombre}
-          </Outlined>
-        </span>
-      </div>
-
-      <ReglasGo />
-
-      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
-
-      {partida.estado === 'jugando' && (
-        <p
-          className="flex items-center gap-1 text-md font-semibold"
-          style={{
-            color: RELLENO[partida.turno],
-          }}
-        >
-          {partida.turno === BLANCO ? (
-            <Outlined
-              radius={1.1}
-              outlineColor="black"
-              className="flex items-center gap-2 drop-shadow-2xl tracking-wider"
-            >
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              Juega blanco
-            </Outlined>
-          ) : (
-            <>
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              Juega negro
-            </>
-          )}
-        </p>
-      )}
+      <HudPartida partida={partida} final={partida.estado === 'terminada'} />
 
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
@@ -417,7 +378,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           deshabilitado
         />
 
-        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        {partida.estado !== 'terminada' && (
+          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        )}
       </div>
 
       <button
@@ -427,43 +390,6 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
         <Icon icon={'akar-icons:arrow-back'} />
         Volver a la Sala
       </button>
-    </div>
-  )
-}
-
-/** Encabezado de resultado ("Ganó X" / "Empate") una vez que la partida terminó. */
-function BannerResultado({
-  partida,
-}: {
-  partida: Pick<Partida, 'ganadorUserId' | 'negro' | 'blanco' | 'resultado' | 'motivoFin'>
-}) {
-  const colorGanador =
-    partida.ganadorUserId === null ? null : partida.ganadorUserId === partida.negro.userId ? NEGRO : BLANCO
-
-  const titulo = colorGanador === null ? 'Empate' : `Ganó ${colorGanador === NEGRO ? 'Negro' : 'Blanco'}`
-  const h2 = (
-    <h2
-      className="text-xl sm:text-2xl font-bold"
-      style={colorGanador !== null ? { color: RELLENO[colorGanador] } : undefined}
-    >
-      {titulo}
-    </h2>
-  )
-
-  return (
-    <div className="flex flex-col gap-1 items-center text-center">
-      <div className="flex gap-2 items-center">
-        <Icon className="-rotate-90 w-8 h-8" icon={'noto:party-popper'} />
-        {colorGanador === BLANCO ? (
-          <Outlined radius={1.5} outlineColor="negro">
-            {h2}
-          </Outlined>
-        ) : (
-          h2
-        )}
-        <Icon className="w-8 h-8" icon={'noto:party-popper'} />
-      </div>
-      <DetalleFin partida={partida} />
     </div>
   )
 }
@@ -511,27 +437,28 @@ const ILUSTRACION_RESULTADO = {
 const ilustracionResultado = (miColor: Color, gane: boolean) => ILUSTRACION_RESULTADO[miColor][gane ? 'gana' : 'pierde']
 
 /** Ventana que aparece al terminar mi partida, con la ilustración de mi color ganando o perdiendo.
- * Con empate no aparece: el `BannerResultado` ya lo cuenta.
+ * Con empate no aparece: el HUD final ya lo cuenta.
  *
  * No modal, así el resto de la página sigue clickeable mientras está abierta; se cierra solo con
  * "Seguir" (ni click afuera ni Escape). Radix no dibuja overlay en modo no modal: el fondo oscuro
  * sobre el área del juego lo portalea este componente al `container`. */
 function DialogResultado({
+  abierto,
+  onCerrar,
   partida,
   miColor,
   gane,
   container,
 }: {
+  abierto: boolean
+  onCerrar: () => void
   partida: Partida
   miColor: Color
   gane: boolean
   container: HTMLElement | null
 }) {
-  const [cerrado, setCerrado] = useState(false)
-  const abierto = partida.estado === 'terminada' && partida.ganadorUserId !== null && !cerrado
-
   return (
-    <Dialog open={abierto} onOpenChange={(open) => !open && setCerrado(true)} modal={false}>
+    <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()} modal={false}>
       {abierto &&
         container &&
         createPortal(<div className="fixed inset-0 z-50 bg-black/80 rounded-xl animate-in fade-in-0" />, container)}
@@ -575,8 +502,13 @@ function PartidaEnCurso({
 
   const soyNegro = partida.negro.userId === userId
   const miColor = soyNegro ? NEGRO : BLANCO
-  const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor
+
+  // Al terminar con ganador aparece la ventana de resultado; el HUD pasa a su versión final recién
+  // cuando se cierra. Con empate no hay ventana y el HUD final aparece directo.
+  const [resultadoVisto, setResultadoVisto] = useState(false)
+  const hayGanador = partida.estado === 'terminada' && partida.ganadorUserId !== null
+  const hudFinal = partida.estado === 'terminada' && (!hayGanador || resultadoVisto)
 
   // Contenedor del área del juego: se lo pasamos como `container` a los dialogs de esta partida para
   // que el overlay quede acotado a esta zona en vez de tapar toda la pantalla (el div de abajo tiene
@@ -678,50 +610,18 @@ function PartidaEnCurso({
   return (
     <div
       ref={setContenedorJuego}
-      className="relative [contain:layout] flex flex-col gap-4 items-center p-2 rounded-2xl"
+      className="relative [contain:layout] w-full flex flex-col gap-4 items-center p-2 rounded-2xl"
     >
-      <div className="flex flex-col items-center gap-2 text-md mb-2">
-        <span className="font-bold border-2 shadow-sm p-3 text-xl rounded-full inline-flex items-center gap-1.5">
-          {partida.modo === 'atari' && <span className="text-indigo-600">Atari Go ·</span>}
-          Tu color:
-          <PiedraIcono color={miColor} className="h-4 w-4" />{' '}
-          <span className="font-bold ">{soyNegro ? 'Negro' : 'Blanco'}</span>
-        </span>
-        <span className="font-bold  p-2 rounded-xl">
-          Contrincante: <span className="font-bold">{contrincante.nombre}</span>
-        </span>
-        <ReglasGo />
-      </div>
-
-      {partida.estado === 'terminada' && <BannerResultado partida={partida} />}
+      <HudPartida partida={partida} miColor={miColor} final={hudFinal} />
 
       <DialogResultado
+        abierto={hayGanador && !resultadoVisto}
+        onCerrar={() => setResultadoVisto(true)}
         partida={partida}
         miColor={miColor}
         gane={partida.ganadorUserId === userId}
         container={contenedorJuego}
       />
-
-      {partida.estado === 'jugando' && (
-        <p
-          className={cn('flex items-center gap-1 text-md font-semibold', esMiTurno && 'animate-pulse')}
-          style={{
-            color: RELLENO[partida.turno],
-          }}
-        >
-          {partida.turno === BLANCO ? (
-            <Outlined radius={1.5} outlineColor="black" className="flex items-center gap-2 shadow-2xl tracking-wider">
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              {esMiTurno ? 'Tu turno' : 'Juega blanco '}
-            </Outlined>
-          ) : (
-            <>
-              <PiedraIcono color={partida.turno} className="h-3 w-3" />
-              {esMiTurno ? 'Tu turno' : 'Juega negro'}
-            </>
-          )}
-        </p>
-      )}
 
       {partida.estado === 'contando' && conteoEnVivo && (
         <div className="text-sm text-slate-600 text-center">
@@ -768,7 +668,9 @@ function PartidaEnCurso({
           </button>
         )}
 
-        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        {partida.estado !== 'terminada' && (
+          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+        )}
       </div>
 
       <div className="w-full flex gap-12 items-center justify-center">

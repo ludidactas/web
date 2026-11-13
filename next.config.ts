@@ -23,7 +23,11 @@ const nextConfig: NextConfig = {
     },
   },
   async redirects() {
-    return [{ source: '/inicio', destination: '/', permanent: true }]
+    return [
+      { source: '/inicio', destination: '/', permanent: true },
+      // Redirect del servidor (sin pasar por el shell de loading): entrar a la sala no deja flashes ni aborta fetches.
+      { source: '/sala/:idSala', destination: '/sala/:idSala/go', permanent: false },
+    ]
   },
   webpack(config) {
     config.module.rules.push({

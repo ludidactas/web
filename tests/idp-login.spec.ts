@@ -29,6 +29,8 @@ test.afterAll(async () => {
 })
 
 test('el botón de login lleva a un login OIDC real y deja logueado', async ({ page }) => {
+  // /salas abre solo el diálogo "¿Qué es una sala?" en la primera visita, y deja el resto de la página inerte.
+  await page.addInitScript(() => localStorage.setItem('salas-saber-mas-visto', '1'))
   await page.goto('/login')
   // El botón dice "Google" pero en dev dispara el provider `idp-dev` (mismo botón,
   // provider distinto según entorno). El browser sigue solo los redirects del OIDC.
@@ -36,6 +38,8 @@ test('el botón de login lleva a un login OIDC real y deja logueado', async ({ p
 
   // Señales de éxito: el flujo redirigió a la zona autenticada (/salas)...
   await page.waitForURL(/\/salas/)
-  // ...y la UI refleja una sesión abierta (aparece "Cerrar sesión").
-  await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
+  // ...y la UI refleja la sesión abierta: el saludo y, en "Cuenta", el email que emitió el IdP.
+  await expect(page.getByText('¡Hola Test!').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Cuenta' }).first().click()
+  await expect(page.getByText('test@fake.com')).toBeVisible()
 })

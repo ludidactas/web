@@ -1,6 +1,6 @@
 import { ConfigCreacionSala, configCreacionSala, ConfigSala } from '@/wss/validators/salas'
 import { MetodosLogin } from '@/wss/validators/auth'
-import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
+import { IDENTIDAD_EN_LISTA, OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
 import type { Browser, Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
 import { loginFake } from './auth'
@@ -10,9 +10,11 @@ interface LoginUser {
   email: string
 }
 
+/** Lo que trae cada estudiante: `dni` para salas por DNI y `email` para salas con cuenta de Google. */
 interface LoginEstudiante {
   nombre: string
-  dni: string
+  dni?: string
+  email?: string
 }
 
 interface LdFixtures {
@@ -24,11 +26,26 @@ interface LdFixtures {
 }
 
 /**
+ * Las animaciones del sitio corren en `requestAnimationFrame` y, en un Chromium headless sin GPU, cada
+ * pestaña consume un núcleo entero. A 4 fps el costo baja ~10x y los callbacks siguen ejecutándose.
+ */
+const ralentizarAnimaciones = () => {
+  window.requestAnimationFrame = (cb) => window.setTimeout(() => cb(performance.now()), 250)
+}
+
+/** Un contexto de PW para tests: usarlo en vez de `browser.newContext()`. */
+export async function nuevoContexto(browser: Browser) {
+  const context = await browser.newContext()
+  await context.addInitScript(ralentizarAnimaciones)
+  return context
+}
+
+/**
  * Devuelve una nueva `page` de PW con una sesión en el server de NextJS
  * (esto le permite entrar como profe a la sala)
  */
 export async function nuevaSesion(browser: Browser, user?: LoginUser) {
-  const context = await browser.newContext()
+  const context = await nuevoContexto(browser)
   const page = await context.newPage()
   if (user) await loginFake(page, user)
 
@@ -44,7 +61,7 @@ export async function nuevaSesion(browser: Browser, user?: LoginUser) {
  */
 export async function armarSala(browser: Browser, profe: LoginUser, config: ConfigCreacionSala) {
   // Abrimos una tab de profe
-  const profeContext = await browser.newContext()
+  const profeContext = await nuevoContexto(browser)
   const profePage = await profeContext.newPage()
 
   // Hacemos login como profe de prueba
@@ -67,6 +84,13 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
     await profePage.getByRole('radio', { name: new RegExp(OPCIONES_ACCESO[config.acceso].titulo) }).click()
   }
 
+  // La lista de la sala se carga por el formulario de alta, una entrada por vez
+  const placeholderIdentidad = IDENTIDAD_EN_LISTA[config.metodo_login ?? MetodosLogin.Nombre].placeholder
+  for (const entrada of config.listaPermitidos ?? []) {
+    await profePage.getByPlaceholder(placeholderIdentidad).fill(entrada)
+    await profePage.getByRole('button', { name: 'Agregar', exact: true }).click()
+  }
+
   await profePage.getByRole('button', { name: 'Crear e ingresar', exact: true }).click()
   // La URL de operación es /salas/<id>/go (default tras crear la sala): el id es el segundo segmento,
   // no el último.
@@ -78,17 +102,30 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   const fullUrl = `/sala/${idSala}/`
 
   // Definimos la función para que un estudiante entre a la sala
-  const estudiante = async ({ nombre, dni }: LoginEstudiante) => {
+  const estudiante = async ({ nombre, dni, email }: LoginEstudiante) => {
     // Abrimos una nueva página como alumno
-    const alumnoContext = await browser.newContext()
+    const alumnoContext = await nuevoContexto(browser)
     const alumnoPage = await alumnoContext.newPage()
+
+    if (config.metodo_login === MetodosLogin.Google) {
+      // Con cuenta de Google, la identidad es la sesión: la abrimos con el provider de test (igual que la del
+      // profe) y en la sala confirmamos con esa cuenta. El camino por el IdP lo cubre `idp-login.spec.ts`.
+      if (!email) throw new Error('Una sala con cuenta de Google necesita el email del estudiante')
+      await loginFake(alumnoPage, { name: nombre, email })
+      await alumnoPage.goto(fullUrl)
+      await alumnoPage.getByRole('button', { name: 'Ingresar a la sala' }).click()
+      return alumnoPage
+    }
 
     // El alumno accede a la sala mediante el link
     await alumnoPage.goto(fullUrl)
 
     // Llenamos el form de ingreso
     await alumnoPage.getByPlaceholder('Ingresá tu nombre').fill(nombre)
-    if (config.metodo_login === MetodosLogin.DNI) await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
+    if (config.metodo_login === MetodosLogin.DNI) {
+      if (!dni) throw new Error('Una sala por DNI necesita el DNI del estudiante')
+      await alumnoPage.getByPlaceholder('Ingresá tu DNI').fill(dni)
+    }
     await alumnoPage.getByRole('button', { name: 'Conectarse' }).click()
 
     return alumnoPage
@@ -102,6 +139,11 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
 }
 
 export const test = base.extend<LdFixtures>({
+  context: async ({ context }, use) => {
+    await context.addInitScript(ralentizarAnimaciones)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(context)
+  },
   login: async ({ page }, use) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(async (user: LoginUser) => {

@@ -1,6 +1,6 @@
 import { Browser, Page, test, expect } from '@playwright/test'
 import { configCreacionSala } from '@/wss/validators/salas'
-import { armarSala } from './ld-test'
+import { armarSala, nuevoContexto } from './ld-test'
 
 /**
  * Arma, entre dos estudiantes y con un tercero observando, una partida de 9x9 "casi completa": cuatro
@@ -63,7 +63,7 @@ const BLANCO_MOVES: Array<[number, number]> = [
 ]
 
 async function entrarGo(browser: Browser, idSala: string, nombre: string): Promise<Page> {
-  const context = await browser.newContext()
+  const context = await nuevoContexto(browser)
   const page = await context.newPage()
   await page.goto(`/sala/${idSala}/go/`)
   await page.getByPlaceholder('Ingresá tu nombre').fill(nombre)
@@ -74,7 +74,7 @@ async function entrarGo(browser: Browser, idSala: string, nombre: string): Promi
 async function esperarContrincante(page: Page, nombreContrincante: string) {
   await expect(async () => {
     const refrescar = page.getByText('Refrescar')
-    if (await refrescar.isVisible().catch(() => false)) await refrescar.click()
+    if (await refrescar.isVisible().catch(() => false)) await refrescar.click({ timeout: 1000 }).catch(() => {})
     await expect(page.getByText(nombreContrincante, { exact: true })).toBeVisible({ timeout: 500 })
   }).toPass({ timeout: 20_000 })
 }

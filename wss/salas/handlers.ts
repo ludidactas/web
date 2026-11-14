@@ -188,7 +188,12 @@ export const handlersGestionSalasProfe = async (socket: SocketProfe) => {
       const salas = await Salas.getSalasDeProfe(email)
       io.to(rooms.cuentaProfe(email)).emit(
         'salas:lista',
-        salas.map((s) => ({ id: s.id, nombre: s.config.nombre }))
+        salas.map((s) => ({
+          id: s.id,
+          nombre: s.config.nombre,
+          metodo_login: s.config.metodo_login,
+          acceso: s.config.acceso,
+        }))
       )
     })
 

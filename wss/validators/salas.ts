@@ -104,4 +104,4 @@ export type PlanillaCompleta = {
 /** Lista de una sala (identidades según su `metodo_login`) con los nombres que el profe les asignó. */
 export type ListaPermitidosConNombres = { lista: string[]; nombres: Record<string, string> }
 
-export type SalaResumen = { id: string; nombre?: string }
+export type SalaResumen = { id: string; nombre?: string; metodo_login: MetodosLogin; acceso: AccesoSala }

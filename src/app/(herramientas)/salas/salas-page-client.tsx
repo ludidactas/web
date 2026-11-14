@@ -286,6 +286,27 @@ function FilaSala({
         {nombre}
       </NavLink>
       <div className={cn('flex items-center gap-1 pr-2')}>
+        {/* Un wss que aún no manda estos campos (deploy a medias) deja la fila sin íconos en vez de romperla. */}
+        {[
+          { prefijo: 'Identificación por ', opcion: OPCIONES_IDENTIDAD[sala.metodo_login] },
+          { prefijo: 'Acceso ', opcion: OPCIONES_ACCESO[sala.acceso] },
+        ]
+          .filter((e) => e.opcion)
+          .map(({ prefijo, opcion: { titulo, icono: Icono } }) => (
+            <Tooltip key={prefijo}>
+              <TooltipTrigger asChild>
+                <span className="flex h-9 w-9 items-center justify-center text-muted-foreground">
+                  <Icono className="h-4 w-4" aria-label={`${prefijo}${titulo.toLocaleLowerCase()}`} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">
+                  <span className="opacity-60">{prefijo}</span>
+                  {titulo}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
         <Dialog
           open={renombrarAbierto}
           onOpenChange={(abierto) => {

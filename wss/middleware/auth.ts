@@ -75,13 +75,14 @@ export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstud
       `El ${ETIQUETA_IDENTIDAD[session.metodo]} ${session.userId} no está en la lista de participantes permitidos.`
     )
 
-  // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login.
+  // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login. Una fila
+  // sin `clientId` (nombre liberado) la reclama quien ingrese primero.
   if (session.metodo === MetodosLogin.Nombre) {
     const nombreNormalizado = normalizarTexto(session.userId)
     if (nombreNormalizado === normalizarTexto(sala.profe.email))
       throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
     const enUso = (await sala.listarEstudiantes()).some(
-      (s) => normalizarTexto(s.userId) === nombreNormalizado && s.clientId !== session.clientId
+      (s) => normalizarTexto(s.userId) === nombreNormalizado && !!s.clientId && s.clientId !== session.clientId
     )
     if (enUso)
       throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)

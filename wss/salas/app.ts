@@ -150,6 +150,17 @@ export namespace Salas {
       })
     }
 
+    /** Desconecta, con aviso, todos los sockets del estudiante `userId`. */
+    async function expulsar(userId: string, motivo: string) {
+      const sockets = await io.in(rooms.estudiantes(salaId)).fetchSockets()
+      sockets
+        .filter((s: RemoteSocketConSesion) => s.data.session.userId === userId)
+        .forEach((s) => {
+          s.emit('sala:kick', { motivo })
+          s.disconnect()
+        })
+    }
+
     /**
      * Registra el ingreso del estudiante: lo persiste en la planilla durable de la sala y anota su
      * conexión en el log de asistencia.
@@ -193,6 +204,9 @@ export namespace Salas {
 
       /** Kickea a los estudiantes cuyo DNI/email no esté en la lista de permitidos actualizada */
       sanitizar,
+
+      /** Desconecta, con aviso, los sockets de un estudiante */
+      expulsar,
 
       /** Devuelve la lista de estudiantes, y anota si están presentes */
       listarEstudiantes,

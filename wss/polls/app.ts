@@ -268,6 +268,34 @@ export async function estudianteSala(idSala: string, userId: string) {
   }
 }
 
+/**
+ * Borra los votos de `userId` en todas las encuestas de la sala: ajusta los conteos de cada opción y lo
+ * quita de los votantes. Las opciones que aportó siguen en la encuesta. Reenvía las encuestas afectadas.
+ */
+export async function borrarVotosDeUsuario(sala: Awaited<ReturnType<typeof Salas.get>>, userId: string) {
+  const salaId = sala.id
+  for (const pollId of await db.getIdsEncuestas(salaId)) {
+    const afectada = await conLock(`${salaId}:${pollId}`, async () => {
+      const opciones = await db.getVotosUsuario(salaId, pollId, userId)
+      const aportes = await db.contarAportesUsuario(salaId, pollId, userId)
+      if (opciones.length === 0 && aportes === 0) return false
+
+      for (const optionId of opciones) {
+        await db.decrementarVoto(salaId, pollId, optionId)
+        await db.removerVotanteOpcion(salaId, pollId, optionId, userId)
+      }
+      await db.borrarVotosUsuario(salaId, pollId, userId)
+      await db.borrarAportesUsuario(salaId, pollId, userId)
+      await db.removerVotante(salaId, pollId, userId)
+      return true
+    })
+    if (!afectada) continue
+
+    const poll = await db.getEncuesta(salaId, pollId)
+    if (poll) await broadcastPoll(sala, poll)
+  }
+}
+
 /** Envía a admin, profe y a estudiantes una poll pero hidratada para cada quien  */
 export async function broadcastPoll(sala: Awaited<ReturnType<typeof Salas.get>>, poll: Encuesta) {
   const visible = poll.isPublished ? poll : { ...poll, pregunta: '', descripcion: undefined, opciones: [] }

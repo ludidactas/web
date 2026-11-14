@@ -195,3 +195,25 @@ export async function addAporteUsuario(
 export async function borrarAportesUsuario(salaId: string, pollId: string, userId: string): Promise<void> {
   await redis.del(k.aportesUsuario(salaId, pollId, userId))
 }
+
+// -- Retiro de los votos de un usuario --
+
+/** Resta un voto al contador de una opción. */
+export async function decrementarVoto(salaId: string, pollId: string, optionId: string): Promise<void> {
+  await redis.hincrby(k.votos(salaId, pollId), optionId, -1)
+}
+
+/** Quita a un usuario del set de votantes de la encuesta. */
+export async function removerVotante(salaId: string, pollId: string, userId: string): Promise<void> {
+  await redis.srem(k.votantes(salaId, pollId), userId)
+}
+
+/** Quita a un usuario del set de votantes de una opción. */
+export async function removerVotanteOpcion(
+  salaId: string,
+  pollId: string,
+  optionId: string,
+  userId: string
+): Promise<void> {
+  await redis.srem(k.votantesOpcion(salaId, pollId, optionId), userId)
+}

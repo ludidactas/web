@@ -4,9 +4,10 @@ import { alDesconectar, protegido, registrar } from '../contrato/registrar'
 import * as db from './db'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { SocketConSesion } from '../middleware/session'
-import { profeSala } from '../polls/app'
+import { borrarVotosDeUsuario, profeSala } from '../polls/app'
 import { handlersEncuestasProfe } from '../polls/handlers'
 import { handlersGoProfe } from '../go/handlers'
+import { borrarDatosGoDeUsuario } from '../go/app'
 import { io } from '../io'
 import { rooms } from '../rooms'
 import { Sala, Salas } from './app'
@@ -159,6 +160,24 @@ async function handlersSalaActivaProfe(socket: SocketProfe, sala: Sala) {
       await asertUsaLista(sala)
       await sala.listaPermitidos().setNombre(identidad, nombre)
       await emitirPermitidos(socket, sala)
+    },
+
+    'sala:liberar_nombre': async ({ nombre, borrarDatos }) => {
+      if ((await sala.config()).metodo_login !== MetodosLogin.Nombre)
+        throw new Error('Solo se pueden liberar nombres en salas con identidad por nombre.')
+
+      // Primero la reserva: con ella quitada, el nombre que se reconecta ya no se reconoce como el mismo cliente.
+      await db.liberarReservaEstudiante(sala.id, nombre)
+      await sala.expulsar(nombre, 'El profe liberó tu nombre. Podés volver a ingresar.')
+
+      if (borrarDatos) {
+        await db.borrarEstudiante(sala.id, nombre)
+        await db.borrarEventosAsistenciaDe(sala.id, nombre)
+        await borrarVotosDeUsuario(sala, nombre)
+        await borrarDatosGoDeUsuario(sala.id, nombre)
+      }
+
+      socket.emit('sala:estudiantes', await sala.listarEstudiantes())
     },
 
     // Quedan en redis hasta que el FE confirma que las escribió en Drive: un fallo de subida no pierde la clase.

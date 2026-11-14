@@ -77,6 +77,14 @@ test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso', 
   expect((err as InstanceType<typeof ErrorSesion>).tipo).toBe(TipoErrorSesion.NombreEnUso)
 })
 
+test('un nombre liberado (fila sin clientId) lo reclama cualquier cliente', async () => {
+  const sala = fakeSala({
+    listarEstudiantes: async () => [{ userId: 'Ana' } as never],
+  })
+
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionNombre('Ana', 'c-nuevo'), sala)).resolves.toBeUndefined()
+})
+
 test('el metodo DNI no cambió', async () => {
   const sala = fakeSala({}, MetodosLogin.DNI)
 

@@ -13,7 +13,7 @@ test.describe('Sala de encuestas', () => {
 
   test('loguearse como profe y acceder a la sala como estudiante', async ({ setupSala }) => {
     // Armar la sala como profe
-    const { sala, idSala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
+    const { sala, idSala, estudiante } = await setupSala({ name: nombreProfe, email: `profe.${crypto.randomUUID()}@fake.com` })
 
     // La sala abre en la pestaña de Go: vamos a la de encuestas y verificamos que el profe la ve
     await sala.goto(`/salas/${idSala}/encuestas`)

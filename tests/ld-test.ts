@@ -1,7 +1,7 @@
 import { ConfigCreacionSala, configCreacionSala, ConfigSala } from '@/wss/validators/salas'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { IDENTIDAD_EN_LISTA, OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
-import type { Browser, Page } from '@playwright/test'
+import type { Browser, BrowserContext, Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
 import { loginFake } from './auth'
 
@@ -33,9 +33,16 @@ const ralentizarAnimaciones = () => {
   window.requestAnimationFrame = (cb) => window.setTimeout(() => cb(performance.now()), 250)
 }
 
-/** Un contexto de PW para tests: usarlo en vez de `browser.newContext()`. */
+const contextosAbiertos: BrowserContext[] = []
+
+/**
+ * Un contexto de PW para tests: usarlo en vez de `browser.newContext()`. Los de `browser.newContext()` no se
+ * cierran al terminar el test (solo al terminar el worker) y siguen consumiendo CPU y conexiones; estos se
+ * cierran solos al terminar cada test (fixture `cerrarContextos`).
+ */
 export async function nuevoContexto(browser: Browser) {
   const context = await browser.newContext()
+  contextosAbiertos.push(context)
   await context.addInitScript(ralentizarAnimaciones)
   return context
 }
@@ -138,7 +145,15 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   }
 }
 
-export const test = base.extend<LdFixtures>({
+export const test = base.extend<LdFixtures & { cerrarContextos: void }>({
+  cerrarContextos: [
+    async ({}, use) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      await use()
+      await Promise.all(contextosAbiertos.splice(0).map((c) => c.close().catch(() => {})))
+    },
+    { auto: true },
+  ],
   context: async ({ context }, use) => {
     await context.addInitScript(ralentizarAnimaciones)
     // eslint-disable-next-line react-hooks/rules-of-hooks

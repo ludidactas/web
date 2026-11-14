@@ -1,6 +1,6 @@
-import { Browser, Page, test, expect } from '@playwright/test'
+import { Browser, Page } from '@playwright/test'
 import { configCreacionSala } from '@/wss/validators/salas'
-import { armarSala, nuevoContexto } from './ld-test'
+import { armarSala, expect, nuevoContexto, test } from './ld-test'
 
 /**
  * Arma, entre dos estudiantes y con un tercero observando, una partida de 9x9 "casi completa": cuatro

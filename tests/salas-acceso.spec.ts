@@ -1,4 +1,4 @@
-import { expect, test } from './ld-test'
+import { expect, nuevoContexto, test } from './ld-test'
 import type { Page } from '@playwright/test'
 import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
 import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
@@ -8,9 +8,6 @@ import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
 
 /** Un profe nuevo por test: el plan limita las salas por profe, y los tests corren en paralelo. */
 const profeNuevo = () => ({ name: 'Profe Acceso', email: `profe.${crypto.randomUUID()}@fake.com` })
-
-// Cada test arma una sala y entra con dos estudiantes.
-test.describe.configure({ timeout: 60_000 })
 
 /** Un estudiante de cada tipo por identidad: `enLista` figura en la lista de la sala; `afuera`, no. */
 const ESTUDIANTES = {
@@ -90,3 +87,64 @@ for (const metodo of Object.values(MetodosLogin)) {
     })
   })
 }
+
+// Lo que pasa con quien ya está adentro, o con la sala misma, cuando el profe cambia algo.
+test.describe('cambios del profe con la sala en curso', () => {
+  const ingreso = (page: Page) => page.getByRole('button', { name: 'Conectarse' })
+
+  test('lista: quitar a alguien conectado lo devuelve al ingreso, sin ver la sala', async ({ setupSala }) => {
+    const { sala, estudiante } = await setupSala(profeNuevo(), {
+      metodo_login: MetodosLogin.Nombre,
+      acceso: AccesoSala.Lista,
+      listaPermitidos: ['Ana01', 'Beto01'],
+    } as never)
+
+    const ana = await estudiante({ nombre: 'Ana01' })
+    const beto = await estudiante({ nombre: 'Beto01' })
+    await entro(ana)
+    await entro(beto)
+
+    await sala.getByTitle('Configurá el acceso a tu sala').click()
+    await sala.getByRole('button', { name: 'Quitar Ana01' }).click()
+
+    await expect(ingreso(ana)).toBeVisible()
+    await expect(ana.getByRole('heading', { name: 'Partidas', exact: true })).toHaveCount(0)
+    // Quien sigue en la lista no se entera.
+    await expect(beto.getByRole('heading', { name: 'Partidas', exact: true })).toBeVisible()
+  })
+
+  test('nombre: un nombre en uso se rechaza hasta que el profe lo libera', async ({ setupSala }) => {
+    const { sala, estudiante } = await setupSala(profeNuevo(), {
+      metodo_login: MetodosLogin.Nombre,
+      acceso: AccesoSala.Libre,
+    })
+
+    const original = await estudiante({ nombre: 'Ana01' })
+    await entro(original)
+
+    const otroDispositivo = await estudiante({ nombre: 'Ana01' })
+    await expect(otroDispositivo.getByText(/ya está en uso/)).toBeVisible()
+    await expect(ingreso(otroDispositivo)).toBeVisible()
+
+    await sala.getByRole('button', { name: 'Liberar el nombre Ana01' }).click()
+    await sala.getByRole('button', { name: 'Liberar nombre', exact: true }).click()
+
+    // Quien lo tenía queda afuera y el otro dispositivo, que reintenta, lo reclama.
+    await expect(ingreso(original)).toBeVisible()
+    await otroDispositivo.getByRole('button', { name: 'Conectarse' }).click()
+    await entro(otroDispositivo)
+  })
+
+  test('una sala eliminada deja de existir para quien abre su link', async ({ browser, setupSala }) => {
+    const { sala, idSala } = await setupSala(profeNuevo(), { metodo_login: MetodosLogin.Nombre })
+
+    await sala.goto('/salas')
+    await sala.locator('button:has(svg[class*="lucide-trash"])').click()
+    await sala.getByRole('dialog').getByRole('button', { name: 'Eliminar', exact: true }).click()
+    await expect(sala.getByText('No tenés ninguna sala creada todavía.')).toBeVisible()
+
+    const page = await (await nuevoContexto(browser)).newPage()
+    await page.goto(`/sala/${idSala}/`)
+    await expect(page.getByText(/Esta sala no existe/)).toBeVisible()
+  })
+})

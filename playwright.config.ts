@@ -23,6 +23,9 @@ const envStack = {
 
 export default defineConfig({
   testDir: './tests',
+  // Cada test arma una sala y entra con uno o más estudiantes: con la máquina cargada, los timeouts por defecto (30s por test, 5s por assert) no alcanzan.
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

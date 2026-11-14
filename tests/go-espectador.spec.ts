@@ -1,6 +1,6 @@
-import { Browser, Page, test, expect } from '@playwright/test'
+import { Browser, Page } from '@playwright/test'
 import { configCreacionSala } from '@/wss/validators/salas'
-import { armarSala, nuevoContexto } from './ld-test'
+import { armarSala, expect, nuevoContexto, test } from './ld-test'
 
 async function entrarGo(browser: Browser, idSala: string, nombre: string): Promise<Page> {
   const context = await nuevoContexto(browser)

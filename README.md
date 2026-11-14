@@ -102,7 +102,8 @@ Cuando se encare, la propuesta es:
   - POLLS_ADMINS= $un_mail
 
 - Correr el proyecto next en otra terminal con `bun/npm dev`
-- Los tests se corren con `bun/npm e2e` (de end-to-end)
+- Los tests e2e se corren con `bun/npm e2e`. Playwright levanta su propio stack (redis `:4379`, wss `:4005`, Next `:4000` con un build de e2e en `.next-e2e/`), así que no usa ni toca el entorno de desarrollo. `idp-login.spec.ts` levanta el IdP en `:3006`: correrlo con el IdP de desarrollo apagado.
+- Cada corrida buildea Next: `next build` reescribe `tsconfig.json` (agrega `.next-e2e/types`); descartar ese cambio antes de commitear.
 
 ### Variables de entorno
 

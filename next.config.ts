@@ -7,6 +7,10 @@ import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 import bracketedSpans from 'remark-bracketed-spans'
 
 const nextConfig: NextConfig = {
+  // Los e2e corren un Next aparte (ver playwright.config.ts) y necesitan su propio directorio de build.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+  // Build solo para e2e: conserva `NODE_ENV=development` para que exista el login falso (ver src/app/auth.ts).
+  experimental: { allowDevelopmentBuild: process.env.E2E_BUILD ? true : undefined },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   images: {
     remotePatterns: [

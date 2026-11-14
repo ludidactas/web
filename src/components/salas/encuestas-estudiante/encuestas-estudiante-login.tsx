@@ -28,7 +28,7 @@ import { MAX_LEN_DNI, MAX_LEN_NOMBRE, MetodosLogin } from '@/wss/validators/auth
 /** Página de login a sala: pide lo que la identidad de la sala requiere (nombre, nombre y DNI, o cuenta de Google). */
 
 export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
-  const { confirmadoNoExiste, confirmadoError, error, averiguandoEstado, averiguandoExistencia, estado } =
+  const { confirmadoNoExiste, confirmadoError, error, averiguandoEstado, estado } =
     useConexionPublico()
 
   const { setDNI, setNombre, setIngresado, nombre, dni, google } = useLoginSalaEstudiante({ idSala })
@@ -111,8 +111,6 @@ export default function LoginSalaEstudiante({ idSala }: { idSala: string }) {
         <Button onClick={() => window.location.reload()}>Recargar página</Button>
       </div>
     )
-
-  if (averiguandoExistencia) return <LoadingSala overlay mensaje="Verificando existencia de la sala..." />
 
   if (averiguandoEstado) return <LoadingSala overlay mensaje="Verificando estado..." />
 

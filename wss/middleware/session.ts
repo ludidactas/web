@@ -118,7 +118,13 @@ const login = async (socket: SocketConSesion) => {
     abrirSesion(socket, session)
   }
 
-  // Publico y test no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
+  // Público: no establece sesión, pero la sala tiene que existir (si no, el cliente no recibiría nunca su config).
+  else if (auth.rol === RolSala.Publico) {
+    await Salas.assertExiste(auth.idSala)
+    console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
+  }
+
+  // Los demás roles no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
   else {
     console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
   }

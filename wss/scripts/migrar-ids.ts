@@ -76,7 +76,7 @@ async function planificar(salaId: string, ahora: number): Promise<Plan> {
   const k = (sufijo: string) => `sala:${salaId}:${sufijo}`
   const prefijo = (sufijo: string) => escaparPatron(k(sufijo))
 
-  // Los ids se escriben acá y no con `idOpaco`, que desde el cifrado guarda el campo cifrado.
+  // Sin `idOpaco`, que escribe en redis al resolver: los ids van en el MULTI de la sala.
   const ids = new Map(Object.entries(await redis.hgetall(k('ids'))))
   const idsNuevos: string[] = []
   const resolver = (identidad: string) => {

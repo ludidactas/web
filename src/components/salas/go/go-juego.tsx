@@ -46,7 +46,7 @@ export type AccionesGo = {
 
 /** Flujo completo de Go (invitaciones, buscador de contrincantes, partida en curso) para quien juega:
  * usado tanto por el estudiante como por el profe, cada uno con sus propios `acciones` de conexión.
- * `miId` es el id opaco por sala que el server emite por `go:identidad`. */
+ * `miId` es el id opaco por sala que el server devuelve por `go:identidad`. */
 export default function GoJuego({ miId, acciones }: { miId: string; acciones: AccionesGo }) {
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones

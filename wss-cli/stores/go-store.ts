@@ -7,7 +7,7 @@ interface GoState {
   /** `false` hasta que llega la respuesta del primer `go:mi_partida`. Mientras tanto no sabemos si
    * ya hay una partida en curso, así que la UI debe mostrar un loading en vez de asumir que no hay. */
   inicializado: boolean
-  /** Mi id opaco en la sala, recibido por `go:identidad`: con esto me reconozco en las partidas. */
+  /** Mi id opaco en la sala, pedido con `go:identidad`: con esto me reconozco en las partidas. */
   miId: string | null
   /** Mi partida activa (pendiente o en curso), o `null` si no tengo ninguna. */
   partida: PartidaPublica | null

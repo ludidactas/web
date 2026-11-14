@@ -21,7 +21,7 @@ import { Icon } from '@iconify/react/dist/iconify.js'
 export default function GoEstudiantePage({ idSala }: { idSala: string }) {
   const { nombre, setIngresado } = useLoginSalaEstudiante({ idSala })
 
-  // El server emite `go:identidad` con el id opaco de esta sala; con eso comparamos "soy negro/blanco"
+  // El server devuelve por `go:identidad` el id opaco de esta sala; con eso comparamos "soy negro/blanco"
   // contra `partida.negro/blanco.id` (el dni/nombre no viajan en los eventos de Go).
   const miId = storeGo((s) => s.miId) ?? ''
 

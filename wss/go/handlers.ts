@@ -17,9 +17,6 @@ import * as db from './db'
 async function registrarComandosGo(socket: Socket, idSala: string, userId: string, nombre: string) {
   const go = await estudianteGo(idSala, userId)
 
-  // El id con el que el cliente se reconoce a sí mismo en partidas y contrincantes.
-  socket.emit('go:identidad', { id: userId })
-
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
   function seguir<T extends PartidaPublica | null>(partida: T): T {
     if (partida) socket.join(rooms.partidaGo(idSala, partida.id))
@@ -27,6 +24,7 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
   }
 
   registrar(socket, comandosGo, {
+    'go:identidad': async () => ({ id: userId }),
     'go:contrincantes': async () => go.contrincantesDisponibles(),
     'go:mi_partida': async () => seguir(await go.miPartida()),
     'go:observar': async (payload) => seguir(await go.observar(payload)),

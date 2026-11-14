@@ -39,8 +39,11 @@ export default function goHandlers(socket: Socket | null) {
     for (let i = 0; i < intentos; i++) {
       if (desmontado) return
       try {
-        const partida = await cmd.pedir('go:mi_partida')
-        if (!desmontado) store.set(partida)
+        const [{ id }, partida] = await Promise.all([cmd.pedir('go:identidad'), cmd.pedir('go:mi_partida')])
+        if (!desmontado) {
+          store.setMiId(id)
+          store.set(partida)
+        }
         return
       } catch {
         if (desmontado) return
@@ -55,9 +58,6 @@ export default function goHandlers(socket: Socket | null) {
       if (!socket) return () => {}
 
       const dejarDeEscuchar = escuchar<EventosGo>(socket, {
-        // El id opaco con el que me reconozco a mí mismo en las partidas (nunca el userId real).
-        'go:identidad': ({ id }) => store.setMiId(id),
-
         // Una partida en la que estoy: la que observo va a `observando`; si no, es la mía.
         'go:partida': (partida) => {
           if (storeGo.getState().observando?.id === partida.id) store.setObservando(partida)

@@ -5,6 +5,8 @@ import { invitacionSchema, jugadaSchema, partidaIdSchema, type ContrincanteGo, t
 
 /** Comandos de Go de una conexión: estudiante y profe comparten la mecánica, cambia la identidad. */
 export const comandosGo = {
+  /** El id opaco por sala con el que el cliente se reconoce a sí mismo en `go:partida`/`go:contrincantes`. */
+  'go:identidad': comandoAck(sinPayload, devuelve<{ id: string }>()),
   'go:contrincantes': comandoAck(sinPayload, devuelve<ContrincanteGo[]>()),
   /** Mi partida activa (pendiente o en curso), o `null`. */
   'go:mi_partida': comandoAck(sinPayload, devuelve<PartidaPublica | null>()),
@@ -27,8 +29,6 @@ export const comandosGoDriveProfe = {
 }
 
 export interface EventosGo {
-  /** El id opaco por sala con el que el cliente se reconoce a sí mismo en `go:partida`/`go:contrincantes`. */
-  'go:identidad': { id: string }
   /** Una partida en la que estoy adentro (jugando u observando) cambió. */
   'go:partida': PartidaPublica
   'go:invitacion': PartidaPublica

@@ -26,7 +26,7 @@ export const OPCIONES_IDENTIDAD: Record<MetodosLogin, OpcionSala> = {
 export const OPCIONES_ACCESO: Record<AccesoSala, OpcionSala> = {
   [AccesoSala.Libre]: {
     titulo: 'Libre',
-    descripcion: 'Entra cualquiera. Se registra quién es.',
+    descripcion: 'Puede ingresar cualquiera con la URL.',
     icono: DoorOpen,
   },
   [AccesoSala.Invitados]: {

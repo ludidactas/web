@@ -92,6 +92,11 @@ estudiante en la planilla:
 
 Payload: `{ nombre, borrarDatos?: boolean }`, con `borrarDatos` en `false` por defecto.
 
+Con `borrarDatos`, las encuestas ajustan sus conteos y se reenvían a la sala; si el nombre tenía una
+partida de Go pendiente o en curso, se cierra por abandono para que el contrincante no quede esperando
+(las partidas terminadas quedan: también son del otro jugador). El evento de desconexión de la conexión
+expulsada puede llegar al log después del borrado; sin su `conexion` previa no abre ni cierra intervalos.
+
 Con `borrarDatos` se borra, para ese `userId`: su fila de la planilla, sus votos en las encuestas, sus
 datos en las demás apps de la sala y sus eventos del log de asistencia. No toca lo que ya salió de la
 sala: las clases ya evaluadas y las planillas ya escritas en Drive quedan como están.
@@ -248,9 +253,10 @@ wss/contrato/salas.ts         comandos y eventos
 - **El nombre de Google no viene del navegador del estudiante.** Viaja dentro del token que firma Next
   (`src/server/token_wss.ts`) y el server lo decodea; el FE no manda nombre propio en las salas `google`.
 - **El login de Google del estudiante pide solo identidad.** A diferencia del login del profe, no solicita
-  permisos sobre Drive (`src/server/login-estudiante.ts`). Con la sesión abierta, el estudiante confirma la
-  cuenta con la que entra ("Usar otra cuenta" cierra la sesión): el navegador puede tener abierta la cuenta
-  de otra persona, por ejemplo la del profe. Si la cuenta no tiene nombre, el email hace de nombre.
+  permisos sobre Drive (`src/server/login-estudiante.ts`). Si ya había una sesión abierta, el estudiante
+  confirma la cuenta con la que entra ("Usar otra cuenta" lo lleva al selector del proveedor): el navegador
+  puede tener abierta la cuenta de otra persona, por ejemplo la del profe. Al elegir cuenta en el selector
+  entra directo. Si la cuenta no tiene nombre, el email hace de nombre.
 - **Google da identidad verificada, no autorización.** El email verificado impide hacerse pasar por otra
   persona de la lista; no impide que alguien comparta su cuenta.
 - **El DNI no se verifica.** En una sala `dni` + `lista`, quien conozca el DNI de un invitado puede

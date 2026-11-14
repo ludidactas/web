@@ -13,7 +13,8 @@ import { storeEstudiantes, type Estudiante } from '@/wss-cli/stores/estudiantes-
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
-import { AccesoSala } from '@/wss/validators/auth'
+import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
+import { LiberarNombre } from './liberar-nombre'
 import { buscarNombreProvisto } from '@/wss/invitados/identidad'
 
 /** Una fila de la lista de participantes: avatar, nombre/DNI/email, y las acciones del profe sobre
@@ -56,6 +57,8 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        {config?.metodo_login === MetodosLogin.Nombre && <LiberarNombre nombre={e.userId} />}
+
         {modo === 'go' && e.conectado && (
           <Tooltip>
             <ElegirModoInvitacion

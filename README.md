@@ -103,6 +103,7 @@ Cuando se encare, la propuesta es:
 
 - Correr el proyecto next en otra terminal con `bun/npm dev`
 - Los tests se corren con `bun/npm e2e` (de end-to-end)
+- Los tests unitarios y de integración (`bun run test`, `bun run test:integracion`) usan un redis aparte en el puerto 6395 (`REDIS_PORT` en `.env.test`): `redis-server --port 6395`
 
 ### Variables de entorno
 

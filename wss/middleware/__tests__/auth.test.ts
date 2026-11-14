@@ -4,7 +4,7 @@ import { decodearTokenNextAuth, verificarYAutorizarAccesoEstudianteASala } from 
 import { MetodosLogin } from '../../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../../validators/errors'
 import type { Sala } from '../../salas/app'
-import type { WssEstudianteSession } from '../../validators/session'
+import type { WssEstudianteIdentidad } from '../../validators/session'
 
 const PROFE_EMAIL = 'profe@colegio.edu'
 
@@ -25,26 +25,25 @@ function fakeSala(overrides: Partial<Sala> = {}, metodo_login = MetodosLogin.Nom
   } as Sala
 }
 
-function sesionNombre(userId: string, clientId = 'c1'): WssEstudianteSession {
+function sesionNombre(nombre: string, clientId = 'c1'): WssEstudianteIdentidad {
   return {
     rol: 'estudiante' as const,
     idSala: 's1',
     clientId,
     metodo: MetodosLogin.Nombre,
-    nombre: userId,
-    userId,
-  } as WssEstudianteSession
+    nombre,
+  } as WssEstudianteIdentidad
 }
 
-function sesionDni(userId = '12345678'): WssEstudianteSession {
+function sesionDni(dni = '12345678'): WssEstudianteIdentidad {
   return {
     rol: 'estudiante' as const,
     idSala: 's1',
     clientId: 'c1',
     metodo: MetodosLogin.DNI,
-    dni: userId,
-    userId,
-  } as WssEstudianteSession
+    dni,
+    nombre: 'Ana',
+  } as WssEstudianteIdentidad
 }
 
 test('un estudiante cuyo nombre normaliza al email del profe es rechazado', async () => {
@@ -61,9 +60,9 @@ test('un nombre normal distinto al email del profe pasa sin error', async () => 
   await expect(verificarYAutorizarAccesoEstudianteASala(session, sala)).resolves.toBeUndefined()
 })
 
-test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso', async () => {
+test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso (compara por nombre, no por userId)', async () => {
   const sala = fakeSala({
-    listarEstudiantes: async () => [{ userId: 'Ana', clientId: 'c2' } as never],
+    listarEstudiantes: async () => [{ userId: 'handle-opaco-ana', nombre: 'Ana', clientId: 'c2' } as never],
   })
   const session = sesionNombre('Ana', 'c1')
 
@@ -77,7 +76,7 @@ test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso', 
   expect((err as InstanceType<typeof ErrorSesion>).tipo).toBe(TipoErrorSesion.NombreEnUso)
 })
 
-test('el metodo DNI no cambió', async () => {
+test('el metodo DNI autoriza por el dni', async () => {
   const sala = fakeSala({}, MetodosLogin.DNI)
 
   await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni(), sala)).resolves.toBeUndefined()
@@ -95,7 +94,28 @@ test('el token del WSS se firma y verifica con WSS_TOKEN_SECRET; un secreto ajen
   expect(() => decodearTokenNextAuth(firmar('otro-secreto'))).toThrow()
 })
 
-test('el metodo Google no cambió', async () => {
+test('con solo_invitados, la autorización va contra el dni real', async () => {
+  const sala = fakeSala(
+    {
+      config: async () =>
+        ({
+          nombre: 'Sala test',
+          metodo_login: MetodosLogin.DNI,
+          solo_invitados: true,
+          nombre_profe: 'Profe',
+          link: 'x',
+          overlay: {},
+        }) as never,
+      listaPermitidos: () => ({ incluye: async (dni: string) => dni === '12345678' }) as never,
+    },
+    MetodosLogin.DNI
+  )
+
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni('12345678'), sala)).resolves.toBeUndefined()
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionDni('99999999'), sala)).rejects.toThrow(ErrorSesion)
+})
+
+test('el metodo Google autoriza por el email', async () => {
   const sala = fakeSala({}, MetodosLogin.Google)
   const session = {
     rol: 'estudiante' as const,
@@ -103,8 +123,7 @@ test('el metodo Google no cambió', async () => {
     metodo: MetodosLogin.Google,
     email: 'x@x.com',
     nombre: 'X',
-    userId: 'x@x.com',
-  } as WssEstudianteSession
+  } as WssEstudianteIdentidad
 
   await expect(verificarYAutorizarAccesoEstudianteASala(session, sala)).resolves.toBeUndefined()
 })

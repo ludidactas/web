@@ -1,11 +1,16 @@
 import { afterEach, describe, expect, it } from 'bun:test'
+import { createServer } from 'http'
+import type { AddressInfo } from 'net'
+import { io as ioClient } from 'socket.io-client'
 import redis from '../../redis'
 import { Salas } from '../app'
-import { getEmailProfe, getIdsSalasDeProfe, getSala, getUltimaActividad, guardarEstudiante, marcarActividad } from '../db'
+import { borrarRegistroDeClase, getEmailProfe, getIdsSalasDeProfe, getSala, getUltimaActividad, guardarEstudiante, marcarActividad } from '../db'
 import { barrerSalasInactivas, RETENCION_DIAS } from '../retencion'
 import { MetodosLogin, RolSala } from '../../validators/auth'
 import { WssEstudianteSessionSchema } from '../../validators/session'
 import type { SocketProfe } from '../../middleware/roles'
+import { io } from '../../io'
+import { handlersGestionSalasProfe } from '../handlers'
 
 const DIA_MS = 24 * 60 * 60_000
 const AHORA = Date.now()
@@ -80,5 +85,33 @@ describe('última actividad', () => {
     const sala = await Salas.get(id)
     await sala.registrarIngreso(WssEstudianteSessionSchema.parse({ rol: RolSala.Estudiante, idSala: id, metodo: MetodosLogin.Nombre, nombre: 'Ana', userId: 'u1' }))
     expect(await getUltimaActividad(id)).toBeGreaterThan(1)
+  })
+
+  it('se marca cuando el profe abre la sala', async () => {
+    const id = await crearSala()
+    await marcarActividad(id, 1)
+
+    const httpServer = createServer()
+    io.attach(httpServer)
+    const alConectar = (socket: SocketProfe) => {
+      socket.data.session = { rol: RolSala.Profe, email, nombre: 'Profe', userId: email }
+      void handlersGestionSalasProfe(socket)
+    }
+    io.on('connection', alConectar)
+    httpServer.listen(0)
+    const cliente = ioClient(`http://localhost:${(httpServer.address() as AddressInfo).port}`, { reconnection: false })
+
+    try {
+      const abierta = new Promise<void>((resolve) => cliente.once('sala:abierta', () => resolve()))
+      cliente.emit('sala:abrir', { idSala: id })
+      await abierta
+
+      expect(await getUltimaActividad(id)).toBeGreaterThan(1)
+    } finally {
+      await borrarRegistroDeClase(id)
+      cliente.disconnect()
+      io.off('connection', alConectar)
+      httpServer.close()
+    }
   })
 })

@@ -86,14 +86,14 @@ export async function escribirAsistencia(
 
   const todosLosUserIds = new Set<string>()
   for (const asistencia of asistencias) {
-    for (const est of asistencia.estudiantes) todosLosUserIds.add(est.userId)
+    for (const est of asistencia.estudiantes) todosLosUserIds.add(est.identidad)
   }
 
   if (filasExistentes > 1) {
     const rowData = hoja!.rowData!
     for (let i = 1; i < rowData.length; i++) {
-      const userId = rowData[i].values?.[0]?.formattedValue
-      if (userId) todosLosUserIds.add(userId)
+      const identidad = rowData[i].values?.[0]?.formattedValue
+      if (identidad) todosLosUserIds.add(identidad)
     }
   }
 
@@ -101,16 +101,16 @@ export async function escribirAsistencia(
   const nombresMap = new Map<string, string>()
   for (const asistencia of asistencias) {
     for (const est of asistencia.estudiantes) {
-      if (!nombresMap.has(est.userId)) nombresMap.set(est.userId, est.nombre)
+      if (!nombresMap.has(est.identidad)) nombresMap.set(est.identidad, est.nombre)
     }
   }
 
   if (filasExistentes > 1) {
     const rowData = hoja!.rowData!
     for (let i = 1; i < rowData.length; i++) {
-      const userId = rowData[i].values?.[0]?.formattedValue
+      const identidad = rowData[i].values?.[0]?.formattedValue
       const nombre = rowData[i].values?.[1]?.formattedValue
-      if (userId && nombre && !nombresMap.has(userId)) nombresMap.set(userId, nombre)
+      if (identidad && nombre && !nombresMap.has(identidad)) nombresMap.set(identidad, nombre)
     }
   }
 
@@ -126,15 +126,15 @@ export async function escribirAsistencia(
 
     const rowData = hoja!.rowData!
     for (let i = 1; i < rowData.length; i++) {
-      const userId = rowData[i].values?.[0]?.formattedValue
-      if (!userId) continue
+      const identidad = rowData[i].values?.[0]?.formattedValue
+      if (!identidad) continue
       const presencias = new Map<string, boolean>()
       for (let col = 2; col < columnasExistentes - 1; col++) {
         const fecha = headerRow[col]?.formattedValue
         const valor = rowData[i].values?.[col]?.formattedValue
         if (fecha && valor) presencias.set(fecha, valor === 'P')
       }
-      presenciaExistente.set(userId, presencias)
+      presenciaExistente.set(identidad, presencias)
     }
   }
 
@@ -144,10 +144,10 @@ export async function escribirAsistencia(
       fechasExistentes.push(label)
     }
     for (const est of asistencia.estudiantes) {
-      let presencias = presenciaExistente.get(est.userId)
+      let presencias = presenciaExistente.get(est.identidad)
       if (!presencias) {
         presencias = new Map()
-        presenciaExistente.set(est.userId, presencias)
+        presenciaExistente.set(est.identidad, presencias)
       }
       presencias.set(label, est.presente)
     }
@@ -156,8 +156,9 @@ export async function escribirAsistencia(
   const todasLasFechas = fechasExistentes
   const header = ['ID', 'Nombre', ...todasLasFechas, '% Asistencia']
 
-  const filas = userIds.map((userId) => {
-    const presencias = presenciaExistente.get(userId) ?? new Map()
+  // La columna ID es la planilla del profe: identidad real (dni/nombre/email), no el id opaco.
+  const filas = userIds.map((identidad) => {
+    const presencias = presenciaExistente.get(identidad) ?? new Map()
     const valores = todasLasFechas.map((f) => {
       const p = presencias.get(f)
       return p === undefined ? '' : p ? 'P' : 'A'
@@ -166,7 +167,7 @@ export async function escribirAsistencia(
     const presentes = valores.filter((v) => v === 'P').length
     const porcentaje = total > 0 ? `${Math.round((presentes / total) * 100)}%` : ''
 
-    return [userId, nombresMap.get(userId) ?? userId, ...valores, porcentaje]
+    return [identidad, nombresMap.get(identidad) ?? identidad, ...valores, porcentaje]
   })
 
   const values = [header, ...filas]

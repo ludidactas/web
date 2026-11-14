@@ -37,6 +37,7 @@ function estudiante(salaId: string, nombre: string) {
     idSala: salaId,
     metodo: MetodosLogin.Nombre,
     nombre,
+    userId: `handle-${nombre}`,
   })
 }
 
@@ -89,13 +90,16 @@ describe('asistencia — pipeline completo contra Redis', () => {
     }
     await db.guardarSala(salaCon(salaId, condicion))
 
+    const juan = estudiante(salaId, 'Juan')
+    const maria = estudiante(salaId, 'María')
     await correrClase(60, async () => {
-      await db.guardarEstudiante(salaId, estudiante(salaId, 'Juan'))
-      await db.guardarEstudiante(salaId, estudiante(salaId, 'María'))
-      await db.registrarEventoAsistencia(salaId, 'Juan', 'conexion', T0)
-      await db.registrarEventoAsistencia(salaId, 'Juan', 'desconexion', T0 + 50 * MIN)
-      await db.registrarEventoAsistencia(salaId, 'María', 'conexion', T0 + 40 * MIN)
-      await db.registrarEventoAsistencia(salaId, 'María', 'desconexion', T0 + 50 * MIN)
+      await db.guardarEstudiante(salaId, juan)
+      await db.guardarEstudiante(salaId, maria)
+      // El log de asistencia registra el userId (id opaco por sala), igual que la planilla.
+      await db.registrarEventoAsistencia(salaId, juan.userId, 'conexion', T0)
+      await db.registrarEventoAsistencia(salaId, juan.userId, 'desconexion', T0 + 50 * MIN)
+      await db.registrarEventoAsistencia(salaId, maria.userId, 'conexion', T0 + 40 * MIN)
+      await db.registrarEventoAsistencia(salaId, maria.userId, 'desconexion', T0 + 50 * MIN)
     })
 
     const pendientes = await db.getAsistenciasPendientes(salaId)
@@ -103,10 +107,10 @@ describe('asistencia — pipeline completo contra Redis', () => {
     expect(pendientes[0].inicio).toBe(T0)
     expect(pendientes[0].fin).toBe(T0 + 60 * MIN)
 
-    const evaluados = [...pendientes[0].estudiantes].sort((a, b) => a.userId.localeCompare(b.userId))
+    const evaluados = [...pendientes[0].estudiantes].sort((a, b) => a.identidad.localeCompare(b.identidad))
     expect(evaluados).toEqual([
-      { userId: 'Juan', nombre: 'Juan', presente: true },
-      { userId: 'María', nombre: 'María', presente: false },
+      { userId: juan.userId, identidad: 'Juan', nombre: 'Juan', presente: true },
+      { userId: maria.userId, identidad: 'María', nombre: 'María', presente: false },
     ])
 
     expect(await db.getEventosAsistencia(salaId)).toEqual([])

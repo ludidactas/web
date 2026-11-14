@@ -41,8 +41,9 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
       <div className="flex flex-col">
         <span className="flex items-center gap-1.5">
           {e.nombre}
-          {nombresInvitados[e.userId] && (
-            <span className="text-xs text-slate-400">– {nombresInvitados[e.userId]}</span>
+          {/* El nombre provisto del invitado se indexa por la identidad real (dni/email), no por el userId opaco. */}
+          {nombresInvitados[(e.dni ?? e.email ?? '')] && (
+            <span className="text-xs text-slate-400">– {nombresInvitados[(e.dni ?? e.email ?? '')]}</span>
           )}
         </span>
         {e.dni && <span className="text-teal-500">{e.dni}</span>}
@@ -63,7 +64,7 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
               <TooltipTrigger asChild>
                 <button
                   className="cursor-pointer text-teal-500 hover:text-teal-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-teal-500"
-                  disabled={!!partidaPropia || !!contrincantes.find((c) => c.userId === e.userId)?.enPartida}
+                  disabled={!!partidaPropia || !!contrincantes.find((c) => c.id === e.userId)?.enPartida}
                 >
                   <Icon icon="lucide:play" width={18} height={18} />
                 </button>
@@ -97,7 +98,7 @@ function TooltipPartidaEstudiante({
   conectado,
 }: PropsWithChildren & { userId: string; conectado: boolean }) {
   const { contrincantes } = storeGo()
-  const info = contrincantes.find((c) => c.userId === userId)
+  const info = contrincantes.find((c) => c.id === userId)
 
   return (
     <Tooltip>

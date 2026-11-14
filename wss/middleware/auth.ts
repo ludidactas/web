@@ -3,7 +3,7 @@ import { isDefined } from 'remeda'
 import { Sala } from '../salas/app'
 import { MetodosLogin } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
-import { WssEstudianteSession } from '../validators/session'
+import { identidadRealEstudiante, WssEstudianteIdentidad } from '../validators/session'
 import { normalizarTexto } from '../utils'
 
 // Cargamos el secret para decodear los JWT y la lista de admins desde las variables de entorno.
@@ -53,34 +53,40 @@ export const registradoComoAdmin = (email: string) => {
 
 /**
  * Verifica una sesión de estudiante ya construida contra las políticas de la sala.
- * El `metodo` de la sesión coincide con `config.metodo_login` (lo inyectó el login), y el `userId` ya
- * está resuelto al campo de identidad del metodo_login.
+ * El `metodo` de la sesión coincide con `config.metodo_login` (lo inyectó el login); la autorización
+ * va contra la identidad real (`identidadRealEstudiante`), no contra el `userId` (id opaco por sala).
  */
-export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstudianteSession, sala: Sala) {
+export async function verificarYAutorizarAccesoEstudianteASala(session: WssEstudianteIdentidad, sala: Sala) {
   const config = await sala.config()
   switch (session.metodo) {
-    // Si es por DNI o Google, verificamos que el userId esté en la lista de permitidos si la sala es excluyente
+    // Si es por DNI o Google, verificamos que la identidad esté en la lista de permitidos si la sala es excluyente
     case MetodosLogin.Google:
     case MetodosLogin.DNI:
-      if (config.solo_invitados && !(await sala.listaPermitidos().incluye(session.userId)))
+      if (config.solo_invitados && !(await sala.listaPermitidos().incluye(identidadRealEstudiante(session))))
         throw new ErrorSesion(
           session.metodo === MetodosLogin.DNI ? TipoErrorSesion.DniNoPermitido : TipoErrorSesion.EmailNoPermitido,
           `El ${session.metodo === MetodosLogin.DNI ? 'DNI' : 'email'} ${
-            session.userId
+            identidadRealEstudiante(session)
           } no está en la lista de participantes permitidos.`
         )
       break
 
     case MetodosLogin.Nombre:
       // El nombre (identidad) no se puede reutilizar dentro de la misma sala si es el método login.
-      const nombreNormalizado = normalizarTexto(session.userId)
+      const nombreNormalizado = normalizarTexto(identidadRealEstudiante(session))
       if (nombreNormalizado === normalizarTexto(sala.profe.email))
-        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
+        throw new ErrorSesion(
+          TipoErrorSesion.NombreEnUso,
+          `El nombre "${identidadRealEstudiante(session)}" ya está en uso en la sala.`
+        )
       const enUso = (await sala.listarEstudiantes()).some(
-        (s) => normalizarTexto(s.userId) === nombreNormalizado && s.clientId !== session.clientId
+        (s) => normalizarTexto(s.nombre) === nombreNormalizado && s.clientId !== session.clientId
       )
       if (enUso)
-        throw new ErrorSesion(TipoErrorSesion.NombreEnUso, `El nombre "${session.userId}" ya está en uso en la sala.`)
+        throw new ErrorSesion(
+          TipoErrorSesion.NombreEnUso,
+          `El nombre "${identidadRealEstudiante(session)}" ya está en uso en la sala.`
+        )
       break
   }
 }

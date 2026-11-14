@@ -1,15 +1,16 @@
 import { create } from 'zustand'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 
 interface InvitadoState {
   esInvitado: boolean
-  nombreProvisto?: string
-  set: (payload: { nombreProvisto?: string }) => void
+  info?: InfoEntrada
+  set: (payload: { info?: InfoEntrada }) => void
   reset: () => void
 }
 
 export const storeInvitado = create<InvitadoState>((set) => ({
   esInvitado: false,
-  nombreProvisto: undefined,
-  set: ({ nombreProvisto }) => set({ esInvitado: true, nombreProvisto }),
-  reset: () => set({ esInvitado: false, nombreProvisto: undefined }),
+  info: undefined,
+  set: ({ info }) => set({ esInvitado: true, info }),
+  reset: () => set({ esInvitado: false, info: undefined }),
 }))

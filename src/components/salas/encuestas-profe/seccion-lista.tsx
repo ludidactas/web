@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 import { ListaInvitadosForm, ListaPermitidosForm, type EntradaLista } from './lista-invitados-form'
 
 const AVISO: Record<Exclude<AccesoSala, AccesoSala.Libre>, string> = {
@@ -14,7 +15,7 @@ export function SeccionLista({
   metodo,
   acceso,
   lista,
-  nombres,
+  info,
   onAgregar,
   onRemover,
   onBorrar,
@@ -22,7 +23,7 @@ export function SeccionLista({
   metodo: MetodosLogin
   acceso: Exclude<AccesoSala, AccesoSala.Libre>
   lista: string[]
-  nombres: Record<string, string>
+  info: Record<string, InfoEntrada>
   onAgregar: (entradas: EntradaLista[]) => void
   onRemover: (entrada: string) => void
   onBorrar: () => void
@@ -36,7 +37,7 @@ export function SeccionLista({
         <ListaPermitidosForm
           metodo={metodo}
           lista={lista}
-          nombres={nombres}
+          info={info}
           onRemover={onRemover}
           onBorrar={onBorrar}
           onAgregarCSV={onAgregar}

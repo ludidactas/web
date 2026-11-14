@@ -4,7 +4,7 @@ import { MetodosLogin } from '../../validators/auth'
 import { ListaPermitidos } from '../app'
 
 const ID = `test-lista-${crypto.randomUUID()}`
-const limpiar = () => redis.del(`sala:${ID}:allowed_list`, `sala:${ID}:allowed_names`)
+const limpiar = () => redis.del(`sala:${ID}:allowed_list`, `sala:${ID}:allowed_info`)
 afterEach(limpiar)
 
 describe('ListaPermitidos con identidad nombre', () => {
@@ -18,24 +18,33 @@ describe('ListaPermitidos con identidad nombre', () => {
     expect(await lista().incluye('Beto')).toBe(false)
   })
 
-  it('el nombre provisto se asigna a la entrada guardada y se resuelve por clave', async () => {
+  it('la info se asigna a la entrada guardada y se resuelve por clave', async () => {
     await lista().agregar(['José Pérez'])
-    await lista().setNombre('jose perez', 'Josefina')
-    expect(await lista().nombres()).toEqual({ 'José Pérez': 'Josefina' })
-    expect(await lista().nombreProvistoDe('JOSÉ PÉREZ')).toBe('Josefina')
-    expect(await lista().nombreProvistoDe('Beto')).toBeUndefined()
+    await lista().setInfo('jose perez', { nombre: 'Josefina' })
+    expect(await lista().info()).toEqual({ 'José Pérez': { nombre: 'Josefina' } })
+    expect(await lista().infoDe('JOSÉ PÉREZ')).toEqual({ nombre: 'Josefina' })
+    expect(await lista().infoDe('Beto')).toBeUndefined()
   })
 
-  it('remover por clave borra también el nombre provisto', async () => {
+  it('setInfo reemplaza la info completa y una info vacía la quita', async () => {
+    await lista().agregar(['Ana'])
+    await lista().setInfo('Ana', { nombre: 'Ana García' })
+    await lista().setInfo('Ana', { nombre: 'Ana G.' })
+    expect(await lista().infoDe('Ana')).toEqual({ nombre: 'Ana G.' })
+    await lista().setInfo('Ana', {})
+    expect(await lista().info()).toEqual({})
+  })
+
+  it('remover por clave borra también la info', async () => {
     await lista().agregar(['José Pérez'])
-    await lista().setNombre('José Pérez', 'Josefina')
+    await lista().setInfo('José Pérez', { nombre: 'Josefina' })
     await lista().remover(['jose perez'])
     expect(await lista().obtener()).toEqual([])
-    expect(await lista().nombres()).toEqual({})
+    expect(await lista().info()).toEqual({})
   })
 
-  it('nombrar algo que no figura en la lista falla', async () => {
-    await expect(lista().setNombre('Beto', 'Roberto')).rejects.toThrow(/no está en la lista/)
+  it('anotar algo que no figura en la lista falla', async () => {
+    await expect(lista().setInfo('Beto', { nombre: 'Roberto' })).rejects.toThrow(/no está en la lista/)
   })
 })
 
@@ -53,25 +62,25 @@ describe('ListaPermitidos con identidad google', () => {
 })
 
 describe('ListaPermitidos con identidad dni', () => {
-  it('limpiar borra la lista y los nombres', async () => {
+  it('limpiar borra la lista y la info', async () => {
     const lista = ListaPermitidos.para(ID, MetodosLogin.DNI)
     await lista.agregar(['123'])
-    await lista.setNombre('123', 'Zoe')
+    await lista.setInfo('123', { nombre: 'Zoe' })
     await lista.limpiar()
-    expect(await lista.obtenerConNombres()).toEqual({ lista: [], nombres: {} })
+    expect(await lista.obtenerConInfo()).toEqual({ lista: [], info: {} })
   })
 })
 
-describe('agregarConNombres', () => {
-  it('agrega entradas y nombres en un solo paso, y no guarda nada si una entrada es inválida', async () => {
+describe('agregarConInfo', () => {
+  it('agrega entradas e info en un solo paso, y no guarda nada si una entrada es inválida', async () => {
     const lista = ListaPermitidos.para(ID, MetodosLogin.DNI)
-    await expect(lista.agregarConNombres([{ identidad: '123', nombre: 'Zoe' }, { identidad: 'x' }])).rejects.toThrow()
+    await expect(lista.agregarConInfo([{ identidad: '123', info: { nombre: 'Zoe' } }, { identidad: 'x' }])).rejects.toThrow()
     expect(await lista.obtener()).toEqual([])
 
-    await lista.agregarConNombres([{ identidad: '123', nombre: 'Zoe' }, { identidad: '456' }])
-    expect(await lista.obtenerConNombres()).toEqual({
+    await lista.agregarConInfo([{ identidad: '123', info: { nombre: 'Zoe' } }, { identidad: '456' }])
+    expect(await lista.obtenerConInfo()).toEqual({
       lista: expect.arrayContaining(['123', '456']),
-      nombres: { '123': 'Zoe' },
+      info: { '123': { nombre: 'Zoe' } },
     })
   })
 })

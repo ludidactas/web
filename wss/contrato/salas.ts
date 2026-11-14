@@ -8,12 +8,13 @@ import {
   idSalaSchema,
   type ConfigSala,
   type EstudianteDeSala,
-  type ListaPermitidosConNombres,
+  type ListaPermitidosConInfo,
   type PlanillaCompleta,
   type SalaData,
   type SalaResumen,
 } from '../validators/salas'
 import type { WssEstudianteSession } from '../validators/session'
+import { infoEntrada, type InfoEntrada } from '../validators/invitados'
 
 /** Comandos de gestión (ABM) del profe: valen desde que conecta, sin sala abierta. */
 export const comandosSalasGestion = {
@@ -31,11 +32,12 @@ export const comandosSalaActivaProfe = {
   'sala:listar_estudiantes': comando(sinPayload),
   /** `minutos` acota la planilla a quienes estuvieron conectados en ese intervalo hacia atrás. */
   'sala:pedir_planilla_completa': comandoAck(z.number().optional(), devuelve<PlanillaCompleta>()),
-  /** Entradas de la lista (identidad según el `metodo_login`) con su nombre provisto opcional. */
-  'sala:permitidos_agregar': comando(z.array(z.object({ identidad: z.string(), nombre: z.string().optional() }))),
+  /** Entradas de la lista (identidad según el `metodo_login`) con su info opcional. */
+  'sala:permitidos_agregar': comando(z.array(z.object({ identidad: z.string(), info: infoEntrada.optional() }))),
   'sala:permitidos_remover': comando(z.array(z.string())),
   'sala:permitidos_limpiar': comando(sinPayload),
-  'sala:permitidos_nombre': comando(z.object({ identidad: z.string(), nombre: z.string() })),
+  /** Reemplaza la info de una entrada de la lista. */
+  'sala:permitidos_info': comando(z.object({ identidad: z.string(), info: infoEntrada })),
   /**
    * Quita la reserva de un nombre (identidad `nombre`) y desconecta a quien lo tenga. Con `borrarDatos`
    * borra además lo asociado al nombre: planilla, votos, datos de Go y asistencia.
@@ -64,19 +66,19 @@ export interface EventosSalaProfe extends EventosBase {
     polls: EncuestaHidratadaProfe[]
     estudiantes: EstudianteDeSala[]
     config: ConfigSala
-    listaPermitidos: ListaPermitidosConNombres
+    listaPermitidos: ListaPermitidosConInfo
   }
   'sala:estudiantes': EstudianteDeSala[]
   'sala:estudiante_conectado': WssEstudianteSession
   'sala:estudiante_desconectado': { id: string }
-  'sala:lista_permitidos': ListaPermitidosConNombres
+  'sala:lista_permitidos': ListaPermitidosConInfo
 }
 
 export interface EventosSalaEstudiante extends EventosBase {
   /** El server lo desconecta de la sala (fuera de la lista de invitados, sala eliminada). */
   'sala:kick': { motivo: string }
-  /** Está en la lista de invitados: `nombreProvisto` es el que le puso el profe, si le puso uno. */
-  'sala:invitado': { nombreProvisto?: string }
+  /** Está en la lista de invitados: `info` es lo que el profe anotó de esa entrada, si anotó algo. */
+  'sala:invitado': { info?: InfoEntrada }
 }
 
 export type EventosSalaPublico = EventosBase

@@ -1,7 +1,8 @@
 import { normalizarIdentidad } from '@/wss/invitados/identidad'
 import { MetodosLogin } from '@/wss/validators/auth'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 
-export type EntradaLista = { identidad: string; nombre?: string }
+export type EntradaLista = { identidad: string; info?: InfoEntrada }
 
 /** Resultado de leer un CSV: las entradas válidas y las filas que se descartaron por no tener la forma de la identidad. */
 export type LecturaCSV = { entradas: EntradaLista[]; descartadas: string[] }
@@ -23,7 +24,7 @@ export function entradaValida(metodo: MetodosLogin, valor: string): string | nul
 }
 
 /**
- * Lee un CSV con una columna de identidad (según la sala) y otra de nombre provisto, en cualquier orden.
+ * Lee un CSV con una columna de identidad (según la sala) y otra de nombre provisto (el campo `nombre` de la info), en cualquier orden.
  * Detecta el encabezado y acepta `,` y `;` como separador. Sin encabezado, la primera columna es la
  * identidad y la segunda el nombre.
  */
@@ -56,7 +57,8 @@ export function parsearCSV(texto: string, metodo: MetodosLogin): LecturaCSV {
       if (crudo) descartadas.push(crudo)
       continue
     }
-    entradas.push({ identidad, nombre: colNombre !== -1 ? celdas[colNombre]?.trim() || undefined : undefined })
+    const nombre = colNombre !== -1 ? celdas[colNombre]?.trim() : undefined
+    entradas.push({ identidad, info: nombre ? { nombre } : undefined })
   }
   return { entradas, descartadas }
 }

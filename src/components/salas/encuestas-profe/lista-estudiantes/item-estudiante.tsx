@@ -15,18 +15,18 @@ import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
 import { LiberarNombre } from './liberar-nombre'
-import { buscarNombreProvisto } from '@/wss/invitados/identidad'
+import { buscarInfo } from '@/wss/invitados/identidad'
 
 /** Una fila de la lista de participantes: avatar, nombre/DNI/email, y las acciones del profe sobre
  * ese estudiante (invitar a Go, ver su partida o sus votos). */
 export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante; modo: 'encuestas' | 'go' }) {
   const { invitar } = useConexionProfe()
   const { contrincantes, partida: partidaPropia } = storeGo()
-  const { nombres: nombresInvitados } = storePermitidos()
+  const { info: infoInvitados } = storePermitidos()
   const { config } = storeConfig()
   const nombreProvisto =
     config && config.acceso !== AccesoSala.Libre
-      ? buscarNombreProvisto(nombresInvitados, config.metodo_login, e.userId)
+      ? buscarInfo(infoInvitados, config.metodo_login, e.userId)?.nombre
       : undefined
 
   return (

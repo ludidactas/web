@@ -23,6 +23,7 @@ import { claveDeIdentidad } from '@/wss/invitados/identidad'
 import { OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
 import { TarjetasEleccion } from '@/components/salas/tarjetas-eleccion'
 import type { CondicionAsistencia } from '@/wss/validators/asistencia'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 import type { EntradaLista } from '@/components/salas/encuestas-profe/lista-invitados-form'
 import { SeccionLista } from '@/components/salas/encuestas-profe/seccion-lista'
 import { SelectorCondicionDeAsistencia } from '@/components/salas/encuestas-profe/condicion-asistencia'
@@ -55,7 +56,7 @@ type FormState = {
   metodoLogin: MetodosLogin
   acceso: AccesoSala
   lista: string[]
-  nombres: Record<string, string>
+  info: Record<string, InfoEntrada>
   condicionAsistencia: CondicionAsistencia | null
 }
 
@@ -64,7 +65,7 @@ const FORM_INICIAL: FormState = {
   metodoLogin: MetodosLogin.Nombre,
   acceso: AccesoSala.Libre,
   lista: [],
-  nombres: {},
+  info: {},
   condicionAsistencia: null,
 }
 
@@ -102,7 +103,7 @@ function FormCrearSala() {
               acceso: form.acceso,
               nombre: form.nombre.trim(),
               listaPermitidos: form.lista,
-              nombresPermitidos: form.nombres,
+              infoPermitidos: form.info,
               condicion_asistencia: form.condicionAsistencia,
             },
           }),
@@ -117,19 +118,19 @@ function FormCrearSala() {
     })
   }
 
-  /** Las entradas ya vienen normalizadas (`entradaValida`); se unifican por clave y el nombre más nuevo gana. */
+  /** Las entradas ya vienen normalizadas (`entradaValida`); se unifican por clave y la info más nueva gana. */
   const agregarALista = (entradas: EntradaLista[]) =>
     setForm((f) => {
       const lista = [...f.lista]
-      const nombres = { ...f.nombres }
-      for (const { identidad, nombre } of entradas) {
+      const info = { ...f.info }
+      for (const { identidad, info: infoDeEntrada } of entradas) {
         const clave = claveDeIdentidad(f.metodoLogin, identidad)
         const existente = lista.find((e) => claveDeIdentidad(f.metodoLogin, e) === clave)
         const entrada = existente ?? identidad
         if (!existente) lista.push(entrada)
-        if (nombre) nombres[entrada] = nombre
+        if (infoDeEntrada) info[entrada] = infoDeEntrada
       }
-      return { ...f, lista, nombres }
+      return { ...f, lista, info }
     })
 
   return (
@@ -149,7 +150,7 @@ function FormCrearSala() {
         legend="¿Cómo se identifican las personas?"
         valor={form.metodoLogin}
         opciones={OPCIONES_IDENTIDAD}
-        onChange={(metodoLogin) => setForm((f) => ({ ...f, metodoLogin, lista: [], nombres: {} }))}
+        onChange={(metodoLogin) => setForm((f) => ({ ...f, metodoLogin, lista: [], info: {} }))}
       />
 
       <TarjetasEleccion
@@ -157,7 +158,7 @@ function FormCrearSala() {
         valor={form.acceso}
         opciones={OPCIONES_ACCESO}
         onChange={(acceso) =>
-          setForm((f) => ({ ...f, acceso, ...(acceso === AccesoSala.Libre && { lista: [], nombres: {} }) }))
+          setForm((f) => ({ ...f, acceso, ...(acceso === AccesoSala.Libre && { lista: [], info: {} }) }))
         }
       />
 
@@ -179,15 +180,15 @@ function FormCrearSala() {
               metodo={form.metodoLogin}
               acceso={form.acceso as Exclude<AccesoSala, AccesoSala.Libre>}
               lista={form.lista}
-              nombres={form.nombres}
+              info={form.info}
               onAgregar={agregarALista}
               onRemover={(entrada) =>
                 setForm((f) => {
-                  const { [entrada]: _quitado, ...nombres } = f.nombres
-                  return { ...f, lista: f.lista.filter((e) => e !== entrada), nombres }
+                  const { [entrada]: _quitado, ...info } = f.info
+                  return { ...f, lista: f.lista.filter((e) => e !== entrada), info }
                 })
               }
-              onBorrar={() => setForm((f) => ({ ...f, lista: [], nombres: {} }))}
+              onBorrar={() => setForm((f) => ({ ...f, lista: [], info: {} }))}
             />
           </motion.div>
         )}

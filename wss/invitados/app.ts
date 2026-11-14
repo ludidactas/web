@@ -1,10 +1,11 @@
-import { MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
+import { MetodosLogin } from '../validators/auth'
+import { infoEntrada, infoVacia, type InfoEntrada } from '../validators/invitados'
 import * as db from './db'
 import { claveDeIdentidad, normalizarIdentidad, prepararLista } from './identidad'
 
 /**
- * La lista de una sala: identidades (DNI, email o nombre según su `metodo_login`) con el nombre que el
- * profe le puso a cada una. Guarda las entradas normalizadas (`normalizarIdentidad`) y resuelve la
+ * La lista de una sala: identidades (DNI, email o nombre según su `metodo_login`) con la info que el
+ * profe anotó de cada una. Guarda las entradas normalizadas (`normalizarIdentidad`) y resuelve la
  * pertenencia por clave (`claveDeIdentidad`), así que `Ana` y `ana` son la misma entrada.
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -27,16 +28,16 @@ export namespace ListaPermitidos {
       )
     }
 
-    /** Agrega las entradas con su nombre provisto (si lo traen). Valida el lote entero antes de guardar nada. */
-    async function agregarConNombres(entradas: { identidad: string; nombre?: string }[]) {
-      const nombres = Object.fromEntries(entradas.flatMap((e) => (e.nombre ? [[e.identidad, e.nombre]] : [])))
+    /** Agrega las entradas con su info (si la traen). Valida el lote entero antes de guardar nada. */
+    async function agregarConInfo(entradas: { identidad: string; info?: InfoEntrada }[]) {
+      const info = Object.fromEntries(entradas.flatMap((e) => (e.info ? [[e.identidad, e.info]] : [])))
       const preparado = prepararLista(
         metodo,
         entradas.map((e) => e.identidad),
-        nombres
+        info
       )
       await agregar(preparado.lista)
-      for (const [entrada, nombre] of Object.entries(preparado.nombres)) await setNombre(entrada, nombre)
+      for (const [entrada, infoDeEntrada] of Object.entries(preparado.info)) await setInfo(entrada, infoDeEntrada)
     }
 
     async function remover(valores: string[]) {
@@ -44,19 +45,19 @@ export namespace ListaPermitidos {
       const aQuitar = (await db.obtenerPermitidosDe(salaId)).filter((entrada) => objetivos.has(clave(entrada)))
       if (aQuitar.length === 0) return
       await db.quitarPermitidosDe(aQuitar, salaId)
-      await db.quitarNombresPermitidos(aQuitar, salaId)
+      await db.quitarInfoPermitidos(aQuitar, salaId)
     }
 
-    async function setNombre(identidad: string, nombre: string) {
+    async function setInfo(identidad: string, info: InfoEntrada) {
       const entrada = await buscar(normalizarIdentidad(metodo, identidad))
       if (!entrada) throw new Error(`"${identidad}" no está en la lista`)
-      const recortado = nombre.trim().slice(0, MAX_LEN_NOMBRE)
-      if (!recortado) throw new Error('El nombre no puede estar vacío')
-      await db.setNombrePermitido(salaId, entrada, recortado)
+      const limpia = infoEntrada.parse(info)
+      if (infoVacia(limpia)) await db.quitarInfoPermitidos([entrada], salaId)
+      else await db.setInfoPermitido(salaId, entrada, limpia)
     }
 
-    async function nombres() {
-      return db.obtenerNombresPermitidos(salaId)
+    async function infoDeLaLista() {
+      return db.obtenerInfoPermitidos(salaId)
     }
 
     return {
@@ -65,23 +66,23 @@ export namespace ListaPermitidos {
       remover,
       limpiar: async () => {
         await db.limpiarListaPermitidosDe(salaId)
-        await db.limpiarNombresPermitidosDe(salaId)
+        await db.limpiarInfoPermitidosDe(salaId)
       },
       /** Si `identidad` figura en la lista. */
       incluye: async (identidad: string) => (await buscar(identidad)) !== undefined,
 
-      agregarConNombres,
-      /** Asigna el nombre que el profe le dio a una entrada de la lista. Lanza si la entrada no figura. */
-      setNombre,
-      /** Mapa entrada → nombre provisto. */
-      nombres,
-      /** El nombre provisto de `identidad`, o `undefined` si no figura en la lista o no tiene. */
-      nombreProvistoDe: async (identidad: string) => {
+      agregarConInfo,
+      /** Reemplaza la info de una entrada de la lista (vacía la deja sin anotaciones). Lanza si la entrada no figura. */
+      setInfo,
+      /** Mapa entrada → info. */
+      info: infoDeLaLista,
+      /** La info de `identidad`, o `undefined` si no figura en la lista o no tiene. */
+      infoDe: async (identidad: string) => {
         const entrada = await buscar(identidad)
-        return entrada === undefined ? undefined : (await nombres())[entrada]
+        return entrada === undefined ? undefined : (await infoDeLaLista())[entrada]
       },
-      /** Lista junto con sus nombres provistos, para hidratar al FE de una sola vez. */
-      obtenerConNombres: async () => ({ lista: await db.obtenerPermitidosDe(salaId), nombres: await nombres() }),
+      /** Lista junto con la info de sus entradas, para hidratar al FE de una sola vez. */
+      obtenerConInfo: async () => ({ lista: await db.obtenerPermitidosDe(salaId), info: await infoDeLaLista() }),
     }
   }
 }

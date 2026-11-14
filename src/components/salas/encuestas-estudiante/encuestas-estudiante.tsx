@@ -27,7 +27,7 @@ import { BannerSalaEstudiante } from '../banner-sala-estudiante'
 
 /** Avisa al estudiante que su DNI está en la lista de invitados de la sala (se le tomó asistencia). */
 export function AvisoInvitado() {
-  const { esInvitado, nombreProvisto } = storeInvitado()
+  const { esInvitado, info } = storeInvitado()
 
   if (!esInvitado) return null
 
@@ -35,7 +35,7 @@ export function AvisoInvitado() {
     <p className="flex items-start sm:items-center max-w-max gap-1.5 text-xs sm:text-sm text-teal-600 bg-white rounded-full px-2 py-1 mt-2">
       <Icon className="w-8 h-8" icon={"ant-design:check-circle-twotone"} /> 
       Estás en la lista de invitados de esta sala{' '}
-      {nombreProvisto && <>con el nombre {nombreProvisto}</>}
+      {info?.nombre && <>con el nombre {info.nombre}</>}
     </p>
   )
 }

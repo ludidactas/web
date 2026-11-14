@@ -25,7 +25,7 @@ export function armarTablaPlanilla(planilla: PlanillaCompleta, config: ConfigSal
   const filas = planilla.filas.map((fila) => ({
     id: fila.dni || fila.email || fila.userId,
     nombre: fila.asistio ? fila.nombre || 'Sin nombre' : '',
-    nombreProvisto: fila.nombreProvisto || '',
+    nombreProvisto: fila.info?.nombre || '',
     asistio: fila.asistio ? 'Sí' : 'No',
     ...fila.respuestas,
   }))

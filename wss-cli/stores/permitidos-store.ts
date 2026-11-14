@@ -1,14 +1,16 @@
 import { create } from 'zustand'
+import type { ListaPermitidosConInfo } from '@/wss/validators/salas'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 
 interface PermitidosState {
   lista: string[]
-  nombres: Record<string, string>
-  /** Hidrata lista + nombres de una sola vez (viene siempre junta del server). */
-  set: (payload: { lista: string[]; nombres: Record<string, string> }) => void
+  info: Record<string, InfoEntrada>
+  /** Hidrata lista + info de una sola vez (viene siempre junta del server). */
+  set: (payload: ListaPermitidosConInfo) => void
 }
 
 export const storePermitidos = create<PermitidosState>()((set) => ({
   lista: [],
-  nombres: {},
-  set: ({ lista, nombres }) => set({ lista, nombres }),
+  info: {},
+  set: ({ lista, info }) => set({ lista, info }),
 }))

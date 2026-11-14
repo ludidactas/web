@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { AccesoSala, MetodosLogin } from './auth'
+import { infoEntrada, type InfoEntrada } from './invitados'
 import { CONFIG_DEFAULTS, estadisticaSvgConfigValidator } from './overlay'
 import { condicionAsistenciaSchema } from './asistencia'
 import type { WssEstudianteSession } from './session'
@@ -21,13 +22,13 @@ export const configCreacionSala = z.object({
   // Lista inicial (identidades según el metodo_login), lueguito el server la extrae y la guarda en su SET (`sala:<id>:allowed_list`)
   listaPermitidos: z.array(z.string()).default([]),
 
-  // Nombres provistos para (algunas de) las identidades de `listaPermitidos`, cargados junto con la lista
-  // inicial. El server los extrae y los guarda en su hash (`sala:<id>:allowed_names`).
-  nombresPermitidos: z.record(z.string(), z.string()).default({}),
+  // Info de (algunas de) las identidades de `listaPermitidos`, cargada junto con la lista inicial. El
+  // server la extrae y la guarda en su hash (`sala:<id>:allowed_info`).
+  infoPermitidos: z.record(z.string(), infoEntrada).default({}),
 })
 
 /** Data derivada o generada en el server (lo que se persiste en el blob). */
-export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombresPermitidos: true }).extend({
+export const configSala = configCreacionSala.omit({ listaPermitidos: true, infoPermitidos: true }).extend({
   nombre_profe: z.string(),
   link: z.string(),
   overlay: estadisticaSvgConfigValidator.catch(CONFIG_DEFAULTS),
@@ -82,14 +83,14 @@ export type EstudianteDeSala = WssEstudianteSession & {
 /**
  * Fila de la planilla exportada. Los datos de identidad vienen de la sesión del estudiante; en una sala
  * con lista, quien figura en ella y nunca ingresó tiene una fila con `asistio: false` y solo su
- * identidad y su nombre provisto.
+ * identidad y su info.
  */
 export type FilaPlanillaCompleta = {
   userId: string
   nombre?: string
   dni?: string
   email?: string
-  nombreProvisto?: string
+  info?: InfoEntrada
   /** Pasó por la sala (y, si la planilla se acotó a una ventana, estuvo conectado en ella). */
   asistio: boolean
   /** Texto de lo que votó en cada encuesta, por id de encuesta. */
@@ -101,7 +102,7 @@ export type PlanillaCompleta = {
   filas: FilaPlanillaCompleta[]
 }
 
-/** Lista de una sala (identidades según su `metodo_login`) con los nombres que el profe les asignó. */
-export type ListaPermitidosConNombres = { lista: string[]; nombres: Record<string, string> }
+/** Lista de una sala (identidades según su `metodo_login`) con la info que el profe anotó de cada una. */
+export type ListaPermitidosConInfo = { lista: string[]; info: Record<string, InfoEntrada> }
 
 export type SalaResumen = { id: string; nombre?: string; metodo_login: MetodosLogin; acceso: AccesoSala }

@@ -8,8 +8,8 @@ const config = (metodo_login: MetodosLogin, acceso: AccesoSala) => ({ metodo_log
 const planilla: PlanillaCompleta = {
   preguntas: [{ id: 'p1', pregunta: '¿Listo?' }],
   filas: [
-    { userId: '111', dni: '111', nombre: 'Ana', nombreProvisto: 'Ana Gómez', asistio: true, respuestas: { p1: 'Sí' } },
-    { userId: '222', dni: '222', nombreProvisto: 'Beto Ruiz', asistio: false, respuestas: {} },
+    { userId: '111', dni: '111', nombre: 'Ana', info: { nombre: 'Ana Gómez' }, asistio: true, respuestas: { p1: 'Sí' } },
+    { userId: '222', dni: '222', info: { nombre: 'Beto Ruiz' }, asistio: false, respuestas: {} },
   ],
 }
 

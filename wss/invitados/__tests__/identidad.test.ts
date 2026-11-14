@@ -34,21 +34,23 @@ describe('claveDeIdentidad', () => {
 })
 
 describe('prepararLista', () => {
-  it('unifica repetidos por clave y normaliza los nombres provistos', () => {
-    const { lista, nombres } = prepararLista(MetodosLogin.Nombre, ['Ana', ' ana ', 'Beto'], { ANA: '  Ana García ' })
+  it('unifica repetidos por clave y normaliza la info', () => {
+    const { lista, info } = prepararLista(MetodosLogin.Nombre, ['Ana', ' ana ', 'Beto'], {
+      ANA: { nombre: '  Ana García ' },
+    })
     expect(lista).toEqual(['Ana', 'Beto'])
-    expect(nombres).toEqual({ Ana: 'Ana García' })
+    expect(info).toEqual({ Ana: { nombre: 'Ana García' } })
   })
 
   it('rechaza todo el lote si alguna entrada es inválida, con el detalle', () => {
     expect(() => prepararLista(MetodosLogin.DNI, ['123', 'abc', '456', 'x1'])).toThrow(/abc, x1/)
   })
 
-  it('rechaza un nombre provisto para algo que no está en la lista', () => {
-    expect(() => prepararLista(MetodosLogin.DNI, ['123'], { '999': 'Zoe' })).toThrow(/no está en la lista/)
+  it('rechaza info para algo que no está en la lista', () => {
+    expect(() => prepararLista(MetodosLogin.DNI, ['123'], { '999': { nombre: 'Zoe' } })).toThrow(/no está en la lista/)
   })
 
-  it('descarta nombres provistos vacíos', () => {
-    expect(prepararLista(MetodosLogin.DNI, ['123'], { '123': '   ' }).nombres).toEqual({})
+  it('descarta la info vacía', () => {
+    expect(prepararLista(MetodosLogin.DNI, ['123'], { '123': { nombre: '   ' } }).info).toEqual({})
   })
 })

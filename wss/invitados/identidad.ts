@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { normalizarTexto } from '../utils'
 import { MAX_LEN_DNI, MAX_LEN_NOMBRE, MetodosLogin } from '../validators/auth'
+import { infoEntrada, infoVacia, type InfoEntrada } from '../validators/invitados'
 
 /** Cómo se llama la identidad en los mensajes al usuario. */
 export const ETIQUETA_IDENTIDAD: Record<MetodosLogin, string> = {
@@ -37,15 +38,15 @@ export function claveDeIdentidad(metodo: MetodosLogin, valor: string): string {
 }
 
 /**
- * Valida y normaliza la lista inicial de una sala, y los nombres provistos que la acompañan.
+ * Valida y normaliza la lista inicial de una sala, y la info de sus entradas que la acompaña.
  * Lanza con el detalle de las entradas inválidas, sin guardar nada. Las entradas repetidas (por clave)
- * se unifican. Un nombre provisto para algo que no está en la lista es un error.
+ * se unifican. Info para algo que no está en la lista es un error.
  */
 export function prepararLista(
   metodo: MetodosLogin,
   lista: string[],
-  nombres: Record<string, string> = {}
-): { lista: string[]; nombres: Record<string, string> } {
+  info: Record<string, InfoEntrada> = {}
+): { lista: string[]; info: Record<string, InfoEntrada> } {
   const porClave = new Map<string, string>()
   const invalidas: string[] = []
   for (const valor of lista) {
@@ -59,24 +60,24 @@ export function prepararLista(
   }
   if (invalidas.length > 0) throw new Error(`Entradas inválidas en la lista: ${invalidas.join(', ')}`)
 
-  const nombresPorEntrada: Record<string, string> = {}
-  for (const [identidad, nombre] of Object.entries(nombres)) {
+  const infoPorEntrada: Record<string, InfoEntrada> = {}
+  for (const [identidad, crudo] of Object.entries(info)) {
     const entrada = porClave.get(claveDeIdentidad(metodo, identidad))
-    if (!entrada) throw new Error(`"${identidad}" tiene nombre provisto pero no está en la lista`)
-    const recortado = nombre.trim().slice(0, MAX_LEN_NOMBRE)
-    if (recortado) nombresPorEntrada[entrada] = recortado
+    if (!entrada) throw new Error(`"${identidad}" tiene info pero no está en la lista`)
+    const limpia = infoEntrada.parse(crudo)
+    if (!infoVacia(limpia)) infoPorEntrada[entrada] = limpia
   }
 
-  return { lista: [...porClave.values()], nombres: nombresPorEntrada }
+  return { lista: [...porClave.values()], info: infoPorEntrada }
 }
 
-/** El nombre provisto de `userId` en un mapa entrada → nombre (como el de `ListaPermitidosConNombres`), o `undefined`. */
-export function buscarNombreProvisto(
-  nombres: Record<string, string>,
+/** La info de `userId` en un mapa entrada → info (como el de `ListaPermitidosConInfo`), o `undefined`. */
+export function buscarInfo(
+  info: Record<string, InfoEntrada>,
   metodo: MetodosLogin,
   userId: string
-): string | undefined {
+): InfoEntrada | undefined {
   const objetivo = claveDeIdentidad(metodo, userId)
-  const entrada = Object.keys(nombres).find((e) => claveDeIdentidad(metodo, e) === objetivo)
-  return entrada === undefined ? undefined : nombres[entrada]
+  const entrada = Object.keys(info).find((e) => claveDeIdentidad(metodo, e) === objetivo)
+  return entrada === undefined ? undefined : info[entrada]
 }

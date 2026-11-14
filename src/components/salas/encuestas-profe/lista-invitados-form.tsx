@@ -4,12 +4,13 @@ import { toast } from 'sonner'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { MetodosLogin } from '@/wss/validators/auth'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 import { IDENTIDAD_EN_LISTA } from '../opciones-sala'
 import { entradaValida, parsearCSV, type EntradaLista } from './csv-lista'
 
 export type { EntradaLista }
 
-/** Formulario para agregar una entrada (identidad + nombre opcional) a la lista de la sala. */
+/** Formulario para agregar una entrada (identidad + info opcional) a la lista de la sala. */
 export function ListaInvitadosForm({
   metodo,
   onAgregar,
@@ -26,7 +27,7 @@ export function ListaInvitadosForm({
 
   const handleAgregar = () => {
     if (identidad === null) return
-    onAgregar({ identidad, nombre: inputNombre.trim() || undefined })
+    onAgregar({ identidad, info: inputNombre.trim() ? { nombre: inputNombre.trim() } : undefined })
     setInputNombre('')
     setInputIdentidad('')
   }
@@ -77,14 +78,14 @@ export function ListaInvitadosForm({
 export function ListaPermitidosForm({
   metodo,
   lista,
-  nombres,
+  info,
   onRemover,
   onBorrar,
   onAgregarCSV,
 }: {
   metodo: MetodosLogin
   lista: string[]
-  nombres: Record<string, string>
+  info: Record<string, InfoEntrada>
   onRemover: (entrada: string) => void
   onBorrar: () => void
   onAgregarCSV: (nuevos: EntradaLista[]) => void
@@ -121,7 +122,7 @@ export function ListaPermitidosForm({
                 <div key={item}>
                   <li className={cn('flex items-center justify-between gap-2 w-full py-1')}>
                     <p className={cn('flex flex-col')}>
-                      <span>{nombres[item]}</span>
+                      <span>{info[item]?.nombre}</span>
                       <span>{item}</span>
                     </p>
                     <button

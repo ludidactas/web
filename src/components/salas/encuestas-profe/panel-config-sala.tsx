@@ -58,7 +58,7 @@ function EleccionesFijas({ metodo, acceso }: { metodo: MetodosLogin; acceso: Acc
 export default function PanelConfigSala({ children }: PropsWithChildren) {
   const { actualizarConfig, agregarPermitidos, removerPermitidos, borrarListaPermitidos } = useConexionProfe()
   const { config } = storeConfig()
-  const { lista: listaPermitidos, nombres } = storePermitidos()
+  const { lista: listaPermitidos, info } = storePermitidos()
 
   const acceso = config?.acceso ?? AccesoSala.Libre
 
@@ -77,7 +77,7 @@ export default function PanelConfigSala({ children }: PropsWithChildren) {
               metodo={config.metodo_login}
               acceso={acceso}
               lista={listaPermitidos}
-              nombres={nombres}
+              info={info}
               onAgregar={agregarPermitidos}
               onRemover={(entrada) => removerPermitidos([entrada])}
               onBorrar={borrarListaPermitidos}

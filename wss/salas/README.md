@@ -58,8 +58,8 @@ identidad y el acceso elegidos como dato de solo lectura.
 
 ## La lista
 
-Cada entrada es una **identidad** (nombre, DNI o email, según `metodo_login`) y, opcionalmente, el
-**nombre provisto** que le dio el profe. La lista es lo único de la política de acceso que se puede
+Cada entrada es una **identidad** (nombre, DNI o email, según `metodo_login`) y, opcionalmente, su
+**info**: lo que el profe sabe de esa persona de antemano. La lista es lo único de la política de acceso que se puede
 editar con la sala en marcha.
 
 - **Normalización.** El DNI se guarda solo con dígitos; el email, en minúsculas y sin espacios; el
@@ -68,14 +68,16 @@ editar con la sala en marcha.
 - **Validación.** El server rechaza las entradas que no tienen la forma de la identidad de la sala (DNI
   no numérico, email mal formado, nombre vacío o de más de `MAX_LEN_NOMBRE`). El FE las filtra antes de
   mandarlas (formulario y CSV); la barrera es la del server.
-- **Nombre provisto.** Es una anotación del profe sobre la entrada: no reemplaza el nombre que el
-  estudiante declara o trae de Google. La planilla muestra ambos.
+- **Info de la entrada.** Un objeto con el schema `infoEntrada` (`wss/validators/invitados.ts`), única
+  fuente de qué se puede anotar. Hoy tiene un campo, `nombre` (el **nombre provisto**), que no
+  reemplaza el nombre que el estudiante declara o trae de Google: la planilla muestra ambos. Un campo
+  nuevo se agrega en el schema y en el FE (formulario, CSV, planilla). `setInfo` reemplaza la info
+  completa de una entrada; una info vacía la deja sin anotaciones.
 - **CSV.** Una columna con la identidad (`nombre`, `dni` o `email`, según la sala) y otra `nombre
   provisto`, en cualquier orden. Detecta el encabezado y acepta `,` y `;` como separador.
 - **Editar.** Agregar, quitar o limpiar rige al instante. En una sala `lista`, quien deja de figurar y
   está conectado recibe `sala:kick`; en `invitados` y `libre` ninguna edición expulsa a nadie.
-- **Quién la ve.** Solo el profe. El estudiante recibe únicamente `sala:invitado` con su propio nombre
-  provisto.
+- **Quién la ve.** Solo el profe. El estudiante recibe únicamente `sala:invitado` con su propia info.
 
 ### Liberar un nombre (identidad `nombre`)
 
@@ -144,8 +146,8 @@ la sala le pidió y el server construye la sesión contra el schema de ese `meto
 ## Ciclo de vida
 
 - **Crear** (`sala:crear`). Exige que el profe no haya alcanzado el máximo de salas de su plan
-  (`wss/suscripciones/planes.ts`). El id lo genera el server. La lista inicial y sus nombres viajan en
-  el mismo comando.
+  (`wss/suscripciones/planes.ts`). El id lo genera el server. La lista inicial y su info viajan en
+  el mismo comando (`infoPermitidos`: identidad → info).
 - **Abrir** (`sala:abrir`). Solo el dueño. Una conexión opera **una** sala: para cambiar de sala se
   reconecta. Abrir marca el inicio de la clase y emite `sala:abierta` con todo el estado (config,
   encuestas, planilla, lista). Los comandos de operación se registran recién al abrir.
@@ -187,8 +189,8 @@ Contrato completo en `wss/contrato/salas.ts`.
 `sala:renombrar`, `sala:eliminar` (ack), `sala:abrir`.
 
 **Sala abierta del profe**: `sala:actualizar_config`, `sala:listar_estudiantes`,
-`sala:pedir_planilla_completa` (ack), `sala:permitidos_agregar` (entradas con su nombre provisto opcional, en un solo comando), `sala:permitidos_remover`,
-`sala:permitidos_limpiar`, `sala:permitidos_nombre`, `sala:liberar_nombre`,
+`sala:pedir_planilla_completa` (ack), `sala:permitidos_agregar` (entradas con su info opcional, en un solo comando), `sala:permitidos_remover`,
+`sala:permitidos_limpiar`, `sala:permitidos_info` (`{ identidad, info }`), `sala:liberar_nombre`,
 `sala:asistencias_pendientes` (ack),
 `sala:descartar_asistencias_pendientes` (ack).
 
@@ -206,7 +208,7 @@ Contrato completo en `wss/contrato/salas.ts`.
 | `profe:<email>:salas`, `salas_owners` | set, hash | Índice profe → salas e inverso sala → dueño                        |
 | `sala:<id>:estudiantes`               | hash   | `userId → sesión` de la planilla                                      |
 | `sala:<id>:allowed_list`              | set    | Identidades de la lista                                               |
-| `sala:<id>:allowed_names`             | hash   | `identidad → nombre provisto`                                         |
+| `sala:<id>:allowed_info`              | hash   | `identidad → info` (JSON de `infoEntrada`)                            |
 | `sala:<id>:asistencia`                | lista  | Log append-only de conexión/desconexión                               |
 | `sala:<id>:asistencia_pendiente`      | lista  | Clases evaluadas que esperan subirse a Drive                          |
 | `sala:<id>:registro_clase`            | string | Inicio/fin de la clase en curso                                       |
@@ -230,7 +232,7 @@ wss/salas/
   handlers.ts     comandos de gestión y de la sala abierta; ingreso del estudiante; planilla completa
   retencion.ts    barrido diario de salas sin uso (bullmq)
   utils.ts        nombres de fantasía para estudiantes por DNI que no ponen nombre
-wss/invitados/    la lista: set de identidades + hash de nombres provistos
+wss/invitados/    la lista: set de identidades + hash de info por identidad
 wss/validators/   salas.ts (config), auth.ts (pasaporte), session.ts (sesión por identidad)
 wss/middleware/   session.ts (login), auth.ts (política de acceso)
 wss/suscripciones/planes.ts   límite de salas por plan
@@ -264,7 +266,7 @@ wss/contrato/salas.ts         comandos y eventos
   garantía más fuerte, la identidad es `google`.
 - **`sala:invitado` llega al conectarse.** Viaja junto con la respuesta a `sala:pedir_config`, que el cliente pide
   recién cuando ya montó sus listeners; emitido durante el login, llegaría antes de que alguien escuche. Quien ya estaba conectado cuando el profe lo sumó a la lista
-  recibe el aviso al reconectarse; la planilla, en cambio, muestra su nombre provisto de inmediato porque
+  recibe el aviso al reconectarse; la planilla, en cambio, muestra su info de inmediato porque
   lee la lista vigente al exportar.
 - **La planilla guarda sesiones, no un estado de presencia.** Un estudiante con el documento ilegible se
   omite de la planilla (con warning) hasta que se reconecta y se reescribe.

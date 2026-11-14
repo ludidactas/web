@@ -10,7 +10,7 @@ export type EventoAnalytics =
   | { event: 'go_partida_iniciada'; origen: Origen; modo: string; tamano: number }
   | { event: 'go_partida_terminada'; origen: Origen; modo: string; tamano: number; motivo?: string }
   | { event: 'go_dojo_ejercicio'; desafio_id: string; tipo: string; correcto: boolean }
-  | { event: 'sala_creada'; metodo_login: string; solo_invitados: boolean }
+  | { event: 'sala_creada'; metodo_login: string; acceso: string }
   | { event: 'sala_acceso_estudiante'; metodo_login?: string }
   | { event: 'encuesta_pregunta_creada'; opciones: number; admite_aportes: boolean; admite_multiples_votos: boolean }
   | { event: 'encuesta_coleccion_exportada'; destino: 'archivo' | 'drive'; preguntas: number }

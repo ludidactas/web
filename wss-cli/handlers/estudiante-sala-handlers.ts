@@ -26,11 +26,11 @@ export default function estudianteSalaHandlers(socket: Socket | null) {
           }
         },
 
-        // El toast usa el nombre que puso el profe (prueba de que la asistencia matcheó la lista), no el tipeado; si falta, el DNI.
+        // El toast usa el nombre que puso el profe (prueba de que la asistencia matcheó la lista), no el tipeado; si falta, el DNI o el nombre.
         'sala:invitado': ({ nombreProvisto }) => {
           storeInvitado.getState().set({ nombreProvisto })
-          const { dni } = storeEstudianteLogin.getState()
-          toast.success(`Asistencia tomada de ${nombreProvisto || dni}`)
+          const { dni, nombre } = storeEstudianteLogin.getState()
+          toast.success(`Asistencia tomada de ${nombreProvisto || dni || nombre}`)
         },
       }),
 

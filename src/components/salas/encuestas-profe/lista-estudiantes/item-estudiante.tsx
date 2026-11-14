@@ -12,6 +12,10 @@ import { storeEncuestasProfe } from '@/wss-cli/stores/encuestas-store'
 import { storeEstudiantes, type Estudiante } from '@/wss-cli/stores/estudiantes-store'
 import { storeGo } from '@/wss-cli/stores/go-store'
 import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
+import { storeConfig } from '@/wss-cli/stores/config-store'
+import { AccesoSala, MetodosLogin } from '@/wss/validators/auth'
+import { LiberarNombre } from './liberar-nombre'
+import { buscarNombreProvisto } from '@/wss/invitados/identidad'
 
 /** Una fila de la lista de participantes: avatar, nombre/DNI/email, y las acciones del profe sobre
  * ese estudiante (invitar a Go, ver su partida o sus votos). */
@@ -19,6 +23,11 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
   const { invitar } = useConexionProfe()
   const { contrincantes, partida: partidaPropia } = storeGo()
   const { nombres: nombresInvitados } = storePermitidos()
+  const { config } = storeConfig()
+  const nombreProvisto =
+    config && config.acceso !== AccesoSala.Libre
+      ? buscarNombreProvisto(nombresInvitados, config.metodo_login, e.userId)
+      : undefined
 
   return (
     <li
@@ -41,15 +50,15 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
       <div className="flex flex-col">
         <span className="flex items-center gap-1.5">
           {e.nombre}
-          {nombresInvitados[e.userId] && (
-            <span className="text-xs text-slate-400">– {nombresInvitados[e.userId]}</span>
-          )}
+          {nombreProvisto && <span className="text-xs text-slate-400">– {nombreProvisto}</span>}
         </span>
         {e.dni && <span className="text-teal-500">{e.dni}</span>}
         {!e.dni && e.email && <span className="text-teal-500">{e.email}</span>}
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        {config?.metodo_login === MetodosLogin.Nombre && <LiberarNombre nombre={e.userId} />}
+
         {modo === 'go' && e.conectado && (
           <Tooltip>
             <ElegirModoInvitacion

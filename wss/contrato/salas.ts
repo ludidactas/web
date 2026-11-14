@@ -31,10 +31,16 @@ export const comandosSalaActivaProfe = {
   'sala:listar_estudiantes': comando(sinPayload),
   /** `minutos` acota la planilla a quienes estuvieron conectados en ese intervalo hacia atrás. */
   'sala:pedir_planilla_completa': comandoAck(z.number().optional(), devuelve<PlanillaCompleta>()),
-  'sala:permitidos_agregar': comando(z.array(z.string())),
+  /** Entradas de la lista (identidad según el `metodo_login`) con su nombre provisto opcional. */
+  'sala:permitidos_agregar': comando(z.array(z.object({ identidad: z.string(), nombre: z.string().optional() }))),
   'sala:permitidos_remover': comando(z.array(z.string())),
   'sala:permitidos_limpiar': comando(sinPayload),
-  'sala:permitidos_nombre': comando(z.object({ dni: z.string(), nombre: z.string() })),
+  'sala:permitidos_nombre': comando(z.object({ identidad: z.string(), nombre: z.string() })),
+  /**
+   * Quita la reserva de un nombre (identidad `nombre`) y desconecta a quien lo tenga. Con `borrarDatos`
+   * borra además lo asociado al nombre: planilla, votos, datos de Go y asistencia.
+   */
+  'sala:liberar_nombre': comando(z.object({ nombre: z.string(), borrarDatos: z.boolean().default(false) })),
   /** Asistencias de clases cerradas que todavía no se escribieron en Drive. */
   'sala:asistencias_pendientes': comandoAck(sinPayload, devuelve<AsistenciaDeClase[]>()),
   'sala:descartar_asistencias_pendientes': comandoAck(sinPayload, devuelve<void>()),

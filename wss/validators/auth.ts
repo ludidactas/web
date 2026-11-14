@@ -8,10 +8,18 @@ export enum RolSala {
   Dojo = 'dojo',
 }
 
+/** Identidad de los estudiantes de una sala: qué pide el login y cuál es su `userId`. */
 export enum MetodosLogin {
   Nombre = 'nombre',
   DNI = 'dni',
   Google = 'google',
+}
+
+/** A quién admite una sala: a cualquiera, a cualquiera anotando a los de la lista, o solo a la lista. */
+export enum AccesoSala {
+  Libre = 'libre',
+  Invitados = 'invitados',
+  Lista = 'lista',
 }
 
 // ════════════════════════════════════════════════════════════════════════════

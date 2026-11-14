@@ -80,9 +80,12 @@ const login = async (socket: SocketConSesion) => {
       datosGoogle = decodearTokenNextAuth(auth.token)
     }
 
+    // Una cuenta de Google puede no traer nombre: el email hace de nombre para mostrarlo.
+    const identidadGoogle = datosGoogle && { ...datosGoogle, nombre: datosGoogle.nombre || datosGoogle.email }
+
     const session = parsearAuth(SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
       ...auth,
-      ...datosGoogle,
+      ...identidadGoogle,
       metodo: config.metodo_login,
     })
 
@@ -115,7 +118,13 @@ const login = async (socket: SocketConSesion) => {
     abrirSesion(socket, session)
   }
 
-  // Publico y test no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
+  // Público: no establece sesión, pero la sala tiene que existir (si no, el cliente no recibiría nunca su config).
+  else if (auth.rol === RolSala.Publico) {
+    await Salas.assertExiste(auth.idSala)
+    console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
+  }
+
+  // Los demás roles no establecen sesión y por lo tanto tampoco hacen login, se usa solo el auth del socket
   else {
     console.log(`👀 Cliente público conectado desde IP ${socketIp(socket)}...`)
   }

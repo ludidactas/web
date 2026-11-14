@@ -1,7 +1,7 @@
-import { expect, test } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import jwt from 'jsonwebtoken'
 import { decodearTokenNextAuth, verificarYAutorizarAccesoEstudianteASala } from '../auth'
-import { MetodosLogin } from '../../validators/auth'
+import { AccesoSala, MetodosLogin } from '../../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../../validators/errors'
 import type { Sala } from '../../salas/app'
 import type { WssEstudianteSession } from '../../validators/session'
@@ -13,7 +13,7 @@ function fakeSala(overrides: Partial<Sala> = {}, metodo_login = MetodosLogin.Nom
     config: async () => ({
       nombre: 'Sala test',
       metodo_login,
-      solo_invitados: false,
+      acceso: AccesoSala.Libre,
       nombre_profe: 'Profe',
       link: 'x',
       overlay: {},
@@ -77,6 +77,14 @@ test('un nombre ya usado por otro estudiante sigue rechazado como NombreEnUso', 
   expect((err as InstanceType<typeof ErrorSesion>).tipo).toBe(TipoErrorSesion.NombreEnUso)
 })
 
+test('un nombre liberado (fila sin clientId) lo reclama cualquier cliente', async () => {
+  const sala = fakeSala({
+    listarEstudiantes: async () => [{ userId: 'Ana' } as never],
+  })
+
+  await expect(verificarYAutorizarAccesoEstudianteASala(sesionNombre('Ana', 'c-nuevo'), sala)).resolves.toBeUndefined()
+})
+
 test('el metodo DNI no cambió', async () => {
   const sala = fakeSala({}, MetodosLogin.DNI)
 
@@ -107,4 +115,64 @@ test('el metodo Google no cambió', async () => {
   } as WssEstudianteSession
 
   await expect(verificarYAutorizarAccesoEstudianteASala(session, sala)).resolves.toBeUndefined()
+})
+
+describe('acceso', () => {
+  const salaConLista = (acceso: AccesoSala, metodo_login: MetodosLogin, incluye: boolean) =>
+    fakeSala(
+      {
+        config: async () => ({ metodo_login, acceso, nombre_profe: 'P', link: 'x', overlay: {} }),
+        listaPermitidos: () => ({ incluye: async () => incluye }),
+      } as unknown as Partial<Sala>,
+      metodo_login
+    )
+
+  const sesionGoogle = {
+    rol: 'estudiante' as const,
+    idSala: 's1',
+    metodo: MetodosLogin.Google,
+    email: 'x@x.com',
+    nombre: 'X',
+    userId: 'x@x.com',
+  } as WssEstudianteSession
+
+  const rechazo = async (session: WssEstudianteSession, sala: Sala) =>
+    verificarYAutorizarAccesoEstudianteASala(session, sala).then(
+      () => undefined,
+      (e) => (e as InstanceType<typeof ErrorSesion>).tipo
+    )
+
+  test('lista: rechaza a quien no figura, con el error de su identidad', async () => {
+    expect(await rechazo(sesionDni(), salaConLista(AccesoSala.Lista, MetodosLogin.DNI, false))).toBe(
+      TipoErrorSesion.DniNoPermitido
+    )
+    expect(await rechazo(sesionGoogle, salaConLista(AccesoSala.Lista, MetodosLogin.Google, false))).toBe(
+      TipoErrorSesion.EmailNoPermitido
+    )
+    expect(await rechazo(sesionNombre('Ana'), salaConLista(AccesoSala.Lista, MetodosLogin.Nombre, false))).toBe(
+      TipoErrorSesion.NombreNoPermitido
+    )
+  })
+
+  test('lista: admite a quien figura', async () => {
+    for (const [sesion, metodo] of [
+      [sesionDni(), MetodosLogin.DNI],
+      [sesionGoogle, MetodosLogin.Google],
+      [sesionNombre('Ana'), MetodosLogin.Nombre],
+    ] as const)
+      expect(await rechazo(sesion, salaConLista(AccesoSala.Lista, metodo, true))).toBeUndefined()
+  })
+
+  test('invitados y libre: admiten a quien no figura', async () => {
+    for (const acceso of [AccesoSala.Invitados, AccesoSala.Libre]) {
+      expect(await rechazo(sesionDni(), salaConLista(acceso, MetodosLogin.DNI, false))).toBeUndefined()
+      expect(await rechazo(sesionNombre('Ana'), salaConLista(acceso, MetodosLogin.Nombre, false))).toBeUndefined()
+    }
+  })
+
+  test('lista con identidad nombre: sigue rechazando un nombre en uso por otro cliente', async () => {
+    const sala = salaConLista(AccesoSala.Lista, MetodosLogin.Nombre, true)
+    sala.listarEstudiantes = async () => [sesionNombre('Ana', 'otro-cliente')] as never[]
+    expect(await rechazo(sesionNombre('ana'), sala)).toBe(TipoErrorSesion.NombreEnUso)
+  })
 })

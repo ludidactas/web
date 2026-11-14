@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Icon } from '@iconify/react/dist/iconify.js'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,11 @@ import {
   MINUTOS_MAXIMOS,
   type CondicionAsistencia,
 } from '@/wss/validators/asistencia'
+
+/** Glifo de Google Drive, de un solo color: toma el del círculo del `SwitchCard`. */
+const IconoDrive = ({ className }: { className?: string }) => (
+  <Icon icon="simple-icons:googledrive" className={className} aria-hidden />
+)
 
 /** Condición con la que queda la lista de asistencia al encenderla; el profe la ajusta después. */
 const CONDICION_POR_DEFECTO: CondicionAsistencia = {
@@ -149,8 +155,9 @@ export function SelectorCondicionDeAsistencia({
   return (
     <>
       <SwitchCard
-        title="Lista de asistencia"
-        description="Registra automaticamente la asistencia de la sala en tu drive al retirarte"
+        icono={IconoDrive}
+        title="Asistencia automática en Drive"
+        description="Al terminar la clase, anota quién estuvo presente en una planilla de tu Drive: una columna por clase."
         checked={!!condicion}
         onCheckedChange={(checked) => onChange(checked ? condicion ?? CONDICION_POR_DEFECTO : null)}
       />
@@ -166,7 +173,7 @@ export function SelectorCondicionDeAsistencia({
             style={{ overflow: 'hidden', width: '100%' }}
             className={cn('flex flex-col gap-2')}
           >
-            <p className="text-sm text-slate-500 px-2 ">Criterio de asistencia:</p>
+            <p className="text-sm text-slate-500 px-2 ">Cuenta como presente quien…</p>
             <div className={cn('flex gap-2')}>
               <DropdownMenu>
                 <DropdownMenuTrigger className={cn('flex-1 border rounded-lg px-3 py-1.5 text-sm text-left bg-white')}>

@@ -17,6 +17,8 @@ import { cn, exportarPlanillaCompleta } from '@/lib/utils'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import { storeConfig } from '@/wss-cli/stores/config-store'
 import { storeEstudiantes, type Estudiante } from '@/wss-cli/stores/estudiantes-store'
+import { storePermitidos } from '@/wss-cli/stores/permitidos-store'
+import { AccesoSala } from '@/wss/validators/auth'
 
 /** Acciones sobre la lista completa: filtrar por conectados, copiarla como texto, y exportar la
  * planilla completa (incluye a quienes ya no están conectados en este navegador). */
@@ -32,6 +34,10 @@ export function AccionesPlanilla({
   const { pedirPlanillaCompleta } = useConexionProfe()
   const { items: estudiantes } = storeEstudiantes()
   const { config: configSala } = storeConfig()
+  const { lista: listaPermitidos } = storePermitidos()
+  const usaLista = !!configSala && configSala.acceso !== AccesoSala.Libre
+  // Con lista, la planilla incluye a quienes figuran y no ingresaron: hay algo para exportar aunque nadie haya entrado.
+  const hayQueExportar = estudiantes.length > 0 || (usaLista && listaPermitidos.length > 0)
   const [exportandoPlanilla, startExportarPlanilla] = useTransition()
   const [minutosVentana, setMinutosVentana] = useState(90)
 
@@ -147,7 +153,7 @@ export function AccionesPlanilla({
                 className={cn(
                   'flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
                 )}
-                disabled={exportandoPlanilla || estudiantes.length === 0}
+                disabled={exportandoPlanilla || !hayQueExportar}
               >
                 <Icon icon="lucide:file-spreadsheet" width={14} height={14} />{' '}
                 {exportandoPlanilla ? 'Generando...' : 'Exportar'}
@@ -165,6 +171,7 @@ export function AccionesPlanilla({
           <p className="text-sm text-slate-500 text-center">
             ¿Cuántos minutos hacia atrás abarca la clase? Solo se van a incluir en la planilla los
             participantes que estuvieron conectados en algún momento de ese intervalo.
+            {usaLista && ' Quienes figuran en tu lista y no estuvieron conectados aparecen como ausentes.'}
           </p>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             Minutos

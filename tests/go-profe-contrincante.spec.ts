@@ -1,23 +1,5 @@
-import { Browser, Page } from '@playwright/test'
 import { configCreacionSala } from '@/wss/validators/salas'
-import { armarSala, expect, nuevoContexto, test } from './ld-test'
-
-async function entrarGo(browser: Browser, idSala: string, nombre: string): Promise<Page> {
-  const context = await nuevoContexto(browser)
-  const page = await context.newPage()
-  await page.goto(`/sala/${idSala}/go/`)
-  await page.getByPlaceholder('Ingresá tu nombre').fill(nombre)
-  await page.getByRole('button', { name: 'Conectarse' }).click()
-  return page
-}
-
-async function esperarContrincante(page: Page, nombreContrincante: string) {
-  await expect(async () => {
-    const refrescar = page.getByText('Refrescar')
-    if (await refrescar.isVisible().catch(() => false)) await refrescar.click({ timeout: 1000 }).catch(() => {})
-    await expect(page.getByText(nombreContrincante, { exact: true })).toBeVisible({ timeout: 500 })
-  }).toPass({ timeout: 20_000 })
-}
+import { armarSala, entrarGo, esperarContrincante, expect, test } from './ld-test'
 
 test('el profe aparece como contrincante disponible y se puede jugar contra él', async ({ browser }) => {
   const profe = { name: 'Profe Go', email: `profe.go.contrincante.${Date.now()}@test.com` }

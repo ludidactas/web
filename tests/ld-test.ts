@@ -1,8 +1,8 @@
-import { ConfigCreacionSala, configCreacionSala, ConfigSala } from '@/wss/validators/salas'
+import { ConfigCreacionSala, configCreacionSala } from '@/wss/validators/salas'
 import { MetodosLogin } from '@/wss/validators/auth'
 import { IDENTIDAD_EN_LISTA, OPCIONES_ACCESO, OPCIONES_IDENTIDAD } from '@/components/salas/opciones-sala'
-import type { Browser, BrowserContext, Page } from '@playwright/test'
-import { test as base } from '@playwright/test'
+import type { Browser, BrowserContext, Locator, Page } from '@playwright/test'
+import { expect, test as base } from '@playwright/test'
 import { loginFake } from './auth'
 
 interface LoginUser {
@@ -28,11 +28,13 @@ interface LdFixtures {
 /**
  * Las animaciones del sitio corren en `requestAnimationFrame` y, en un Chromium headless sin GPU, cada
  * pestaña consume un núcleo entero. A 4 fps el costo baja ~10x y los callbacks siguen ejecutándose.
+ * Se inyecta en cada contexto con `addInitScript`, antes de que corra el código de la página.
  */
 const ralentizarAnimaciones = () => {
   window.requestAnimationFrame = (cb) => window.setTimeout(() => cb(performance.now()), 250)
 }
 
+/** Contextos creados con `nuevoContexto` y todavía abiertos; el fixture `cerrarContextos` los vacía tras cada test. */
 const contextosAbiertos: BrowserContext[] = []
 
 /**
@@ -60,11 +62,9 @@ export async function nuevaSesion(browser: Browser, user?: LoginUser) {
 }
 
 /**
- * Crea una sala nueva con la configuración dada, y devuelve la `page` de esa sala, y una función para ingesar estudiantes a esa sala.
- * @param browser instancia de `Browser` de PW, que se asume ya está inicializada en el test
- * @param profe autenticación del profe que va a crear la sala
- * @param config configuración de la sala a crear. Si no se provee, se asume la configuración por defecto (sin DNI ni lista de permitidos)
- * @returns un objeto con la `page` de la sala creada, y una función para que un estudiante entre a esa sala (recibe el nombre y DNI del estudiante, y devuelve la `page` del estudiante ya dentro de la sala)
+ * Crea una sala por la UI como `profe` y devuelve la `page` del profe, el `idSala` y `estudiante()`, que
+ * abre un contexto nuevo (otro navegador, otro `clientId`), ingresa a la sala y devuelve su `page`.
+ * La lista de `config.listaPermitidos` se carga al crear la sala.
  */
 export async function armarSala(browser: Browser, profe: LoginUser, config: ConfigCreacionSala) {
   // Abrimos una tab de profe
@@ -145,15 +145,46 @@ export async function armarSala(browser: Browser, profe: LoginUser, config: Conf
   }
 }
 
+/** Un estudiante entra a la pestaña de Go de una sala de identidad `nombre` y devuelve su `page`. */
+export async function entrarGo(browser: Browser, idSala: string, nombre: string): Promise<Page> {
+  const context = await nuevoContexto(browser)
+  const page = await context.newPage()
+  await page.goto(`/sala/${idSala}/go/`)
+  await page.getByPlaceholder('Ingresá tu nombre').fill(nombre)
+  await page.getByRole('button', { name: 'Conectarse' }).click()
+  return page
+}
+
+/**
+ * Espera a que `buscado` aparezca en la lista de contrincantes. La lista se pide una sola vez al
+ * montar, así que mientras esté vacía se pulsa "Refrescar". El `click` tiene un timeout corto y su
+ * error se ignora: si la lista llega entre `isVisible` y el click, el botón desaparece y el click
+ * no tiene nada que esperar.
+ */
+export async function esperarEnListaDeContrincantes(page: Page, buscado: Locator) {
+  await expect(async () => {
+    const refrescar = page.getByText('Refrescar')
+    if (await refrescar.isVisible().catch(() => false)) await refrescar.click({ timeout: 1000 }).catch(() => {})
+    await expect(buscado).toBeVisible({ timeout: 500 })
+  }).toPass({ timeout: 20_000 })
+}
+
+/** Espera a que un contrincante, por su nombre, aparezca en la lista (ver `esperarEnListaDeContrincantes`). */
+export const esperarContrincante = (page: Page, nombre: string) =>
+  esperarEnListaDeContrincantes(page, page.getByText(nombre, { exact: true }))
+
 export const test = base.extend<LdFixtures & { cerrarContextos: void }>({
+  // Fixture automático: corre en todo test que use este `test`, sin pedirlo.
   cerrarContextos: [
     async ({}, use) => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
       await use()
+      // Cierra los contextos abiertos durante el test; `.catch` tolera los que el propio test ya cerró.
       await Promise.all(contextosAbiertos.splice(0).map((c) => c.close().catch(() => {})))
     },
     { auto: true },
   ],
+  // El contexto que Playwright le da al fixture `page` también corre con las animaciones ralentizadas.
   context: async ({ context }, use) => {
     await context.addInitScript(ralentizarAnimaciones)
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -167,11 +198,11 @@ export const test = base.extend<LdFixtures & { cerrarContextos: void }>({
   },
   setupSala: async ({ browser }, use) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    await use(async (profe: LoginUser, config?: ConfigSala) => {
+    await use(async (profe: LoginUser, config?: ConfigCreacionSala) => {
       const conf = configCreacionSala.parse(config ?? {})
       return await armarSala(browser, profe, conf)
     })
   },
 })
 
-export { expect } from '@playwright/test'
+export { expect }

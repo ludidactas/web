@@ -42,11 +42,15 @@ async function fueRechazado(page: Page, metodo: MetodosLogin) {
 /** Se le avisó que figura como invitadx (`sala:invitado`). */
 const avisoInvitado = (page: Page) => page.getByText(/Asistencia tomada de/)
 
+// Este bucle corre al cargar el archivo y registra un test por identidad y acceso. Los cuerpos de los tests,
+// incluido `profeNuevo()`, corren después, una vez por test.
 for (const metodo of Object.values(MetodosLogin)) {
   const { enLista, afuera, entrada } = ESTUDIANTES[metodo]
 
   test.describe(`identidad ${OPCIONES_IDENTIDAD[metodo].titulo}`, () => {
-    test(`${OPCIONES_ACCESO[AccesoSala.Libre].titulo}: entran todos, estén o no en una lista`, async ({ setupSala }) => {
+    test(`${OPCIONES_ACCESO[AccesoSala.Libre].titulo}: entran todos, estén o no en una lista`, async ({
+      setupSala,
+    }) => {
       const { estudiante } = await setupSala(profeNuevo(), { metodo_login: metodo, acceso: AccesoSala.Libre })
 
       await entro(await estudiante(enLista))
@@ -60,7 +64,7 @@ for (const metodo of Object.values(MetodosLogin)) {
         metodo_login: metodo,
         acceso: AccesoSala.Invitados,
         listaPermitidos: [entrada],
-      } as never)
+      })
 
       const invitado = await estudiante(enLista)
       await entro(invitado)
@@ -80,7 +84,7 @@ for (const metodo of Object.values(MetodosLogin)) {
         metodo_login: metodo,
         acceso: AccesoSala.Lista,
         listaPermitidos: [entrada],
-      } as never)
+      })
 
       await entro(await estudiante(enLista))
       await fueRechazado(await estudiante(afuera), metodo)
@@ -97,7 +101,7 @@ test.describe('cambios del profe con la sala en curso', () => {
       metodo_login: MetodosLogin.Nombre,
       acceso: AccesoSala.Lista,
       listaPermitidos: ['Ana01', 'Beto01'],
-    } as never)
+    })
 
     const ana = await estudiante({ nombre: 'Ana01' })
     const beto = await estudiante({ nombre: 'Beto01' })

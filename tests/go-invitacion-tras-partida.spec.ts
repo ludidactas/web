@@ -1,23 +1,6 @@
-import { Browser, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { configCreacionSala } from '@/wss/validators/salas'
-import { armarSala, expect, nuevoContexto, test } from './ld-test'
-
-async function entrarGo(browser: Browser, idSala: string, nombre: string): Promise<Page> {
-  const context = await nuevoContexto(browser)
-  const page = await context.newPage()
-  await page.goto(`/sala/${idSala}/go/`)
-  await page.getByPlaceholder('Ingresá tu nombre').fill(nombre)
-  await page.getByRole('button', { name: 'Conectarse' }).click()
-  return page
-}
-
-async function esperarContrincante(page: Page, nombreContrincante: string) {
-  await expect(async () => {
-    const refrescar = page.getByText('Refrescar')
-    if (await refrescar.isVisible().catch(() => false)) await refrescar.click({ timeout: 1000 }).catch(() => {})
-    await expect(page.getByText(nombreContrincante, { exact: true })).toBeVisible({ timeout: 500 })
-  }).toPass({ timeout: 20_000 })
-}
+import { armarSala, entrarGo, esperarContrincante, esperarEnListaDeContrincantes, expect, test } from './ld-test'
 
 /** Igual que `esperarContrincante`, pero para la pantalla del profe: ahí el nombre del estudiante
  * también aparece en la lista de participantes (`ListaEstudiantes`), así que en vez de buscar el
@@ -25,11 +8,7 @@ async function esperarContrincante(page: Page, nombreContrincante: string) {
  * contrincantes. */
 async function esperarBotonInvitar(page: Page, nombreContrincante: string) {
   const boton = page.locator('li:visible', { hasText: nombreContrincante }).getByRole('button', { name: 'Invitar' })
-  await expect(async () => {
-    const refrescar = page.getByText('Refrescar')
-    if (await refrescar.isVisible().catch(() => false)) await refrescar.click({ timeout: 1000 }).catch(() => {})
-    await expect(boton).toBeVisible({ timeout: 500 })
-  }).toPass({ timeout: 20_000 })
+  await esperarEnListaDeContrincantes(page, boton)
   return boton
 }
 

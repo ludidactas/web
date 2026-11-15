@@ -65,7 +65,7 @@ diffear el set completo contra lo que estaba corriendo antes de guardar, no solo
 se fue a cambiar. Los labels nuevos tampoco toman efecto hasta el próximo redeploy del container.
 
 Es independiente de cualquier rate limit más fino que se agregue
-después adentro del wss, a nivel de evento de socket (ver Backlog).
+después adentro del wss, a nivel de evento de socket (ver el proyecto de GitHub).
 
 ### Observabilidad (Grafana Cloud + Alloy)
 
@@ -140,51 +140,6 @@ Dos mecanismos, cada uno cubre lo que el otro no puede:
 | `TELEGRAM_BOT_TOKEN` | Token del bot. Sin esto, `avisarTelegram` no hace nada.                                                                                                                     |
 | `TELEGRAM_CHAT_ID`   | Chat al que se manda el aviso.                                                                                                                                              |
 | `ENTORNO`            | `"staging"` o `"production"`, para distinguir el origen en el mensaje — no se puede usar `NODE_ENV` porque el `Dockerfile` lo fija en `production` en las dos Applications. |
-
-## Backlog
-
-Ideas y trabajo pendiente, sin orden estricto más allá de lo que parece más barato primero.
-
-**Rate limiting granular por evento.** El de Traefik frena volumen bruto, pero no distingue "una sala
-creando preguntas normalmente" de "alguien automatizando `encuesta:votar`". Para eso hace falta
-throttling a nivel de evento de socket, con estado en Redis (ya disponible). Librería sugerida:
-`rate-limiter-flexible` (backed por `ioredis`), envolviendo `conAck` en
-`wss/middleware/error-handling.ts` para que cualquier comando nuevo lo herede. Abierto: con qué eventos
-arrancar — los de escritura pública sin auth fuerte (`sala:crear`, votar, jugar) son los candidatos
-obvios.
-
-**Postgres para usuarios y subscripciones.** Coolify tiene Postgres como recurso nativo, mismo patrón
-que los Redis ya en uso — nada nuevo que diseñar en infra. Dos preguntas abiertas:
-
-- Acceso: ¿el wss abre su propia conexión a Postgres, o se mantiene la separación actual (Next y wss
-  sin estado compartido, ver `README.md`) y el wss lee el estado de subscripción vía Redis, actualizado
-  por Next con el mismo patrón de codec versionado de `wss/versionado.ts`?
-- ORM: Drizzle (TypeScript nativo, migraciones versionadas, liviano) o Prisma (más conocido, engine
-  binario aparte, menos control sobre el SQL generado).
-
-**Backups y extracción de datos para pruebas.** Hoy no hay backup de nada en el VPS. Una vez que exista
-Postgres con datos reales, Coolify soporta backups programados a un bucket S3-compatible (Backblaze B2,
-Cloudflare R2) con restore desde la misma UI. Para usar esos datos en pruebas falta además un script de
-sanitización que anonimice el dump (emails, nombres) antes de que toque staging o una máquina local —
-una vez que haya usuarios reales, restaurar un backup de prod tal cual en otro ambiente es un problema
-de privacidad. Abierto: si además de Postgres conviene backupear algo de Redis, o si se mantiene como
-dato descartable (como es hoy).
-
-**Excalidraw** (pizarra colaborativa para docentes y estudiantes, una por sala de las nuestras). Dos
-piezas: el frontend (SPA estática, costo ~nulo) y `excalidraw-room` (server de colaboración vía
-socket.io, sin persistencia). "Una pizarra por sala" no pide nada especial de infra: se logra usando
-el id de la sala existente como room id de `excalidraw-room`, y un solo proceso ya multiplexa en
-memoria tantas rooms lógicas como haga falta — mismo patrón que el wss propio con sus `salas`, no hay
-límite de "una instancia, una sala".
-
-Mismo patrón de deploy que el wss — dos Applications nuevas en Coolify, cada una con su subdominio. El
-tráfico es distinto al del wss propio (muchos mensajes chicos y frecuentes en vez de comandos
-puntuales), pero con las rooms chicas esperadas (un docente y su clase) el volumen se mantiene bajo.
-
-Arranca con una sola instancia, sin Redis — la cantidad de salas no lo pide. Lo que sí pediría más de
-una instancia (y ahí sí Redis, para sincronizar entre ellas) es el volumen total de tráfico de dibujo
-de todas las salas juntas si el uso crece mucho — hoy, con pocos usuarios, no hace falta dejar nada
-preparado de antemano para eso.
 
 ## Apéndice: si hay que reconfigurar algo
 

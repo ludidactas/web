@@ -31,8 +31,8 @@ no es un documento que se escribe una vez y se congela.
 - **Lo que previene o mitiga algo se dice en afirmativo y con su consecuencia.** "Con el wrapper, un
   throw no tira el proceso" orienta más que un párrafo sobre cómo falla sin él.
 - **Si un comentario tiene que justificar por qué algo sigue ahí sin usarse, probablemente sobra el
-  código.** Un tipo o una función sin llamadores se borra, o se anota como pendiente en el doc de la
-  feature, no se deja explicado en el código.
+  código.** Un tipo o una función sin llamadores se borra, o se anota como tarea en el proyecto de
+  GitHub, no se deja explicado en el código.
 - **Un README por feature no calca el formato de otro.** El de un feature con capas paralelas e
   independientes (reglas de un juego, por ejemplo) no le queda bien a un pipeline lineal con estado
   (una máquina de estados tipo apertura/cierre de clase). Antes de escribir, preguntarse qué forma

@@ -59,7 +59,9 @@ export function LiberarNombre({ nombre }: { nombre: string }) {
             <Checkbox id="borrar-datos" checked={borrarDatos} onCheckedChange={(v) => setBorrarDatos(v === true)} />
             <Label htmlFor="borrar-datos" className="flex flex-col gap-1 font-normal leading-snug">
               Borrar también sus votos y su asistencia
-              <span className="text-xs text-muted-foreground">Esta acción no se puede deshacer.</span>
+              <span className="text-xs text-muted-foreground">
+                Esta acción no se puede deshacer. Las clases ya cerradas no cambian.
+              </span>
             </Label>
           </div>
           <DialogFooter className="gap-2">

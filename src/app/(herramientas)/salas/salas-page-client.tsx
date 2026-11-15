@@ -287,7 +287,7 @@ function FilaSala({
         {nombre}
       </NavLink>
       <div className={cn('flex items-center gap-1 pr-2')}>
-        {/* Un wss que aún no manda estos campos (deploy a medias) deja la fila sin íconos en vez de romperla. */}
+        {/* Ícono de la identidad y del acceso de la sala, con su descripción en el tooltip. */}
         {[
           { prefijo: 'Identificación por ', opcion: OPCIONES_IDENTIDAD[sala.metodo_login] },
           { prefijo: 'Acceso ', opcion: OPCIONES_ACCESO[sala.acceso] },

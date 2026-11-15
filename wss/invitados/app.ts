@@ -37,7 +37,14 @@ export namespace ListaPermitidos {
         info
       )
       await agregar(preparado.lista)
-      for (const [entrada, infoDeEntrada] of Object.entries(preparado.info)) await setInfo(entrada, infoDeEntrada)
+      // La info ya viene validada y con las entradas normalizadas: una sola lectura de la lista resuelve la
+      // entrada guardada de cada una (que puede diferir en mayúsculas o tildes de la que vino).
+      const guardadas = new Map((await db.obtenerPermitidosDe(salaId)).map((entrada) => [clave(entrada), entrada]))
+      await Promise.all(
+        Object.entries(preparado.info).map(([entrada, infoDeEntrada]) =>
+          db.setInfoPermitido(salaId, guardadas.get(clave(entrada))!, infoDeEntrada)
+        )
+      )
     }
 
     async function remover(valores: string[]) {

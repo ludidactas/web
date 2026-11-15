@@ -56,7 +56,7 @@ function cuentaDeBearer(authorization?: string) {
   }
 }
 
-// Si el login pide elegir cuenta, en vez de volver a la app mandamos al selector...
+// Si el login pide elegir cuenta, la redirección va al selector de cuentas del IdP.
 server.service.on(Events.BeforeAuthorizeRedirect, (redireccion, req) => {
   const code = redireccion.url.searchParams.get('code')
   const pideSelector = new URL(req.url ?? '', server.issuer.url).searchParams

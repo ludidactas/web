@@ -12,7 +12,7 @@ const sala = (config: Record<string, unknown>) => ({
 describe('soloInvitadosAAcceso', () => {
   const casos: [MetodosLogin, boolean, AccesoSala][] = [
     [MetodosLogin.Nombre, false, AccesoSala.Libre],
-    [MetodosLogin.Nombre, true, AccesoSala.Lista],
+    [MetodosLogin.Nombre, true, AccesoSala.Libre],
     [MetodosLogin.DNI, false, AccesoSala.Invitados],
     [MetodosLogin.DNI, true, AccesoSala.Lista],
     [MetodosLogin.Google, false, AccesoSala.Invitados],

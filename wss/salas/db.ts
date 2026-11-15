@@ -165,14 +165,19 @@ export async function getEventosAsistencia(salaId: string): Promise<EventoAsiste
   return raw.map((s) => eventoAsistenciaCodec.parsear(s))
 }
 
-/** Quita del log de asistencia los eventos de un `userId`; el orden del resto se conserva. */
+/**
+ * Quita del log de asistencia los eventos de un `userId`; el orden del resto se conserva. Borra con
+ * `LREM` cada evento del usuario (en vez de reescribir la lista), así un evento que otro estudiante
+ * agregue mientras tanto no se pierde.
+ */
 export async function borrarEventosAsistenciaDe(salaId: string, userId: string): Promise<void> {
   const clave = `sala:${salaId}:asistencia`
-  const crudos = await redis.lrange(clave, 0, -1)
-  const restantes = crudos.filter((s) => eventoAsistenciaCodec.parsear(s).userId !== userId)
-  if (restantes.length === crudos.length) return
-  const tx = redis.multi().del(clave)
-  if (restantes.length > 0) tx.rpush(clave, ...restantes)
+  const propios = new Set(
+    (await redis.lrange(clave, 0, -1)).filter((s) => eventoAsistenciaCodec.parsear(s).userId === userId)
+  )
+  if (propios.size === 0) return
+  const tx = redis.multi()
+  for (const evento of propios) tx.lrem(clave, 0, evento)
   await tx.exec()
 }
 

@@ -106,7 +106,7 @@ sala: las clases ya evaluadas y las planillas ya escritas en Drive quedan como e
 **FE.** La acción "Liberar nombre" está en la fila del estudiante, con un tooltip: "Libera este nombre
 para que otra persona o dispositivo pueda usarlo. Si está conectado, se lo desconecta." Al hacer clic
 se abre un diálogo de confirmación con un checkbox, desmarcado por defecto: "Borrar también sus votos
-y su asistencia". El texto del checkbox aclara que el borrado no se puede deshacer.
+y su asistencia". El texto del checkbox aclara que el borrado no se puede deshacer y que las clases ya cerradas no cambian.
 
 ## Qué pasa al ingresar
 
@@ -270,5 +270,14 @@ wss/contrato/salas.ts         comandos y eventos
   lee la lista vigente al exportar.
 - **La planilla guarda sesiones, no un estado de presencia.** Un estudiante con el documento ilegible se
   omite de la planilla (con warning) hasta que se reconecta y se reescribe.
+- **Probar la sala propia en el mismo navegador reemplaza la sesión del profe.** Hay una sola sesión de
+  next-auth por navegador: si el profe elige otra cuenta de Google al entrar como estudiante, su sesión (y su
+  conexión con Drive) se reemplaza, y se recupera volviendo a iniciar sesión. Para probar su sala, el profe
+  usa una ventana privada u otro navegador.
+- **`Salas.get` lee la sala una vez** para fijar su `metodo_login`, que no cambia. Es una lectura chica por
+  llamada; con el volumen actual (decenas de salas) no justifica resolverla de forma perezosa.
+- **Cambiar de sala sin desmontar el login del estudiante no está contemplado.** El estudiante no tiene un
+  camino de una sala a otra (el único enlace de la pantalla de ingreso va a `/`), así que el método de login
+  que fija `useLoginSalaEstudiante` pertenece siempre a la única sala de la página.
 - **Una conexión de profe opera una sola sala.** Las demás pestañas de la sala reciben la lista de salas
   por el room `cuentaProfe`.

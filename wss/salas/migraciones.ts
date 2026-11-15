@@ -3,16 +3,17 @@ import type { Migracion } from '../versionado'
 
 /**
  * v0 → v1: `config.solo_invitados` (booleano) pasa a `config.acceso`.
- * `true` es `lista`. `false` es `invitados` en DNI y Google, donde la lista ya anotaba a los invitados,
- * y `libre` en nombre, que no tenía lista.
+ * En nombre, que no tenía lista y aplicaba `solo_invitados` a nadie, el acceso es siempre `libre`. En
+ * DNI y Google, `true` es `lista` y `false` es `invitados` (la lista ya anotaba a los invitados).
  */
 export const soloInvitadosAAcceso: Migracion = (doc) => {
   const { solo_invitados, ...config } = (doc.config ?? {}) as Record<string, unknown>
-  const acceso = solo_invitados
-    ? AccesoSala.Lista
-    : config.metodo_login === MetodosLogin.Nombre || config.metodo_login === undefined
+  const acceso =
+    config.metodo_login === MetodosLogin.Nombre || config.metodo_login === undefined
       ? AccesoSala.Libre
-      : AccesoSala.Invitados
+      : solo_invitados
+        ? AccesoSala.Lista
+        : AccesoSala.Invitados
   return { ...doc, config: { ...config, acceso } }
 }
 

@@ -74,7 +74,9 @@ describe('ListaPermitidos con identidad dni', () => {
 describe('agregarConInfo', () => {
   it('agrega entradas e info en un solo paso, y no guarda nada si una entrada es inválida', async () => {
     const lista = ListaPermitidos.para(ID, MetodosLogin.DNI)
-    await expect(lista.agregarConInfo([{ identidad: '123', info: { nombre: 'Zoe' } }, { identidad: 'x' }])).rejects.toThrow()
+    await expect(
+      lista.agregarConInfo([{ identidad: '123', info: { nombre: 'Zoe' } }, { identidad: 'x' }])
+    ).rejects.toThrow()
     expect(await lista.obtener()).toEqual([])
 
     await lista.agregarConInfo([{ identidad: '123', info: { nombre: 'Zoe' } }, { identidad: '456' }])
@@ -82,5 +84,13 @@ describe('agregarConInfo', () => {
       lista: expect.arrayContaining(['123', '456']),
       info: { '123': { nombre: 'Zoe' } },
     })
+  })
+
+  it('la info va a la entrada ya guardada aunque la nueva difiera en mayúsculas o tildes', async () => {
+    const lista = ListaPermitidos.para(ID, MetodosLogin.Nombre)
+    await lista.agregar(['José Pérez'])
+    await lista.agregarConInfo([{ identidad: 'jose perez', info: { nombre: 'Josefina' } }])
+    expect(await lista.obtener()).toEqual(['José Pérez'])
+    expect(await lista.info()).toEqual({ 'José Pérez': { nombre: 'Josefina' } })
   })
 })

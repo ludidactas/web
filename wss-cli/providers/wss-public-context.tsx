@@ -9,19 +9,14 @@ import { StatusDeConexion } from '../conexion-wss'
 const useHandlersConexionSalaPublico = (auth: Omit<PasaportePublico, 'rol'>) => {
   const { socket, estado, error } = useWss({ ...auth, rol: RolSala.Publico })
 
-  // Aguantamos un segundo antes de confirmar que la sala no existe
-  const { valor: posibleNoExiste, confirmado: confirmadoNoExiste } = useConfirmarConDelay(
-    () => estado === StatusDeConexion.Error && error === 'Invalid namespace',
-    1000
-  )
+  // El único rechazo posible de un cliente público es que la sala no exista: es definitivo, sin demora.
+  const confirmadoNoExiste = estado === StatusDeConexion.Rechazado
 
   // Aguantamos un segundo antes de confirmar que la sala no existe
   const { valor: posibleError, confirmado: confirmadoError } = useConfirmarConDelay(
     () => estado === StatusDeConexion.Error,
     1000
   )
-
-  const averiguandoExistencia = posibleNoExiste && !confirmadoNoExiste
 
   const averiguandoEstado = posibleError && !confirmadoError
 
@@ -42,7 +37,6 @@ const useHandlersConexionSalaPublico = (auth: Omit<PasaportePublico, 'rol'>) => 
     error,
     confirmadoNoExiste,
     confirmadoError,
-    averiguandoExistencia,
     averiguandoEstado,
     ...handlers.base.acciones,
   }

@@ -1,5 +1,6 @@
 import { comandosSalaActivaProfe, EventosSalaProfe } from '@/wss/contrato/salas'
 import { ConfigActualizableParcial, PlanillaCompleta } from '@/wss/validators/salas'
+import type { InfoEntrada } from '@/wss/validators/invitados'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { comandos, escuchar } from '../contrato-cli'
@@ -34,7 +35,7 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
           almacenConfig.set(config)
           almacenEncuestas.set(polls)
           almacenEstudiantes.set(estudiantes)
-          almacenPermitidos.set(listaPermitidos ?? { lista: [], nombres: {} })
+          almacenPermitidos.set(listaPermitidos ?? { lista: [], info: {} })
         },
 
         'sala:lista_permitidos': almacenPermitidos.set,
@@ -42,10 +43,13 @@ export default function profeSalaActivaHandlers(socket: Socket | null) {
 
     acciones: {
       actualizarConfig: (config: ConfigActualizableParcial) => cmd.enviar('sala:actualizar_config', config),
-      agregarPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_agregar', list),
+      agregarPermitidos: (entradas: { identidad: string; info?: InfoEntrada }[]) =>
+        cmd.enviar('sala:permitidos_agregar', entradas),
       removerPermitidos: (list: string[]) => cmd.enviar('sala:permitidos_remover', list),
       borrarListaPermitidos: () => cmd.enviar('sala:permitidos_limpiar'),
-      setNombrePermitido: (dni: string, nombre: string) => cmd.enviar('sala:permitidos_nombre', { dni, nombre }),
+      setInfoPermitido: (identidad: string, info: InfoEntrada) =>
+        cmd.enviar('sala:permitidos_info', { identidad, info }),
+      liberarNombre: (nombre: string, borrarDatos: boolean) => cmd.enviar('sala:liberar_nombre', { nombre, borrarDatos }),
       // Comando con ack: el caller (botón de exportar) necesita los datos ya para armar el archivo.
       // `minutos`, si viene, acota la planilla a quienes estuvieron conectados en ese intervalo hacia
       // atrás (para acotar la exportación a la clase actual).

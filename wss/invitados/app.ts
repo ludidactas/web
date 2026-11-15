@@ -1,65 +1,95 @@
-import { SocketConSesion } from '../middleware/session'
-import { MetodosLogin, RolSala } from '../validators/auth'
+import { MetodosLogin } from '../validators/auth'
+import { infoEntrada, infoVacia, type InfoEntrada } from '../validators/invitados'
 import * as db from './db'
+import { claveDeIdentidad, normalizarIdentidad, prepararLista } from './identidad'
 
+/**
+ * La lista de una sala: identidades (DNI, email o nombre según su `metodo_login`) con la info que el
+ * profe anotó de cada una. Guarda las entradas normalizadas (`normalizarIdentidad`) y resuelve la
+ * pertenencia por clave (`claveDeIdentidad`), así que `Ana` y `ana` son la misma entrada.
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ListaPermitidos {
-  async function obtener(salaId: string) {
-    return db.obtenerPermitidosDe(salaId)
-  }
-  async function agregar(list: string[], salaId: string) {
-    await db.agregarPermitidosA(list, salaId)
-  }
+  export function para(salaId: string, metodo: MetodosLogin) {
+    const clave = (valor: string) => claveDeIdentidad(metodo, valor)
 
-  async function remover(list: string[], salaId: string) {
-    await db.quitarPermitidosDe(list, salaId)
-    await db.quitarNombresPermitidos(list, salaId)
-  }
+    /** La entrada guardada que corresponde a `identidad`, o `undefined` si no figura en la lista. */
+    async function buscar(identidad: string) {
+      const objetivo = clave(identidad)
+      return (await db.obtenerPermitidosDe(salaId)).find((entrada) => clave(entrada) === objetivo)
+    }
 
-  async function limpiar(salaId: string) {
-    await db.limpiarListaPermitidosDe(salaId)
-    await db.limpiarNombresPermitidosDe(salaId)
-  }
+    async function agregar(valores: string[]) {
+      const { lista } = prepararLista(metodo, valores)
+      const existentes = new Set((await db.obtenerPermitidosDe(salaId)).map(clave))
+      await db.agregarPermitidosA(
+        lista.filter((entrada) => !existentes.has(clave(entrada))),
+        salaId
+      )
+    }
 
-  async function setNombre(dni: string, nombre: string, salaId: string) {
-    await db.setNombrePermitido(salaId, dni, nombre)
-  }
+    /** Agrega las entradas con su info (si la traen). Valida el lote entero antes de guardar nada. */
+    async function agregarConInfo(entradas: { identidad: string; info?: InfoEntrada }[]) {
+      const info = Object.fromEntries(entradas.flatMap((e) => (e.info ? [[e.identidad, e.info]] : [])))
+      const preparado = prepararLista(
+        metodo,
+        entradas.map((e) => e.identidad),
+        info
+      )
+      await agregar(preparado.lista)
+      // La info ya viene validada y con las entradas normalizadas: una sola lectura de la lista resuelve la
+      // entrada guardada de cada una (que puede diferir en mayúsculas o tildes de la que vino).
+      const guardadas = new Map((await db.obtenerPermitidosDe(salaId)).map((entrada) => [clave(entrada), entrada]))
+      await Promise.all(
+        Object.entries(preparado.info).map(([entrada, infoDeEntrada]) =>
+          db.setInfoPermitido(salaId, guardadas.get(clave(entrada))!, infoDeEntrada)
+        )
+      )
+    }
 
-  async function nombres(salaId: string) {
-    return db.obtenerNombresPermitidos(salaId)
-  }
+    async function remover(valores: string[]) {
+      const objetivos = new Set(valores.map(clave))
+      const aQuitar = (await db.obtenerPermitidosDe(salaId)).filter((entrada) => objetivos.has(clave(entrada)))
+      if (aQuitar.length === 0) return
+      await db.quitarPermitidosDe(aQuitar, salaId)
+      await db.quitarInfoPermitidos(aQuitar, salaId)
+    }
 
-  async function incluye(salaId: string, userId: string) {
-    const lista = await obtener(salaId)
-    return lista.includes(userId)
-  }
+    async function setInfo(identidad: string, info: InfoEntrada) {
+      const entrada = await buscar(normalizarIdentidad(metodo, identidad))
+      if (!entrada) throw new Error(`"${identidad}" no está en la lista`)
+      const limpia = infoEntrada.parse(info)
+      if (infoVacia(limpia)) await db.quitarInfoPermitidos([entrada], salaId)
+      else await db.setInfoPermitido(salaId, entrada, limpia)
+    }
 
-  async function purgarSockets(salaId: string, sockets: SocketConSesion[]) {
-    const lista = await obtener(salaId)
-    // Devolvemos los sockets que no están autorizados (estudiantes cuyo DNI no está en la lista de permitidos)
-    return sockets.filter(
-      (s) =>
-        s.data.session.rol === RolSala.Estudiante &&
-        s.data.session.metodo === MetodosLogin.DNI &&
-        !lista.includes(s.data.session.userId)
-    )
-  }
+    async function infoDeLaLista() {
+      return db.obtenerInfoPermitidos(salaId)
+    }
 
-  export function para(salaId: string) {
     return {
-      obtener: () => obtener(salaId),
-      agregar: (list: string[]) => agregar(list, salaId),
-      remover: (list: string[]) => remover(list, salaId),
-      limpiar: () => limpiar(salaId),
-      incluye: (dni: string) => incluye(salaId, dni),
-      purgar: (sockets: SocketConSesion[]) => purgarSockets(salaId, sockets),
+      obtener: () => db.obtenerPermitidosDe(salaId),
+      agregar,
+      remover,
+      limpiar: async () => {
+        await db.limpiarListaPermitidosDe(salaId)
+        await db.limpiarInfoPermitidosDe(salaId)
+      },
+      /** Si `identidad` figura en la lista. */
+      incluye: async (identidad: string) => (await buscar(identidad)) !== undefined,
 
-      /** Asigna el nombre que el profe le dio a un DNI de la lista de invitados. */
-      setNombre: (dni: string, nombre: string) => setNombre(dni, nombre, salaId),
-      /** Mapa dni → nombre provisto de los invitados de la sala. */
-      nombres: () => nombres(salaId),
-      /** Lista de invitados junto con sus nombres provistos, para hidratar al FE de una sola vez. */
-      obtenerConNombres: async () => ({ lista: await obtener(salaId), nombres: await nombres(salaId) }),
+      agregarConInfo,
+      /** Reemplaza la info de una entrada de la lista (vacía la deja sin anotaciones). Lanza si la entrada no figura. */
+      setInfo,
+      /** Mapa entrada → info. */
+      info: infoDeLaLista,
+      /** La info de `identidad`, o `undefined` si no figura en la lista o no tiene. */
+      infoDe: async (identidad: string) => {
+        const entrada = await buscar(identidad)
+        return entrada === undefined ? undefined : (await infoDeLaLista())[entrada]
+      },
+      /** Lista junto con la info de sus entradas, para hidratar al FE de una sola vez. */
+      obtenerConInfo: async () => ({ lista: await db.obtenerPermitidosDe(salaId), info: await infoDeLaLista() }),
     }
   }
 }

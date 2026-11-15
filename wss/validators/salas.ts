@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { MetodosLogin } from './auth'
+import { AccesoSala, MetodosLogin } from './auth'
+import { infoEntrada, type InfoEntrada } from './invitados'
 import { CONFIG_DEFAULTS, estadisticaSvgConfigValidator } from './overlay'
 import { condicionAsistenciaSchema } from './asistencia'
 import type { WssEstudianteSession } from './session'
@@ -9,25 +10,25 @@ export const configCreacionSala = z.object({
   // Nombre de la sala (opcional). Editable después con `sala:renombrar` (ver `configActualizable`).
   nombre: z.string().optional(),
 
-  // Método de login de la sala: la sala decide cómo se autentican los estudiantes.
-  metodo_login: z.nativeEnum(MetodosLogin).default(MetodosLogin.Nombre),
+  // Identidad de los estudiantes: la sala decide cómo se identifican. Inmutable.
+  metodo_login: z.enum(MetodosLogin).default(MetodosLogin.Nombre),
 
-  // Ortogonal al metodo_login: restringe el acceso a una lista de invitados.
-  solo_invitados: z.boolean().default(false),
+  // A quién admite la sala, ortogonal al metodo_login. Inmutable; solo la lista es editable.
+  acceso: z.enum(AccesoSala).default(AccesoSala.Libre),
 
   // Listado de asistencia automática
   condicion_asistencia: condicionAsistenciaSchema.nullable().optional(),
 
-  // Lista de invitados inicial, lueguito el server la extrae y la guarda en su SET (`sala:<id>:allowed_list`)
+  // Lista inicial (identidades según el metodo_login), lueguito el server la extrae y la guarda en su SET (`sala:<id>:allowed_list`)
   listaPermitidos: z.array(z.string()).default([]),
 
-  // Nombres provistos para (algunos de) los DNIs de `listaPermitidos`, cargados junto con la lista
-  // inicial. El server los extrae y los guarda en su hash (`sala:<id>:allowed_names`).
-  nombresPermitidos: z.record(z.string(), z.string()).default({}),
+  // Info de (algunas de) las identidades de `listaPermitidos`, cargada junto con la lista inicial. El
+  // server la extrae y la guarda en su hash (`sala:<id>:allowed_info`).
+  infoPermitidos: z.record(z.string(), infoEntrada).default({}),
 })
 
 /** Data derivada o generada en el server (lo que se persiste en el blob). */
-export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombresPermitidos: true }).extend({
+export const configSala = configCreacionSala.omit({ listaPermitidos: true, infoPermitidos: true }).extend({
   nombre_profe: z.string(),
   link: z.string(),
   overlay: estadisticaSvgConfigValidator.catch(CONFIG_DEFAULTS),
@@ -37,11 +38,11 @@ export const configSala = configCreacionSala.omit({ listaPermitidos: true, nombr
 
 /**
  * Subconjunto de la config que se puede modificar una vez creada la sala.
- * El `metodo_login` es inmutable: se fija al crear la sala y no se cambia más.
- * (La lista de invitados se gestiona aparte, vía los eventos `sala:permitidos_*`.)
+ * `metodo_login` y `acceso` se fijan al crear la sala.
+ * (La lista se gestiona aparte, vía los comandos `sala:permitidos_*`.)
  */
 export const configActualizable = configSala
-  .pick({ solo_invitados: true, nombre: true, overlay: true, condicion_asistencia: true, guardar_partidas_drive: true })
+  .pick({ nombre: true, overlay: true, condicion_asistencia: true, guardar_partidas_drive: true })
   .strict()
 
 /** `configActualizable` con todos los campos opcionales: lo que el profe puede mandar para cambiar la config. */
@@ -79,15 +80,29 @@ export type EstudianteDeSala = WssEstudianteSession & {
   votos?: Record<string, string[]>
 }
 
-/** Fila de la planilla: el estudiante, su nombre provisto (si es invitado) y el texto de lo que votó en cada encuesta. */
-export type FilaPlanillaCompleta = EstudianteDeSala & { nombreProvisto?: string; respuestas: Record<string, string> }
+/**
+ * Fila de la planilla exportada. Los datos de identidad vienen de la sesión del estudiante; en una sala
+ * con lista, quien figura en ella y nunca ingresó tiene una fila con `asistio: false` y solo su
+ * identidad y su info.
+ */
+export type FilaPlanillaCompleta = {
+  userId: string
+  nombre?: string
+  dni?: string
+  email?: string
+  info?: InfoEntrada
+  /** Pasó por la sala (y, si la planilla se acotó a una ventana, estuvo conectado en ella). */
+  asistio: boolean
+  /** Texto de lo que votó en cada encuesta, por id de encuesta. */
+  respuestas: Record<string, string>
+}
 
 export type PlanillaCompleta = {
   preguntas: { id: string; pregunta: string }[]
   filas: FilaPlanillaCompleta[]
 }
 
-/** Lista de invitados de una sala (DNIs) con los nombres que el profe les asignó. */
-export type ListaPermitidosConNombres = { lista: string[]; nombres: Record<string, string> }
+/** Lista de una sala (identidades según su `metodo_login`) con la info que el profe anotó de cada una. */
+export type ListaPermitidosConInfo = { lista: string[]; info: Record<string, InfoEntrada> }
 
-export type SalaResumen = { id: string; nombre?: string }
+export type SalaResumen = { id: string; nombre?: string; metodo_login: MetodosLogin; acceso: AccesoSala }

@@ -8,9 +8,9 @@ export enum FormaEvaluacionAsistencia {
 
 /** Etiquetas de las formas de evaluación, para los selects del FE. */
 export const ETIQUETAS_FORMA_DE_EVALUACION: Record<FormaEvaluacionAsistencia, string> = {
-  [FormaEvaluacionAsistencia.UltimosMinutos]: 'Conectado los últimos',
-  [FormaEvaluacionAsistencia.TotalMinutos]: 'Conectado un total de',
-  [FormaEvaluacionAsistencia.Conectado]: 'Se conectó en algún momento',
+  [FormaEvaluacionAsistencia.UltimosMinutos]: 'estuvo conectado los últimos',
+  [FormaEvaluacionAsistencia.TotalMinutos]: 'estuvo conectado un total de',
+  [FormaEvaluacionAsistencia.Conectado]: 'se conectó en algún momento',
 }
 
 // Techo generoso para una clase real (8 h): sin esto, un valor tipeado a mano sin querer (ej. de más)

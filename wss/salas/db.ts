@@ -10,13 +10,14 @@ import {
 import { salaData, type SalaData } from '../validators/salas'
 import { WssEstudianteSession, WssEstudianteSessionSchema } from '../validators/session'
 import { versionado } from '../versionado'
+import { migracionesSala } from './migraciones'
 
 export type { SalaData }
 
 // -- Salas --
 
 // Codecs de los documentos JSON de redis. Para evolucionar un shape ver `docs/versionado-redis.md`.
-export const salaCodec = versionado({ schema: salaData })
+export const salaCodec = versionado({ schema: salaData, migraciones: migracionesSala })
 const estudianteCodec = versionado({ schema: WssEstudianteSessionSchema })
 const eventoAsistenciaCodec = versionado({ schema: eventoAsistenciaSchema })
 const asistenciaDeClaseCodec = versionado({ schema: asistenciaDeClaseSchema })
@@ -115,6 +116,22 @@ export async function guardarEstudiante(salaId: string, session: WssEstudianteSe
   await redis.hset(`sala:${salaId}:estudiantes`, session.userId, estudianteCodec.serializar(session))
 }
 
+/**
+ * Quita la reserva del nombre (el `clientId` de la fila) conservando el resto de la fila. No-op si la
+ * fila no existe.
+ */
+export async function liberarReservaEstudiante(salaId: string, userId: string): Promise<void> {
+  const estudiante = (await getEstudiantes(salaId))[userId]
+  if (!estudiante) return
+  const { clientId: _reserva, ...sinReserva } = estudiante
+  await guardarEstudiante(salaId, sinReserva as WssEstudianteSession)
+}
+
+/** Borra la fila del estudiante en la planilla. */
+export async function borrarEstudiante(salaId: string, userId: string): Promise<void> {
+  await redis.hdel(`sala:${salaId}:estudiantes`, userId)
+}
+
 // -- Asistencia (log de conexión/desconexión) --
 
 // Nota: Este log de asistencia guarda los intervalos en los que estuvo conectado un `userId`
@@ -146,6 +163,22 @@ export async function registrarEventoAsistencia(
 export async function getEventosAsistencia(salaId: string): Promise<EventoAsistencia[]> {
   const raw = await redis.lrange(`sala:${salaId}:asistencia`, 0, -1)
   return raw.map((s) => eventoAsistenciaCodec.parsear(s))
+}
+
+/**
+ * Quita del log de asistencia los eventos de un `userId`; el orden del resto se conserva. Borra con
+ * `LREM` cada evento del usuario (en vez de reescribir la lista), así un evento que otro estudiante
+ * agregue mientras tanto no se pierde.
+ */
+export async function borrarEventosAsistenciaDe(salaId: string, userId: string): Promise<void> {
+  const clave = `sala:${salaId}:asistencia`
+  const propios = new Set(
+    (await redis.lrange(clave, 0, -1)).filter((s) => eventoAsistenciaCodec.parsear(s).userId === userId)
+  )
+  if (propios.size === 0) return
+  const tx = redis.multi()
+  for (const evento of propios) tx.lrem(clave, 0, evento)
+  await tx.exec()
 }
 
 /** Borra el log de asistencia de la sala (la clase ya quedó resumida en un pendiente). */

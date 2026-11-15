@@ -1,6 +1,7 @@
 export enum TipoErrorSesion {
   SalaNoExiste = 'sala_no_existe',
   DniNoPermitido = 'dni_no_permitido',
+  NombreNoPermitido = 'nombre_no_permitido',
   EmailNoPermitido = 'email_no_permitido',
   NombreEnUso = 'nombre_en_uso',
   AuthInvalido = 'auth_invalido',

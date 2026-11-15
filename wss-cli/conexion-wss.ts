@@ -171,31 +171,15 @@ export const conexionWss = create<Estado>((set, get) => ({
     console.log('❗ Error de conexión al WSS:', msg, 'Detalle del error:', err)
     toast.error(msg)
 
-    // Acá switcheamos según el tipo de error para manejar casos específicos como expiración de sesión, etc.
-    switch (err.data?.type as TipoErrorSesion | undefined) {
-      case TipoErrorSesion.SalaNoExiste:
-        get()._limpiarSocket(`Rechazado: ${msg}`)
-        set({ status: StatusDeConexion.Rechazado, error: msg })
-        break
-
-      case TipoErrorSesion.DniNoPermitido:
-        get()._limpiarSocket(`Rechazado: ${msg}`)
-        set({ status: StatusDeConexion.Rechazado, error: msg })
-        break
-
-      case TipoErrorSesion.NombreEnUso:
-        get()._limpiarSocket(`Rechazado: ${msg}`)
-        set({ status: StatusDeConexion.Rechazado, error: msg })
-        break
-
-      case TipoErrorSesion.AuthInvalido:
-        get()._limpiarSocket(`Rechazado: ${msg}`)
-        set({ status: StatusDeConexion.Rechazado, error: msg })
-        break
-
-      default:
-        console.log('❗ Error de conexión al WSS fatal:', msg)
-        set({ status: StatusDeConexion.Error, error: msg })
+    // Todo error de sesión conocido (sala inexistente, identidad fuera de la lista, nombre en uso, auth
+    // inválida) es un rechazo del server: no reconecta y el estudiante vuelve al login con el mensaje.
+    const tipo = err.data?.type as TipoErrorSesion | undefined
+    if (tipo && Object.values(TipoErrorSesion).includes(tipo)) {
+      get()._limpiarSocket(`Rechazado: ${msg}`)
+      set({ status: StatusDeConexion.Rechazado, error: msg })
+    } else {
+      console.log('❗ Error de conexión al WSS fatal:', msg)
+      set({ status: StatusDeConexion.Error, error: msg })
     }
   },
 }))

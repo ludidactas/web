@@ -1,5 +1,4 @@
 import { expect, test } from './ld-test'
-import { MetodosLogin } from '@/wss/validators/auth'
 
 test.describe('Sala de encuestas', () => {
   test('se puede llegar a la sala desde la portada', async ({ page }) => {
@@ -14,7 +13,10 @@ test.describe('Sala de encuestas', () => {
 
   test('loguearse como profe y acceder a la sala como estudiante', async ({ setupSala }) => {
     // Armar la sala como profe
-    const { sala, idSala, estudiante } = await setupSala({ name: nombreProfe, email: 'el.tes.tito@fake.com' })
+    const { sala, idSala, estudiante } = await setupSala({
+      name: nombreProfe,
+      email: `profe.${crypto.randomUUID()}@fake.com`,
+    })
 
     // La sala abre en la pestaña de Go: vamos a la de encuestas y verificamos que el profe la ve
     await sala.goto(`/salas/${idSala}/encuestas`)
@@ -26,35 +28,5 @@ test.describe('Sala de encuestas', () => {
     // Verificar que el estudiante puede ver la sala: entra por la pestaña de Go y tiene la de encuestas a mano
     await expect(alumnoPage.getByRole('heading', { name: 'Partidas', exact: true })).toBeVisible()
     await expect(alumnoPage.getByRole('link', { name: 'Encuestas' })).toBeVisible()
-  })
-
-  test.skip('crear una sala con DNI y acceder con varios', async ({ setupSala }) => {
-    const { sala, estudiante } = await setupSala(
-      { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { metodo_login: MetodosLogin.DNI }
-    )
-
-    const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
-    const alumnoPage2 = await estudiante({ nombre: 'Alumnini Pruebino', dni: '32987655' })
-    const alumnoPage3 = await estudiante({ nombre: 'Alumnini Pruebina', dni: '32987656' })
-
-    await expect(alumnoPage1.getByText('Sala de Encuestas')).toBeVisible()
-    await expect(alumnoPage2.getByText('Sala de Encuestas')).toBeVisible()
-    await expect(alumnoPage3.getByText('Sala de Encuestas')).toBeVisible()
-
-    expect(sala.getByText('Alumnini Pruebini')).toBeVisible()
-    expect(sala.getByText('Alumnini Pruebino')).toBeVisible()
-    expect(sala.getByText('Alumnini Pruebina')).toBeVisible()
-  })
-
-  test.skip('crear una sala con DNI y lista de permitidos', async ({ setupSala }) => {
-    const { sala, estudiante } = await setupSala(
-      { name: nombreProfe, email: 'el.tes.tito@fake.com' },
-      { metodo_login: MetodosLogin.DNI, solo_invitados: true }
-    )
-
-    const alumnoPage1 = await estudiante({ nombre: 'Alumnini Pruebini', dni: '32987654' })
-
-    await expect(alumnoPage1.getByText('Sala de Encuestas')).toBeVisible()
   })
 })

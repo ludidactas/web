@@ -60,6 +60,11 @@ export async function incrementarStats(salaId: string, userId: string, gano: boo
   if (gano) await redis.hincrby(k.stats(salaId, userId), 'ganadas', 1)
 }
 
+/** Borra las estadísticas acumuladas de un usuario en la sala. */
+export async function borrarStats(salaId: string, userId: string): Promise<void> {
+  await redis.del(k.stats(salaId, userId))
+}
+
 // -- Partidas pendientes de subir a Drive (hash) --
 
 export type { PartidaDrivePendiente }

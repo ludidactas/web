@@ -365,6 +365,24 @@ export async function estudianteGo(idSala: string, userId: string) {
   }
 }
 
+/**
+ * Borra los datos de Go de `userId` en la sala: si tiene una partida pendiente o en curso la cierra por
+ * abandono (el contrincante no queda esperando) y borra sus estadísticas. Las partidas terminadas
+ * quedan, porque también son del otro jugador.
+ */
+export async function borrarDatosGoDeUsuario(idSala: string, userId: string) {
+  const partidaId = await db.getPartidaActiva(idSala, userId)
+  if (partidaId) {
+    await conLock(partidaId, async () => {
+      const partida = await db.getPartida(idSala, partidaId)
+      if (partida && partida.estado !== EstadoPartida.Terminada)
+        await finalizar(partida, contrincanteDe(partida, userId).userId, 'abandono')
+    })
+    await db.limpiarPartidaActiva(idSala, userId)
+  }
+  await db.borrarStats(idSala, userId)
+}
+
 /** Cierra una partida: persiste el resultado, limpia punteros de "partida activa" y suma estadísticas. */
 async function finalizar(
   partida: Partida,

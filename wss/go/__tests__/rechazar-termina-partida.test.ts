@@ -8,7 +8,7 @@ import {
   setPartidaActiva,
 } from '../db'
 import { borrarSala, guardarSala } from '../../salas/db'
-import { MetodosLogin } from '../../validators/auth'
+import { AccesoSala, MetodosLogin } from '../../validators/auth'
 import { EstadoPartida, type Partida } from '../../validators/go'
 import { CONFIG_DEFAULTS } from '../../validators/overlay'
 import type { SalaData } from '../../validators/salas'
@@ -21,7 +21,7 @@ function salaData(id: string): SalaData {
       nombre_profe: 'Profe',
       link: 'x',
       metodo_login: MetodosLogin.Nombre,
-      solo_invitados: false,
+      acceso: AccesoSala.Libre,
       overlay: CONFIG_DEFAULTS,
     },
   }

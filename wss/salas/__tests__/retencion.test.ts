@@ -3,7 +3,7 @@ import redis from '../../redis'
 import { Salas } from '../app'
 import { getEmailProfe, getIdsSalasDeProfe, getSala, getUltimaActividad, guardarEstudiante, marcarActividad } from '../db'
 import { barrerSalasInactivas, RETENCION_DIAS } from '../retencion'
-import { MetodosLogin, RolSala } from '../../validators/auth'
+import { AccesoSala, MetodosLogin, RolSala } from '../../validators/auth'
 import { WssEstudianteSessionSchema } from '../../validators/session'
 import type { SocketProfe } from '../../middleware/roles'
 
@@ -14,7 +14,7 @@ const creadas: string[] = []
 
 async function crearSala() {
   const socket = { data: { session: { email, nombre: 'Profe' } } } as unknown as SocketProfe
-  const sala = await Salas.crear(socket, { nombre: 'Sala', metodo_login: MetodosLogin.Nombre, solo_invitados: false })
+  const sala = await Salas.crear(socket, { nombre: 'Sala', metodo_login: MetodosLogin.Nombre, acceso: AccesoSala.Libre })
   creadas.push(sala.id)
   return sala.id
 }

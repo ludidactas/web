@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client'
 import redis from '../redis'
 import { getSala } from '../salas/db'
 import { nombreDeFantasia } from '../salas/utils'
-import { MetodosLogin } from '../validators/auth'
+import { AccesoSala, MetodosLogin } from '../validators/auth'
 import { agregarPermitidosA, quitarPermitidosDe } from '../invitados/db'
 
 const WSS_HOST = process.env.WSS_HOST ?? 'http://localhost:3005'
@@ -78,8 +78,8 @@ if (!sala) {
 }
 
 const metodo = sala.config.metodo_login
-const soloInvitados = sala.config.solo_invitados
-console.log(`Sala ${idSala} — metodo: ${metodo}, solo_invitados: ${soloInvitados}`)
+const soloLista = sala.config.acceso === AccesoSala.Lista
+console.log(`Sala ${idSala} — metodo: ${metodo}, acceso: ${sala.config.acceso}`)
 
 if (metodo === MetodosLogin.Google) {
   console.error('metodo_login "google" no soportado por este script (requiere JWT)')
@@ -91,9 +91,11 @@ const nombres = nombresUnicos(cantidad)
 const dnis = metodo === MetodosLogin.DNI ? Array.from({ length: cantidad }, () => generarDni()) : []
 const clientIds = Array.from({ length: cantidad }, () => generarClientId())
 
-if (metodo === MetodosLogin.DNI && soloInvitados) {
-  await agregarPermitidosA(dnis, idSala)
-  console.log(`Inyectados ${dnis.length} DNIs en allowed_list`)
+// Identidades que el script inyecta en la lista para poder entrar a una sala `lista`.
+const identidades = metodo === MetodosLogin.DNI ? dnis : nombres
+if (soloLista) {
+  await agregarPermitidosA(identidades, idSala)
+  console.log(`Inyectadas ${identidades.length} identidades en allowed_list`)
 }
 
 const sockets: Socket[] = []
@@ -147,9 +149,9 @@ async function cleanup() {
     socket.disconnect()
   }
 
-  if (metodo === MetodosLogin.DNI && soloInvitados && dnis.length > 0) {
-    await quitarPermitidosDe(dnis, idSala)
-    console.log(`Removidos ${dnis.length} DNIs de allowed_list`)
+  if (soloLista) {
+    await quitarPermitidosDe(identidades, idSala)
+    console.log(`Removidas ${identidades.length} identidades de allowed_list`)
   }
 
   await redis.quit()

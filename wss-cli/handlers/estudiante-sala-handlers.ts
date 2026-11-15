@@ -26,11 +26,11 @@ export default function estudianteSalaHandlers(socket: Socket | null) {
           }
         },
 
-        // El toast usa el nombre que puso el profe (prueba de que la asistencia matcheó la lista), no el tipeado; si falta, el DNI.
-        'sala:invitado': ({ nombreProvisto }) => {
-          storeInvitado.getState().set({ nombreProvisto })
-          const { dni } = storeEstudianteLogin.getState()
-          toast.success(`Asistencia tomada de ${nombreProvisto || dni}`)
+        // El toast usa el nombre que puso el profe (prueba de que la asistencia matcheó la lista), no el tipeado; si falta, el DNI o el nombre.
+        'sala:invitado': ({ info }) => {
+          storeInvitado.getState().set({ info })
+          const { dni, nombre } = storeEstudianteLogin.getState()
+          toast.success(`Asistencia tomada de ${info?.nombre || dni || nombre}`)
         },
       }),
 

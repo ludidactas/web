@@ -18,7 +18,7 @@ test('los tipos de emisión del server se chequean en compilación', () => {
 
     io.to('sala').emit('go:partida', partida)
     profe.emit('sala:estudiantes', [])
-    estudiante.emit('sala:invitado', { nombreProvisto: 'Ana' })
+    estudiante.emit('sala:invitado', { info: { nombre: 'Ana' } })
 
     // @ts-expect-error evento que ningún rol recibe
     io.to('sala').emit('evento:inexistente')

@@ -112,20 +112,16 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
 
   return (
     <Dialog>
-      <div className="contents md:relative md:block md:w-11 md:h-11 md:shrink-0">
-        <DialogTrigger asChild>
-          <button
-            className="group flex items-center w-full md:w-fit justify-center gap-2 md:gap-0 md:hover:gap-2 font-semibold text-white text-sm px-4 py-3 md:py-0 rounded-full bg-ld-azul hover:bg-ld-azul/80 transition-colors md:absolute md:right-0 md:top-0 md:z-10 md:h-11 md:flex-row-reverse md:justify-start md:hover:px-4 md:text-base"
-            title="Mostrá el código QR para que tus estudiantes se unan escaneándolo"
-          >
-            <Icon icon="lucide:qr-code" className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="hidden md:block whitespace-nowrap md:max-w-0 md:overflow-hidden md:group-hover:max-w-[120px] md:transition-all md:duration-300 md:ease-in-out">
-              Mostrar QR
-            </span>
-          </button>
-        </DialogTrigger>
-      </div>
-      <DialogContent className={cn('flex flex-col items-center gap-3 w-fit p-4')} aria-description="QR de tu sala">
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center gap-2 h-10 px-4 rounded-lg font-semibold text-white bg-ld-violeta-oscuro hover:bg-ld-violeta-oscuro/80 transition-colors"
+          title="Mostrá el código QR para que tus estudiantes se unan escaneándolo"
+        >
+          <Icon icon="lucide:qr-code" className="w-4 h-4 shrink-0" />
+          QR
+        </button>
+      </DialogTrigger>
+      <DialogContent className={cn('flex flex-col items-center gap-4 w-fit px-14 py-8')} aria-description="QR de tu sala">
         <DialogHeader>
           <DialogTitle className="text-center text-lg font-semibold text-ld-violeta-oscuro">{titulo}</DialogTitle>
         </DialogHeader>
@@ -140,7 +136,7 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
         <button
           className={cn(
             'flex items-center gap-1 px-4 py-1.5 rounded-full text-white text-sm transition-colors active:scale-95',
-            copiado ? 'bg-emerald-500 hover:bg-emerald-500/80' : 'bg-ld-azul hover:bg-ld-azul/80'
+            copiado ? 'bg-emerald-500 hover:bg-emerald-500/80' : 'bg-ld-violeta-oscuro hover:bg-ld-violeta-oscuro/80'
           )}
           onClick={copiar}
         >
@@ -153,7 +149,10 @@ export function DialogMostrarQR({ link, titulo }: { link: string; titulo: string
         </button>
         <DialogFooter>
           <DialogClose>
-            <p className={cn('px-3 py-1 text-white text-sm border-2 bg-teal-500 rounded-full')}>Cerrar</p>
+            <p className={cn('flex items-center gap-1 px-3 py-1 text-white text-sm border-2 bg-red-500 hover:bg-red-500/80 rounded-full transition-colors')}>
+              <Icon icon="ci:close-md" width={14} height={14} />
+              Cerrar
+            </p>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

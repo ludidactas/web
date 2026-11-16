@@ -145,7 +145,7 @@ export default function EncuestasProfe({
 
             <TabsContent value="participantes">
               <div className="flex flex-col bg-white">
-                <div className="p-4 min-h-screen">
+                <div className="p-4 h-[100dvh]">
                   <ListaEstudiantes />
                 </div>
               </div>

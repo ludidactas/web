@@ -682,7 +682,7 @@ function PartidaEnCurso({
         )}
       </div>
 
-      <div className="w-full flex gap-12 items-center justify-center">
+      <div className="w-full flex flex-wrap gap-x-4 gap-y-2 sm:gap-x-12 items-center justify-center">
         {partida.estado === 'contando' && !(soyNegro ? partida.confirmaron.negro : partida.confirmaron.blanco) && (
           <button
             className="bg-indigo-500 text-white px-4 py-2 rounded"
@@ -705,7 +705,7 @@ function PartidaEnCurso({
         ) : (
           <>
             <button
-              className="flex gap-1 items-center text-sm text-ld-violeta-oscuro hover:scale-105 font-bold"
+              className="flex gap-1 items-center whitespace-nowrap text-sm text-ld-violeta-oscuro hover:scale-105 font-bold"
               onClick={onVolverASala}
             >
               <Icon className="w-6 h-6" icon={'famicons:arrow-back-circle-outline'} />

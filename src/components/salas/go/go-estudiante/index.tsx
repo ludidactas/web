@@ -2,6 +2,7 @@
 
 import { nombreSplit } from '@/lib/utils'
 import HeaderSala from '../../header-sala'
+import { TabsSalaEstudiante } from '../../tabs-sala-estudiante'
 import LdGo from '@/components/custom/ld-go'
 import { BtnAuth } from '@/components/ui/btn-auth'
 import { useLoginSalaEstudiante } from '@/wss-cli/providers/wss-estudiante-login-context'
@@ -48,6 +49,8 @@ export default function GoEstudiantePage({ idSala }: { idSala: string }) {
             subtitulo="Sumérgete en el mundo del Go!"
             // aviso={<AvisoInvitado />}
           />
+          {/* -mx-2 compensa el p-2 del contenedor: en mobile las tabs van de borde a borde. */}
+          <TabsSalaEstudiante idSala={idSala} actual="go" className="-mx-2" />
 
           <GoEstudiante userId={userId} />
         </div>

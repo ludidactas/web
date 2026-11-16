@@ -9,8 +9,8 @@ import { AvisoInvitado } from '../../encuestas-estudiante/encuestas-estudiante'
  * contrincante, invitaciones, partida) queda en `GoJuego`. Análogo a `../go-profe/go-profe.tsx`, misma
  * mecánica, cada uno con su propia conexión (`useConexionEstudiante`/`useConexionProfe`). */
 export default function GoEstudiante({ userId }: { userId: string }) {
-  return <div className='flex flex-col items-center bg-white mx-10 p-10 rounded-xl'>
-    <h1 className="flex gap-2 items-center text-5xl font-medium text-ld-violeta-oscuro">
+  return <div className='flex flex-col items-center bg-white p-4 sm:mx-10 sm:p-10 rounded-xl'>
+    <h1 className="flex gap-2 items-center text-4xl sm:text-5xl font-medium text-ld-violeta-oscuro">
       <Icon className='-rotate-3' icon={"bi:grid-3x3"} />
       Partidas
     </h1>

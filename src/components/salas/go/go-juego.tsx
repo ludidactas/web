@@ -344,6 +344,9 @@ function EsperandoContrincante({
   )
 }
 
+/** Apenas más angosto que el HUD (`hud-partida.tsx`, 576px en desktop). */
+const TAMAÑO_TABLERO = 'max-w-md sm:max-w-[34rem] max-h-[70vh]'
+
 /** Partida ajena, en modo solo lectura (sin acciones), para quien la está observando. */
 function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; onDejarDeObservar: () => void }) {
   if (partida.estado === 'pendiente') {
@@ -366,8 +369,9 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
 
       {partida.estado === 'contando' && <p className="text-sm text-slate-600">Contando piedras muertas…</p>}
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="w-full flex flex-col items-center gap-3">
         <PartidaGo
+          className={TAMAÑO_TABLERO}
           tablero={partida.tablero}
           tamaño={partida.tamaño}
           removidas={partida.removidas}
@@ -466,22 +470,26 @@ function DialogResultado({
         container={container}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        className="flex flex-col items-center gap-2 rounded-xl max-w-sm"
+        // Mismo gradiente que el HUD, en versión opaca: sobre el overlay oscuro, el del HUD (al 35%) se
+        // vería apagado. Son sus colores tal como quedan sobre blanco.
+        className="max-w-sm p-4 sm:p-10 rounded-3xl sm:rounded-3xl border-0 bg-gradient-to-r from-[#A6E3EF] to-[#D4BEFF]"
       >
-        <LdSvg
-          className="w-56 h-auto drop-shadow-xl"
-          SvgComponent={ilustracionResultado(miColor, gane)}
-        />
-        <DialogHeader>
-          <DialogTitle className={cn('text-center text-3xl', gane ? 'text-emerald-600' : 'text-slate-600')}>
-            {gane ? '¡Ganaste!' : 'Perdiste'}
-          </DialogTitle>
-        </DialogHeader>
-        <DetalleFin partida={partida} />
-        <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
-        <DialogClose asChild>
-          <button className="bg-indigo-500 text-white px-6 py-2 mt-2 rounded-full hover:scale-105">Seguir</button>
-        </DialogClose>
+        <div className="flex flex-col items-center gap-2 rounded-3xl bg-white p-4 sm:p-6">
+          <LdSvg
+            className="w-56 h-auto drop-shadow-xl"
+            SvgComponent={ilustracionResultado(miColor, gane)}
+          />
+          <DialogHeader>
+            <DialogTitle className={cn('text-center text-3xl', gane ? 'text-emerald-600' : 'text-slate-600')}>
+              {gane ? '¡Ganaste!' : 'Perdiste'}
+            </DialogTitle>
+          </DialogHeader>
+          <DetalleFin partida={partida} />
+          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
+          <DialogClose asChild>
+            <button className="bg-indigo-500 text-white px-6 py-2 mt-2 rounded-full hover:scale-105">Seguir</button>
+          </DialogClose>
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -633,8 +641,9 @@ function PartidaEnCurso({
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="w-full flex flex-col items-center gap-3">
         <PartidaGo
+          className={TAMAÑO_TABLERO}
           tablero={partida.tablero}
           tamaño={partida.tamaño}
           removidas={partida.removidas}

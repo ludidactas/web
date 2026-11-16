@@ -33,6 +33,11 @@ function HudEnJuego({ partida, miColor }: { partida: Partida; miColor?: Color })
 
         <ChipColor color={BLANCO} className="absolute top-3 left-4" />
         <ChipColor color={NEGRO} className="absolute top-3 right-4" />
+        {partida.modo === 'atari' && (
+          <span className="absolute top-2.5 inset-x-0 text-center text-xl sm:text-[1.6rem] font-bold text-ld-violeta-oscuro">
+            {ETIQUETA_MODO[partida.modo]}
+          </span>
+        )}
 
         {/* En pantallas chicas el texto sube para no pisar las cabezas de los gatos. */}
         <div className="absolute inset-x-0 top-0 bottom-10 sm:bottom-0 flex flex-col items-center justify-center">
@@ -62,27 +67,19 @@ function CentroEnJuego({ partida, miColor }: { partida: Partida; miColor?: Color
 
   const esMiTurno = partida.turno === miColor
   return (
-    <>
-      {partida.modo === 'atari' && (
-        <span className="text-sm font-bold text-indigo-600">{ETIQUETA_MODO[partida.modo]}</span>
-      )}
-      {/* La piedra cuelga a la izquierda del texto, así el que queda centrado es el texto. */}
-      <div className={cn('relative flex items-center', esMiTurno && 'animate-pulse')}>
-        <PiedraIcono
-          color={partida.turno}
-          className="absolute right-full mr-2 h-5 w-5 sm:h-6 sm:w-6"
-        />
-        <TextoGrande color={partida.turno}>
-          {esMiTurno ? 'Tu turno' : `Juega ${NOMBRE_COLOR[partida.turno]}`}
-        </TextoGrande>
-      </div>
-    </>
+    // La piedra cuelga a la izquierda del texto, así el que queda centrado es el texto.
+    <div className={cn('relative flex items-center', esMiTurno && 'animate-pulse')}>
+      <PiedraIcono color={partida.turno} className="absolute right-full mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+      <TextoGrande color={partida.turno}>
+        {esMiTurno ? 'Tu turno' : `Juega ${NOMBRE_COLOR[partida.turno]}`}
+      </TextoGrande>
+    </div>
   )
 }
 
 /** Texto en el color de las piedras: blanco con contorno negro, o negro liso. */
 function TextoGrande({ color, children }: { color: Color; children: React.ReactNode }) {
-  const texto = <span className="text-xl sm:text-[1.6rem] font-bold tracking-wide whitespace-nowrap">{children}</span>
+  const texto = <span className="text-lg sm:text-[1.6rem] font-bold tracking-wide whitespace-nowrap">{children}</span>
   return color === BLANCO ? (
     <Outlined radius={1.5} outlineColor="black" className="text-white">
       {texto}

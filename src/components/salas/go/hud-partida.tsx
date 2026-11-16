@@ -42,6 +42,8 @@ function HudEnJuego({ partida, miColor }: { partida: Partida; miColor?: Color })
         {/* En pantallas chicas el texto sube para no pisar las cabezas de los gatos. */}
         <div className="absolute inset-x-0 top-0 bottom-10 sm:bottom-0 flex flex-col items-center justify-center">
           <CentroEnJuego partida={partida} miColor={miColor} />
+          <p className="mt-2 text-sm font-semibold text-slate-700">Capturas</p>
+          <Capturas partida={partida} className="text-sm" iconoClassName="h-4 w-4" />
         </div>
 
         <PestañaNombre
@@ -100,6 +102,28 @@ function ChipColor({ color, className }: { color: Color; className?: string }) {
     >
       <PiedraIcono color={color} className="h-3.5 w-3.5" />
       {NOMBRE_COLOR[color]}
+    </span>
+  )
+}
+
+/** Cada número va con el ícono del color CAPTURADO (ver `PanelCapturas` en go-juego). */
+function Capturas({
+  partida,
+  className,
+  iconoClassName,
+}: {
+  partida: Pick<Partida, 'capturasNegras' | 'capturasBlancas'>
+  className?: string
+  iconoClassName: string
+}) {
+  return (
+    <span className={cn('flex items-center gap-3', className)}>
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={NEGRO} className={iconoClassName} /> {partida.capturasBlancas}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <PiedraIcono color={BLANCO} className={iconoClassName} /> {partida.capturasNegras}
+      </span>
     </span>
   )
 }
@@ -165,16 +189,8 @@ function HudFinal({ partida }: { partida: Partida }) {
         )}
         {info.motivoFin && info.motivoFin !== 'conteo' && <p>{TEXTO_MOTIVO_FIN[info.motivoFin]}</p>}
 
-        {/* Cada número va con el ícono del color CAPTURADO (ver `PanelCapturas` en go-juego). */}
         <p className="mt-1">Capturas</p>
-        <span className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1">
-            <PiedraIcono color={NEGRO} className="h-3 w-3" /> {partida.capturasBlancas}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <PiedraIcono color={BLANCO} className="h-3 w-3" /> {partida.capturasNegras}
-          </span>
-        </span>
+        <Capturas partida={partida} iconoClassName="h-3 w-3" />
       </div>
     </div>
   )

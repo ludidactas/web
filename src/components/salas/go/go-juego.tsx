@@ -382,9 +382,6 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; on
           deshabilitado
         />
 
-        {partida.estado !== 'terminada' && (
-          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
-        )}
       </div>
 
       <button
@@ -414,7 +411,7 @@ function DetalleFin({ partida }: { partida: Pick<Partida, 'resultado' | 'motivoF
   )
 }
 
-/** Panel único de capturas debajo del tablero. `capturasNegras`/`capturasBlancas` cuentan, como en
+/** Capturas de los dos jugadores, para el diálogo de resultado. `capturasNegras`/`capturasBlancas` cuentan, como en
  * `Partida`, las piedras que capturó cada jugador (no las que le capturaron a él), así que el ícono
  * de cada número es el del color CAPTURADO: negro captura blancas, blanco captura negras. */
 function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: number; capturasBlancas: number }) {
@@ -677,9 +674,6 @@ function PartidaEnCurso({
           </button>
         )}
 
-        {partida.estado !== 'terminada' && (
-          <PanelCapturas capturasNegras={partida.capturasNegras} capturasBlancas={partida.capturasBlancas} />
-        )}
       </div>
 
       <div className="w-full flex flex-wrap gap-x-4 gap-y-2 sm:gap-x-12 items-center justify-center">

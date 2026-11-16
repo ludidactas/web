@@ -27,7 +27,10 @@ export const ListaEstudiantes = ({ modo = 'encuestas' }: { modo?: 'encuestas' | 
       return !prev
     })
 
-  const visibles = soloConectados ? estudiantes.filter((e) => e.conectado) : estudiantes
+  // Conectados primero; el sort es estable, así que cada grupo conserva el orden del store.
+  const visibles = soloConectados
+    ? estudiantes.filter((e) => e.conectado)
+    : [...estudiantes].sort((a, b) => Number(b.conectado) - Number(a.conectado))
 
   return (
     <div className="relative flex flex-col h-full">

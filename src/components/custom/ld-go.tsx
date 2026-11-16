@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react'
+import { Matrix, Element as SvgElement } from '@svgdotjs/svg.js'
 import { cn } from '@/lib/utils'
 import Go from '@/svg/dist/ilustraciones/Go.svg'
 import { LdSvg } from './ld-svg'
 
 const ids = ['colaIzq', 'colaDer'] as const
 
-// Puntos (en el sistema de coordenadas del svg) donde cada cola nace del cuerpo del gato:
-// son los ejes sobre los que giran, como si el resto del gato quedara fijo.
-const PIVOTE_IZQ = { x: 355.543, y: 405.642 }
-const PIVOTE_DER = { x: 1346.54, y: 451.157 }
+// Puntos (en el sistema de coordenadas propio de cada cola, antes de su `transform`) donde la
+// cola nace del cuerpo del gato: son los ejes sobre los que giran, como si el resto del gato
+// quedara fijo. Son el punto medio entre el inicio y el fin del trazo de la cola.
+const PIVOTE_IZQ = { x: 524.718, y: 809.877 }
+const PIVOTE_DER = { x: 3137.86, y: 951.362 }
 
 const PERIODO = 2600 // ms que tarda un barrido completo (ida y vuelta)
 const AMPLITUD = 6 // grados que se inclina cada cola a cada lado desde el centro
@@ -60,12 +62,21 @@ export default function LdGo({ className }: { className?: string }) {
         animation={(nodos, t) => {
           const anguloIzq = AMPLITUD * Math.sin((2 * Math.PI * t) / PERIODO)
           const anguloDer = AMPLITUD * Math.sin((2 * Math.PI * (t + DESFASE)) / PERIODO)
-          nodos.colaIzq.transform({ rotate: anguloIzq, ox: PIVOTE_IZQ.x, oy: PIVOTE_IZQ.y })
-          nodos.colaDer.transform({ rotate: anguloDer, ox: PIVOTE_DER.x, oy: PIVOTE_DER.y })
+          rotarCola(nodos.colaIzq, anguloIzq, PIVOTE_IZQ)
+          rotarCola(nodos.colaDer, anguloDer, PIVOTE_DER)
         }}
       />
     </div>
   )
+}
+
+/** Gira la cola sobre su pivote, componiendo con la matriz que trae del export (la que la ubica
+ * en el dibujo). `transform` reemplaza el atributo entero, así que la matriz original se guarda
+ * en el nodo la primera vez, antes de que la pise ningún frame. */
+function rotarCola(cola: SvgElement, angulo: number, pivote: { x: number; y: number }) {
+  if (!cola.remember('matrizBase')) cola.remember('matrizBase', new Matrix(cola))
+  const base: Matrix = cola.remember('matrizBase')
+  cola.transform(base.transform({ rotate: angulo, ox: pivote.x, oy: pivote.y }))
 }
 
 function ExplosionPiedras({ x, y }: { x: number; y: number }) {

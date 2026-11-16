@@ -9,5 +9,5 @@ import SalaFloatingNav from './sala-floating-nav'
 export default function SalaFloatingNavEstudiante({ idSala }: { idSala: string }) {
   const { ingresado } = useLoginSalaEstudiante({ idSala })
   if (!ingresado) return null
-  return <SalaFloatingNav idSala={idSala} basePath="/sala" />
+  return <SalaFloatingNav idSala={idSala} basePath="/sala" className="hidden md:flex" />
 }

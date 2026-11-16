@@ -24,6 +24,7 @@ import { storeInvitado } from '@/wss-cli/stores/invitado-store'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { track } from '@/lib/analytics'
 import { BannerSalaEstudiante } from '../banner-sala-estudiante'
+import { TabsSalaEstudiante } from '../tabs-sala-estudiante'
 
 /** Avisa al estudiante que su DNI está en la lista de invitados de la sala (se le tomó asistencia). */
 export function AvisoInvitado() {
@@ -77,6 +78,8 @@ export default function EncuestasEstudiante({ idSala }: { idSala: string }) {
           subtitulo="¡Participa respondiendo a las preguntas en vivo!"
           // aviso={<AvisoInvitado />}
         />
+        {/* -mx-2 compensa el p-2 de la página: en mobile las tabs van de borde a borde. */}
+        <TabsSalaEstudiante idSala={idSala} actual="encuestas" className="-mx-2" />
         <div className="flex flex-col px-4 items-center justify-center md:gap-10 bg-white rounded-3xl md:p-10">
  <AvisoInvitado/>
 

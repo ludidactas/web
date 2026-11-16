@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 /** Botones flotantes (abajo a la derecha) para alternar entre las vistas de la sala, cada una con su
- * propia ruta (`{basePath}/[idSala]/encuestas`, `{basePath}/[idSala]/go`). Se reutiliza tanto para la
- * sala del profe (`/salas`, por defecto, donde en mobile queda oculto porque esa navegación pasa a
- * vivir en las tabs) como para la del estudiante (`/sala`). */
+ * propia ruta (`{basePath}/[idSala]/encuestas`, `{basePath}/[idSala]/go`). Se reutiliza para la sala
+ * del profe (`/salas`, por defecto) y la del estudiante (`/sala`); en las dos se muestra solo en
+ * desktop, en mobile esa navegación vive en las tabs. */
 export default function SalaFloatingNav({
   idSala,
   basePath = '/salas',

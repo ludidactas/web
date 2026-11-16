@@ -10,6 +10,7 @@ import {
   type EstadoPiedra,
 } from '@/lib/go/tablero-go-base'
 import { BLANCO, calcularTerritorio, DAME, grupoEn, NEGRO, VACIO, type Color, type Tablero } from '@/lib/go/motor'
+import { cn } from '@/lib/utils'
 import { useMemo, useState } from 'react'
 
 /** Opacidad de las piedras marcadas como muertas durante el conteo. */
@@ -42,6 +43,7 @@ export function PartidaGo({
   pendiente,
   deshabilitado,
   onJugar,
+  className,
 }: {
   tablero: Tablero
   tamaño: number
@@ -65,6 +67,8 @@ export function PartidaGo({
   pendiente?: Punto | null
   deshabilitado?: boolean
   onJugar?: (fila: number, columna: number) => void
+  /** Clases extra para el `<svg>`; pisan el tamaño máximo por defecto. */
+  className?: string
 }) {
   const [hover, setHover] = useState<Punto | null>(null)
 
@@ -132,7 +136,7 @@ export function PartidaGo({
       esSeleccionable={esSeleccionable}
       onHoverChange={(p) => setHover(p ? { fila: p[0], columna: p[1] } : null)}
       estadoPiedra={estadoPiedra}
-      className="max-w-[min(90vw,560px)] max-h-[min(70vh,560px)] aspect-square touch-none select-none"
+      className={cn('max-w-[min(90vw,560px)] max-h-[min(70vh,560px)] aspect-square touch-none select-none', className)}
       extraDefs={
         <>
           {contornoNegro.defs}

@@ -24,7 +24,7 @@ let cliente: SocketCli
 
 const unirAlRoomDelProfe = (socket: Socket) => {
   socket.data.session = { rol: RolSala.Profe, userId: profeEmail }
-  socket.join([rooms.profe(salaId), rooms.usuario(salaId, profeEmail)])
+  socket.join([rooms.profe(salaId), rooms.usuario(salaId, userIdProfe)])
 }
 
 function salaData(id: string): SalaData {

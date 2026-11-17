@@ -25,6 +25,7 @@ export const EstadoPartida = {
 export type EstadoPartida = (typeof EstadoPartida)[keyof typeof EstadoPartida]
 
 export interface JugadorPartida {
+  /** Id opaco por sala (ver `wss/id-opaco.ts`), de estudiantes y del profe. */
   userId: string
   nombre: string
 }
@@ -147,21 +148,11 @@ export const jugadaSchema = z.object({
 export type PartidaIdPayload = z.output<typeof partidaIdSchema>
 export type Jugada = z.output<typeof jugadaSchema>
 
-/** Alguien de la sala como contrincante posible: si ya está en una partida, cuál y contra quién.
- * `id` es el id opaco por sala (ver `wss/id-opaco.ts`): los eventos hacia la sala nunca llevan el
- * `userId` real. */
+/** Alguien de la sala como contrincante posible: si ya está en una partida, cuál y contra quién. */
 export interface ContrincanteGo {
-  id: string
+  userId: string
   nombre: string
   enPartida: boolean
   partidaId: string | null
-  contrincante: { id: string; nombre: string } | null
-}
-
-/** Vista de `Partida` para los sockets de la sala: los jugadores van por su id opaco por sala, sin
- * identidad real. */
-export interface PartidaPublica extends Omit<Partida, 'negro' | 'blanco' | 'ganadorUserId'> {
-  negro: { id: string; nombre: string }
-  blanco: { id: string; nombre: string }
-  ganadorId: string | null
+  contrincante: { userId: string; nombre: string } | null
 }

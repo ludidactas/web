@@ -108,9 +108,9 @@ function verificarLista(lista: ContrincanteGo[]) {
   expect(serializada).not.toContain(alumnos[1].dni)
   expect(serializada).not.toContain(emailProfe)
 
-  expect(lista.map((c) => c.id).sort()).toEqual([ids[1], idProfe].sort())
-  expect(lista.find((c) => c.id === idProfe)?.nombre).toBe(nombreProfe)
-  expect(lista.find((c) => c.id === ids[1])?.nombre).toBe(alumnos[1].nombre)
+  expect(lista.map((c) => c.userId).sort()).toEqual([ids[1], idProfe].sort())
+  expect(lista.find((c) => c.userId === idProfe)?.nombre).toBe(nombreProfe)
+  expect(lista.find((c) => c.userId === ids[1])?.nombre).toBe(alumnos[1].nombre)
 }
 
 describe('contrincantes de Go de un estudiante', () => {

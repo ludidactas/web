@@ -1,6 +1,6 @@
 import { track } from '@/lib/analytics'
 import { comandosGo, EventosGo } from '@/wss/contrato/go'
-import { ModoPartida, PartidaPublica, TamañoTablero } from '@/wss/validators/go'
+import { ModoPartida, Partida, TamañoTablero } from '@/wss/validators/go'
 import { Socket } from 'socket.io-client'
 import { toast } from 'sonner'
 import { comandos, escuchar } from '../contrato-cli'
@@ -16,7 +16,7 @@ export default function goHandlers(socket: Socket | null) {
   /** El store se actualiza con la respuesta: el broadcast `go:partida` todavía puede no alcanzar a este socket.
    * Una respuesta `terminada` es de quien cerró la partida (los comandos sobre una terminada fallan), así que
    * el fin se mide una sola vez por partida. */
-  async function guardandoPartida(pedido: Promise<PartidaPublica>): Promise<PartidaPublica> {
+  async function guardandoPartida(pedido: Promise<Partida>): Promise<Partida> {
     const partida = await pedido
     store.set(partida)
     if (partida.estado === 'terminada')

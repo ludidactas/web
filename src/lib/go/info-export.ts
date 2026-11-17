@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import type { ModoPartida, Partida, PartidaPublica } from '@/wss/validators/go'
+import type { ModoPartida, Partida } from '@/wss/validators/go'
 
 export const ETIQUETA_MODO: Record<ModoPartida, string> = { partida: 'Partida por territorio', atari: 'Atari Go' }
 
@@ -11,24 +11,9 @@ export type InfoExport = {
   puntos: { negro: number; blanco: number } | null
 }
 
-/** La partida completa del server (ids reales) o la vista pública que llega al cliente (ids opacos). */
-type PartidaParaExportar =
-  | Pick<Partida, 'modo' | 'negro' | 'blanco' | 'ganadorUserId' | 'resultado'>
-  | Pick<PartidaPublica, 'modo' | 'negro' | 'blanco' | 'ganadorId' | 'resultado'>
-
-export function infoExport(p: PartidaParaExportar): InfoExport {
+export function infoExport(p: Pick<Partida, 'modo' | 'negro' | 'blanco' | 'ganadorUserId' | 'resultado'>): InfoExport {
   const ganador =
-    'ganadorId' in p
-      ? p.ganadorId === null
-        ? null
-        : p.ganadorId === p.negro.id
-          ? 'negro'
-          : 'blanco'
-      : p.ganadorUserId === null
-        ? null
-        : p.ganadorUserId === p.negro.userId
-          ? 'negro'
-          : 'blanco'
+    p.ganadorUserId === null ? null : p.ganadorUserId === p.negro.userId ? 'negro' : 'blanco'
 
   return {
     modo: p.modo,

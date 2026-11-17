@@ -1,4 +1,4 @@
-import { ContrincanteGo, PartidaPublica } from '@/wss/validators/go'
+import { ContrincanteGo, Partida } from '@/wss/validators/go'
 import { create } from 'zustand'
 
 /** Estado cliente (zustand) de Go — lo pueblan `estudiante-go-handlers.ts`/`profe-go-handlers.ts`
@@ -10,21 +10,21 @@ interface GoState {
   /** Mi id opaco en la sala, pedido con `go:identidad`: con esto me reconozco en las partidas. */
   miId: string | null
   /** Mi partida activa (pendiente o en curso), o `null` si no tengo ninguna. */
-  partida: PartidaPublica | null
+  partida: Partida | null
   /** Invitaciones entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
-  invitaciones: PartidaPublica[]
+  invitaciones: Partida[]
   /** Compañeros conectados, con si están o no disponibles para invitar (ya en una partida) y, en ese
    * caso, contra quién. */
   contrincantes: ContrincanteGo[]
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
-  observando: PartidaPublica | null
+  observando: Partida | null
   marcarInicializado: () => void
   setMiId: (id: string) => void
-  set: (partida: PartidaPublica | null) => void
-  agregarInvitacion: (partida: PartidaPublica) => void
+  set: (partida: Partida | null) => void
+  agregarInvitacion: (partida: Partida) => void
   quitarInvitacion: (partidaId: string) => void
   setContrincantes: (contrincantes: GoState['contrincantes']) => void
-  setObservando: (partida: PartidaPublica | null) => void
+  setObservando: (partida: Partida | null) => void
   reset: () => void
   resetConexion: () => void
 }

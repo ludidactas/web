@@ -10,7 +10,7 @@ import { PiedraIcono, RELLENO } from '@/lib/go/tablero-go-base'
 import { descargarBlob } from '@/lib/imagen-compartible'
 import { cn } from '@/lib/utils'
 import { storeGo } from '@/wss-cli/stores/go-store'
-import { ModoPartida, PartidaPublica, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
+import { ModoPartida, Partida, TAMAÑOS_TABLERO, TamañoTablero } from '@/wss/validators/go'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -32,15 +32,15 @@ import { useSonidoJugada } from './use-sonido-jugada'
  * `estudiante-go-handlers.ts` / `profe-go-handlers.ts` del lado cliente. */
 export type AccionesGo = {
   pedirContrincantes: () => void
-  invitar: (contrincanteId: string, opciones?: { tamaño?: TamañoTablero; modo?: ModoPartida }) => Promise<PartidaPublica>
-  aceptar: (partidaId: string) => Promise<PartidaPublica>
+  invitar: (contrincanteId: string, opciones?: { tamaño?: TamañoTablero; modo?: ModoPartida }) => Promise<Partida>
+  aceptar: (partidaId: string) => Promise<Partida>
   rechazar: (partidaId: string) => Promise<void>
-  jugar: (partidaId: string, fila: number, columna: number) => Promise<PartidaPublica>
-  pasar: (partidaId: string) => Promise<PartidaPublica>
-  marcarMuerta: (partidaId: string, fila: number, columna: number) => Promise<PartidaPublica>
-  confirmarConteo: (partidaId: string) => Promise<PartidaPublica>
-  abandonar: (partidaId: string) => Promise<PartidaPublica>
-  observar: (partidaId: string) => Promise<PartidaPublica>
+  jugar: (partidaId: string, fila: number, columna: number) => Promise<Partida>
+  pasar: (partidaId: string) => Promise<Partida>
+  marcarMuerta: (partidaId: string, fila: number, columna: number) => Promise<Partida>
+  confirmarConteo: (partidaId: string) => Promise<Partida>
+  abandonar: (partidaId: string) => Promise<Partida>
+  observar: (partidaId: string) => Promise<Partida>
   dejarDeObservar: (partidaId: string) => Promise<void>
 }
 
@@ -54,7 +54,7 @@ export default function GoJuego({ miId, acciones }: { miId: string; acciones: Ac
   useSonidoJugada(observando ?? partida)
 
   // Tengo una partida pendiente donde soy el invitado?
-  const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.id === miId
+  const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === miId
   // Si me llega una invitación mientras `partida` todavía tiene la mía anterior ya terminada, no la
   // mostramos acá arriba de la tuya propia (eso lo hace elegir dejar de mirar su tablero, ver abajo):
   // solo la sumamos a la lista una vez que `partida` se soltó (`!partida`, ver más abajo).
@@ -196,7 +196,7 @@ function BuscarContrincante({
   onAceptar: (partidaId: string) => Promise<unknown>
   onRechazar: (partidaId: string) => Promise<unknown>
   /** Mi propia partida, si estoy acá "pausándola" en vez de sin ninguna partida activa. */
-  partidaEnPausa: PartidaPublica | null
+  partidaEnPausa: Partida | null
   onVolverAPartida: () => void
 }) {
   const [tamaño, setTamaño] = useState<TamañoTablero>(9)
@@ -246,7 +246,7 @@ function BuscarContrincante({
             const esMiContrincantePausado = c.partidaId != null && c.partidaId === partidaEnPausa?.id
             const invitacionDe = invitacionesEntrantes.find((i) => i.id === c.partidaId)
             return (
-              <li key={c.id} className="flex items-center justify-between bg-white rounded-xl p-3 border">
+              <li key={c.userId} className="flex items-center justify-between bg-white rounded-xl p-3 border">
                 <span>{c.nombre}</span>
                 {c.enPartida ? (
                   <div className="flex flex-col items-end gap-1">
@@ -290,7 +290,7 @@ function BuscarContrincante({
                 ) : (
                   <ElegirModoInvitacion
                     nombre={c.nombre}
-                    onElegir={(modo) => onInvitar(c.id, { tamaño, modo }).catch((e) => toast.error(e.message))}
+                    onElegir={(modo) => onInvitar(c.userId, { tamaño, modo }).catch((e) => toast.error(e.message))}
                   >
                     <button
                       className="bg-indigo-500 text-white px-3 py-1.5 rounded text-sm disabled:opacity-40"
@@ -323,7 +323,7 @@ function EsperandoContrincante({
   miId: string
   rechazar: AccionesGo['rechazar']
 }) {
-  const soyNegro = partida.negro.id === miId
+  const soyNegro = partida.negro.userId === miId
   const contrincante = soyNegro ? partida.blanco : partida.negro
 
   return (
@@ -340,7 +340,7 @@ function EsperandoContrincante({
 }
 
 /** Partida ajena, en modo solo lectura (sin acciones), para quien la está observando. */
-function PartidaObservada({ partida, onDejarDeObservar }: { partida: PartidaPublica; onDejarDeObservar: () => void }) {
+function PartidaObservada({ partida, onDejarDeObservar }: { partida: Partida; onDejarDeObservar: () => void }) {
   if (partida.estado === 'pendiente') {
     return (
       <div className="flex flex-col gap-4 items-center">
@@ -429,10 +429,10 @@ function PartidaObservada({ partida, onDejarDeObservar }: { partida: PartidaPubl
 function BannerResultado({
   partida,
 }: {
-  partida: Pick<PartidaPublica, 'ganadorId' | 'negro' | 'blanco' | 'resultado' | 'motivoFin'>
+  partida: Pick<Partida, 'ganadorUserId' | 'negro' | 'blanco' | 'resultado' | 'motivoFin'>
 }) {
   const colorGanador =
-    partida.ganadorId === null ? null : partida.ganadorId === partida.negro.id ? NEGRO : BLANCO
+    partida.ganadorUserId === null ? null : partida.ganadorUserId === partida.negro.userId ? NEGRO : BLANCO
 
   const titulo = colorGanador === null ? 'Empate' : `Ganó ${colorGanador === NEGRO ? 'Negro' : 'Blanco'}`
   const h2 = (
@@ -500,7 +500,7 @@ function PartidaEnCurso({
 }) {
   const { jugar, pasar, marcarMuerta, confirmarConteo, abandonar } = acciones
 
-  const soyNegro = partida.negro.id === miId
+  const soyNegro = partida.negro.userId === miId
   const miColor = soyNegro ? NEGRO : BLANCO
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor

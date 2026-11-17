@@ -6,7 +6,7 @@ import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo } from './app'
 import { idOpaco } from '../id-opaco'
-import { PartidaPublica } from '../validators/go'
+import { Partida } from '../validators/go'
 import * as db from './db'
 
 /**
@@ -18,7 +18,7 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
   const go = await estudianteGo(idSala, userId)
 
   /** Si la partida existe, une el socket a su sala de broadcast (idempotente). */
-  function seguir<T extends PartidaPublica | null>(partida: T): T {
+  function seguir<T extends Partida | null>(partida: T): T {
     if (partida) socket.join(rooms.partidaGo(idSala, partida.id))
     return partida
   }
@@ -71,6 +71,7 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const { userId, nombre } = socket.data.session
   const userIdGo = await idOpaco(idSala, userId)
+  socket.join(rooms.usuario(idSala, userIdGo))
 
   alDesconectar(socket, async () => {
     const sala = await Salas.get(idSala)

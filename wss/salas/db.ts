@@ -19,7 +19,21 @@ export type { SalaData }
 export const salaCodec = versionado({ schema: salaData })
 const estudianteCodec = versionado({ schema: WssEstudianteSessionSchema })
 const eventoAsistenciaCodec = versionado({ schema: eventoAsistenciaSchema })
-const asistenciaDeClaseCodec = versionado({ schema: asistenciaDeClaseSchema })
+const asistenciaDeClaseCodec = versionado({
+  schema: asistenciaDeClaseSchema,
+  migraciones: [
+    // En un documento sin `identidad`, el `userId` es la identidad real (dni, nombre o email): se copia ahí.
+    (doc) => ({
+      ...doc,
+      estudiantes: Array.isArray(doc.estudiantes)
+        ? doc.estudiantes.map((estudiante) => {
+            if (typeof estudiante !== 'object' || estudiante === null || 'identidad' in estudiante) return estudiante
+            return { ...estudiante, identidad: (estudiante as Record<string, unknown>).userId }
+          })
+        : doc.estudiantes,
+    }),
+  ],
+})
 const registroDeClaseCodec = versionado({ schema: registroDeClaseSchema })
 
 /** Devuelve la data de la sala, o `null` si no existe. */
@@ -110,7 +124,9 @@ export async function getEstudiantes(salaId: string): Promise<Record<string, Wss
   )
 }
 
-/** Agrega/actualiza al estudiante en la planilla, persistiendo su sesión (idempotente por `userId`). */
+/**
+ * Agrega/actualiza al estudiante en la planilla, persistiendo su sesión (idempotente por `userId`).
+ */
 export async function guardarEstudiante(salaId: string, session: WssEstudianteSession): Promise<void> {
   await redis.hset(`sala:${salaId}:estudiantes`, session.userId, estudianteCodec.serializar(session))
 }

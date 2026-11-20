@@ -39,8 +39,11 @@ export default function goHandlers(socket: Socket | null) {
     for (let i = 0; i < intentos; i++) {
       if (desmontado) return
       try {
-        const partida = await cmd.pedir('go:mi_partida')
-        if (!desmontado) store.set(partida)
+        const [{ id }, partida] = await Promise.all([cmd.pedir('go:identidad'), cmd.pedir('go:mi_partida')])
+        if (!desmontado) {
+          store.setMiId(id)
+          store.set(partida)
+        }
         return
       } catch {
         if (desmontado) return

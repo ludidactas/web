@@ -5,6 +5,7 @@ import { alDesconectar, registrar } from '../contrato/registrar'
 import { SocketEstudiante, SocketProfe } from '../middleware/roles'
 import { Salas } from '../salas/app'
 import { avisarContrincantesActualizados, estudianteGo } from './app'
+import { idOpaco } from '../id-opaco'
 import { Partida } from '../validators/go'
 import * as db from './db'
 
@@ -23,6 +24,7 @@ async function registrarComandosGo(socket: Socket, idSala: string, userId: strin
   }
 
   registrar(socket, comandosGo, {
+    'go:identidad': async () => ({ id: userId }),
     'go:contrincantes': async () => go.contrincantesDisponibles(),
     'go:mi_partida': async () => seguir(await go.miPartida()),
     'go:observar': async (payload) => seguir(await go.observar(payload)),
@@ -61,12 +63,15 @@ export const handlersGoEstudiante = async (socket: SocketEstudiante, idSala: str
 
 /**
  * Handlers de Go del profe: puede invitar y jugar contra los estudiantes de su sala bajo su propia
- * identidad (el email, igual que en el resto de la sesión de profe). También es un contrincante
- * disponible para ellos, así que al conectar/desconectar avisamos a la sala igual que con un
- * estudiante (ver `handlersGoEstudiante`, que también describe el init que devuelve).
+ * identidad. Su handle en Go es su id opaco por sala (los estudiantes no pueden ver su email, que es
+ * su `userId` de sesión). También es un contrincante disponible para ellos, así que al
+ * conectar/desconectar avisamos a la sala igual que con un estudiante (ver `handlersGoEstudiante`,
+ * que también describe el init que devuelve).
  */
 export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
   const { userId, nombre } = socket.data.session
+  const userIdGo = await idOpaco(idSala, userId)
+  socket.join(rooms.usuario(idSala, userIdGo))
 
   alDesconectar(socket, async () => {
     const sala = await Salas.get(idSala)
@@ -78,7 +83,7 @@ export const handlersGoProfe = async (socket: SocketProfe, idSala: string) => {
     'go:descartar_partidas_drive': async ({ ids }) => db.descartarPartidasDrivePendientes(idSala, ids),
   })
 
-  await registrarComandosGo(socket, idSala, userId, nombre)
+  await registrarComandosGo(socket, idSala, userIdGo, nombre)
 
   return () => avisarContrincantesActualizados(idSala)
 }

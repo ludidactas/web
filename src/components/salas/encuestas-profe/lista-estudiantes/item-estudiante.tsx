@@ -41,8 +41,9 @@ export function ItemEstudiante({ estudiante: e, modo }: { estudiante: Estudiante
       <div className="flex flex-col">
         <span className="flex items-center gap-1.5">
           {e.nombre}
-          {nombresInvitados[e.userId] && (
-            <span className="text-xs text-slate-400">– {nombresInvitados[e.userId]}</span>
+          {/* El nombre provisto del invitado se indexa por la identidad real (dni/email), no por el userId opaco. */}
+          {nombresInvitados[(e.dni ?? e.email ?? '')] && (
+            <span className="text-xs text-slate-400">– {nombresInvitados[(e.dni ?? e.email ?? '')]}</span>
           )}
         </span>
         {e.dni && <span className="text-teal-500">{e.dni}</span>}

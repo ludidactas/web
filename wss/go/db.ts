@@ -14,7 +14,7 @@ const k = {
   /** STRING — ID de la partida pendiente/en curso de un usuario en la sala (una por vez). */
   partidaActiva: (salaId: string, userId: string) => `sala:${salaId}:go:activa:${userId}`,
   /** HASH — estadísticas acumuladas de un usuario en la sala: { jugadas, ganadas }. Por sala, no
-   * global: el userId de un estudiante (dni o nombre) no es único fuera de su propia sala. */
+   * global: el userId de un estudiante es un id opaco válido solo dentro de su sala. */
   stats: (salaId: string, userId: string) => `sala:${salaId}:go:stats:${userId}`,
 }
 

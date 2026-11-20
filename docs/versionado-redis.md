@@ -24,9 +24,25 @@ sin migrar su data existente.
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | Campo nuevo con valor por defecto                                                       | `.default()` / `.optional()` en el schema. Sin migración.         |
 | Campo renombrado, partido, con otro significado                                         | Agregar una función al final de `migraciones` y su test.          |
-| Cambia el nombre o la estructura de las **claves** de redis (hash nuevo, índice, split) | Fuera del alcance del codec: script one-off o runner de arranque. |
+| Cambia el nombre o la estructura de las **claves** de redis (hash nuevo, índice, split) | Fuera del alcance del codec: agregar una `Migracion` a `wss/migraciones/index.ts`.  |
 
 Una migración es una función pura, recibe el documento sin `v` y no conoce redis.
+
+## Migraciones de claves
+
+`wss/migraciones/index.ts` lista, en orden, las migraciones de claves de redis (`{ id, up(redis) }`).
+El `CMD` del Dockerfile corre `wss/migrar.ts` antes de levantar el server, en cada arranque del
+container, así que el deploy a staging y a main las aplica solo, contra el redis de cada entorno.
+
+- Cada id aplicado queda en el hash `migraciones:aplicadas`; un lock (`migraciones:lock`) serializa a
+  las instancias que arrancan a la vez.
+- `up` es idempotente: si queda a medias, el próximo arranque la repite entera.
+- Si una migración tira, el container no arranca y Coolify mantiene el anterior.
+- Una migración con `id` ya aplicado no se edita; el cambio va en una nueva.
+- Las claves se migran en el arranque del server nuevo, con el anterior todavía sirviendo hasta que
+  el healthcheck pase: `up` tiene que dejar los datos legibles para ambas versiones, o el cambio se
+  parte en dos deploys.
+- Antes de una migración destructiva en prod, backup de redis.
 
 ## Cosas que confunden fácil
 

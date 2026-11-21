@@ -5,11 +5,13 @@ import { socketIp } from '../utils'
 import { MetodosLogin, PasaporteSchema, RolSala } from '../validators/auth'
 import { ErrorSesion, TipoErrorSesion } from '../validators/errors'
 import {
+  identidadRealEstudiante,
   SESSION_ESTUDIANTE_POR_METODO_LOGIN,
   WssAdminSessionSchema,
   WssProfeSessionSchema,
   WssServerSession,
 } from '../validators/session'
+import { idOpaco } from '../id-opaco'
 import {
   AuthGoogle,
   decodearTokenNextAuth,
@@ -44,19 +46,23 @@ const parsearAuth = <S extends z.ZodTypeAny>(schema: S, raw: unknown): z.infer<S
   return data
 }
 
-/** Attachea la sesión al socket y la emite de inmediato al cliente. */
+/** Attachea la sesión al socket y la emite de inmediato al cliente, sin el campo de identidad real
+ * (el dni queda en el server: lista de permitidos y planilla del profe). */
 const abrirSesion = (socket: Socket, sessionData: WssServerSession) => {
   socket.data.session = sessionData
   console.log(`🤝 Abriendo sesión para ${sessionData.userId}`)
-  socket.emit('session:opened', sessionData)
+
+  const emision = { ...sessionData } as Record<string, unknown>
+  delete emision.dni
+  socket.emit('session:opened', emision)
 }
 
 /**
  * Hace login al server de websockets.
  * - Determina el rol del pasaporte.
- * - Si es estudiante: la sala decide el metodo de autenticación. Construimos la sesión contra el schema de ese
- *   metodo_login (inyectando el `metodo`, que el FE no manda), la verificamos contra la config (dni en
- *   lista, nombre libre) y la abrimos. El `userId` lo resuelve el transform del schema.
+ * - Si es estudiante: la sala decide el metodo de autenticación. Construimos la identidad contra el
+ *   schema de ese metodo_login (inyectando el `metodo`, que el FE no manda), la verificamos contra la
+ *   config (dni en lista, nombre libre) y recién ahí resolvemos su `userId` con el id opaco por sala.
  * - Si es profe o admin: validamos el token de Next y usamos su info para abrir la sesión.
  * - Público no establece sesión.
  */
@@ -80,14 +86,17 @@ const login = async (socket: SocketConSesion) => {
       datosGoogle = decodearTokenNextAuth(auth.token)
     }
 
-    const session = parsearAuth(SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
+    const identidad = parsearAuth(SESSION_ESTUDIANTE_POR_METODO_LOGIN[config.metodo_login], {
       ...auth,
       ...datosGoogle,
       metodo: config.metodo_login,
     })
 
-    // Verificamos la sesión contra la config de la sala (dni en lista, nombre libre, etc.)
-    await verificarYAutorizarAccesoEstudianteASala(session, sala)
+    // Verificamos la identidad contra la config de la sala (dni en lista, nombre libre, etc.)
+    await verificarYAutorizarAccesoEstudianteASala(identidad, sala)
+
+    // Recién con la identidad autorizada creamos/leemos su id en la sala.
+    const session = { ...identidad, userId: await idOpaco(auth.idSala, identidadRealEstudiante(identidad)) }
 
     console.log(`👤 Iniciando sesión en la sala ${auth.idSala} desde IP ${socketIp(socket)}...`)
     abrirSesion(socket, session)

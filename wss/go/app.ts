@@ -15,9 +15,11 @@ import {
 import { calcularVivos } from '@/lib/go/benson'
 import * as db from './db'
 import { conLock } from '../lock'
+import { idOpaco } from '../id-opaco'
 import * as motor from '@/lib/go/motor'
 import { getSala } from '../salas/db'
 import { infoExport } from '@/lib/go/info-export'
+import { RolSala } from '../validators/auth'
 
 /**
  * Lógica de servidor de una partida de Go: comandos (invitar/aceptar/jugar/pasar/marcarMuerta/
@@ -56,14 +58,19 @@ export async function broadcastPartida(partida: Partida) {
 
 /** Estudiantes de la sala más el profe (si está conectado): todas las personas que puede invitar a
  * jugar Go alguien de esa sala, normalizadas a lo mínimo que necesita este archivo (no la sesión
- * completa). El profe juega bajo su email, igual que el resto de su sesión de sala. */
+ * completa). El `userId` de un estudiante es su id opaco por sala; el del profe es `idOpaco(salaId,
+ * email)`. */
 async function personasDeSala(idSala: string) {
   const sala = await Salas.get(idSala)
   const estudiantes = await sala.listarEstudiantes()
   const personas = estudiantes.map((e) => ({ userId: e.userId, nombre: e.nombre, conectado: e.conectado }))
 
   if (await sala.profeConectado()) {
-    personas.push({ userId: sala.profe.email, nombre: sala.profe.nombre ?? sala.profe.email, conectado: true })
+    personas.push({
+      userId: await idOpaco(idSala, sala.profe.email),
+      nombre: sala.profe.nombre ?? sala.profe.email,
+      conectado: true,
+    })
   }
 
   return personas
@@ -108,13 +115,20 @@ export async function avisarContrincantesActualizados(idSala: string) {
   const personas = await personasDeSala(idSala)
   await Promise.all(
     sockets.map(async (s) => {
-      const contrincantes = await contrincantesDesde(personas, idSala, s.data.session.userId)
+      // El handle del destinatario: el del profe es su id opaco por sala (su sesión es el email real).
+      const miHandle =
+        s.data.session.rol === RolSala.Profe
+          ? await idOpaco(idSala, s.data.session.userId)
+          : s.data.session.userId
+      const contrincantes = await contrincantesDesde(personas, idSala, miHandle)
       s.emit('go:contrincantes_actualizados', contrincantes)
     })
   )
 }
 
-/** Crea un closure para operar las partidas de Go de un estudiante dentro de una sala. */
+/** Crea un closure para operar las partidas de Go de una identidad dentro de una sala. `userId` es el
+ * handle por sala: el del estudiante viene de su sesión (id opaco); el del profe lo calcula
+ * `handlersGoProfe` (`idOpaco(salaId, email)`). */
 export async function estudianteGo(idSala: string, userId: string) {
   async function miPartida() {
     const partidaId = await db.getPartidaActiva(idSala, userId)

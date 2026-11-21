@@ -56,8 +56,8 @@ describe('escribirAsistencia — planilla nueva', () => {
         inicio,
         fin,
         estudiantes: [
-          { userId: 'u1', nombre: 'Juan', presente: true },
-          { userId: 'u2', nombre: 'María', presente: false },
+          { userId: 'handle-1', identidad: '20333444555', nombre: 'Juan', presente: true },
+          { userId: 'handle-2', identidad: '27888999000', nombre: 'María', presente: false },
         ],
       },
     ]
@@ -67,10 +67,11 @@ describe('escribirAsistencia — planilla nueva', () => {
     const label = labelLocal(inicio, fin)
     expect(updates).toHaveLength(1)
     expect(updates[0]).toMatchObject({ spreadsheetId: 'spreadsheet-1', range: 'Asistencia!A1', valueInputOption: 'RAW' })
+    // La columna ID es la planilla del profe: identidad real, no el id opaco.
     expect(updates[0].requestBody.values).toEqual([
       ['ID', 'Nombre', label, '% Asistencia'],
-      ['u1', 'Juan', 'P', '100%'],
-      ['u2', 'María', 'A', '0%'],
+      ['20333444555', 'Juan', 'P', '100%'],
+      ['27888999000', 'María', 'A', '0%'],
     ])
   })
 })
@@ -97,8 +98,9 @@ describe('escribirAsistencia — merge con planilla existente', () => {
                   {
                     rowData: [
                       row('ID', 'Nombre', labelVieja, '% Asistencia'),
-                      row('u1', 'Juan', 'P', '100%'),
-                      row('u3', 'Pedro', 'A', '0%'),
+                      // Filas existentes con la identidad real en la columna ID: el merge sigue por identidad.
+                      row('20333444555', 'Juan', 'P', '100%'),
+                      row('27888999000', 'Pedro', 'A', '0%'),
                     ],
                   },
                 ],
@@ -127,8 +129,8 @@ describe('escribirAsistencia — merge con planilla existente', () => {
         inicio: inicioNueva,
         fin: finNueva,
         estudiantes: [
-          { userId: 'u1', nombre: 'Juan', presente: false },
-          { userId: 'u2', nombre: 'María', presente: true },
+          { userId: 'handle-1', identidad: '20333444555', nombre: 'Juan', presente: false },
+          { userId: 'handle-2', identidad: '30444555666', nombre: 'María', presente: true },
         ],
       },
     ]
@@ -137,9 +139,9 @@ describe('escribirAsistencia — merge con planilla existente', () => {
 
     expect(updates[0].requestBody.values).toEqual([
       ['ID', 'Nombre', labelVieja, labelNueva, '% Asistencia'],
-      ['u1', 'Juan', 'P', 'A', '50%'],
-      ['u2', 'María', '', 'P', '100%'],
-      ['u3', 'Pedro', 'A', '', '0%'],
+      ['20333444555', 'Juan', 'P', 'A', '50%'],
+      ['30444555666', 'María', '', 'P', '100%'],
+      ['27888999000', 'Pedro', 'A', '', '0%'],
     ])
   })
 })

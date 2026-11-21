@@ -7,6 +7,8 @@ interface GoState {
   /** `false` hasta que llega la respuesta del primer `go:mi_partida`. Mientras tanto no sabemos si
    * ya hay una partida en curso, así que la UI debe mostrar un loading en vez de asumir que no hay. */
   inicializado: boolean
+  /** Mi id opaco en la sala, pedido con `go:identidad`: con esto me reconozco en las partidas. */
+  miId: string | null
   /** Mi partida activa (pendiente o en curso), o `null` si no tengo ninguna. */
   partida: Partida | null
   /** Invitaciones entrantes de otros estudiantes, pendientes de aceptar/rechazar. */
@@ -17,6 +19,7 @@ interface GoState {
   /** Partida ajena que estoy mirando como espectador, o `null` si no estoy observando ninguna. */
   observando: Partida | null
   marcarInicializado: () => void
+  setMiId: (id: string) => void
   set: (partida: Partida | null) => void
   agregarInvitacion: (partida: Partida) => void
   quitarInvitacion: (partidaId: string) => void
@@ -28,12 +31,15 @@ interface GoState {
 
 export const storeGo = create<GoState>()((set) => ({
   inicializado: false,
+  miId: null,
   partida: null,
   invitaciones: [],
   contrincantes: [],
   observando: null,
 
   marcarInicializado: () => set({ inicializado: true }),
+
+  setMiId: (id) => set({ miId: id }),
 
   set: (partida) =>
     set((state) => ({
@@ -66,5 +72,5 @@ export const storeGo = create<GoState>()((set) => ({
   // se cierra la conexión): ahí sí hay que volver todo a estado inicial, invitaciones e `inicializado`
   // incluidos, para no filtrarle a la próxima persona el tablero/rival/invitaciones de la anterior.
   resetConexion: () =>
-    set({ inicializado: false, partida: null, invitaciones: [], contrincantes: [], observando: null }),
+    set({ inicializado: false, miId: null, partida: null, invitaciones: [], contrincantes: [], observando: null }),
 }))

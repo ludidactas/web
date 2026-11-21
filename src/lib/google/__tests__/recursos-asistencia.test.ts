@@ -8,7 +8,9 @@ afterEach(() => {
   globalThis.fetch = fetchOriginal
 })
 
-const asistencias = [{ inicio: 1, fin: 2, estudiantes: [{ userId: 'u1', nombre: 'Juan', presente: true }] }]
+const asistencias = [
+  { inicio: 1, fin: 2, estudiantes: [{ userId: 'u1', identidad: '12345678', nombre: 'Juan', presente: true }] },
+]
 
 describe('escribirAsistenciaEnDrive', () => {
   it('postea a la ruta de asistencia con el body correcto', async () => {

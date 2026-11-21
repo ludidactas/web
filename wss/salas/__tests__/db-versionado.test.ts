@@ -17,6 +17,7 @@ import {
 } from '../db'
 import { MetodosLogin as Metodo } from '../../validators/auth'
 import { WssEstudianteSessionSchema } from '../../validators/session'
+import { idOpaco } from '../../id-opaco'
 
 const ID = `test-versionado-${crypto.randomUUID()}`
 
@@ -57,37 +58,48 @@ describe('getSala / guardarSala con versión', () => {
 describe('entidades de la sala en redis', () => {
   afterEach(() => borrarSala(ID))
 
-  it('estudiantes: roundtrip y lectura de una sesión guardada sin `v`', async () => {
-    const sesion = WssEstudianteSessionSchema.parse({
+  const sesionAna = () =>
+    WssEstudianteSessionSchema.parse({
       rol: 'estudiante',
       idSala: ID,
       metodo: Metodo.Nombre,
       nombre: 'Ana',
+      userId: 'handle-ana',
     })
-    await guardarEstudiante(ID, sesion)
-    expect(await getEstudiantes(ID)).toEqual({ Ana: sesion })
 
+  it('estudiantes: roundtrip bajo el id opaco', async () => {
+    const sesion = sesionAna()
+    await guardarEstudiante(ID, sesion)
+    expect(await getEstudiantes(ID)).toEqual({ [sesion.userId]: sesion })
+  })
+
+  it('estudiantes: una sesión legada bajo la identidad real se sigue leyendo', async () => {
+    const sesion = { ...sesionAna(), userId: 'Ana' }
     await redis.hset(`sala:${ID}:estudiantes`, 'Ana', JSON.stringify(sesion))
     expect(await getEstudiantes(ID)).toEqual({ Ana: sesion })
   })
 
   it('estudiantes: un documento ilegible se omite y no tira la planilla', async () => {
-    const ana = WssEstudianteSessionSchema.parse({
-      rol: 'estudiante',
-      idSala: ID,
-      metodo: Metodo.Nombre,
-      nombre: 'Ana',
-    })
+    const ana = sesionAna()
     await guardarEstudiante(ID, ana)
     await redis.hset(`sala:${ID}:estudiantes`, 'roto', JSON.stringify({ metodo: 'dni', dni: 'no-es-un-dni' }))
     await redis.hset(`sala:${ID}:estudiantes`, 'basura', 'no es json')
     const warn = spyOn(console, 'warn').mockImplementation(() => {})
     try {
-      expect(await getEstudiantes(ID)).toEqual({ Ana: ana })
+      expect(await getEstudiantes(ID)).toEqual({ [ana.userId]: ana })
       expect(warn).toHaveBeenCalledTimes(2)
     } finally {
       warn.mockRestore()
     }
+  })
+
+  it('borrarSala elimina el hash de ids por sala', async () => {
+    await idOpaco(ID, '20333444555')
+    expect(await redis.hlen(`sala:${ID}:ids`)).toBe(1)
+
+    await borrarSala(ID)
+
+    expect(await redis.exists(`sala:${ID}:ids`)).toBe(0)
   })
 
   it('eventos de asistencia: cada elemento de la lista lleva su versión', async () => {
@@ -101,11 +113,34 @@ describe('entidades de la sala en redis', () => {
   })
 
   it('asistencias pendientes y registro de clase: roundtrip', async () => {
-    const asistencia = { inicio: 1, fin: 2, estudiantes: [{ userId: 'Ana', nombre: 'Ana', presente: true }] }
+    const asistencia = {
+      inicio: 1,
+      fin: 2,
+      estudiantes: [{ userId: 'handle-ana', identidad: 'Ana', nombre: 'Ana', presente: true }],
+    }
     await encolarAsistencia(ID, asistencia)
     expect(await getAsistenciasPendientes(ID)).toEqual([asistencia])
 
     await guardarRegistroDeClase(ID, { inicio: 1, fin: null })
     expect(await getRegistroDeClase(ID)).toEqual({ inicio: 1, fin: null })
+  })
+
+  it('una asistencia pendiente sin `identidad` se lee con el `userId` viejo como identidad', async () => {
+    await redis.rpush(
+      `sala:${ID}:asistencia_pendiente`,
+      JSON.stringify({
+        inicio: 1,
+        fin: 2,
+        estudiantes: [{ userId: '20333444555', nombre: 'Ana', presente: true }],
+      })
+    )
+
+    expect(await getAsistenciasPendientes(ID)).toEqual([
+      {
+        inicio: 1,
+        fin: 2,
+        estudiantes: [{ userId: '20333444555', identidad: '20333444555', nombre: 'Ana', presente: true }],
+      },
+    ])
   })
 })

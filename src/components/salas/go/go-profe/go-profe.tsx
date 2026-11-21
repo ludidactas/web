@@ -1,12 +1,12 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { storeGo } from '@/wss-cli/stores/go-store'
 import { useConexionProfe } from '@/wss-cli/providers/wss-profe-context'
 import GoJuego from '../go-juego'
 
-/** El profe juega Go con la misma mecánica que un estudiante, identificado por su email (mismo
- * userId que usa el resto de su sesión de sala, ver `WssProfeSessionSchema`). */
+/** El profe juega Go con la misma mecánica que un estudiante; su identidad en las partidas es el id
+ * opaco que el server le devuelve por `go:identidad` (igual que al estudiante). */
 export default function GoProfe() {
-  const { data: session } = useSession()
-  return <GoJuego userId={session?.user?.email ?? ''} acciones={useConexionProfe()} />
+  const miId = storeGo((s) => s.miId) ?? ''
+  return <GoJuego miId={miId} acciones={useConexionProfe()} />
 }

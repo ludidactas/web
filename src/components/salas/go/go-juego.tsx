@@ -45,15 +45,16 @@ export type AccionesGo = {
 }
 
 /** Flujo completo de Go (invitaciones, buscador de contrincantes, partida en curso) para quien juega:
- * usado tanto por el estudiante como por el profe, cada uno con sus propios `acciones` de conexión. */
-export default function GoJuego({ userId, acciones }: { userId: string; acciones: AccionesGo }) {
+ * usado tanto por el estudiante como por el profe, cada uno con sus propios `acciones` de conexión.
+ * `miId` es el id opaco por sala que el server devuelve por `go:identidad`. */
+export default function GoJuego({ miId, acciones }: { miId: string; acciones: AccionesGo }) {
   const { inicializado, partida, invitaciones, contrincantes, observando } = storeGo()
   const { pedirContrincantes, invitar, aceptar, rechazar, observar, dejarDeObservar, abandonar } = acciones
 
   useSonidoJugada(observando ?? partida)
 
   // Tengo una partida pendiente donde soy el invitado?
-  const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === userId
+  const soyInvitado = partida?.estado === 'pendiente' && partida.blanco.userId === miId
   // Si me llega una invitación mientras `partida` todavía tiene la mía anterior ya terminada, no la
   // mostramos acá arriba de la tuya propia (eso lo hace elegir dejar de mirar su tablero, ver abajo):
   // solo la sumamos a la lista una vez que `partida` se soltó (`!partida`, ver más abajo).
@@ -114,10 +115,10 @@ export default function GoJuego({ userId, acciones }: { userId: string; acciones
       )
 
     if (partida.estado === 'pendiente')
-      return <EsperandoContrincante partida={partida} userId={userId} rechazar={rechazar} />
+      return <EsperandoContrincante partida={partida} miId={miId} rechazar={rechazar} />
 
     return (
-      <PartidaEnCurso partida={partida} userId={userId} acciones={acciones} onVolverASala={() => setPausada(true)} />
+      <PartidaEnCurso partida={partida} miId={miId} acciones={acciones} onVolverASala={() => setPausada(true)} />
     )
   }
 
@@ -315,14 +316,14 @@ function BuscarContrincante({
 
 function EsperandoContrincante({
   partida,
-  userId,
+  miId,
   rechazar,
 }: {
   partida: NonNullable<ReturnType<typeof storeGo.getState>['partida']>
-  userId: string
+  miId: string
   rechazar: AccionesGo['rechazar']
 }) {
-  const soyNegro = partida.negro.userId === userId
+  const soyNegro = partida.negro.userId === miId
   const contrincante = soyNegro ? partida.blanco : partida.negro
 
   return (
@@ -488,18 +489,18 @@ function PanelCapturas({ capturasNegras, capturasBlancas }: { capturasNegras: nu
 
 function PartidaEnCurso({
   partida,
-  userId,
+  miId,
   acciones,
   onVolverASala,
 }: {
   partida: NonNullable<ReturnType<typeof storeGo.getState>['partida']>
-  userId: string
+  miId: string
   acciones: AccionesGo
   onVolverASala: () => void
 }) {
   const { jugar, pasar, marcarMuerta, confirmarConteo, abandonar } = acciones
 
-  const soyNegro = partida.negro.userId === userId
+  const soyNegro = partida.negro.userId === miId
   const miColor = soyNegro ? NEGRO : BLANCO
   const contrincante = soyNegro ? partida.blanco : partida.negro
   const esMiTurno = partida.turno === miColor

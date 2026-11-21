@@ -25,6 +25,7 @@ export const EstadoPartida = {
 export type EstadoPartida = (typeof EstadoPartida)[keyof typeof EstadoPartida]
 
 export interface JugadorPartida {
+  /** Id opaco por sala (ver `wss/id-opaco.ts`), de estudiantes y del profe. */
   userId: string
   nombre: string
 }

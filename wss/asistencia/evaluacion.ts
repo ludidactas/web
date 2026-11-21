@@ -1,6 +1,6 @@
 import type { EventoAsistencia, IntervaloDeConexion } from '../salas/db'
 import { FormaEvaluacionAsistencia, type AsistenciaDeClase, type CondicionAsistencia } from '../validators/asistencia'
-import type { WssEstudianteSession } from '../validators/session'
+import { identidadRealEstudiante, type WssEstudianteSession } from '../validators/session'
 
 /** La clase: desde que el profe abrió la sala (`inicio`) hasta que se desconectó (`fin`). */
 export type VentanaDeClase = { inicio: number; fin: number }
@@ -91,6 +91,8 @@ export function evaluarClase(
     fin: ventana.fin,
     estudiantes: Object.values(estudiantes).map((est) => ({
       userId: est.userId,
+      // La identidad real es para la planilla del profe (columna ID de Sheets); no sale a estudiantes.
+      identidad: identidadRealEstudiante(est),
       nombre: est.nombre,
       presente: estuvoPresente(intervalos[est.userId] ?? [], condicion, ventana),
     })),

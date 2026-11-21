@@ -3,6 +3,8 @@ import type Redis from 'ioredis'
 export interface Migracion {
   /** Identificador estable y único; una migración aplicada queda registrada por este id. */
   id: string
+  /** Simula y valida la migración sin escribir en redis; corre siempre antes de `up`. */
+  dryRun: (redis: Redis) => Promise<void>
   /** Debe ser idempotente: si queda a medias, el próximo arranque la repite entera. */
   up: (redis: Redis) => Promise<void>
 }
@@ -28,7 +30,7 @@ const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export async function correrMigraciones(
   redis: Redis,
   migraciones: Migracion[],
-  { prefijo = 'migraciones', lockMs = 10 * 60_000, esperaMs = 500 }: Opciones = {}
+  { prefijo = 'migraciones', lockMs = 2 * 60_000, esperaMs = 500 }: Opciones = {}
 ): Promise<string[]> {
   const claveAplicadas = `${prefijo}:aplicadas`
   const claveLock = `${prefijo}:lock`
@@ -42,6 +44,7 @@ export async function correrMigraciones(
     for (const m of migraciones) {
       if (aplicadas.has(m.id)) continue
       console.log(`🔧 Migración ${m.id}...`)
+      await m.dryRun(redis)
       await m.up(redis)
       await redis.hset(claveAplicadas, m.id, new Date().toISOString())
       corridas.push(m.id)

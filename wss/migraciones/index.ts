@@ -5,6 +5,10 @@ import type { Migracion } from './runner'
 export const migraciones: Migracion[] = [
   {
     id: 'ids-opacos',
+    dryRun: async () => {
+      const { conError } = await migrarIds({ dryRun: true })
+      if (conError.length > 0) throw new Error(`Dry-run falló. Salas con error: ${conError.join(', ')}`)
+    },
     up: async () => {
       const { conError } = await migrarIds({ dryRun: false })
       if (conError.length > 0) throw new Error(`Salas sin migrar: ${conError.join(', ')}`)

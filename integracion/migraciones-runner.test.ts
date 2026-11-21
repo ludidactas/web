@@ -1,19 +1,37 @@
-import { afterAll, describe, expect, it } from 'bun:test'
+import { afterAll, describe, expect, it, spyOn } from 'bun:test'
 import redis from '../wss/redis'
-import { correrMigraciones, type Migracion } from '../wss/migraciones/runner'
+import { clavesDeBackup, listarBackups } from '../wss/migraciones/backup'
+import { correrMigraciones, restaurarMigracion, type Migracion } from '../wss/migraciones/runner'
 
 const prefijo = `test-migraciones-${crypto.randomUUID()}`
-const opciones = { prefijo, esperaMs: 10 }
+const datos = `${prefijo}-datos`
+const opciones = { prefijo, esperaMs: 10, patrones: [`${datos}:*`] }
+
+const idsUsados: string[] = []
+const registrar = (id: string) => {
+  idsUsados.push(id)
+  return id
+}
 const noop = async () => {}
 
 afterAll(async () => {
-  await redis.del(`${prefijo}:aplicadas`, `${prefijo}:lock`)
+  const clavesDatos: string[] = []
+  let cursor = '0'
+  do {
+    const [next, lote] = await redis.scan(cursor, 'MATCH', `${datos}:*`, 'COUNT', 200)
+    cursor = next
+    clavesDatos.push(...lote)
+  } while (cursor !== '0')
+
+  const clavesBackup = idsUsados.flatMap((id) => Object.values(clavesDeBackup(prefijo, id)))
+  const todas = [`${prefijo}:aplicadas`, `${prefijo}:lock`, ...clavesDatos, ...clavesBackup]
+  if (todas.length > 0) await redis.del(...todas)
 })
 
 describe('correrMigraciones', () => {
   it('aplica en orden las pendientes (dryRun antes de up) y no repite las ya aplicadas', async () => {
     const orden: string[] = []
-    const lista: Migracion[] = ['a', 'b'].map((id) => ({
+    const lista: Migracion[] = [registrar('a'), registrar('b')].map((id) => ({
       id,
       dryRun: async () => void orden.push(`dry:${id}`),
       up: async () => void orden.push(`up:${id}`),
@@ -23,7 +41,7 @@ describe('correrMigraciones', () => {
     expect(await correrMigraciones(redis, lista, opciones)).toEqual([])
 
     lista.push({
-      id: 'c',
+      id: registrar('c'),
       dryRun: async () => void orden.push('dry:c'),
       up: async () => void orden.push('up:c'),
     })
@@ -31,11 +49,12 @@ describe('correrMigraciones', () => {
     expect(orden).toEqual(['dry:a', 'up:a', 'dry:b', 'up:b', 'dry:c', 'up:c'])
   })
 
-  it('si dryRun tira, no corre up y libera el lock', async () => {
+  it('si dryRun tira, no crea backup ni corre up y libera el lock', async () => {
+    const id = registrar('dryrun-falla')
     let corrioUp = false
     const lista: Migracion[] = [
       {
-        id: 'dryrun-falla',
+        id,
         dryRun: async () => {
           throw new Error('precondición rota')
         },
@@ -47,33 +66,132 @@ describe('correrMigraciones', () => {
 
     await expect(correrMigraciones(redis, lista, opciones)).rejects.toThrow('precondición rota')
     expect(corrioUp).toBe(false)
+    expect(await redis.exists(clavesDeBackup(prefijo, id).meta)).toBe(0)
     expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
-    expect(await redis.hexists(`${prefijo}:aplicadas`, 'dryrun-falla')).toBe(0)
+    expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
   })
 
-  it('una migración que tira corta la corrida, queda pendiente y libera el lock', async () => {
-    let intentos = 0
-    const lista: Migracion[] = [
-      {
-        id: 'falla-una-vez',
-        dryRun: noop,
-        up: async () => {
-          if (++intentos === 1) throw new Error('boom')
-        },
-      },
-      { id: 'despues', dryRun: noop, up: noop },
-    ]
+  it('si up falla a mitad de camino, restaura claves borradas/modificadas (con TTL) y borra las nuevas', async () => {
+    const id = registrar('falla-a-medias')
+    const kStr = `${datos}:str`
+    const kHash = `${datos}:hash`
+    const kSet = `${datos}:set`
+    const kNueva = `${datos}:nueva`
 
-    await expect(correrMigraciones(redis, lista, opciones)).rejects.toThrow('boom')
-    expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
-    expect(await correrMigraciones(redis, lista, opciones)).toEqual(['falla-una-vez', 'despues'])
+    await redis.set(kStr, 'original', 'PX', 60_000)
+    await redis.hset(kHash, 'campo', 'valor')
+    await redis.sadd(kSet, 'uno', 'dos')
+
+    const silenciar = spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      let intentos = 0
+      const lista: Migracion[] = [
+        {
+          id,
+          dryRun: noop,
+          up: async (r) => {
+            await r.del(kStr)
+            await r.hset(kHash, 'campo', 'mutado', 'extra', 'x')
+            await r.srem(kSet, 'uno')
+            await r.set(kNueva, 'creada')
+            if (++intentos === 1) throw new Error('boom en el medio')
+          },
+        },
+      ]
+
+      await expect(correrMigraciones(redis, lista, opciones)).rejects.toThrow('boom en el medio')
+
+      expect(await redis.get(kStr)).toBe('original')
+      expect(await redis.pttl(kStr)).toBeGreaterThan(0)
+      expect(await redis.hgetall(kHash)).toEqual({ campo: 'valor' })
+      expect((await redis.smembers(kSet)).sort()).toEqual(['dos', 'uno'])
+      expect(await redis.exists(kNueva)).toBe(0)
+      expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
+      expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
+
+      // Al reintentar sin error, se aplica normalmente.
+      expect(await correrMigraciones(redis, lista, opciones)).toEqual([id])
+      expect(await redis.get(kNueva)).toBe('creada')
+    } finally {
+      silenciar.mockRestore()
+    }
+  })
+
+  it('si falla la segunda migración de una corrida, revierte también la primera sin tocar deploys previos', async () => {
+    const idPrevia = registrar('previa')
+    const idPaso1 = registrar('paso-1')
+    const idPaso2 = registrar('paso-2')
+    const k = `${datos}:multi`
+
+    await redis.set(k, 'v0')
+    await correrMigraciones(
+      redis,
+      [{ id: idPrevia, dryRun: noop, up: async (r) => void (await r.set(k, 'v1')) }],
+      opciones
+    )
+
+    const silenciar = spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const lista: Migracion[] = [
+        { id: idPrevia, dryRun: noop, up: noop },
+        { id: idPaso1, dryRun: noop, up: async (r) => void (await r.set(k, 'v2')) },
+        {
+          id: idPaso2,
+          dryRun: noop,
+          up: async (r) => {
+            await r.set(k, 'v3')
+            throw new Error('falló paso 2')
+          },
+        },
+      ]
+
+      await expect(correrMigraciones(redis, lista, opciones)).rejects.toThrow('falló paso 2')
+      expect(await redis.get(k)).toBe('v1')
+      expect(await redis.hexists(`${prefijo}:aplicadas`, idPrevia)).toBe(1)
+      expect(await redis.hexists(`${prefijo}:aplicadas`, idPaso1)).toBe(0)
+      expect(await redis.hexists(`${prefijo}:aplicadas`, idPaso2)).toBe(0)
+    } finally {
+      silenciar.mockRestore()
+    }
+  })
+
+  it('restaurarMigracion revierte manualmente una migración ya aplicada y falla si no hay backup', async () => {
+    const id = registrar('rollback-manual')
+    const kVieja = `${datos}:manual-vieja`
+    const kNueva = `${datos}:manual-nueva`
+
+    await redis.set(kVieja, 'antes')
+    await correrMigraciones(
+      redis,
+      [
+        {
+          id,
+          dryRun: noop,
+          up: async (r) => {
+            await r.rename(kVieja, kNueva)
+          },
+        },
+      ],
+      opciones
+    )
+    expect(await redis.exists(kVieja)).toBe(0)
+    expect(await redis.get(kNueva)).toBe('antes')
+    expect((await listarBackups(redis, { prefijo })).some((b) => b.id === id)).toBe(true)
+
+    const res = await restaurarMigracion(redis, id, opciones)
+    expect(res.borradas).toBeGreaterThanOrEqual(1)
+    expect(await redis.get(kVieja)).toBe('antes')
+    expect(await redis.exists(kNueva)).toBe(0)
+    expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
+
+    await expect(restaurarMigracion(redis, 'inexistente', opciones)).rejects.toThrow('No hay backup vigente')
   })
 
   it('dos instancias a la vez: la migración corre una sola vez', async () => {
     let corridas = 0
     const lista: Migracion[] = [
       {
-        id: 'concurrente',
+        id: registrar('concurrente'),
         dryRun: noop,
         up: async () => {
           corridas++

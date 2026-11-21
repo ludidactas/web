@@ -29,11 +29,12 @@ try {
     process.exit(1)
   }
 
+  // Cierra la conexión de bullmq antes de verificar exclusividad (`CLIENT LIST`).
+  await redisBullMQ.quit().catch(() => redisBullMQ.disconnect())
   console.log(`⏪ Restaurando redis al estado previo a la migración "${id}"...`)
   const { restauradas, borradas } = await restaurarMigracion(redis, id)
   console.log(`✅ Listo: ${restauradas} clave(s) restaurada(s), ${borradas} clave(s) nueva(s) eliminada(s).`)
   redis.disconnect()
-  redisBullMQ.disconnect()
 } catch (err) {
   console.error('❌ Falló el rollback de redis:', err)
   redis.disconnect()

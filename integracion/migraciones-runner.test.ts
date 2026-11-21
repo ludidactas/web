@@ -178,13 +178,72 @@ describe('correrMigraciones', () => {
     expect(await redis.get(kNueva)).toBe('antes')
     expect((await listarBackups(redis, { prefijo })).some((b) => b.id === id)).toBe(true)
 
-    const res = await restaurarMigracion(redis, id, opciones)
+    // Por defecto exige exclusividad: con otro cliente conectado aborta sin tocar redis.
+    const otro = redis.duplicate()
+    try {
+      await otro.ping()
+      await expect(restaurarMigracion(redis, id, opciones)).rejects.toThrow('requiere exclusividad')
+      expect(await redis.get(kNueva)).toBe('antes')
+      expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(1)
+    } finally {
+      await otro.quit().catch(() => otro.disconnect())
+    }
+
+    const res = await restaurarMigracion(redis, id, { ...opciones, exigirExclusividad: false })
     expect(res.borradas).toBeGreaterThanOrEqual(1)
     expect(await redis.get(kVieja)).toBe('antes')
     expect(await redis.exists(kNueva)).toBe(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
 
-    await expect(restaurarMigracion(redis, 'inexistente', opciones)).rejects.toThrow('No hay backup vigente')
+    await expect(
+      restaurarMigracion(redis, 'inexistente', { ...opciones, exigirExclusividad: false })
+    ).rejects.toThrow('No hay backup vigente')
+  })
+
+  it('con exigirExclusividad, una migración destructiva aborta si hay otro cliente conectado y una normal corre', async () => {
+    const idDestructiva = registrar('destructiva-bloqueada')
+    const idNormal = registrar('normal-con-clientes')
+    let corrioDry = false
+    let corrioUp = false
+
+    const otro = redis.duplicate()
+    try {
+      await otro.ping()
+
+      await expect(
+        correrMigraciones(
+          redis,
+          [
+            {
+              id: idDestructiva,
+              destructiva: true,
+              dryRun: async () => {
+                corrioDry = true
+              },
+              up: async () => {
+                corrioUp = true
+              },
+            },
+          ],
+          { ...opciones, exigirExclusividad: true }
+        )
+      ).rejects.toThrow('requiere exclusividad')
+
+      expect(corrioDry).toBe(false)
+      expect(corrioUp).toBe(false)
+      expect(await redis.exists(clavesDeBackup(prefijo, idDestructiva).meta)).toBe(0)
+      expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
+
+      expect(
+        await correrMigraciones(
+          redis,
+          [{ id: idNormal, dryRun: noop, up: noop }],
+          { ...opciones, exigirExclusividad: true }
+        )
+      ).toEqual([idNormal])
+    } finally {
+      await otro.quit().catch(() => otro.disconnect())
+    }
   })
 
   it('dos instancias a la vez: la migración corre una sola vez', async () => {

@@ -4,6 +4,8 @@ import { BACKUP_TTL_SEG, guardarBackup, restaurarBackup, type ResultadoRestore }
 export interface Migracion {
   /** Identificador estable y único; una migración aplicada queda registrada por este id. */
   id: string
+  /** Si es `true` y corre con `exigirExclusividad`, aborta si hay otros clientes conectados a redis. */
+  destructiva?: boolean
   /** Patrones de claves que la migración lee o modifica; acotan backup y rollback (default `['*']`). */
   patrones?: string[]
   /** Simula y valida la migración sin escribir en redis; corre siempre antes del backup y de `up`. */
@@ -23,6 +25,8 @@ export interface Opciones {
   patrones?: string[]
   /** Tiempo de vida en segundos de cada backup en redis. */
   backupTtlSeg?: number
+  /** Si es `true`, las migraciones con `destructiva: true` abortan si hay otro cliente conectado a redis. */
+  exigirExclusividad?: boolean
 }
 
 const LIBERAR_LOCK = `if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) end return 0`
@@ -41,6 +45,23 @@ async function conLock<T>(
     return await fn()
   } finally {
     await redis.eval(LIBERAR_LOCK, 1, claveLock, token)
+  }
+}
+
+async function verificarExclusividad(redis: Redis, operacion: string): Promise<void> {
+  const miId = Number(await redis.client('ID'))
+  const crudo = (await redis.call('CLIENT', 'LIST', 'TYPE', 'normal')) as string
+  const ajenos = crudo
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((linea) => Number(linea.match(/^id=(\d+)/)?.[1]))
+    .filter((clientId) => Number.isFinite(clientId) && clientId !== miId)
+
+  if (ajenos.length > 0) {
+    throw new Error(
+      `"${operacion}" requiere exclusividad sobre redis (hay ${ajenos.length} cliente(s) conectado(s)). Detener el WSS antes de correrla.`
+    )
   }
 }
 
@@ -66,6 +87,7 @@ export async function correrMigraciones(
     esperaMs = 500,
     patrones = ['*'],
     backupTtlSeg = BACKUP_TTL_SEG,
+    exigirExclusividad = false,
   }: Opciones = {}
 ): Promise<string[]> {
   return conLock(redis, { prefijo, lockMs, esperaMs }, async () => {
@@ -79,6 +101,7 @@ export async function correrMigraciones(
 
       let backupGuardado = false
       try {
+        if (m.destructiva && exigirExclusividad) await verificarExclusividad(redis, m.id)
         await m.dryRun(redis)
         await guardarBackup(redis, m.id, {
           prefijo,
@@ -105,11 +128,22 @@ export async function correrMigraciones(
   })
 }
 
-/** Restaura manualmente redis al estado previo a la migración `id`, serializado por el lock del runner. */
+/**
+ * Restaura manualmente redis al estado previo a la migración `id`, serializado por el lock del runner.
+ * Por defecto exige exclusividad sobre redis (`CLIENT LIST`) para no pisar escrituras de un WSS vivo.
+ */
 export async function restaurarMigracion(
   redis: Redis,
   id: string,
-  { prefijo = 'migraciones', lockMs = 2 * 60_000, esperaMs = 500 }: Pick<Opciones, 'prefijo' | 'lockMs' | 'esperaMs'> = {}
+  {
+    prefijo = 'migraciones',
+    lockMs = 2 * 60_000,
+    esperaMs = 500,
+    exigirExclusividad = true,
+  }: Pick<Opciones, 'prefijo' | 'lockMs' | 'esperaMs' | 'exigirExclusividad'> = {}
 ): Promise<ResultadoRestore> {
-  return conLock(redis, { prefijo, lockMs, esperaMs }, () => restaurarBackup(redis, id, { prefijo }))
+  return conLock(redis, { prefijo, lockMs, esperaMs }, async () => {
+    if (exigirExclusividad) await verificarExclusividad(redis, `restaurar ${id}`)
+    return restaurarBackup(redis, id, { prefijo })
+  })
 }

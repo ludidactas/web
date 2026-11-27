@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, spyOn } from 'bun:test'
 import { tableroVacio } from '@/lib/go/motor'
+import { clavePendientes, clavesDeBackup } from '../wss/migraciones/backup'
+import { migraciones } from '../wss/migraciones'
+import { correrMigraciones, type EntradaPendiente } from '../wss/migraciones/runner'
 import redis from '../wss/redis'
 import { borrarSala, eliminarSalaDeProfe } from '../wss/salas/db'
 import { migrarIds } from '../wss/scripts/migrar-ids'
@@ -8,6 +11,7 @@ import { CONFIG_DEFAULTS } from '../wss/validators/overlay'
 import type { SalaData } from '../wss/validators/salas'
 
 const sufijo = crypto.randomUUID()
+const prefijoCtl = `test-migrar-ids-ctl-${sufijo}`
 const salaId = `test-migrar-ids-${sufijo}`
 const salaRotaId = `test-migrar-ids-rota-${sufijo}`
 const salaNombreId = `test-migrar-ids-nombre-${sufijo}`
@@ -180,8 +184,25 @@ async function sembrar() {
   await redis.sadd(`sala:${salaGoogleId}:allowed_list`, emailGoogle)
 
   await redis.hset('salas', salaRotaId, JSON.stringify(salaDe(salaRotaId)))
-  await redis.hset(`sala:${salaRotaId}:estudiantes`, dni, '{no es json')
-  await redis.sadd(`sala:${salaRotaId}:allowed_list`, dni)
+  await redis.hset(
+    `sala:${salaRotaId}:estudiantes`,
+    dni,
+    '{no es json',
+    dniDos,
+    JSON.stringify({ ...sesionDos, idSala: salaRotaId })
+  )
+  await redis.sadd(`sala:${salaRotaId}:allowed_list`, dni, dniDos)
+  await redis.rpush(
+    `sala:${salaRotaId}:asistencia`,
+    JSON.stringify({ userId: dniDos, evento: 'conexion', ts: 10 }),
+    '{"userId":"x","evento":"invalido"}'
+  )
+  await redis.rpush(`sala:${salaRotaId}:asistencia_pendiente`, '{pendiente roto')
+  await redis.sadd(`sala:${salaRotaId}:go`, 'p_rota')
+  await redis.set(`sala:${salaRotaId}:go:p_rota`, '{"id":"p_rota","rota":true}')
+  await redis.sadd(`sala:${salaRotaId}:go:basura_set`, 'x')
+  await redis.sadd(`sala:${salaRotaId}:go:activa:${dni}`, 'p1')
+  await redis.set(`sala:${salaRotaId}:poll:p1:votantes`, 'corrupto')
 }
 
 async function volcar(...ids: string[]): Promise<Record<string, unknown>> {
@@ -214,10 +235,12 @@ async function volcar(...ids: string[]): Promise<Record<string, unknown>> {
 let idEstudiante: string
 let idOtro: string
 let idDos: string
+let idDosRota: string
 let idPorNombre: string
 let idGoogle: string
 let antes: Record<string, unknown>
 let tras_dry_run: Record<string, unknown>
+let simulacro: Awaited<ReturnType<typeof migrarIds>>
 let resultado: Awaited<ReturnType<typeof migrarIds>>
 let consola: string
 
@@ -230,10 +253,10 @@ beforeAll(async () => {
     spyOn(console, m).mockImplementation((...args: unknown[]) => void salida.push(args.map(String).join(' ')))
   )
   try {
-    const simulacro = await migrarIds({ dryRun: true })
+    simulacro = await migrarIds({ dryRun: true, prefijo: prefijoCtl })
     expect(simulacro.migradas).toBeGreaterThanOrEqual(1)
     tras_dry_run = await volcar(...salasMigradas, salaRotaId)
-    resultado = await migrarIds({ dryRun: false })
+    resultado = await migrarIds({ dryRun: false, prefijo: prefijoCtl })
   } finally {
     espias.forEach((e) => e.mockRestore())
   }
@@ -243,6 +266,7 @@ beforeAll(async () => {
   idEstudiante = await idDe(salaId, dni)
   idOtro = await idDe(salaId, otroJugador)
   idDos = await idDe(salaId, dniDos)
+  idDosRota = await idDe(salaRotaId, dniDos)
   idPorNombre = await idDe(salaNombreId, nombrePorNombre)
   idGoogle = await idDe(salaGoogleId, emailGoogle)
 })
@@ -253,14 +277,18 @@ afterAll(async () => {
     await eliminarSalaDeProfe(emailProfe, id)
   }
   await redis.srem(`profe:${emailProfe}:salas`, ...salasMigradas, salaRotaId)
+  await redis.del(clavePendientes(prefijoCtl, 'ids-opacos'))
 })
 
 describe('migrar ids', () => {
-  it('--dry-run no cambia ninguna clave', () => {
+  it('--dry-run no cambia ninguna clave y clasifica los pendientes sin error', async () => {
     expect(tras_dry_run).toEqual(antes)
+    expect(simulacro.conError).toEqual([])
+    expect(simulacro.salasConPendientes).toContain(salaRotaId)
+    expect(simulacro.pendientes).toBeGreaterThanOrEqual(7)
   })
 
-  it('no imprime datos personales y reporta la sala rota por su id', () => {
+  it('no imprime datos personales y reporta la sala con pendientes por su id', () => {
     for (const secreto of secretos) expect(consola).not.toContain(secreto)
     expect(consola).toContain(salaRotaId)
   })
@@ -271,14 +299,13 @@ describe('migrar ids', () => {
     expect(await redis.hkeys(`sala:${salaGoogleId}:ids`)).toEqual([emailGoogle])
   })
 
-  it('la marca de migración quedó escrita', async () => {
-    for (const id of salasMigradas) expect(await redis.exists(`sala:${id}:migrado_ids`)).toBe(1)
-    expect(await redis.exists(`sala:${salaRotaId}:migrado_ids`)).toBe(0)
+  it('la marca de migración quedó escrita también en la sala con entradas pendientes', async () => {
+    for (const id of [...salasMigradas, salaRotaId]) expect(await redis.exists(`sala:${id}:migrado_ids`)).toBe(1)
   })
 
   it('la planilla queda por id, sin IP ni User-Agent', async () => {
-    expect(resultado.conError).toContain(salaRotaId)
-    for (const id of salasMigradas) expect(resultado.conError).not.toContain(id)
+    expect(resultado.conError).toEqual([])
+    expect(resultado.salasConPendientes).toContain(salaRotaId)
 
     expect((await redis.hkeys(`sala:${salaId}:estudiantes`)).sort()).toEqual([idEstudiante, idDos].sort())
     const documentos = await redis.hgetall(`sala:${salaId}:estudiantes`)
@@ -341,21 +368,39 @@ describe('migrar ids', () => {
     expect((await redis.smembers(`sala:${salaGoogleId}:allowed_list`))).toEqual([emailGoogle])
   })
 
-  it('la sala con un documento roto queda intacta', async () => {
-    const despues = await volcar(salaRotaId)
-    for (const [clave, valor] of Object.entries(despues)) {
-      if (clave.startsWith('profe:')) continue
-      expect(valor).toEqual(antes[clave])
+  it('desvía los ítems malformados y tipos inesperados a pendientes:<id> y migra el resto sano de la sala', async () => {
+    expect(await redis.hkeys(`sala:${salaRotaId}:estudiantes`)).toEqual([idDosRota])
+    expect(idDosRota).not.toBe(dniDos)
+
+    const eventosRota = (await redis.lrange(`sala:${salaRotaId}:asistencia`, 0, -1)).map((s) => JSON.parse(s))
+    expect(eventosRota).toEqual([{ userId: idDosRota, evento: 'conexion', ts: 10, v: 0 }])
+
+    expect(await redis.exists(`sala:${salaRotaId}:asistencia_pendiente`)).toBe(0)
+    expect(await redis.exists(`sala:${salaRotaId}:go:p_rota`)).toBe(0)
+    expect(await redis.smembers(`sala:${salaRotaId}:go`)).not.toContain('p_rota')
+    expect(await redis.exists(`sala:${salaRotaId}:go:basura_set`)).toBe(0)
+    expect(await redis.exists(`sala:${salaRotaId}:go:activa:${dni}`)).toBe(0)
+    expect(await redis.exists(`sala:${salaRotaId}:poll:p1:votantes`)).toBe(0)
+
+    const guardadas = Object.values(await redis.hgetall(clavePendientes(prefijoCtl, 'ids-opacos')))
+      .map((s) => JSON.parse(s) as EntradaPendiente)
+      .filter((e) => e.unidad === salaRotaId)
+    expect(guardadas).toHaveLength(7)
+    expect(guardadas.map((e) => e.origen).sort()).toEqual(
+      ['asistencia', 'asistencia_pendiente', 'estudiantes', 'go:activa', 'go:partida', 'go:partida', 'poll:votantes'].sort()
+    )
+    expect(guardadas.find((e) => e.origen === 'estudiantes')).toMatchObject({ campo: dni, valor: '{no es json' })
+    for (const e of guardadas.filter((x) => x.origen.startsWith('go:') || x.origen.startsWith('poll:'))) {
+      expect(typeof e.dumpBase64).toBe('string')
     }
-    expect(await redis.exists(`sala:${salaRotaId}:ids`, `sala:${salaRotaId}:migrado_ids`)).toBe(0)
   })
 
   it('migrar dos veces da el mismo resultado', async () => {
-    const primera = await volcar(...salasMigradas)
-    const segunda = await migrarIds({ dryRun: false })
+    const primera = await volcar(...salasMigradas, salaRotaId)
+    const segunda = await migrarIds({ dryRun: false, prefijo: prefijoCtl })
     expect(segunda.salteadas).toBeGreaterThanOrEqual(1)
-    for (const id of salasMigradas) expect(segunda.conError).not.toContain(id)
-    expect(await volcar(...salasMigradas)).toEqual(primera)
+    expect(segunda.conError).toEqual([])
+    expect(await volcar(...salasMigradas, salaRotaId)).toEqual(primera)
   })
 
   it('sin --dry-run exige --confirmar', async () => {
@@ -368,5 +413,43 @@ describe('migrar ids', () => {
     expect(await proceso.exited).toBe(1)
     expect(stderr).toContain('--confirmar')
     expect(stderr).toContain('backup')
+  })
+})
+
+describe('correrMigraciones con ids-opacos ante claves malformadas', () => {
+  const sufijoRunner = crypto.randomUUID()
+  const prefijoRunner = `migraciones-ids-resiliencia-${sufijoRunner}`
+  const salaRunnerId = `test-migr-ids-runner-${sufijoRunner}`
+
+  beforeAll(async () => {
+    await redis.hset('salas', salaRunnerId, JSON.stringify(salaDe(salaRunnerId)))
+    await redis.hset(`sala:${salaRunnerId}:estudiantes`, dni, JSON.stringify({ ...sesionVieja, idSala: salaRunnerId }))
+    await redis.sadd(`sala:${salaRunnerId}:go:clave_set_vieja`, 'fosil')
+    await redis.set(`sala:${salaRunnerId}:go:partida_rota`, '{json truncado')
+  })
+
+  afterAll(async () => {
+    await borrarSala(salaRunnerId)
+    await redis.del(`${prefijoRunner}:aplicadas`, clavePendientes(prefijoRunner, 'ids-opacos'))
+    const { meta, datos, ttls } = clavesDeBackup(prefijoRunner, 'ids-opacos')
+    await redis.del(meta, datos, ttls)
+  })
+
+  it('completa la migración sin abortar el arranque y mueve las claves inválidas a pendientes', async () => {
+    const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const corridas = await correrMigraciones(redis, migraciones, {
+        prefijo: prefijoRunner,
+        exigirExclusividad: false,
+      })
+      expect(corridas).toEqual(['ids-opacos'])
+    } finally {
+      silenciar.mockRestore()
+    }
+    expect(await redis.exists(`sala:${salaRunnerId}:migrado_ids`)).toBe(1)
+    const pendientes = Object.values(await redis.hgetall(clavePendientes(prefijoRunner, 'ids-opacos')))
+      .map((s) => JSON.parse(s) as EntradaPendiente)
+      .filter((e) => e.unidad === salaRunnerId)
+    expect(pendientes).toHaveLength(2)
   })
 })

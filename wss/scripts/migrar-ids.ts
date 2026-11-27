@@ -1,21 +1,24 @@
 /**
- * Migración one-off: claves de redis con la identidad real como id → ids opacos por sala, sin cifrar.
+ * Migración: claves de redis con la identidad real como id → ids opacos por sala, sin cifrar.
  *
- *   bun run wss:migrar-ids --dry-run    # no escribe; informa cuántas salas y claves convertiría
+ *   bun run wss:migrar-ids --dry-run    # no escribe; informa cuántas salas, claves y pendientes detectaría
  *   bun run wss:migrar-ids --confirmar  # aplica la migración
  *
- * Con el WSS detenido y un backup de redis hecho. Cada sala se aplica en un MULTI junto con sus ids
- * (`sala:<id>:ids`, con la identidad sin cifrar como campo) y su marca `sala:<id>:migrado_ids`: una
- * sala con marca se saltea, así que se puede correr dos veces.
- * Una sala con algún documento ilegible no se toca y se reporta por su id.
+ * Usa el protocolo de dos fases de `wss/migraciones/runner.ts`: primero planifica en lectura qué
+ * claves migrar y cuáles desviar a `migraciones:pendientes:ids-opacos` (documentos corruptos o tipos
+ * inesperados de Redis), y luego aplica cada sala en un `MULTI` atómico junto con `sala:<id>:migrado_ids`.
  * Nunca imprime datos personales: solo ids de sala, conteos y el tipo de error.
  */
 import { randomBytes } from 'crypto'
+import { clavePendientes } from '../migraciones/backup'
+import { aplicarPlan, armarPlan, nombreError, type Planificador } from '../migraciones/runner'
 import redis from '../redis'
-import { partidaSchema } from '../validators/go'
 import { asistenciaDeClaseSchema, eventoAsistenciaSchema } from '../validators/asistencia'
+import { partidaSchema } from '../validators/go'
 import { WssEstudianteSessionSchema } from '../validators/session'
 import { versionado } from '../versionado'
+
+const MIGRACION_ID = 'ids-opacos'
 
 const estudianteCodec = versionado({ schema: WssEstudianteSessionSchema })
 const eventoCodec = versionado({ schema: eventoAsistenciaSchema })
@@ -35,157 +38,227 @@ const asistenciaDeClaseCodec = versionado({
   ],
 })
 
-type Comando = string[]
-
-interface Plan {
-  comandos: Comando[]
-  claves: Set<string>
-}
-
 export interface Resultado {
   migradas: number
   salteadas: number
   conError: string[]
+  pendientes: number
+  salasConPendientes: string[]
   claves: number
 }
 
 const escaparPatron = (s: string) => s.replace(/[\\*?[\]]/g, '\\$&')
 
-async function claves(patron: string): Promise<string[]> {
-  const encontradas: string[] = []
-  let cursor = '0'
-  do {
-    const [next, lote] = await redis.scan(cursor, 'MATCH', patron, 'COUNT', 200)
-    cursor = next
-    encontradas.push(...lote)
-  } while (cursor !== '0')
-  return encontradas
-}
-
-async function planificar(salaId: string, ahora: number): Promise<Plan> {
-  const comandos: Comando[] = []
-  const tocadas = new Set<string>()
-  const emitir = (clave: string, ...comando: string[]) => {
-    tocadas.add(clave)
-    comandos.push([comando[0], clave, ...comando.slice(1)])
-  }
-  const reemplazar = (clave: string, comando: string, valores: string[]) => {
-    emitir(clave, 'del')
-    if (valores.length > 0) emitir(clave, comando, ...valores)
-  }
+async function planificarSala(planificador: Planificador, salaId: string): Promise<void> {
   const k = (sufijo: string) => `sala:${salaId}:${sufijo}`
   const prefijo = (sufijo: string) => escaparPatron(k(sufijo))
 
-  // Sin `idOpaco`, que escribe en redis al resolver: los ids van en el MULTI de la sala.
-  const ids = new Map(Object.entries(await redis.hgetall(k('ids'))))
-  const idsNuevos: string[] = []
-  const resolver = (identidad: string) => {
-    let id = ids.get(identidad)
-    if (!id) {
-      id = randomBytes(8).toString('hex')
-      ids.set(identidad, id)
-      idsNuevos.push(identidad, id)
+  await planificador.unidad(salaId, async (u) => {
+    // Sin `idOpaco`, que escribe en redis al resolver: los ids van en el MULTI de la sala.
+    const idsExistentes = (await u.leerHash(k('ids'), 'ids')) ?? {}
+    const ids = new Map(Object.entries(idsExistentes))
+    const idsNuevos: string[] = []
+    const resolver = (identidad: string) => {
+      let id = ids.get(identidad)
+      if (!id) {
+        id = randomBytes(8).toString('hex')
+        ids.set(identidad, id)
+        idsNuevos.push(identidad, id)
+      }
+      return id
     }
-    return id
-  }
 
-  const estudiantes = await redis.hgetall(k('estudiantes'))
-  const planilla: string[] = []
-  for (const [identidad, str] of Object.entries(estudiantes)) {
-    const session = estudianteCodec.parsear(str)
-    const id = resolver(identidad)
-    planilla.push(id, estudianteCodec.serializar({ ...session, userId: id }))
-  }
-  if (planilla.length > 0) reemplazar(k('estudiantes'), 'hset', planilla)
-
-  const eventos: string[] = []
-  for (const str of await redis.lrange(k('asistencia'), 0, -1)) {
-    const evento = eventoCodec.parsear(str)
-    eventos.push(eventoCodec.serializar({ ...evento, userId: resolver(evento.userId) }))
-  }
-  if (eventos.length > 0) reemplazar(k('asistencia'), 'rpush', eventos)
-
-  const pendientes: string[] = []
-  for (const str of await redis.lrange(k('asistencia_pendiente'), 0, -1)) {
-    const asistencia = asistenciaDeClaseCodec.parsear(str)
-    const estudiantesConId = []
-    for (const e of asistencia.estudiantes) {
-      estudiantesConId.push({ ...e, userId: resolver(e.identidad) })
+    const estudiantes = await u.leerHash(k('estudiantes'), 'estudiantes')
+    if (estudiantes !== null) {
+      const planilla: string[] = []
+      let omitidos = 0
+      for (const [identidad, str] of Object.entries(estudiantes)) {
+        const session = u.parsearElemento(str, (s) => estudianteCodec.parsear(s), {
+          origen: 'estudiantes',
+          clave: k('estudiantes'),
+          campo: identidad,
+        })
+        if (!session) {
+          omitidos++
+          continue
+        }
+        const id = resolver(identidad)
+        planilla.push(id, estudianteCodec.serializar({ ...session, userId: id }))
+      }
+      if (planilla.length > 0 || omitidos > 0) u.reemplazar(k('estudiantes'), 'hset', planilla)
     }
-    pendientes.push(asistenciaDeClaseCodec.serializar({ ...asistencia, estudiantes: estudiantesConId }))
-  }
-  if (pendientes.length > 0) reemplazar(k('asistencia_pendiente'), 'rpush', pendientes)
 
-  for (const clave of await claves(`${prefijo('poll:')}*`)) {
-    const resto = clave.slice(k('poll:').length)
-    const voto = resto.match(/^([^:]+):(votos|aportes):(.+)$/)
-    if (voto) {
-      const destino = k(`poll:${voto[1]}:${voto[2]}:${resolver(voto[3])}`)
-      emitir(clave, 'rename', destino)
-      tocadas.add(destino)
-    } else if (/^[^:]+:votantes$/.test(resto) || /^[^:]+:opcion:[^:]+:votantes$/.test(resto)) {
-      reemplazar(clave, 'sadd', (await redis.smembers(clave)).map((miembro) => resolver(miembro)))
+    const listaAsistencia = await u.leerLista(k('asistencia'), 'asistencia')
+    if (listaAsistencia !== null) {
+      const eventos: string[] = []
+      let omitidos = 0
+      for (const str of listaAsistencia) {
+        const evento = u.parsearElemento(str, (s) => eventoCodec.parsear(s), {
+          origen: 'asistencia',
+          clave: k('asistencia'),
+        })
+        if (!evento) {
+          omitidos++
+          continue
+        }
+        eventos.push(eventoCodec.serializar({ ...evento, userId: resolver(evento.userId) }))
+      }
+      if (eventos.length > 0 || omitidos > 0) u.reemplazar(k('asistencia'), 'rpush', eventos)
     }
-  }
 
-  for (const clave of await claves(`${prefijo('go:')}*`)) {
-    const resto = clave.slice(k('go:').length)
-    const usuario = resto.match(/^(activa|stats):(.+)$/)
-    if (usuario) {
-      const destino = k(`go:${usuario[1]}:${resolver(usuario[2])}`)
-      emitir(clave, 'rename', destino)
-      tocadas.add(destino)
-      continue
+    const listaPendientes = await u.leerLista(k('asistencia_pendiente'), 'asistencia_pendiente')
+    if (listaPendientes !== null) {
+      const pendientes: string[] = []
+      let omitidos = 0
+      for (const str of listaPendientes) {
+        const asistencia = u.parsearElemento(str, (s) => asistenciaDeClaseCodec.parsear(s), {
+          origen: 'asistencia_pendiente',
+          clave: k('asistencia_pendiente'),
+        })
+        if (!asistencia) {
+          omitidos++
+          continue
+        }
+        const estudiantesConId = asistencia.estudiantes.map((e) => ({ ...e, userId: resolver(e.identidad) }))
+        pendientes.push(asistenciaDeClaseCodec.serializar({ ...asistencia, estudiantes: estudiantesConId }))
+      }
+      if (pendientes.length > 0 || omitidos > 0) u.reemplazar(k('asistencia_pendiente'), 'rpush', pendientes)
     }
-    const str = await redis.get(clave)
-    if (str === null) throw new Error('Clave de Go con un tipo inesperado.')
-    const partida = partidaCodec.parsear(str)
-    emitir(
-      clave,
-      'set',
-      partidaCodec.serializar({
-        ...partida,
-        negro: { ...partida.negro, userId: resolver(partida.negro.userId) },
-        blanco: { ...partida.blanco, userId: resolver(partida.blanco.userId) },
-        ganadorUserId: partida.ganadorUserId === null ? null : resolver(partida.ganadorUserId),
-      })
-    )
-  }
 
-  if (idsNuevos.length > 0) emitir(k('ids'), 'hset', ...idsNuevos)
-  emitir(k('ultima_actividad'), 'set', String(ahora), 'NX')
-  emitir(k('migrado_ids'), 'set', String(ahora))
+    for (const clave of await planificador.escanear(`${prefijo('poll:')}*`)) {
+      const resto = clave.slice(k('poll:').length)
+      const voto = resto.match(/^([^:]+):(votos|aportes):(.+)$/)
+      if (voto) {
+        if (!(await u.asegurarTipo(clave, 'set', `poll:${voto[2]}`))) continue
+        u.renombrar(clave, k(`poll:${voto[1]}:${voto[2]}:${resolver(voto[3])}`))
+      } else if (/^[^:]+:votantes$/.test(resto) || /^[^:]+:opcion:[^:]+:votantes$/.test(resto)) {
+        const votantes = await u.leerSet(clave, 'poll:votantes')
+        if (votantes !== null) u.reemplazar(clave, 'sadd', votantes.map((miembro) => resolver(miembro)))
+      }
+    }
 
-  return { comandos, claves: tocadas }
+    const goIndexEsSet = await u.asegurarTipo(k('go'), 'set', 'go:index')
+
+    for (const clave of await planificador.escanear(`${prefijo('go:')}*`)) {
+      const resto = clave.slice(k('go:').length)
+      const usuario = resto.match(/^(activa|stats):(.+)$/)
+      if (usuario) {
+        const esperado = usuario[1] === 'activa' ? 'string' : 'hash'
+        if (!(await u.asegurarTipo(clave, esperado, `go:${usuario[1]}`))) continue
+        u.renombrar(clave, k(`go:${usuario[1]}:${resolver(usuario[2])}`))
+        continue
+      }
+
+      const str = await u.leerString(clave, 'go:partida')
+      if (str === null) {
+        if (goIndexEsSet) u.emitir(k('go'), 'srem', resto)
+        continue
+      }
+      const partida = await u.parsearClave(clave, str, (s) => partidaCodec.parsear(s), 'go:partida')
+      if (!partida) {
+        if (goIndexEsSet) u.emitir(k('go'), 'srem', resto)
+        continue
+      }
+      u.emitir(
+        clave,
+        'set',
+        partidaCodec.serializar({
+          ...partida,
+          negro: { ...partida.negro, userId: resolver(partida.negro.userId) },
+          blanco: { ...partida.blanco, userId: resolver(partida.blanco.userId) },
+          ganadorUserId: partida.ganadorUserId === null ? null : resolver(partida.ganadorUserId),
+        })
+      )
+    }
+
+    if (idsNuevos.length > 0) u.emitir(k('ids'), 'hset', ...idsNuevos)
+    u.emitir(k('ultima_actividad'), 'set', String(planificador.ahora), 'NX')
+    u.emitir(k('migrado_ids'), 'set', String(planificador.ahora))
+  })
 }
 
-async function migrarSala(salaId: string, ahora: number, dryRun: boolean): Promise<number> {
-  const plan = await planificar(salaId, ahora)
-  if (dryRun) return plan.claves.size
-
-  const resultados = await redis.multi(plan.comandos).exec()
-  const fallido = resultados?.find(([err]) => err)
-  if (!resultados || fallido) throw new Error('El MULTI de la sala no se aplicó completo.')
-  return plan.claves.size
+export async function planificarIds(planificador: Planificador): Promise<void> {
+  const ids = await planificador.redis.hkeys('salas')
+  for (const salaId of ids) {
+    if ((await planificador.redis.exists(`sala:${salaId}:migrado_ids`)) === 1) continue
+    await planificarSala(planificador, salaId)
+  }
 }
 
-export async function migrarIds({ dryRun, ahora = Date.now() }: { dryRun: boolean; ahora?: number }): Promise<Resultado> {
+export async function migrarIds({
+  dryRun,
+  ahora = Date.now(),
+  prefijo = 'migraciones',
+}: {
+  dryRun: boolean
+  ahora?: number
+  prefijo?: string
+}): Promise<Resultado> {
   const ids = await redis.hkeys('salas')
-  const resultado: Resultado = { migradas: 0, salteadas: 0, conError: [], claves: 0 }
-
+  let salteadas = 0
+  const aPlanificar: string[] = []
   for (const salaId of ids) {
     if ((await redis.exists(`sala:${salaId}:migrado_ids`)) === 1) {
-      resultado.salteadas++
-      continue
-    }
-    try {
-      resultado.claves += await migrarSala(salaId, ahora, dryRun)
-      resultado.migradas++
-    } catch (err) {
-      resultado.conError.push(salaId)
-      console.error(`   ❌ ${salaId}: ${err instanceof Error ? err.name : typeof err}`)
+      salteadas++
+    } else {
+      aPlanificar.push(salaId)
     }
   }
+
+  const resultado: Resultado = {
+    migradas: 0,
+    salteadas,
+    conError: [],
+    pendientes: 0,
+    salasConPendientes: [],
+    claves: 0,
+  }
+
+  const plan = await armarPlan(
+    redis,
+    async (p) => {
+      for (const salaId of aPlanificar) {
+        try {
+          await planificarSala(p, salaId)
+        } catch (err) {
+          resultado.conError.push(salaId)
+          console.error(`   ❌ ${salaId}: ${nombreError(err)}`)
+        }
+      }
+    },
+    { ahora }
+  )
+
+  const destinoPendientes = clavePendientes(prefijo, MIGRACION_ID)
+  if (dryRun) {
+    for (const u of plan.unidades) {
+      resultado.migradas++
+      resultado.claves += u.claves.size
+      if (u.pendientes.length > 0) {
+        resultado.pendientes += u.pendientes.length
+        resultado.salasConPendientes.push(u.etiqueta)
+        const causas = u.pendientes.map((p) => `${p.origen}:${p.motivo}`).join(', ')
+        console.warn(`   ⚠️ ${u.etiqueta}: ${u.pendientes.length} entrada(s) irían a ${destinoPendientes} (${causas})`)
+      }
+    }
+    return resultado
+  }
+
+  for (const u of plan.unidades) {
+    try {
+      await aplicarPlan(redis, MIGRACION_ID, { unidades: [u], pendientes: u.pendientes }, { prefijo })
+      resultado.migradas++
+      resultado.claves += u.claves.size
+      if (u.pendientes.length > 0) {
+        resultado.pendientes += u.pendientes.length
+        resultado.salasConPendientes.push(u.etiqueta)
+      }
+    } catch (err) {
+      resultado.conError.push(u.etiqueta)
+      console.error(`   ❌ ${u.etiqueta}: ${nombreError(err)}`)
+    }
+  }
+
   return resultado
 }
 
@@ -202,9 +275,13 @@ async function main() {
   const r = await migrarIds({ dryRun })
 
   if (dryRun) {
-    console.log(`✅ Dry-run: se convertirían ${r.migradas} sala(s) y ${r.claves} clave(s); ${r.salteadas} ya migrada(s), ${r.conError.length} con error.`)
+    console.log(
+      `✅ Dry-run: se convertirían ${r.migradas} sala(s) y ${r.claves} clave(s); ${r.salteadas} ya migrada(s), ${r.pendientes} pendiente(s), ${r.conError.length} con error.`
+    )
   } else {
-    console.log(`✅ Listo. ${r.migradas} sala(s) migrada(s), ${r.salteadas} ya migrada(s), ${r.conError.length} con error.`)
+    console.log(
+      `✅ Listo. ${r.migradas} sala(s) migrada(s), ${r.salteadas} ya migrada(s), ${r.pendientes} en migraciones:pendientes:${MIGRACION_ID}, ${r.conError.length} con error.`
+    )
   }
   if (r.conError.length > 0) console.error(`❌ Salas con error: ${r.conError.join(', ')}`)
 
@@ -214,7 +291,7 @@ async function main() {
 
 if (import.meta.main) {
   main().catch((err) => {
-    console.error('❌ Falló la migración:', err instanceof Error ? err.name : typeof err)
+    console.error('❌ Falló la migración:', nombreError(err))
     process.exit(1)
   })
 }

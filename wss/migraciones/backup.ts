@@ -27,18 +27,34 @@ export const clavesDeBackup = (prefijo: string, id: string) => ({
   ttls: `${prefijo}:backup:${id}:ttls`,
 })
 
+export const clavePendientes = (prefijo: string, id: string) => `${prefijo}:pendientes:${id}`
+
 const esClaveInterna = (clave: string, prefijo: string) =>
   clave.startsWith(`${prefijo}:`) || clave.startsWith('bull:')
 
-async function escanear(redis: Redis, patron: string): Promise<string[]> {
-  const encontradas: string[] = []
+/** Escanea claves por patrón devolviendo nombres únicos (Redis `SCAN` puede repetir claves al redimensionar). */
+export async function escanear(redis: Redis, patron: string): Promise<string[]> {
+  const encontradas = new Set<string>()
   let cursor = '0'
   do {
     const [next, lote] = await redis.scan(cursor, 'MATCH', patron, 'COUNT', TAM_LOTE)
     cursor = next
-    encontradas.push(...lote)
+    for (const clave of lote) encontradas.add(clave)
   } while (cursor !== '0')
-  return encontradas
+  return [...encontradas]
+}
+
+/** Captura el snapshot binario (`DUMP` en base64 + `PTTL`) de una clave en lectura sin modificarla. */
+export async function capturarClave(
+  redis: Redis,
+  clave: string
+): Promise<{ dumpBase64: string; pttl: number } | null> {
+  const respuestas = await redis.pipeline().dumpBuffer(clave).pttl(clave).exec()
+  const [errDump, dump] = respuestas?.[0] ?? []
+  const [errTtl, pttl] = respuestas?.[1] ?? []
+  if (errDump || errTtl) throw errDump ?? errTtl
+  if (!Buffer.isBuffer(dump)) return null
+  return { dumpBase64: dump.toString('base64'), pttl: typeof pttl === 'number' && pttl > 0 ? pttl : 0 }
 }
 
 /** Lista las claves cubiertas por `patrones`, excluyendo claves de control de migraciones y bullmq. */
@@ -155,6 +171,7 @@ export async function restaurarBackup(
     verificarPipeline(await pipe.exec(), `restaurar backup de ${id}`)
   }
 
+  await redis.del(clavePendientes(prefijo, id))
   await redis.hdel(`${prefijo}:aplicadas`, id)
   return { restauradas: entradas.length, borradas: aBorrar.length }
 }

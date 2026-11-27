@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it, spyOn } from 'bun:test'
 import redis from '../wss/redis'
-import { clavesDeBackup, listarBackups } from '../wss/migraciones/backup'
-import { correrMigraciones, restaurarMigracion, type Migracion } from '../wss/migraciones/runner'
+import { clavePendientes, clavesDeBackup, listarBackups } from '../wss/migraciones/backup'
+import { armarPlan, correrMigraciones, restaurarMigracion, type EntradaPendiente, type Migracion } from '../wss/migraciones/runner'
 
 const prefijo = `test-migraciones-${crypto.randomUUID()}`
 const datos = `${prefijo}-datos`
@@ -23,7 +23,10 @@ afterAll(async () => {
     clavesDatos.push(...lote)
   } while (cursor !== '0')
 
-  const clavesBackup = idsUsados.flatMap((id) => Object.values(clavesDeBackup(prefijo, id)))
+  const clavesBackup = idsUsados.flatMap((id) => [
+    ...Object.values(clavesDeBackup(prefijo, id)),
+    clavePendientes(prefijo, id),
+  ])
   const todas = [`${prefijo}:aplicadas`, `${prefijo}:lock`, ...clavesDatos, ...clavesBackup]
   if (todas.length > 0) await redis.del(...todas)
 })
@@ -261,5 +264,89 @@ describe('correrMigraciones', () => {
 
     await Promise.all([correrMigraciones(redis, lista, opciones), correrMigraciones(redis, lista, opciones)])
     expect(corridas).toBe(1)
+  })
+
+  it('planificar clasifica en lectura sin tocar redis, aplica lo válido, desvía inválidos a pendientes y restaurar limpia todo', async () => {
+    const id = registrar('planificada-generica')
+    const kHash = `${datos}:plan:hash`
+    const kStrOk = `${datos}:plan:item:ok`
+    const kStrRoto = `${datos}:plan:item:roto`
+    const kTipoMalo = `${datos}:plan:item:set`
+
+    await redis.hset(kHash, 'a', JSON.stringify({ n: 1 }), 'b', '{json roto')
+    await redis.set(kStrOk, JSON.stringify({ n: 2 }))
+    await redis.set(kStrRoto, 'no-es-objeto')
+    await redis.sadd(kTipoMalo, 'miembro')
+
+    const parsearN = (s: string): { n: number } => {
+      const doc = JSON.parse(s)
+      if (typeof doc?.n !== 'number') throw new Error('n inválido')
+      return doc
+    }
+
+    const migracion: Migracion = {
+      id,
+      patrones: [`${datos}:plan:*`],
+      planificar: async (p) => {
+        await p.unidad('hash-global', async (u) => {
+          const campos = await u.leerHash(kHash, 'tabla')
+          if (!campos) return
+          const validos: string[] = []
+          let omitidos = 0
+          for (const [k, raw] of Object.entries(campos)) {
+            const doc = u.parsearElemento(raw, parsearN, { origen: 'tabla', clave: kHash, campo: k })
+            if (!doc) {
+              omitidos++
+              continue
+            }
+            validos.push(k, JSON.stringify({ n: doc.n * 10 }))
+          }
+          if (validos.length > 0 || omitidos > 0) u.reemplazar(kHash, 'hset', validos)
+        })
+
+        for (const clave of await p.escanear(`${datos}:plan:item:*`)) {
+          await p.unidad(clave, async (u) => {
+            const raw = await u.leerString(clave, 'item')
+            if (raw === null) return
+            const doc = await u.parsearClave(clave, raw, parsearN, 'item')
+            if (!doc) return
+            u.emitir(clave, 'set', JSON.stringify({ n: doc.n * 10 }))
+          })
+        }
+      },
+    }
+
+    // Fase 1 aislada: armarPlan clasifica sin mutar ninguna clave en redis.
+    const pre = await armarPlan(redis, migracion.planificar)
+    expect(pre.pendientes).toHaveLength(3)
+    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
+    expect(await redis.type(kTipoMalo)).toBe('set')
+
+    // Corrida completa: aplica válidos y mueve los 3 inválidos a pendientes:<id>.
+    const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      expect(await correrMigraciones(redis, [migracion], opciones)).toEqual([id])
+    } finally {
+      silenciar.mockRestore()
+    }
+
+    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 10 }) })
+    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 20 }))
+    expect(await redis.exists(kStrRoto)).toBe(0)
+    expect(await redis.exists(kTipoMalo)).toBe(0)
+
+    const pendientes = Object.values(await redis.hgetall(clavePendientes(prefijo, id))).map(
+      (s) => JSON.parse(s) as EntradaPendiente
+    )
+    expect(pendientes).toHaveLength(3)
+    expect(pendientes.find((x) => x.origen === 'tabla')).toMatchObject({ campo: 'b', valor: '{json roto' })
+    expect(pendientes.filter((x) => x.origen === 'item').every((x) => typeof x.dumpBase64 === 'string')).toBe(true)
+
+    // Rollback manual restaura las claves rotas originales y elimina pendientes:<id>.
+    await restaurarMigracion(redis, id, { ...opciones, exigirExclusividad: false })
+    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
+    expect(await redis.get(kStrRoto)).toBe('no-es-objeto')
+    expect(await redis.smembers(kTipoMalo)).toEqual(['miembro'])
+    expect(await redis.exists(clavePendientes(prefijo, id))).toBe(0)
   })
 })

@@ -66,7 +66,7 @@ interface MigracionBase {
   id: string
   /** Si es `true` y corre con `exigirExclusividad`, aborta si hay otros clientes conectados a redis. */
   destructiva?: boolean
-  /** Patrones de claves que la migración lee o modifica; acotan backup y rollback (default `['*']`). */
+  /** Patrones de claves que la migración lee, modifica, crea o renombra; acotan backup y rollback (default `['*']`). */
   patrones?: string[]
 }
 
@@ -208,7 +208,7 @@ export async function armarPlan(
   return { unidades, pendientes: pendientesTotales }
 }
 
-function loguearResumenPlan(id: string, plan: PlanMigracion, dryRun: boolean, prefijo: string): void {
+export function loguearResumenPlan(id: string, plan: PlanMigracion, dryRun: boolean, prefijo = 'migraciones'): void {
   const destino = clavePendientes(prefijo, id)
   for (const u of plan.unidades) {
     if (u.pendientes.length === 0) continue
@@ -219,12 +219,15 @@ function loguearResumenPlan(id: string, plan: PlanMigracion, dryRun: boolean, pr
   }
 }
 
-/** Aplica cada unidad de `plan` en un `MULTI` atómico junto con sus entradas hacia `<prefijo>:pendientes:<id>`. */
+/**
+ * Ejecuta cada unidad de `plan` en un bloque `MULTI`/`EXEC` junto con sus entradas hacia `<prefijo>:pendientes:<id>` (con TTL).
+ * Redis no revierte comandos previos de un `MULTI` si uno falla en ejecución; la reversión completa ante fallo la garantiza `correrMigraciones` desde el backup.
+ */
 export async function aplicarPlan(
   redis: Redis,
   id: string,
   plan: PlanMigracion,
-  { prefijo = 'migraciones' }: { prefijo?: string } = {}
+  { prefijo = 'migraciones', ttlSeg = BACKUP_TTL_SEG }: { prefijo?: string; ttlSeg?: number } = {}
 ): Promise<void> {
   const destinoPendientes = clavePendientes(prefijo, id)
   for (const u of plan.unidades) {
@@ -232,12 +235,14 @@ export async function aplicarPlan(
     if (u.pendientes.length > 0) {
       const pares = u.pendientes.flatMap((p) => [crypto.randomUUID(), JSON.stringify(p)])
       comandos.push(['hset', destinoPendientes, ...pares])
+      comandos.push(['expire', destinoPendientes, String(ttlSeg)])
     }
     if (comandos.length === 0) continue
     const resultados = await redis.multi(comandos).exec()
     const fallido = resultados?.find(([err]) => err)
     if (!resultados || fallido) {
-      throw new Error(`El MULTI de "${u.etiqueta}" no se aplicó completo.`)
+      const detalle = fallido?.[0]?.message ?? 'sin respuesta de redis'
+      throw new Error(`El MULTI de "${u.etiqueta}" no se aplicó completo: ${detalle}`)
     }
   }
   loguearResumenPlan(id, plan, false, prefijo)
@@ -315,13 +320,15 @@ export async function correrMigraciones(
 
         if (m.planificar) {
           const plan = await armarPlan(redis, m.planificar)
+          const clavesExtra = [...new Set(plan.unidades.flatMap((u) => [...u.claves]))]
           await guardarBackup(redis, m.id, {
             prefijo,
             patrones: m.patrones ?? patrones,
+            clavesExtra,
             ttlSeg: backupTtlSeg,
           })
           backupGuardado = true
-          await aplicarPlan(redis, m.id, plan, { prefijo })
+          await aplicarPlan(redis, m.id, plan, { prefijo, ttlSeg: backupTtlSeg })
         } else {
           await m.dryRun(redis)
           await guardarBackup(redis, m.id, {

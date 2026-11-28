@@ -1,7 +1,16 @@
 import { afterAll, describe, expect, it, spyOn } from 'bun:test'
+import type Redis from 'ioredis'
 import redis from '../wss/redis'
-import { clavePendientes, clavesDeBackup, listarBackups } from '../wss/migraciones/backup'
-import { armarPlan, correrMigraciones, restaurarMigracion, type EntradaPendiente, type Migracion } from '../wss/migraciones/runner'
+import { clavePendientes, clavesDeBackup, escanear, listarBackups } from '../wss/migraciones/backup'
+import {
+  aplicarPlan,
+  armarPlan,
+  correrMigraciones,
+  loguearResumenPlan,
+  restaurarMigracion,
+  type EntradaPendiente,
+  type Migracion,
+} from '../wss/migraciones/runner'
 
 const prefijo = `test-migraciones-${crypto.randomUUID()}`
 const datos = `${prefijo}-datos`
@@ -268,167 +277,360 @@ describe('correrMigraciones', () => {
 })
 
 describe('migraciones planificadas (dos fases)', () => {
-  const parsearN = (s: string): { n: number } => {
-    const doc = JSON.parse(s)
-    if (typeof doc?.n !== 'number') throw new Error('n inválido')
-    return doc
-  }
-
-  const crearMigracionCompleta = (id: string, base: string): Migracion => ({
-    id,
-    patrones: [`${base}:*`],
-    planificar: async (p) => {
-      const kHash = `${base}:hash`
-      await p.unidad('hash-global', async (u) => {
-        const campos = await u.leerHash(kHash, 'tabla')
-        if (!campos) return
-        const validos: string[] = []
-        let omitidos = 0
-        for (const [k, raw] of Object.entries(campos)) {
-          const doc = u.parsearElemento(raw, parsearN, { origen: 'tabla', clave: kHash, campo: k })
-          if (!doc) {
-            omitidos++
-            continue
-          }
-          validos.push(k, JSON.stringify({ n: doc.n * 10 }))
-        }
-        if (validos.length > 0 || omitidos > 0) u.reemplazar(kHash, 'hset', validos)
-      })
-
-      for (const clave of await p.escanear(`${base}:item:*`)) {
-        await p.unidad(clave, async (u) => {
-          const raw = await u.leerString(clave, 'item')
-          if (raw === null) return
-          const doc = await u.parsearClave(clave, raw, parsearN, 'item')
-          if (!doc) return
-          u.emitir(clave, 'set', JSON.stringify({ n: doc.n * 10 }))
-        })
-      }
-    },
-  })
-
-  async function sembrarBase(base: string) {
-    const kHash = `${base}:hash`
-    const kStrOk = `${base}:item:ok`
-    const kStrRoto = `${base}:item:roto`
-    const kTipoMalo = `${base}:item:set`
-    await redis.hset(kHash, 'a', JSON.stringify({ n: 1 }), 'b', '{json roto')
-    await redis.set(kStrOk, JSON.stringify({ n: 2 }))
-    await redis.set(kStrRoto, 'no-es-objeto')
-    await redis.sadd(kTipoMalo, 'miembro')
-    return { kHash, kStrOk, kStrRoto, kTipoMalo }
-  }
-
   const leerPendientes = async (id: string) =>
     Object.values(await redis.hgetall(clavePendientes(prefijo, id))).map((s) => JSON.parse(s) as EntradaPendiente)
 
-  it('armarPlan clasifica válidos e inválidos en lectura sin tocar redis', async () => {
-    const base = `${datos}:plan-solo-lectura`
-    const { kHash, kStrOk, kStrRoto, kTipoMalo } = await sembrarBase(base)
-    const migracion = crearMigracionCompleta(registrar('plan-solo-lectura'), base)
+  it('armarPlan clasifica en lectura sin modificar redis ni crear pendientes', async () => {
+    const kStr = `${datos}:p-ro:str`
+    const kSet = `${datos}:p-ro:set`
+    await redis.set(kStr, 'antes')
+    await redis.sadd(kSet, 'miembro')
 
-    const plan = await armarPlan(redis, migracion.planificar!)
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        u.emitir(kStr, 'set', 'despues')
+        await u.leerString(kSet, 'item')
+      })
+    })
 
-    expect(plan.pendientes).toHaveLength(3)
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 2 }))
-    expect(await redis.get(kStrRoto)).toBe('no-es-objeto')
-    expect(await redis.type(kTipoMalo)).toBe('set')
-    expect(await redis.exists(clavePendientes(prefijo, migracion.id))).toBe(0)
+    expect(plan.pendientes).toHaveLength(1)
+    expect(plan.pendientes[0]).toMatchObject({ origen: 'item', motivo: 'TipoInesperado(set)', clave: kSet })
+    expect(await redis.get(kStr)).toBe('antes')
+    expect(await redis.smembers(kSet)).toEqual(['miembro'])
   })
 
-  it('parsearElemento migra los campos válidos de un hash y desvía los rotos a pendientes', async () => {
-    const id = registrar('plan-elementos-hash')
-    const kHash = `${datos}:plan-elem:hash`
-    await redis.hset(kHash, 'a', JSON.stringify({ n: 3 }), 'b', '{json roto')
+  it('escanear filtra por patrón en redis y deduplica claves repetidas', async () => {
+    const kA = `${datos}:p-scan:a`
+    const kB = `${datos}:p-scan:b`
+    const kFuera = `${datos}:p-otro:c`
+    await redis.set(kA, '1')
+    await redis.set(kB, '2')
+    await redis.set(kFuera, '3')
 
-    const migracion: Migracion = {
-      id,
-      patrones: [`${datos}:plan-elem:*`],
-      planificar: async (p) => {
-        await p.unidad('hash', async (u) => {
-          const campos = await u.leerHash(kHash, 'tabla')
-          if (!campos) return
-          const validos: string[] = []
-          let omitidos = 0
-          for (const [k, raw] of Object.entries(campos)) {
-            const doc = u.parsearElemento(raw, parsearN, { origen: 'tabla', clave: kHash, campo: k })
-            if (!doc) {
-              omitidos++
-              continue
-            }
-            validos.push(k, JSON.stringify({ n: doc.n * 10 }))
-          }
-          if (validos.length > 0 || omitidos > 0) u.reemplazar(kHash, 'hset', validos)
-        })
-      },
-    }
+    expect((await escanear(redis, `${datos}:p-scan:*`)).sort()).toEqual([kA, kB].sort())
+
+    const redisDuplicado = {
+      scan: async () => ['0', ['k1', 'k2', 'k1']] as [string, string[]],
+    } as unknown as Redis
+    expect(await escanear(redisDuplicado, '*')).toEqual(['k1', 'k2'])
+  })
+
+  it('lectores tipados y asegurarTipo leen valores válidos e ignoran claves ausentes sin generar pendientes', async () => {
+    const kStr = `${datos}:p-ok:str`
+    const kHash = `${datos}:p-ok:hash`
+    const kList = `${datos}:p-ok:list`
+    const kSet = `${datos}:p-ok:set`
+    const kAusente = `${datos}:p-ok:ausente`
+    await redis.set(kStr, 'hola')
+    await redis.hset(kHash, 'a', '1')
+    await redis.rpush(kList, 'e1', 'e2')
+    await redis.sadd(kSet, 'm1')
+
+    let res: Record<string, unknown> = {}
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        res = {
+          str: await u.leerString(kStr, 's'),
+          strAusente: await u.leerString(kAusente, 's'),
+          hash: await u.leerHash(kHash, 'h'),
+          hashAusente: await u.leerHash(kAusente, 'h'),
+          list: await u.leerLista(kList, 'l'),
+          listAusente: await u.leerLista(kAusente, 'l'),
+          set: await u.leerSet(kSet, 'set'),
+          setAusente: await u.leerSet(kAusente, 'set'),
+          tipoOk: await u.asegurarTipo(kSet, 'set', 't'),
+          tipoAusente: await u.asegurarTipo(kAusente, 'set', 't'),
+        }
+      })
+    })
+
+    expect(res).toEqual({
+      str: 'hola',
+      strAusente: null,
+      hash: { a: '1' },
+      hashAusente: null,
+      list: ['e1', 'e2'],
+      listAusente: null,
+      set: ['m1'],
+      setAusente: null,
+      tipoOk: true,
+      tipoAusente: false,
+    })
+    expect(plan.pendientes).toEqual([])
+  })
+
+  it('WRONGTYPE en lectores y asegurarTipo desvía claves con DUMP/PTTL restaurables y borra el origen', async () => {
+    const id = registrar('plan-wrongtype')
+    const kSetPorStr = `${datos}:p-wt:set-por-str`
+    const kStrPorHash = `${datos}:p-wt:str-por-hash`
+    const kStrPorList = `${datos}:p-wt:str-por-list`
+    const kStrPorSet = `${datos}:p-wt:str-por-set`
+    const kStrPorAsegurar = `${datos}:p-wt:str-por-asegurar`
+    const kRestaurada = `${datos}:p-wt:restaurada`
+    await redis.sadd(kSetPorStr, 'miembro')
+    await redis.pexpire(kSetPorStr, 60_000)
+    await redis.set(kStrPorHash, 'x')
+    await redis.set(kStrPorList, 'x')
+    await redis.set(kStrPorSet, 'x')
+    await redis.set(kStrPorAsegurar, 'x')
+
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        expect(await u.leerString(kSetPorStr, 'str')).toBeNull()
+        expect(await u.leerHash(kStrPorHash, 'hash')).toBeNull()
+        expect(await u.leerLista(kStrPorList, 'list')).toBeNull()
+        expect(await u.leerSet(kStrPorSet, 'set')).toBeNull()
+        expect(await u.asegurarTipo(kStrPorAsegurar, 'set', 'asegurar')).toBe(false)
+      })
+    })
 
     const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
     try {
-      expect(await correrMigraciones(redis, [migracion], opciones)).toEqual([id])
+      await aplicarPlan(redis, id, plan, { prefijo })
     } finally {
       silenciar.mockRestore()
     }
 
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 30 }) })
+    expect(await redis.exists(kSetPorStr, kStrPorHash, kStrPorList, kStrPorSet, kStrPorAsegurar)).toBe(0)
     const pendientes = await leerPendientes(id)
-    expect(pendientes).toHaveLength(1)
-    expect(pendientes[0]).toMatchObject({ origen: 'tabla', clave: kHash, campo: 'b', valor: '{json roto' })
+    expect(pendientes).toHaveLength(5)
+
+    const delSet = pendientes.find((x) => x.clave === kSetPorStr)!
+    expect(delSet).toMatchObject({ origen: 'str', motivo: 'TipoInesperado(set)' })
+    expect(delSet.pttl).toBeGreaterThan(0)
+    await redis.restore(kRestaurada, delSet.pttl!, Buffer.from(delSet.dumpBase64!, 'base64'), 'REPLACE')
+    expect(await redis.smembers(kRestaurada)).toEqual(['miembro'])
   })
 
-  it('leerString y parsearClave desvían claves con WRONGTYPE o JSON inválido con DUMP y PTTL', async () => {
-    const id = registrar('plan-claves-sueltas')
-    const base = `${datos}:plan-claves`
-    const kOk = `${base}:ok`
-    const kRoto = `${base}:roto`
-    const kSet = `${base}:set`
-    await redis.set(kOk, JSON.stringify({ n: 4 }))
-    await redis.set(kRoto, 'no-es-objeto', 'PX', 60_000)
+  it('parsearElemento devuelve el valor válido y desvía a pendientes si el parser lanza', async () => {
+    let valido: unknown
+    let invalido: unknown
+
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        valido = u.parsearElemento('{"ok":true}', JSON.parse, { origen: 'tabla', clave: 'k:hash', campo: 'a' })
+        invalido = u.parsearElemento('{roto', JSON.parse, { origen: 'tabla', clave: 'k:hash', campo: 'b' })
+      })
+    })
+
+    expect(valido).toEqual({ ok: true })
+    expect(invalido).toBeNull()
+    expect(plan.pendientes).toHaveLength(1)
+    expect(plan.pendientes[0]).toMatchObject({
+      unidad: 'u',
+      origen: 'tabla',
+      clave: 'k:hash',
+      campo: 'b',
+      valor: '{roto',
+      motivo: 'SyntaxError',
+    })
+  })
+
+  it('parsearClave devuelve el valor válido y desvía claves inválidas con DUMP/PTTL y DEL', async () => {
+    const id = registrar('plan-parsear-clave')
+    const kOk = `${datos}:p-pc:ok`
+    const kRoto = `${datos}:p-pc:roto`
+    await redis.set(kOk, '{"ok":true}')
+    await redis.set(kRoto, '{roto', 'PX', 60_000)
+
+    let valido: unknown
+    let invalido: unknown
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        valido = await u.parsearClave(kOk, '{"ok":true}', JSON.parse, 'doc')
+        invalido = await u.parsearClave(kRoto, '{roto', JSON.parse, 'doc')
+      })
+    })
+
+    const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await aplicarPlan(redis, id, plan, { prefijo })
+    } finally {
+      silenciar.mockRestore()
+    }
+
+    expect(valido).toEqual({ ok: true })
+    expect(invalido).toBeNull()
+    expect(await redis.get(kOk)).toBe('{"ok":true}')
+    expect(await redis.exists(kRoto)).toBe(0)
+    const pendientes = await leerPendientes(id)
+    expect(pendientes).toHaveLength(1)
+    expect(pendientes[0]).toMatchObject({ origen: 'doc', clave: kRoto, motivo: 'SyntaxError' })
+    expect(typeof pendientes[0].dumpBase64).toBe('string')
+    expect(pendientes[0].pttl).toBeGreaterThan(0)
+  })
+
+  it('renombrar y reemplazar aplican sus escrituras, ignoran mismo nombre y borran con lista vacía', async () => {
+    const id = registrar('plan-renombrar-reemplazar')
+    const kOrigen = `${datos}:p-rr:origen`
+    const kDestino = `${datos}:p-rr:destino`
+    const kIgual = `${datos}:p-rr:igual`
+    const kSet = `${datos}:p-rr:set`
+    const kVaciar = `${datos}:p-rr:vaciar`
+    await redis.set(kOrigen, 'v1')
+    await redis.set(kIgual, 'v2')
+    await redis.sadd(kSet, 'a')
+    await redis.sadd(kVaciar, 'x')
+
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        u.renombrar(kOrigen, kDestino)
+        u.renombrar(kIgual, kIgual)
+        u.reemplazar(kSet, 'sadd', ['b'])
+        u.reemplazar(kVaciar, 'sadd', [])
+      })
+    })
+    await aplicarPlan(redis, id, plan, { prefijo })
+
+    expect(await redis.exists(kOrigen)).toBe(0)
+    expect(await redis.get(kDestino)).toBe('v1')
+    expect(await redis.get(kIgual)).toBe('v2')
+    expect(await redis.smembers(kSet)).toEqual(['b'])
+    expect(await redis.exists(kVaciar)).toBe(0)
+  })
+
+  it('aplicarPlan fija TTL acotado a ttlSeg en pendientes:<id>', async () => {
+    const id = registrar('plan-ttl-pendientes')
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('u', async (u) => {
+        u.parsearElemento('{roto', JSON.parse, { origen: 'tabla', clave: 'k', campo: 'c' })
+      })
+    })
+
+    const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      await aplicarPlan(redis, id, plan, { prefijo, ttlSeg: 120 })
+    } finally {
+      silenciar.mockRestore()
+    }
+
+    const ttl = await redis.ttl(clavePendientes(prefijo, id))
+    expect(ttl).toBeGreaterThan(0)
+    expect(ttl).toBeLessThanOrEqual(120)
+  })
+
+  it('loguearResumenPlan distingue dryRun vs up y nunca imprime valor ni campo', async () => {
+    const plan = await armarPlan(redis, async (p) => {
+      await p.unidad('unidad-x', async (u) => {
+        u.parsearElemento('VALOR-SECRETO', JSON.parse, {
+          origen: 'estudiantes',
+          clave: 'k:estudiantes',
+          campo: '20333444555',
+        })
+      })
+    })
+
+    const salida: string[] = []
+    const espia = spyOn(console, 'warn').mockImplementation((...args: unknown[]) => void salida.push(args.join(' ')))
+    try {
+      loguearResumenPlan('m1', plan, true, prefijo)
+      loguearResumenPlan('m1', plan, false, prefijo)
+    } finally {
+      espia.mockRestore()
+    }
+
+    expect(salida[0]).toContain('irían')
+    expect(salida[1]).toContain('movida(s)')
+    const todo = salida.join('\n')
+    expect(todo).toContain('unidad-x')
+    expect(todo).toContain('estudiantes:SyntaxError')
+    expect(todo).not.toContain('VALOR-SECRETO')
+    expect(todo).not.toContain('20333444555')
+  })
+
+  it('si falla un MULTI a mitad de aplicarPlan, incluye el error de redis y revierte la unidad previa y pendientes', async () => {
+    const id = registrar('plan-falla-multi')
+    const kOk = `${datos}:p-fm:ok`
+    const kInexistente = `${datos}:p-fm:no-existe`
+    await redis.set(kOk, 'antes')
+
+    const migracion: Migracion = {
+      id,
+      patrones: [`${datos}:p-fm:*`],
+      planificar: async (p) => {
+        await p.unidad('u1', async (u) => {
+          u.emitir(kOk, 'set', 'despues')
+          u.parsearElemento('{roto', JSON.parse, { origen: 'tabla', clave: kOk, campo: 'c' })
+        })
+        await p.unidad('u2', async (u) => {
+          u.emitir(kInexistente, 'rename', `${datos}:p-fm:dest`)
+        })
+      },
+    }
+
+    const silenciar = spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      await expect(correrMigraciones(redis, [migracion], opciones)).rejects.toThrow(/no such key/i)
+    } finally {
+      silenciar.mockRestore()
+    }
+
+    expect(await redis.get(kOk)).toBe('antes')
+    expect(await redis.exists(clavePendientes(prefijo, id))).toBe(0)
+    expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
+  })
+
+  it('si planificar lanza una excepción, no crea backup ni pendientes y libera el lock', async () => {
+    const id = registrar('plan-excepcion')
+    const migracion: Migracion = {
+      id,
+      patrones: [`${datos}:p-exc:*`],
+      planificar: async () => {
+        throw new Error('fallo inesperado en planificar')
+      },
+    }
+
+    await expect(correrMigraciones(redis, [migracion], opciones)).rejects.toThrow('fallo inesperado en planificar')
+    expect(await redis.exists(clavesDeBackup(prefijo, id).meta)).toBe(0)
+    expect(await redis.exists(clavePendientes(prefijo, id))).toBe(0)
+    expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
+    expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
+  })
+
+  it('con exigirExclusividad, una migración planificada destructiva aborta antes de invocar planificar', async () => {
+    const id = registrar('plan-exclusividad')
+    let invocoPlanificar = false
+    const migracion: Migracion = {
+      id,
+      destructiva: true,
+      patrones: [`${datos}:p-excl:*`],
+      planificar: async () => {
+        invocoPlanificar = true
+      },
+    }
+
+    const otro = redis.duplicate()
+    try {
+      await otro.ping()
+      await expect(
+        correrMigraciones(redis, [migracion], { ...opciones, exigirExclusividad: true })
+      ).rejects.toThrow('requiere exclusividad')
+    } finally {
+      await otro.quit().catch(() => otro.disconnect())
+    }
+
+    expect(invocoPlanificar).toBe(false)
+    expect(await redis.exists(clavesDeBackup(prefijo, id).meta)).toBe(0)
+    expect(await redis.exists(`${prefijo}:lock`)).toBe(0)
+  })
+
+  it('restaurarMigracion (rollback manual) devuelve claves migradas y rotas y limpia pendientes y aplicadas', async () => {
+    const id = registrar('plan-rb-manual')
+    const kOk = `${datos}:p-rbm:ok`
+    const kSet = `${datos}:p-rbm:set`
+    await redis.set(kOk, 'antes')
     await redis.sadd(kSet, 'miembro')
 
     const migracion: Migracion = {
       id,
-      patrones: [`${base}:*`],
+      patrones: [`${datos}:p-rbm:*`],
       planificar: async (p) => {
-        for (const clave of await p.escanear(`${base}:*`)) {
-          await p.unidad(clave, async (u) => {
-            const raw = await u.leerString(clave, 'item')
-            if (raw === null) return
-            const doc = await u.parsearClave(clave, raw, parsearN, 'item')
-            if (!doc) return
-            u.emitir(clave, 'set', JSON.stringify({ n: doc.n * 10 }))
-          })
-        }
+        await p.unidad('u', async (u) => {
+          u.emitir(kOk, 'set', 'despues')
+          await u.leerString(kSet, 'item')
+        })
       },
     }
-
-    const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      expect(await correrMigraciones(redis, [migracion], opciones)).toEqual([id])
-    } finally {
-      silenciar.mockRestore()
-    }
-
-    expect(await redis.get(kOk)).toBe(JSON.stringify({ n: 40 }))
-    expect(await redis.exists(kRoto)).toBe(0)
-    expect(await redis.exists(kSet)).toBe(0)
-
-    const pendientes = await leerPendientes(id)
-    expect(pendientes).toHaveLength(2)
-    const delRoto = pendientes.find((x) => x.clave === kRoto)
-    const delSet = pendientes.find((x) => x.clave === kSet)
-    expect(typeof delRoto?.dumpBase64).toBe('string')
-    expect(delRoto?.pttl).toBeGreaterThan(0)
-    expect(typeof delSet?.dumpBase64).toBe('string')
-    expect(delSet?.motivo).toBe('TipoInesperado(set)')
-  })
-
-  it('restaurarMigracion (rollback manual) devuelve claves válidas y rotas y elimina pendientes y aplicadas', async () => {
-    const id = registrar('plan-rollback-manual')
-    const base = `${datos}:plan-rb-manual`
-    const { kHash, kStrOk, kStrRoto, kTipoMalo } = await sembrarBase(base)
-    const migracion = crearMigracionCompleta(id, base)
 
     const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
     try {
@@ -438,25 +640,58 @@ describe('migraciones planificadas (dos fases)', () => {
     }
 
     await restaurarMigracion(redis, id, { ...opciones, exigirExclusividad: false })
-
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 2 }))
-    expect(await redis.get(kStrRoto)).toBe('no-es-objeto')
-    expect(await redis.smembers(kTipoMalo)).toEqual(['miembro'])
+    expect(await redis.get(kOk)).toBe('antes')
+    expect(await redis.smembers(kSet)).toEqual(['miembro'])
     expect(await redis.exists(clavePendientes(prefijo, id))).toBe(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
   })
 
-  it('rollback automático en corrida múltiple revierte la migración planificada y borra sus pendientes', async () => {
-    const idM1 = registrar('plan-rb-auto-1')
-    const idM2 = registrar('plan-rb-auto-2')
-    const base = `${datos}:plan-rb-auto`
-    const { kHash, kStrOk, kStrRoto, kTipoMalo } = await sembrarBase(base)
+  it('restaurarMigracion borra claves renombradas fuera de patrones cuando la migración usa planificar', async () => {
+    const id = registrar('plan-rb-fuera-patrones')
+    const kDentro = `${datos}:p-in:a`
+    const kFuera = `${datos}:p-out:a`
+    await redis.set(kDentro, 'v1')
 
-    const m1 = crearMigracionCompleta(idM1, base)
+    const migracion: Migracion = {
+      id,
+      patrones: [`${datos}:p-in:*`],
+      planificar: async (p) => {
+        await p.unidad('u', async (u) => {
+          u.renombrar(kDentro, kFuera)
+        })
+      },
+    }
+
+    await correrMigraciones(redis, [migracion], opciones)
+    expect(await redis.exists(kDentro)).toBe(0)
+    expect(await redis.get(kFuera)).toBe('v1')
+
+    await restaurarMigracion(redis, id, { ...opciones, exigirExclusividad: false })
+    expect(await redis.get(kDentro)).toBe('v1')
+    expect(await redis.exists(kFuera)).toBe(0)
+  })
+
+  it('rollback automático en corrida múltiple revierte la migración planificada y borra sus pendientes', async () => {
+    const idM1 = registrar('plan-rba-1')
+    const idM2 = registrar('plan-rba-2')
+    const kOk = `${datos}:p-rba:ok`
+    const kSet = `${datos}:p-rba:set`
+    await redis.set(kOk, 'antes')
+    await redis.sadd(kSet, 'miembro')
+
+    const m1: Migracion = {
+      id: idM1,
+      patrones: [`${datos}:p-rba:*`],
+      planificar: async (p) => {
+        await p.unidad('u', async (u) => {
+          u.emitir(kOk, 'set', 'despues')
+          await u.leerString(kSet, 'item')
+        })
+      },
+    }
     const m2: Migracion = {
       id: idM2,
-      patrones: [`${base}:*`],
+      patrones: [`${datos}:p-rba:*`],
       dryRun: noop,
       up: async () => {
         throw new Error('falló m2')
@@ -472,10 +707,8 @@ describe('migraciones planificadas (dos fases)', () => {
       silenciarErr.mockRestore()
     }
 
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 2 }))
-    expect(await redis.get(kStrRoto)).toBe('no-es-objeto')
-    expect(await redis.smembers(kTipoMalo)).toEqual(['miembro'])
+    expect(await redis.get(kOk)).toBe('antes')
+    expect(await redis.smembers(kSet)).toEqual(['miembro'])
     expect(await redis.exists(clavePendientes(prefijo, idM1))).toBe(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, idM1)).toBe(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, idM2)).toBe(0)
@@ -483,37 +716,49 @@ describe('migraciones planificadas (dos fases)', () => {
 
   it('flujo completo en orden: pre-corrida, aplicación, re-ejecución idempotente y rollback manual', async () => {
     const id = registrar('plan-flujo-completo')
-    const base = `${datos}:plan-e2e`
-    const { kHash, kStrOk, kStrRoto, kTipoMalo } = await sembrarBase(base)
-    const migracion = crearMigracionCompleta(id, base)
+    const kOk = `${datos}:p-e2e:ok`
+    const kRoto = `${datos}:p-e2e:roto`
+    const kSet = `${datos}:p-e2e:set`
+    await redis.set(kOk, 'antes')
+    await redis.set(kRoto, '{roto')
+    await redis.sadd(kSet, 'miembro')
+
+    const migracion: Migracion = {
+      id,
+      patrones: [`${datos}:p-e2e:*`],
+      planificar: async (p) => {
+        await p.unidad('u', async (u) => {
+          u.emitir(kOk, 'set', 'despues')
+          await u.parsearClave(kRoto, '{roto', JSON.parse, 'doc')
+          await u.leerString(kSet, 'item')
+        })
+      },
+    }
 
     // 1. Pre-corrida: clasifica sin mutar Redis.
     const pre = await armarPlan(redis, migracion.planificar!)
-    expect(pre.pendientes).toHaveLength(3)
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 2 }))
+    expect(pre.pendientes).toHaveLength(2)
+    expect(await redis.get(kOk)).toBe('antes')
 
-    // 2. Aplicación: migra válidos, mueve inválidos a pendientes y registra en aplicadas.
+    // 2. Aplicación y 3. Re-ejecución idempotente.
     const silenciar = spyOn(console, 'warn').mockImplementation(() => {})
     try {
       expect(await correrMigraciones(redis, [migracion], opciones)).toEqual([id])
-      // 3. Re-ejecución idempotente: ya aplicada, no repite trabajo.
       expect(await correrMigraciones(redis, [migracion], opciones)).toEqual([])
     } finally {
       silenciar.mockRestore()
     }
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 10 }) })
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 20 }))
-    expect(await redis.exists(kStrRoto)).toBe(0)
-    expect(await redis.exists(kTipoMalo)).toBe(0)
-    expect(await leerPendientes(id)).toHaveLength(3)
+    expect(await redis.get(kOk)).toBe('despues')
+    expect(await redis.exists(kRoto, kSet)).toBe(0)
+    expect(await leerPendientes(id)).toHaveLength(2)
+    expect(await redis.ttl(clavePendientes(prefijo, id))).toBeGreaterThan(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(1)
 
-    // 4. Rollback manual: restaura todo al punto inicial y elimina pendientes/aplicadas.
+    // 4. Rollback manual: restaura todo al estado inicial y elimina pendientes/aplicadas.
     await restaurarMigracion(redis, id, { ...opciones, exigirExclusividad: false })
-    expect(await redis.hgetall(kHash)).toEqual({ a: JSON.stringify({ n: 1 }), b: '{json roto' })
-    expect(await redis.get(kStrOk)).toBe(JSON.stringify({ n: 2 }))
-    expect(await redis.get(kStrRoto)).toBe('no-es-objeto')
-    expect(await redis.smembers(kTipoMalo)).toEqual(['miembro'])
+    expect(await redis.get(kOk)).toBe('antes')
+    expect(await redis.get(kRoto)).toBe('{roto')
+    expect(await redis.smembers(kSet)).toEqual(['miembro'])
     expect(await redis.exists(clavePendientes(prefijo, id))).toBe(0)
     expect(await redis.hexists(`${prefijo}:aplicadas`, id)).toBe(0)
   })

@@ -8,6 +8,7 @@ const TAM_LOTE = 200
 export interface MetaBackup {
   creadoEn: string
   patrones: string[]
+  clavesExtra?: string[]
   claves: number
 }
 
@@ -84,13 +85,15 @@ export async function guardarBackup(
   {
     prefijo = 'migraciones',
     patrones = ['*'],
+    clavesExtra = [],
     ttlSeg = BACKUP_TTL_SEG,
-  }: { prefijo?: string; patrones?: string[]; ttlSeg?: number } = {}
+  }: { prefijo?: string; patrones?: string[]; clavesExtra?: string[]; ttlSeg?: number } = {}
 ): Promise<number> {
   const bk = clavesDeBackup(prefijo, id)
   await redis.del(bk.meta, bk.datos, bk.ttls)
 
-  const claves = await listarClavesEnAlcance(redis, patrones, prefijo)
+  const extrasLimpias = [...new Set(clavesExtra.filter((c) => !esClaveInterna(c, prefijo)))]
+  const claves = [...new Set([...(await listarClavesEnAlcance(redis, patrones, prefijo)), ...extrasLimpias])]
   let guardadas = 0
   let conTtl = false
 
@@ -123,7 +126,12 @@ export async function guardarBackup(
     }
   }
 
-  const meta: MetaBackup = { creadoEn: new Date().toISOString(), patrones, claves: guardadas }
+  const meta: MetaBackup = {
+    creadoEn: new Date().toISOString(),
+    patrones,
+    ...(extrasLimpias.length > 0 ? { clavesExtra: extrasLimpias } : {}),
+    claves: guardadas,
+  }
   const cierre = redis.pipeline()
   cierre.set(bk.meta, JSON.stringify(meta), 'EX', ttlSeg)
   if (guardadas > 0) cierre.expire(bk.datos, ttlSeg)
@@ -156,9 +164,11 @@ export async function restaurarBackup(
   const clavesOriginales = new Set(Object.keys(dumps))
 
   const actuales = await listarClavesEnAlcance(redis, meta.patrones, prefijo)
-  const aBorrar = actuales.filter((c) => !clavesOriginales.has(c))
+  const candidatas = [...new Set([...actuales, ...(meta.clavesExtra ?? [])])]
+  const aBorrar = candidatas.filter((c) => !clavesOriginales.has(c))
+  let borradas = 0
   for (let i = 0; i < aBorrar.length; i += TAM_LOTE) {
-    await redis.del(...aBorrar.slice(i, i + TAM_LOTE))
+    borradas += await redis.del(...aBorrar.slice(i, i + TAM_LOTE))
   }
 
   const entradas = Object.entries(dumps)
@@ -173,7 +183,7 @@ export async function restaurarBackup(
 
   await redis.del(clavePendientes(prefijo, id))
   await redis.hdel(`${prefijo}:aplicadas`, id)
-  return { restauradas: entradas.length, borradas: aBorrar.length }
+  return { restauradas: entradas.length, borradas }
 }
 
 /** Lista los backups vigentes en redis para `<prefijo>`. */

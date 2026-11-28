@@ -40,7 +40,8 @@ container, así que el deploy a staging y a main las aplica solo, contra el redi
   antes de escribir, separando los comandos válidos de las entradas inválidas (documentos que no
   cumplen su schema o claves con otro tipo de Redis). Al aplicar, las unidades válidas se ejecutan en
   `MULTI` y las entradas rechazadas se mueven a `migraciones:pendientes:<id>` (conservando su valor o
-  `DUMP` + `PTTL` y el motivo) sin frenar el resto de la migración.
+  `DUMP` + `PTTL` y el motivo, con el mismo TTL de 7 días que el backup) sin frenar el resto de la
+  migración.
 - Para migraciones imperativas con `dryRun` + `up`, `dryRun` es obligatorio y corre siempre sin
   escribir antes de crear el backup y ejecutar `up`.
 - **Guarda de exclusividad (`destructiva: true` y `restaurar.ts`):** `wss/migrar.ts` exige
@@ -51,9 +52,10 @@ container, así que el deploy a staging y a main las aplica solo, contra el redi
 - Antes de correr `up`, el runner guarda un backup binario (`DUMP` + `PTTL`) de las claves en
   `patrones` (por defecto todas salvo `migraciones:*` y `bull:*`) en `migraciones:backup:<id>:*` con
   TTL de 7 días.
-- Si una migración lanza una excepción (fallo de Redis o falta de exclusividad), el runner restaura
-  automáticamente los cambios de esa migración (y de las anteriores de la misma corrida, en orden
-  inverso) y el proceso sale con código distinto de 0 sin levantar el server.
+- Si una migración lanza una excepción (p. ej. fallo de Redis, `MULTI` rechazado, falta de
+  exclusividad o error no capturado), el runner restaura automáticamente los cambios de esa migración
+  (y de las anteriores de la misma corrida, en orden inverso) y el proceso sale con código distinto de
+  0 sin levantar el server.
 - **Rollback manual:** si el deploy arrancó bien y hace falta volver atrás, detener el WSS (para que
   deje de escribir), correr `bun run wss/migraciones/restaurar.ts <id>` (restaura el backup y saca
   `<id>` de `migraciones:aplicadas`) y pushear el commit previo a la rama para que Vercel y Coolify

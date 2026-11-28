@@ -8,6 +8,7 @@ const TAM_LOTE = 200
 export interface MetaBackup {
   creadoEn: string
   patrones: string[]
+  clavesExtra?: string[]
   claves: number
 }
 
@@ -27,18 +28,34 @@ export const clavesDeBackup = (prefijo: string, id: string) => ({
   ttls: `${prefijo}:backup:${id}:ttls`,
 })
 
+export const clavePendientes = (prefijo: string, id: string) => `${prefijo}:pendientes:${id}`
+
 const esClaveInterna = (clave: string, prefijo: string) =>
   clave.startsWith(`${prefijo}:`) || clave.startsWith('bull:')
 
-async function escanear(redis: Redis, patron: string): Promise<string[]> {
-  const encontradas: string[] = []
+/** Escanea claves por patrón devolviendo nombres únicos (Redis `SCAN` puede repetir claves al redimensionar). */
+export async function escanear(redis: Redis, patron: string): Promise<string[]> {
+  const encontradas = new Set<string>()
   let cursor = '0'
   do {
     const [next, lote] = await redis.scan(cursor, 'MATCH', patron, 'COUNT', TAM_LOTE)
     cursor = next
-    encontradas.push(...lote)
+    for (const clave of lote) encontradas.add(clave)
   } while (cursor !== '0')
-  return encontradas
+  return [...encontradas]
+}
+
+/** Captura el snapshot binario (`DUMP` en base64 + `PTTL`) de una clave en lectura sin modificarla. */
+export async function capturarClave(
+  redis: Redis,
+  clave: string
+): Promise<{ dumpBase64: string; pttl: number } | null> {
+  const respuestas = await redis.pipeline().dumpBuffer(clave).pttl(clave).exec()
+  const [errDump, dump] = respuestas?.[0] ?? []
+  const [errTtl, pttl] = respuestas?.[1] ?? []
+  if (errDump || errTtl) throw errDump ?? errTtl
+  if (!Buffer.isBuffer(dump)) return null
+  return { dumpBase64: dump.toString('base64'), pttl: typeof pttl === 'number' && pttl > 0 ? pttl : 0 }
 }
 
 /** Lista las claves cubiertas por `patrones`, excluyendo claves de control de migraciones y bullmq. */
@@ -68,13 +85,15 @@ export async function guardarBackup(
   {
     prefijo = 'migraciones',
     patrones = ['*'],
+    clavesExtra = [],
     ttlSeg = BACKUP_TTL_SEG,
-  }: { prefijo?: string; patrones?: string[]; ttlSeg?: number } = {}
+  }: { prefijo?: string; patrones?: string[]; clavesExtra?: string[]; ttlSeg?: number } = {}
 ): Promise<number> {
   const bk = clavesDeBackup(prefijo, id)
   await redis.del(bk.meta, bk.datos, bk.ttls)
 
-  const claves = await listarClavesEnAlcance(redis, patrones, prefijo)
+  const extrasLimpias = [...new Set(clavesExtra.filter((c) => !esClaveInterna(c, prefijo)))]
+  const claves = [...new Set([...(await listarClavesEnAlcance(redis, patrones, prefijo)), ...extrasLimpias])]
   let guardadas = 0
   let conTtl = false
 
@@ -107,7 +126,12 @@ export async function guardarBackup(
     }
   }
 
-  const meta: MetaBackup = { creadoEn: new Date().toISOString(), patrones, claves: guardadas }
+  const meta: MetaBackup = {
+    creadoEn: new Date().toISOString(),
+    patrones,
+    ...(extrasLimpias.length > 0 ? { clavesExtra: extrasLimpias } : {}),
+    claves: guardadas,
+  }
   const cierre = redis.pipeline()
   cierre.set(bk.meta, JSON.stringify(meta), 'EX', ttlSeg)
   if (guardadas > 0) cierre.expire(bk.datos, ttlSeg)
@@ -140,9 +164,11 @@ export async function restaurarBackup(
   const clavesOriginales = new Set(Object.keys(dumps))
 
   const actuales = await listarClavesEnAlcance(redis, meta.patrones, prefijo)
-  const aBorrar = actuales.filter((c) => !clavesOriginales.has(c))
+  const candidatas = [...new Set([...actuales, ...(meta.clavesExtra ?? [])])]
+  const aBorrar = candidatas.filter((c) => !clavesOriginales.has(c))
+  let borradas = 0
   for (let i = 0; i < aBorrar.length; i += TAM_LOTE) {
-    await redis.del(...aBorrar.slice(i, i + TAM_LOTE))
+    borradas += await redis.del(...aBorrar.slice(i, i + TAM_LOTE))
   }
 
   const entradas = Object.entries(dumps)
@@ -155,8 +181,9 @@ export async function restaurarBackup(
     verificarPipeline(await pipe.exec(), `restaurar backup de ${id}`)
   }
 
+  await redis.del(clavePendientes(prefijo, id))
   await redis.hdel(`${prefijo}:aplicadas`, id)
-  return { restauradas: entradas.length, borradas: aBorrar.length }
+  return { restauradas: entradas.length, borradas }
 }
 
 /** Lista los backups vigentes en redis para `<prefijo>`. */

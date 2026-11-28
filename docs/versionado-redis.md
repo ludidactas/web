@@ -30,13 +30,20 @@ Una migración es una función pura, recibe el documento sin `v` y no conoce red
 
 ## Migraciones de claves
 
-`wss/migraciones/index.ts` lista, en orden, las migraciones de claves de redis (`{ id, destructiva?, patrones?, dryRun(redis), up(redis) }`).
+`wss/migraciones/index.ts` lista, en orden, las migraciones de claves de redis (`{ id, destructiva?, patrones?, planificar(planificador) }` o `{ id, destructiva?, patrones?, dryRun(redis), up(redis) }`).
 El `CMD` del Dockerfile corre `wss/migrar.ts` antes de levantar el server, en cada arranque del
 container, así que el deploy a staging y a main las aplica solo, contra el redis de cada entorno.
 
 - Cada id aplicado queda en el hash `migraciones:aplicadas`; un lock (`migraciones:lock`, TTL 2 min)
   serializa a las instancias que arrancan a la vez.
-- `dryRun` es obligatorio y corre siempre sin escribir antes de crear el backup y ejecutar `up`.
+- **Protocolo en dos fases (`planificar`):** una pre-corrida de solo lectura escanea y clasifica todo
+  antes de escribir, separando los comandos válidos de las entradas inválidas (documentos que no
+  cumplen su schema o claves con otro tipo de Redis). Al aplicar, las unidades válidas se ejecutan en
+  `MULTI` y las entradas rechazadas se mueven a `migraciones:pendientes:<id>` (conservando su valor o
+  `DUMP` + `PTTL` y el motivo, con el mismo TTL de 7 días que el backup) sin frenar el resto de la
+  migración.
+- Para migraciones imperativas con `dryRun` + `up`, `dryRun` es obligatorio y corre siempre sin
+  escribir antes de crear el backup y ejecutar `up`.
 - **Guarda de exclusividad (`destructiva: true` y `restaurar.ts`):** `wss/migrar.ts` exige
   exclusividad (`CLIENT LIST`) salvo cuando `ENTORNO` es `staging` o `development` (fail-closed: si
   falta `ENTORNO`, protege por defecto). Si hay otro cliente conectado a redis (p. ej. el WSS
@@ -45,9 +52,10 @@ container, así que el deploy a staging y a main las aplica solo, contra el redi
 - Antes de correr `up`, el runner guarda un backup binario (`DUMP` + `PTTL`) de las claves en
   `patrones` (por defecto todas salvo `migraciones:*` y `bull:*`) en `migraciones:backup:<id>:*` con
   TTL de 7 días.
-- Si una migración tira, el runner restaura automáticamente los cambios de esa migración (y de las
-  anteriores de la misma corrida, en orden inverso), el container no arranca y Coolify mantiene el
-  anterior.
+- Si una migración lanza una excepción (p. ej. fallo de Redis, `MULTI` rechazado, falta de
+  exclusividad o error no capturado), el runner restaura automáticamente los cambios de esa migración
+  (y de las anteriores de la misma corrida, en orden inverso) y el proceso sale con código distinto de
+  0 sin levantar el server.
 - **Rollback manual:** si el deploy arrancó bien y hace falta volver atrás, detener el WSS (para que
   deje de escribir), correr `bun run wss/migraciones/restaurar.ts <id>` (restaura el backup y saca
   `<id>` de `migraciones:aplicadas`) y pushear el commit previo a la rama para que Vercel y Coolify

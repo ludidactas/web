@@ -25,6 +25,6 @@ EXPOSE ${PORT}
 
 USER bun
 
-# Las migraciones de redis pendientes corren antes de levantar el server; si una falla, el container
-# no arranca y Coolify mantiene el anterior (ver docs/versionado-redis.md).
+# Las migraciones de redis pendientes corren antes de levantar el server; si una falla (p. ej. falta
+# de exclusividad o caída de redis), revierte el backup y termina con error sin levantar el server (ver docs/versionado-redis.md).
 CMD ["sh", "-c", "bun run wss/migrar.ts && exec bun run wss/server.ts"]
